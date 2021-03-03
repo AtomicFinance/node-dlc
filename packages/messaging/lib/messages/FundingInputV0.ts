@@ -1,0 +1,71 @@
+import { BufferReader, BufferWriter } from "@node-lightning/bufio";
+import { MessageType } from "../MessageType";
+import { DlcMessage } from "./DlcMessage";
+
+/**
+ * FundingInput V0 contains information about a specific input to be used
+ * in a funding transaction, as well as its corresponding on-chain UTXO.
+ */
+export class FundingInputV0 implements DlcMessage {
+    public static type = MessageType.FundingInputV0;
+
+    /**
+     * Deserializes an funding_input_v0 message
+     * @param buf
+     */
+    public static deserialize(buf: Buffer): FundingInputV0 {
+      const instance = new FundingInputV0();
+      const reader = new BufferReader(buf);
+
+      reader.readBigSize(); // read type
+      instance.length = reader.readBigSize();
+      instance.inputSerialId = reader.readUInt64BE()
+      const prevTxLen = reader.readUInt16BE()
+      instance.prevTx = reader.readBytes(prevTxLen)
+      instance.prevTxVout = reader.readUInt32BE()
+      instance.sequence = reader.readUInt32BE()
+      instance.maxWitnessLen = reader.readUInt16BE()
+      const redeemScriptLen = reader.readUInt16BE()
+      instance.redeemScript = reader.readBytes(redeemScriptLen)
+
+      return instance;
+    }
+
+    /**
+     * The type for funding_input_v0 message. funding_input_v0 = 42772
+     */
+    public type = FundingInputV0.type;
+
+    public length: bigint;
+
+    public inputSerialId: bigint;
+
+    public prevTx: Buffer;
+
+    public prevTxVout: number;
+
+    public sequence: number;
+
+    public maxWitnessLen: number;
+
+    public redeemScript: Buffer;
+
+    /**
+     * Serializes the funding_input_v0 message into a Buffer
+     */
+    public serialize(): Buffer {
+      const writer = new BufferWriter();
+      writer.writeBigSize(this.type);
+      writer.writeBigSize(this.length);
+      writer.writeUInt64BE(this.inputSerialId)
+      writer.writeUInt16BE(this.prevTx.length)
+      writer.writeBytes(this.prevTx)
+      writer.writeUInt32BE(this.prevTxVout)
+      writer.writeUInt32BE(this.sequence)
+      writer.writeUInt16BE(this.maxWitnessLen)
+      writer.writeUInt16BE(this.redeemScript.length)
+      writer.writeBytes(this.redeemScript)
+
+      return writer.toBuffer();
+    }
+}

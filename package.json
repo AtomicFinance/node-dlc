@@ -1,0 +1,43 @@
+{
+  "name": "@node-dlc/main",
+  "version": "0.1.0",
+  "description": "Toolkit for Bitcoin DLCs",
+  "scripts": {
+    "start": "cd packages/daemon; npm run start",
+    "bootstrap": "lerna bootstrap",
+    "format": "prettier --check \"packages/**\" \"examples/**\"",
+    "lint": "lerna run lint",
+    "test": "lerna run test",
+    "build": "lerna run build",
+    "bootstrap:ci": "lerna bootstrap --hoist"
+  },
+  "keywords": [
+    "node-dlc",
+    "dlc",
+    "bitcoin"
+  ],
+  "author": "Matthew Black <matthew@atomic.finance>",
+  "license": "MIT",
+  "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@types/bn.js": "^4.11.6",
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^14.0.13",
+    "@types/sinon": "^9.0.4",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "coveralls": "^3.1.0",
+    "eslint": "^5.16.0",
+    "lerna": "^3.22.1",
+    "mocha": "^7.2.0",
+    "nodemon": "^2.0.4",
+    "nyc": "^15.1.0",
+    "prettier": "^1.19.1",
+    "sinon": "^7.5.0",
+    "source-map-support": "^0.5.19",
+    "ts-node": "^8.10.2",
+    "tslint": "^5.20.1",
+    "typescript": "^3.9.5"
+  }
+}
