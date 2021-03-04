@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { FundingInputV0 } from "../../lib/messages/FundingInputV0"
 import { AcceptDlcV0 } from "../../lib/messages/AcceptDlcV0"
 import { CetAdaptorSignaturesV0 } from "../../lib/messages/CetAdaptorSignaturesV0";
-import { NegotiationFieldsV0 } from "../../lib/messages/NegotiationFieldsV0";
+import { NegotiationFields } from "../../lib/messages/NegotiationFields";
 
 describe("AcceptDlcV0", () => {
   const tempContractId = Buffer.from(
@@ -70,7 +70,7 @@ describe("AcceptDlcV0", () => {
         )
       )
       instance.refundSignature = refundSignature
-      instance.negotiationFields = NegotiationFieldsV0.deserialize(
+      instance.negotiationFields = NegotiationFields.deserialize(
         Buffer.from(
           "fdd82600",
           "hex"
