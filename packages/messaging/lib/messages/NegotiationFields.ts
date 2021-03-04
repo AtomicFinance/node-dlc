@@ -1,8 +1,8 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
+import { getTlv } from "../serialize/getTlv";
 import { IDlcMessage } from "./DlcMessage";
-import { getTlv } from "../serialize/getTlv"
-import { RoundingIntervalsV0 } from "./RoundingIntervalsV0"
+import { RoundingIntervalsV0 } from "./RoundingIntervalsV0";
 
 export abstract class NegotiationFields {
   public static deserialize(buf: Buffer): NegotiationFieldsV0 | NegotiationFieldsV1 | NegotiationFieldsV2 {
@@ -16,7 +16,7 @@ export abstract class NegotiationFields {
       case MessageType.NegotiationFieldsV1:
         return NegotiationFieldsV1.deserialize(buf);
       case MessageType.NegotiationFieldsV2:
-        return NegotiationFieldsV2.deserialize(buf)
+        return NegotiationFieldsV2.deserialize(buf);
       default:
         throw new Error(
           `Payout function TLV type must be NegotiationFieldsV0, NegotiationFieldsV1 or NegotiationFieldsV2`
@@ -88,7 +88,7 @@ export class NegotiationFieldsV1 implements IDlcMessage {
 
       reader.readBigSize(); // read type
       instance.length = reader.readBigSize();
-      instance.roundingIntervals = RoundingIntervalsV0.deserialize(getTlv(reader))
+      instance.roundingIntervals = RoundingIntervalsV0.deserialize(getTlv(reader));
 
       return instance;
   }
@@ -109,7 +109,7 @@ export class NegotiationFieldsV1 implements IDlcMessage {
       const writer = new BufferWriter();
       writer.writeBigSize(this.type);
       writer.writeBigSize(this.length);
-      writer.writeBytes(this.roundingIntervals.serialize())
+      writer.writeBytes(this.roundingIntervals.serialize());
 
       return writer.toBuffer();
   }
@@ -132,10 +132,10 @@ export class NegotiationFieldsV2 implements IDlcMessage {
 
       reader.readBigSize(); // read type
       instance.length = reader.readBigSize();
-      reader.readBigSize() // num_disjoint_events
+      reader.readBigSize(); // num_disjoint_events
 
       while (!reader.eof) {
-        instance.negotiationFieldsList.push(NegotiationFields.deserialize(getTlv(reader)))
+        instance.negotiationFieldsList.push(NegotiationFields.deserialize(getTlv(reader)));
       }
 
       return instance;
@@ -157,10 +157,10 @@ export class NegotiationFieldsV2 implements IDlcMessage {
       const writer = new BufferWriter();
       writer.writeBigSize(this.type);
       writer.writeBigSize(this.length);
-      writer.writeBigSize(this.negotiationFieldsList.length)
+      writer.writeBigSize(this.negotiationFieldsList.length);
 
       for (const negotiationFields of this.negotiationFieldsList) {
-        writer.writeBytes(negotiationFields.serialize())
+        writer.writeBytes(negotiationFields.serialize());
       }
 
       return writer.toBuffer();
