@@ -1,12 +1,12 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
-import { DlcMessage } from "./DlcMessage";
+import { IDlcMessage } from "./DlcMessage";
 
 /**
  * NegotiationFields V0 contains preferences of the accepter of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV0 implements DlcMessage {
+export class NegotiationFieldsV0 implements IDlcMessage {
     public static type = MessageType.NegotiationFieldsV0;
 
     /**

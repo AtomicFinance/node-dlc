@@ -1,11 +1,11 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
-import { DlcMessage } from "./DlcMessage";
+import { IDlcMessage } from "./DlcMessage";
 
 /**
  * EnumEventDescriptor V0 is a simple enumeration of outcomes
  */
-export class EnumEventDescriptorV0 implements DlcMessage {
+export class EnumEventDescriptorV0 implements IDlcMessage {
     public static type = MessageType.EnumEventDescriptorV0;
 
     /**
@@ -21,8 +21,8 @@ export class EnumEventDescriptorV0 implements DlcMessage {
         reader.readUInt16BE(); // num_outcomes
 
         while (!reader.eof) {
-          const outcomeLen = reader.readBigSize()
-          instance.outcomes.push(reader.readBytes(Number(outcomeLen)))
+          const outcomeLen = reader.readBigSize();
+          instance.outcomes.push(reader.readBytes(Number(outcomeLen)));
         }
 
         return instance;
@@ -44,11 +44,11 @@ export class EnumEventDescriptorV0 implements DlcMessage {
         const writer = new BufferWriter();
         writer.writeBigSize(this.type);
         writer.writeBigSize(this.length);
-        writer.writeUInt16BE(this.outcomes.length)
+        writer.writeUInt16BE(this.outcomes.length);
 
         for (const outcome of this.outcomes) {
-          writer.writeBigSize(outcome.length)
-          writer.writeBytes(outcome)
+          writer.writeBigSize(outcome.length);
+          writer.writeBytes(outcome);
         }
 
         return writer.toBuffer();

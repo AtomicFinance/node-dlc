@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { ContractDescriptorV0 } from "../../lib/messages/ContractDescriptorV0";
+import { ContractDescriptor, ContractDescriptorV0 } from "../../lib/messages/ContractDescriptor";
+import { MessageType } from "../../lib/MessageType";
 
 describe("ContractDescriptorV0", () => {
   const outcomeOne = Buffer.from(
@@ -63,16 +64,20 @@ describe("ContractDescriptorV0", () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = ContractDescriptorV0.deserialize(buf);
+      const unknownInstance = ContractDescriptor.deserialize(buf);
 
-      expect(Number(instance.length)).to.equal(121)
-      expect(instance.outcomes.length).to.equal(3)
-      expect(instance.outcomes[0].outcome).to.deep.equal(outcomeOne)
-      expect(instance.outcomes[0].localPayout).to.equal(payoutOne)
-      expect(instance.outcomes[1].outcome).to.deep.equal(outcomeTwo)
-      expect(instance.outcomes[1].localPayout).to.equal(payoutTwo)
-      expect(instance.outcomes[2].outcome).to.deep.equal(outcomeThree)
-      expect(instance.outcomes[2].localPayout).to.equal(payoutThree)
+      if (unknownInstance.type === MessageType.ContractDescriptorV0) {
+        const instance = (unknownInstance as ContractDescriptorV0)
+
+        expect(Number(instance.length)).to.equal(121)
+        expect(instance.outcomes.length).to.equal(3)
+        expect(instance.outcomes[0].outcome).to.deep.equal(outcomeOne)
+        expect(instance.outcomes[0].localPayout).to.equal(payoutOne)
+        expect(instance.outcomes[1].outcome).to.deep.equal(outcomeTwo)
+        expect(instance.outcomes[1].localPayout).to.equal(payoutTwo)
+        expect(instance.outcomes[2].outcome).to.deep.equal(outcomeThree)
+        expect(instance.outcomes[2].localPayout).to.equal(payoutThree)
+      }
     });
   });
 });

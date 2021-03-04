@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import { ContractInfoV0 } from "../../lib/messages/ContractInfoV0"
+import { ContractInfo, ContractInfoV0 } from "../../lib/messages/ContractInfo"
 import { OracleInfoV0 } from "../../lib/messages/OracleInfoV0"
-import { ContractDescriptorV0 } from "../../lib/messages/ContractDescriptorV0"
+import { ContractDescriptor } from "../../lib/messages/ContractDescriptor"
 
 describe("OracleInfoV0", () => {
   describe("serialize", () => {
@@ -10,7 +10,7 @@ describe("OracleInfoV0", () => {
 
       instance.length = BigInt(305)
       instance.totalCollateral = BigInt(200000000)
-      instance.contractDescriptor = ContractDescriptorV0.deserialize(
+      instance.contractDescriptor = ContractDescriptor.deserialize(
         Buffer.from(
           "fda710" + // type contract_descriptor
           "79" + // length
@@ -128,7 +128,7 @@ describe("OracleInfoV0", () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = ContractInfoV0.deserialize(buf);
+      const instance = ContractInfo.deserialize(buf);
 
       expect(instance.length).to.deep.equal(BigInt(305))
       expect(Number(instance.totalCollateral)).to.equal(200000000)

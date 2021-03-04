@@ -7,7 +7,7 @@ export enum MessageType {
   ContractInfoV1 = 55344,
 
   ContractDescriptorV0 = 42768,
-  ContractdescriptorV1 = 42784,
+  ContractDescriptorV1 = 42784,
 
   OracleInfoV0 = 42770,
   OracleInfoV1 = 42786,
@@ -31,6 +31,11 @@ export enum MessageType {
   CetAdaptorSignaturesV0 = 42774,
 
   FundingSignaturesV0 = 42776,
+
+  PayoutFunctionV0 = 42790,
+  PayoutFunctionV1 = 42792, // temporary type
+
+  RoundingIntervalsV0 = 42788,
 
   OfferDlcV0 = 42778,
   AcceptDlcV0 = 42780,

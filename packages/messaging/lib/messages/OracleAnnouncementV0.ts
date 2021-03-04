@@ -1,8 +1,8 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
-import { getTlv } from "../serialize/getTlv"
-import { DlcMessage } from "./DlcMessage";
-import { OracleEventV0 } from "./OracleEventV0"
+import { getTlv } from "../serialize/getTlv";
+import { IDlcMessage } from "./DlcMessage";
+import { OracleEventV0 } from "./OracleEventV0";
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -11,12 +11,12 @@ import { OracleEventV0 } from "./OracleEventV0"
  * given in a so-called oracle announcement, which contains an oracle event
  * together with the oracle public key and a signature over its serialization,
  * which must be valid with respect to the specified public key.
- * 
+ *
  * This also makes it possible for users to obtain oracle event information
  * from an un-trusted peer while being guaranteed that it originates from a
  * given oracle.
  */
-export class OracleAnnouncementV0 implements DlcMessage {
+export class OracleAnnouncementV0 implements IDlcMessage {
     public static type = MessageType.OracleAnnouncementV0;
 
     /**
@@ -29,9 +29,9 @@ export class OracleAnnouncementV0 implements DlcMessage {
 
         reader.readBigSize(); // read type
         instance.length = reader.readBigSize();
-        instance.announcementSig = reader.readBytes(64)
-        instance.oraclePubkey = reader.readBytes(32)
-        instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader))
+        instance.announcementSig = reader.readBytes(64);
+        instance.oraclePubkey = reader.readBytes(32);
+        instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader));
 
         return instance;
     }
@@ -56,9 +56,9 @@ export class OracleAnnouncementV0 implements DlcMessage {
         const writer = new BufferWriter();
         writer.writeBigSize(this.type);
         writer.writeBigSize(this.length);
-        writer.writeBytes(this.announcementSig)
-        writer.writeBytes(this.oraclePubkey)
-        writer.writeBytes(this.oracleEvent.serialize())
+        writer.writeBytes(this.announcementSig);
+        writer.writeBytes(this.oraclePubkey);
+        writer.writeBytes(this.oracleEvent.serialize());
 
         return writer.toBuffer();
     }
