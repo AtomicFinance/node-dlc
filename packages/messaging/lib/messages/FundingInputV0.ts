@@ -1,12 +1,12 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
-import { DlcMessage } from "./DlcMessage";
+import { IDlcMessage } from "./DlcMessage";
 
 /**
  * FundingInput V0 contains information about a specific input to be used
  * in a funding transaction, as well as its corresponding on-chain UTXO.
  */
-export class FundingInputV0 implements DlcMessage {
+export class FundingInputV0 implements IDlcMessage {
     public static type = MessageType.FundingInputV0;
 
     /**
@@ -19,14 +19,14 @@ export class FundingInputV0 implements DlcMessage {
 
       reader.readBigSize(); // read type
       instance.length = reader.readBigSize();
-      instance.inputSerialId = reader.readUInt64BE()
-      const prevTxLen = reader.readUInt16BE()
-      instance.prevTx = reader.readBytes(prevTxLen)
-      instance.prevTxVout = reader.readUInt32BE()
-      instance.sequence = reader.readUInt32BE()
-      instance.maxWitnessLen = reader.readUInt16BE()
-      const redeemScriptLen = reader.readUInt16BE()
-      instance.redeemScript = reader.readBytes(redeemScriptLen)
+      instance.inputSerialId = reader.readUInt64BE();
+      const prevTxLen = reader.readUInt16BE();
+      instance.prevTx = reader.readBytes(prevTxLen);
+      instance.prevTxVout = reader.readUInt32BE();
+      instance.sequence = reader.readUInt32BE();
+      instance.maxWitnessLen = reader.readUInt16BE();
+      const redeemScriptLen = reader.readUInt16BE();
+      instance.redeemScript = reader.readBytes(redeemScriptLen);
 
       return instance;
     }
@@ -57,14 +57,14 @@ export class FundingInputV0 implements DlcMessage {
       const writer = new BufferWriter();
       writer.writeBigSize(this.type);
       writer.writeBigSize(this.length);
-      writer.writeUInt64BE(this.inputSerialId)
-      writer.writeUInt16BE(this.prevTx.length)
-      writer.writeBytes(this.prevTx)
-      writer.writeUInt32BE(this.prevTxVout)
-      writer.writeUInt32BE(this.sequence)
-      writer.writeUInt16BE(this.maxWitnessLen)
-      writer.writeUInt16BE(this.redeemScript.length)
-      writer.writeBytes(this.redeemScript)
+      writer.writeUInt64BE(this.inputSerialId);
+      writer.writeUInt16BE(this.prevTx.length);
+      writer.writeBytes(this.prevTx);
+      writer.writeUInt32BE(this.prevTxVout);
+      writer.writeUInt32BE(this.sequence);
+      writer.writeUInt16BE(this.maxWitnessLen);
+      writer.writeUInt16BE(this.redeemScript.length);
+      writer.writeBytes(this.redeemScript);
 
       return writer.toBuffer();
     }

@@ -1,8 +1,8 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
 import { getTlv } from "../serialize/getTlv";
-import { DlcMessage } from "./DlcMessage";
-import { EnumEventDescriptorV0 } from "./EnumEventDescriptorV0"
+import { IDlcMessage } from "./DlcMessage";
+import { EnumEventDescriptorV0 } from "./EnumEventDescriptorV0";
 
 /**
  * For users to be able to create DLCs based on a given event, they also
@@ -16,7 +16,7 @@ import { EnumEventDescriptorV0 } from "./EnumEventDescriptorV0"
  *   - the event ID which can be a name or categorization associated with
  *     the event by the oracle
  */
-export class OracleEventV0 implements DlcMessage {
+export class OracleEventV0 implements IDlcMessage {
     public static type = MessageType.OracleEventV0;
 
     /**
@@ -32,13 +32,13 @@ export class OracleEventV0 implements DlcMessage {
         const nonceCount = reader.readUInt16BE();
 
         for (let i = 0; i < nonceCount; i++) {
-          instance.oracleNonces.push(reader.readBytes(32))
+          instance.oracleNonces.push(reader.readBytes(32));
         }
 
         instance.eventMaturityEpoch = reader.readUInt32BE();
-        instance.eventDescriptor = EnumEventDescriptorV0.deserialize(getTlv(reader))
-        const eventIdLength = reader.readBigSize()
-        instance.eventId = reader.readBytes(Number(eventIdLength))
+        instance.eventDescriptor = EnumEventDescriptorV0.deserialize(getTlv(reader));
+        const eventIdLength = reader.readBigSize();
+        instance.eventId = reader.readBytes(Number(eventIdLength));
 
         return instance;
     }
@@ -65,16 +65,16 @@ export class OracleEventV0 implements DlcMessage {
         const writer = new BufferWriter();
         writer.writeBigSize(this.type);
         writer.writeBigSize(this.length);
-        writer.writeUInt16BE(this.oracleNonces.length)
+        writer.writeUInt16BE(this.oracleNonces.length);
 
         for (const nonce of this.oracleNonces) {
-          writer.writeBytes(nonce)
+          writer.writeBytes(nonce);
         }
 
-        writer.writeUInt32BE(this.eventMaturityEpoch)
-        writer.writeBytes(this.eventDescriptor.serialize())
-        writer.writeBigSize(this.eventId.length)
-        writer.writeBytes(this.eventId)
+        writer.writeUInt32BE(this.eventMaturityEpoch);
+        writer.writeBytes(this.eventDescriptor.serialize());
+        writer.writeBigSize(this.eventId.length);
+        writer.writeBytes(this.eventId);
 
         return writer.toBuffer();
     }

@@ -1,8 +1,8 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
 import { getTlv } from "../serialize/getTlv";
-import { DlcMessage } from "./DlcMessage";
-import { ContractInfoV0 } from "./ContractInfoV0";
+import { ContractInfo } from "./ContractInfo";
+import { IDlcMessage } from "./DlcMessage";
 import { FundingInputV0 } from "./FundingInputV0";
 
 /**
@@ -10,7 +10,7 @@ import { FundingInputV0 } from "./FundingInputV0";
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class OfferDlcV0 implements DlcMessage {
+export class OfferDlcV0 implements IDlcMessage {
     public static type = MessageType.OfferDlcV0;
 
     /**
@@ -22,24 +22,24 @@ export class OfferDlcV0 implements DlcMessage {
         const reader = new BufferReader(buf);
 
         reader.readUInt16BE(); // read type
-        instance.contractFlags = reader.readBytes(1)
-        instance.chainHash = reader.readBytes(32)
-        instance.contractInfo = ContractInfoV0.deserialize(getTlv(reader))
-        instance.fundingPubKey = reader.readBytes(33)
-        const payoutSPKLen = reader.readUInt16BE()
-        instance.payoutSPK = reader.readBytes(payoutSPKLen)
-        instance.totalCollateralSatoshis = reader.readUInt64BE()
-        const fundingInputsLen = reader.readUInt16BE()
+        instance.contractFlags = reader.readBytes(1);
+        instance.chainHash = reader.readBytes(32);
+        instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
+        instance.fundingPubKey = reader.readBytes(33);
+        const payoutSPKLen = reader.readUInt16BE();
+        instance.payoutSPK = reader.readBytes(payoutSPKLen);
+        instance.totalCollateralSatoshis = reader.readUInt64BE();
+        const fundingInputsLen = reader.readUInt16BE();
 
         for (let i = 0; i < fundingInputsLen; i++) {
-          instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)))
+          instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
         }
 
-        const changeSPKLen = reader.readUInt16BE()
-        instance.changeSPK = reader.readBytes(changeSPKLen)
-        instance.feeRate = reader.readUInt64BE()
-        instance.contractMaturityBound = reader.readUInt32BE()
-        instance.contractTimeout = reader.readUInt32BE()
+        const changeSPKLen = reader.readUInt16BE();
+        instance.changeSPK = reader.readBytes(changeSPKLen);
+        instance.feeRate = reader.readUInt64BE();
+        instance.contractMaturityBound = reader.readUInt32BE();
+        instance.contractTimeout = reader.readUInt32BE();
 
         return instance;
     }
@@ -53,7 +53,7 @@ export class OfferDlcV0 implements DlcMessage {
 
     public chainHash: Buffer;
 
-    public contractInfo: ContractInfoV0;
+    public contractInfo: ContractInfo;
 
     public fundingPubKey: Buffer;
 
@@ -77,24 +77,24 @@ export class OfferDlcV0 implements DlcMessage {
     public serialize(): Buffer {
         const writer = new BufferWriter();
         writer.writeUInt16BE(this.type);
-        writer.writeBytes(this.contractFlags)
-        writer.writeBytes(this.chainHash)
-        writer.writeBytes(this.contractInfo.serialize())
-        writer.writeBytes(this.fundingPubKey)
-        writer.writeUInt16BE(this.payoutSPK.length)
-        writer.writeBytes(this.payoutSPK)
-        writer.writeUInt64BE(this.totalCollateralSatoshis)
-        writer.writeUInt16BE(this.fundingInputs.length)
+        writer.writeBytes(this.contractFlags);
+        writer.writeBytes(this.chainHash);
+        writer.writeBytes(this.contractInfo.serialize());
+        writer.writeBytes(this.fundingPubKey);
+        writer.writeUInt16BE(this.payoutSPK.length);
+        writer.writeBytes(this.payoutSPK);
+        writer.writeUInt64BE(this.totalCollateralSatoshis);
+        writer.writeUInt16BE(this.fundingInputs.length);
 
         for (const fundingInput of this.fundingInputs) {
-          writer.writeBytes(fundingInput.serialize())
+          writer.writeBytes(fundingInput.serialize());
         }
 
-        writer.writeUInt16BE(this.changeSPK.length)
-        writer.writeBytes(this.changeSPK)
-        writer.writeUInt64BE(this.feeRate)
-        writer.writeUInt32BE(this.contractMaturityBound)
-        writer.writeUInt32BE(this.contractTimeout)
+        writer.writeUInt16BE(this.changeSPK.length);
+        writer.writeBytes(this.changeSPK);
+        writer.writeUInt64BE(this.feeRate);
+        writer.writeUInt32BE(this.contractMaturityBound);
+        writer.writeUInt32BE(this.contractTimeout);
 
         return writer.toBuffer();
     }

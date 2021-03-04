@@ -16,20 +16,20 @@ export class ScriptWitnessV0 {
         const reader = new BufferReader(buf);
 
         instance.length = reader.readUInt16BE(); // need to fix this
-        instance.witness = reader.readBytes(instance.length)
+        instance.witness = reader.readBytes(instance.length);
 
         return instance;
     }
 
     public static getWitness(reader: BufferReader): Buffer {
-      const length = reader.readUInt16BE()
-      const body = reader.readBytes(Number(length))
-    
-      const writer = new BufferWriter()
-      writer.writeUInt16BE(length)
-      writer.writeBytes(body)
-    
-      return writer.toBuffer()
+      const length = reader.readUInt16BE();
+      const body = reader.readBytes(Number(length));
+
+      const writer = new BufferWriter();
+      writer.writeUInt16BE(length);
+      writer.writeBytes(body);
+
+      return writer.toBuffer();
     }
 
     public length: number;
@@ -41,10 +41,9 @@ export class ScriptWitnessV0 {
      */
     public serialize(): Buffer {
         const writer = new BufferWriter();
-        writer.writeUInt16BE(this.length)
-        writer.writeBytes(this.witness)
+        writer.writeUInt16BE(this.length);
+        writer.writeBytes(this.witness);
 
         return writer.toBuffer();
     }
 }
-

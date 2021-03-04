@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { OfferDlcV0 } from "../../lib/messages/OfferDlcV0";
-import { ContractInfoV0 } from "../../lib/messages/ContractInfoV0"
+import { ContractInfo } from "../../lib/messages/ContractInfo"
 import { FundingInputV0 } from "../../lib/messages/FundingInputV0"
 
 describe("EnumEventDescriptorV0", () => {
@@ -36,7 +36,7 @@ describe("EnumEventDescriptorV0", () => {
       instance.contractFlags = contractFlags
       instance.chainHash = chainHash
 
-      instance.contractInfo = ContractInfoV0.deserialize(
+      instance.contractInfo = ContractInfo.deserialize(
         Buffer.from(
           "fdd82e" + // type contract_info
           "fd0131" + // length

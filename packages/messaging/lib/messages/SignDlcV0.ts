@@ -1,16 +1,16 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
 import { getTlv } from "../serialize/getTlv";
-import { DlcMessage } from "./DlcMessage";
 import { CetAdaptorSignaturesV0 } from "./CetAdaptorSignaturesV0";
-import { FundingSignaturesV0 } from "./FundingSignaturesV0"
+import { IDlcMessage } from "./DlcMessage";
+import { FundingSignaturesV0 } from "./FundingSignaturesV0";
 
 /**
  * SignDlc gives all of the initiator's signatures, which allows the
  * receiver to broadcast the funding transaction with both parties being
  * fully committed to all closing transactions.
  */
-export class SignDlcV0 implements DlcMessage {
+export class SignDlcV0 implements IDlcMessage {
     public static type = MessageType.SignDlcV0;
 
     /**
@@ -22,10 +22,10 @@ export class SignDlcV0 implements DlcMessage {
         const reader = new BufferReader(buf);
 
         reader.readUInt16BE(); // read type
-        instance.contractId = reader.readBytes(32)
-        instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader))
-        instance.refundSignature = reader.readBytes(64)
-        instance.fundingSignatures = FundingSignaturesV0.deserialize(getTlv(reader))
+        instance.contractId = reader.readBytes(32);
+        instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
+        instance.refundSignature = reader.readBytes(64);
+        instance.fundingSignatures = FundingSignaturesV0.deserialize(getTlv(reader));
 
         return instance;
     }
@@ -49,10 +49,10 @@ export class SignDlcV0 implements DlcMessage {
     public serialize(): Buffer {
         const writer = new BufferWriter();
         writer.writeUInt16BE(this.type);
-        writer.writeBytes(this.contractId)
-        writer.writeBytes(this.cetSignatures.serialize())
-        writer.writeBytes(this.refundSignature)
-        writer.writeBytes(this.fundingSignatures.serialize())
+        writer.writeBytes(this.contractId);
+        writer.writeBytes(this.cetSignatures.serialize());
+        writer.writeBytes(this.refundSignature);
+        writer.writeBytes(this.fundingSignatures.serialize());
 
         return writer.toBuffer();
     }

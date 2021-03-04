@@ -1,12 +1,12 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
-import { DlcMessage } from "./DlcMessage";
+import { IDlcMessage } from "./DlcMessage";
 
 /**
- * CetAdaptorSignatures V0 contains CET signatures and any necessary 
+ * CetAdaptorSignatures V0 contains CET signatures and any necessary
  * information linking the signatures to their corresponding outcome
  */
-export class CetAdaptorSignaturesV0 implements DlcMessage {
+export class CetAdaptorSignaturesV0 implements IDlcMessage {
     public static type = MessageType.CetAdaptorSignaturesV0;
 
     /**
@@ -19,12 +19,12 @@ export class CetAdaptorSignaturesV0 implements DlcMessage {
 
       reader.readBigSize(); // read type
       instance.length = reader.readBigSize();
-      reader.readBigSize() // nb_signatures
+      reader.readBigSize(); // nb_signatures
 
       while (!reader.eof) {
-        const encryptedSig = reader.readBytes(65)
-        const dleqProof = reader.readBytes(97)
-        instance.sigs.push({ encryptedSig, dleqProof })
+        const encryptedSig = reader.readBytes(65);
+        const dleqProof = reader.readBytes(97);
+        instance.sigs.push({ encryptedSig, dleqProof });
       }
 
       return instance;
@@ -37,7 +37,7 @@ export class CetAdaptorSignaturesV0 implements DlcMessage {
 
     public length: bigint;
 
-    public sigs: Sig[] = [];
+    public sigs: ISig[] = [];
 
     /**
      * Serializes the cet_adaptor_signature message into a Buffer
@@ -46,18 +46,18 @@ export class CetAdaptorSignaturesV0 implements DlcMessage {
       const writer = new BufferWriter();
       writer.writeBigSize(this.type);
       writer.writeBigSize(this.length);
-      writer.writeBigSize(this.sigs.length)
+      writer.writeBigSize(this.sigs.length);
 
       for (const sig of this.sigs) {
-        writer.writeBytes(sig.encryptedSig)
-        writer.writeBytes(sig.dleqProof)
+        writer.writeBytes(sig.encryptedSig);
+        writer.writeBytes(sig.dleqProof);
       }
 
       return writer.toBuffer();
     }
 }
 
-interface Sig {
+interface ISig {
   encryptedSig: Buffer;
   dleqProof: Buffer;
 }

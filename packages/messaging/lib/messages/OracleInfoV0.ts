@@ -1,14 +1,14 @@
 import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 import { MessageType } from "../MessageType";
-import { getTlv } from "../serialize/getTlv"
-import { DlcMessage } from "./DlcMessage";
-import { OracleAnnouncementV0 } from "./OracleAnnouncementV0"
+import { getTlv } from "../serialize/getTlv";
+import { IDlcMessage } from "./DlcMessage";
+import { OracleAnnouncementV0 } from "./OracleAnnouncementV0";
 
 /**
  * OracleInfo contains information about the oracles to be used in
  * executing a DLC.
  */
-export class OracleInfoV0 implements DlcMessage {
+export class OracleInfoV0 implements IDlcMessage {
     public static type = MessageType.OracleInfoV0;
 
     /**
@@ -21,7 +21,7 @@ export class OracleInfoV0 implements DlcMessage {
 
         reader.readBigSize(); // read type
         instance.length = reader.readBigSize();
-        instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader))
+        instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
 
         return instance;
     }
@@ -42,7 +42,7 @@ export class OracleInfoV0 implements DlcMessage {
         const writer = new BufferWriter();
         writer.writeBigSize(this.type);
         writer.writeBigSize(this.length);
-        writer.writeBytes(this.announcement.serialize())
+        writer.writeBytes(this.announcement.serialize());
 
         return writer.toBuffer();
     }
