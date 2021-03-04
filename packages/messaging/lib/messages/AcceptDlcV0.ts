@@ -4,7 +4,7 @@ import { getTlv } from "../serialize/getTlv";
 import { CetAdaptorSignaturesV0 } from "./CetAdaptorSignaturesV0";
 import { IDlcMessage } from "./DlcMessage";
 import { FundingInputV0 } from "./FundingInputV0";
-import { NegotiationFieldsV0 } from "./NegotiationFieldsV0";
+import { NegotiationFields } from "./NegotiationFields";
 
 /**
  * AcceptChannelMessage represents the accept_channel message defined in
@@ -40,7 +40,7 @@ export class AcceptDlcV0 implements IDlcMessage {
         instance.changeSPK = reader.readBytes(changeSPKLen);
         instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
         instance.refundSignature = reader.readBytes(64);
-        instance.negotiationFields = NegotiationFieldsV0.deserialize(getTlv(reader));
+        instance.negotiationFields = NegotiationFields.deserialize(getTlv(reader));
 
         return instance;
     }
@@ -66,7 +66,7 @@ export class AcceptDlcV0 implements IDlcMessage {
 
     public refundSignature: Buffer;
 
-    public negotiationFields: NegotiationFieldsV0;
+    public negotiationFields: NegotiationFields;
 
     /**
      * Serializes the accept_channel message into a Buffer

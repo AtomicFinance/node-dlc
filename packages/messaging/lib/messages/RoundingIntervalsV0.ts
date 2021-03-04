@@ -37,7 +37,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
 
     public length: bigint;
 
-    public intervals: IInterval[];
+    public intervals: IInterval[] = [];
 
     /**
      * Serializes the enum_event_descriptor_v0 message into a Buffer

@@ -4,7 +4,7 @@ export * from "./messages/ContractInfo";
 export * from "./messages/EnumEventDescriptorV0";
 export * from "./messages/FundingInputV0";
 export * from "./messages/FundingSignaturesV0";
-export * from "./messages/NegotiationFieldsV0";
+export * from "./messages/NegotiationFields";
 export * from "./messages/OracleAnnouncementV0";
 export * from "./messages/OracleEventV0";
 export * from "./messages/OracleInfoV0";
