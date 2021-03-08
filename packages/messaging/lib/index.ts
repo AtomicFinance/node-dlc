@@ -1,3 +1,5 @@
+export * from "./MessageType";
+
 export * from "./messages/CetAdaptorSignaturesV0";
 export * from "./messages/ContractDescriptor";
 export * from "./messages/ContractInfo";
