@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "description": "DLC Daemon",
   "scripts": {
+    "start": "npm run build && node dist/index.js",
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
     "lint": "../../node_modules/.bin/tslint --project tsconfig.json --config ../../tslint.json",
     "lint:fix": "../../node_modules/.bin/tslint --fix --project tsconfig.json --config ../../tslint.json",
     "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublish": "npm run build"
+  },
+  "bin": {
+    "dlcd": "./bin/dlcd.sh"
   },
   "keywords": [
     "dlc",
@@ -24,8 +28,10 @@
   "dependencies": {
     "@node-lightning/bufio": "^0.21.1",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1"
-
+    "express": "^4.17.1",
+    "helmet": "^3.23.3",
+    "morgan": "1.10.0",
+    "winston": "3.3.3"
   },
   "publishConfig": {
     "access": "public"
