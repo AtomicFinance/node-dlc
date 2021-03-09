@@ -28,7 +28,7 @@ export class OfferDlcV0 implements IDlcMessage {
         instance.fundingPubKey = reader.readBytes(33);
         const payoutSPKLen = reader.readUInt16BE();
         instance.payoutSPK = reader.readBytes(payoutSPKLen);
-        instance.totalCollateralSatoshis = reader.readUInt64BE();
+        instance.offerCollateralSatoshis = reader.readUInt64BE();
         const fundingInputsLen = reader.readUInt16BE();
 
         for (let i = 0; i < fundingInputsLen; i++) {
@@ -59,7 +59,7 @@ export class OfferDlcV0 implements IDlcMessage {
 
     public payoutSPK: Buffer;
 
-    public totalCollateralSatoshis: bigint;
+    public offerCollateralSatoshis: bigint;
 
     public fundingInputs: FundingInputV0[] = [];
 
@@ -83,7 +83,7 @@ export class OfferDlcV0 implements IDlcMessage {
         writer.writeBytes(this.fundingPubKey);
         writer.writeUInt16BE(this.payoutSPK.length);
         writer.writeBytes(this.payoutSPK);
-        writer.writeUInt64BE(this.totalCollateralSatoshis);
+        writer.writeUInt64BE(this.offerCollateralSatoshis);
         writer.writeUInt16BE(this.fundingInputs.length);
 
         for (const fundingInput of this.fundingInputs) {

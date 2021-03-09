@@ -35,7 +35,7 @@ describe("AcceptDlcV0", () => {
       const instance = new AcceptDlcV0();
 
       instance.tempContractId = tempContractId
-      instance.totalCollateralSatoshis = BigInt(100000000)
+      instance.acceptCollateralSatoshis = BigInt(100000000)
       instance.fundingPubKey = fundingPubKey
       instance.payoutSPK = payoutSPK
       instance.fundingInputs = [
@@ -149,7 +149,7 @@ describe("AcceptDlcV0", () => {
       const instance = AcceptDlcV0.deserialize(buf);
 
       expect(instance.tempContractId).to.deep.equal(tempContractId)
-      expect(Number(instance.totalCollateralSatoshis)).to.equal(100000000)
+      expect(Number(instance.acceptCollateralSatoshis)).to.equal(100000000)
       expect(instance.fundingPubKey).to.deep.equal(fundingPubKey)
       expect(instance.changeSPK).to.deep.equal(changeSPK)
       expect(instance.cetSignatures.serialize().toString('hex')).to.equal(

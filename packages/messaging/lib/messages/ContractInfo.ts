@@ -27,6 +27,8 @@ export abstract class ContractInfo {
 
   public abstract length: bigint;
 
+  public abstract totalCollateral: bigint;
+
   public abstract serialize(): Buffer;
 }
 
@@ -100,8 +102,13 @@ export class ContractInfoV1 implements IDlcMessage {
       reader.readBigSize(); // read type
       instance.length = reader.readBigSize();
       instance.totalCollateral = reader.readUInt64BE();
-      instance.contractDescriptor = ContractDescriptor.deserialize(getTlv(reader));
-      instance.oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
+
+      while (!reader.eof) {
+        const contractDescriptor = ContractDescriptor.deserialize(getTlv(reader));
+        const oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
+
+        instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
+      }
 
       return instance;
   }
@@ -115,9 +122,7 @@ export class ContractInfoV1 implements IDlcMessage {
 
   public totalCollateral: bigint;
 
-  public contractDescriptor: ContractDescriptor;
-
-  public oracleInfo: OracleInfoV0;
+  public contractOraclePairs: IContractOraclePair[] = [];
 
   /**
    * Serializes the contract_info_v0 message into a Buffer
@@ -127,9 +132,18 @@ export class ContractInfoV1 implements IDlcMessage {
       writer.writeBigSize(this.type);
       writer.writeBigSize(this.length);
       writer.writeUInt64BE(this.totalCollateral);
-      writer.writeBytes(this.contractDescriptor.serialize());
-      writer.writeBytes(this.oracleInfo.serialize());
+
+      for (const contractOraclePair of this.contractOraclePairs) {
+        const { contractDescriptor, oracleInfo } = contractOraclePair;
+        writer.writeBytes(contractDescriptor.serialize());
+        writer.writeBytes(oracleInfo.serialize());
+      }
 
       return writer.toBuffer();
   }
+}
+
+interface IContractOraclePair {
+  contractDescriptor: ContractDescriptor;
+  oracleInfo: OracleInfoV0;
 }
