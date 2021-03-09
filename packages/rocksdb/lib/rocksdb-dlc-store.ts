@@ -1,6 +1,6 @@
+import { sha256 } from "@liquality/crypto";
+import { OfferDlcV0 } from "@node-dlc/messaging";
 import { RocksdbBase } from "@node-lightning/gossip-rocksdb";
-import { OfferDlcV0 } from "@node-dlc/messaging"
-import { sha256 } from "@liquality/crypto"
 
 enum Prefix {
     OfferV0 = 40,
@@ -33,12 +33,12 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async saveDlcOffer(dlcOffer: OfferDlcV0): Promise<void> {
-    const value = dlcOffer.serialize()
-    const tempContractId = Buffer.from(sha256(value), 'hex')
+    const value = dlcOffer.serialize();
+    const tempContractId = Buffer.from(sha256(value), "hex");
     const key = Buffer.concat([
       Buffer.from([Prefix.OfferV0]),
       tempContractId
-    ])
+    ]);
     await this._db.put(key, value);
   }
 

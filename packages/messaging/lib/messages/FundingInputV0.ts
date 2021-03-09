@@ -50,6 +50,14 @@ export class FundingInputV0 implements IDlcMessage {
 
     public redeemScript: Buffer;
 
+    public scriptSigLength(): number {
+      if (this.redeemScript.length > 0) {
+        return 1 + this.redeemScript.length;
+      } else {
+        return 0;
+      }
+    }
+
     /**
      * Serializes the funding_input_v0 message into a Buffer
      */

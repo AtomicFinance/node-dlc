@@ -77,7 +77,7 @@ describe("EnumEventDescriptorV0", () => {
 
       instance.fundingPubKey = fundingPubKey
       instance.payoutSPK = payoutSPK
-      instance.totalCollateralSatoshis = BigInt(100000000)
+      instance.offerCollateralSatoshis = BigInt(100000000)
       instance.fundingInputs = [
         FundingInputV0.deserialize(
           Buffer.from(
@@ -279,7 +279,7 @@ describe("EnumEventDescriptorV0", () => {
       )
       expect(instance.fundingPubKey).to.deep.equal(fundingPubKey)
       expect(instance.payoutSPK).to.deep.equal(payoutSPK)
-      expect(Number(instance.totalCollateralSatoshis)).to.equal(100000000)
+      expect(Number(instance.offerCollateralSatoshis)).to.equal(100000000)
       expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
         "fda714" + 
         "3f" + // length

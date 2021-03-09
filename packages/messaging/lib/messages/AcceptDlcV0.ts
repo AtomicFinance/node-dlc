@@ -7,13 +7,10 @@ import { FundingInputV0 } from "./FundingInputV0";
 import { NegotiationFields } from "./NegotiationFields";
 
 /**
- * AcceptChannelMessage represents the accept_channel message defined in
- * BOLT #2 of the Lightning Specification. This message is sent by the
- * receiving node in reply to an open_channel message. This message
- * signals agreement to open a channel with the using the values both
- * message. After this message is received by the initiating peer, the
- * initiating peer will create a funding transaction and send the
- * funding_created message.
+ * AcceptDlc contains information about a node and indicates its
+ * acceptance of the new DLC, as well as its CET and refund
+ * transaction signatures. This is the second step toward creating
+ * the funding transaction and closing transactions.
  */
 export class AcceptDlcV0 implements IDlcMessage {
     public static type = MessageType.AcceptDlcV0;
@@ -28,7 +25,7 @@ export class AcceptDlcV0 implements IDlcMessage {
 
         reader.readUInt16BE(); // read type
         instance.tempContractId = reader.readBytes(32);
-        instance.totalCollateralSatoshis = reader.readUInt64BE();
+        instance.acceptCollateralSatoshis = reader.readUInt64BE();
         instance.fundingPubKey = reader.readBytes(33);
         const payoutSPKLen = reader.readUInt16BE();
         instance.payoutSPK = reader.readBytes(payoutSPKLen);
@@ -52,7 +49,7 @@ export class AcceptDlcV0 implements IDlcMessage {
 
     public tempContractId: Buffer;
 
-    public totalCollateralSatoshis: bigint;
+    public acceptCollateralSatoshis: bigint;
 
     public fundingPubKey: Buffer;
 
@@ -75,7 +72,7 @@ export class AcceptDlcV0 implements IDlcMessage {
         const writer = new BufferWriter();
         writer.writeUInt16BE(this.type);
         writer.writeBytes(this.tempContractId);
-        writer.writeUInt64BE(this.totalCollateralSatoshis);
+        writer.writeUInt64BE(this.acceptCollateralSatoshis);
         writer.writeBytes(this.fundingPubKey);
         writer.writeUInt16BE(this.payoutSPK.length);
         writer.writeBytes(this.payoutSPK);
@@ -93,4 +90,28 @@ export class AcceptDlcV0 implements IDlcMessage {
 
         return writer.toBuffer();
     }
+
+    public withoutSigs(): AcceptDlcWithoutSigs {
+      return new AcceptDlcWithoutSigs(
+        this.tempContractId,
+        this.acceptCollateralSatoshis,
+        this.fundingPubKey,
+        this.payoutSPK,
+        this.fundingInputs,
+        this.changeSPK,
+        this.negotiationFields
+      );
+    }
+}
+
+export class AcceptDlcWithoutSigs {
+  constructor(
+    readonly tempContractId: Buffer,
+    readonly acceptCollateralSatoshis: bigint,
+    readonly fundingPubKey: Buffer,
+    readonly payoutSPK: Buffer,
+    readonly fundingInputs: FundingInputV0[],
+    readonly changeSPK: Buffer,
+    readonly negotiationFields: NegotiationFields
+  ) {}
 }

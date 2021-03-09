@@ -1,10 +1,10 @@
-import { Application } from "express";
 import * as bodyParser from "body-parser";
-import morgan from "morgan";
+import { Application } from "express";
 import * as fs from "fs";
 import { WriteStream } from "fs";
-import * as path from "path";
 import helmet from "helmet";
+import morgan from "morgan";
+import * as path from "path";
 import * as winston from "winston";
 
 export default class Server {
@@ -24,7 +24,7 @@ export default class Server {
   }
 }
 
-process.on("beforeExit", function (err) {
+process.on("beforeExit", function(err) {
   winston.error(JSON.stringify(err));
   console.error(err);
 });
