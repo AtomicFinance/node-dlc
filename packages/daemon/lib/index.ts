@@ -1,44 +1,56 @@
 #!/usr/bin/env node
 
+process.title = "dlcd";
+
+import yargs = require('yargs/yargs');
 import * as dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import { Application } from "express";
-
+import { ConsoleTransport, Logger, LogLevel } from "@node-lightning/logger";
 import Server from "./server";
+
+type Network = 'mainnet' | 'testnet' | 'regtest'
+const networks: ReadonlyArray<Network> = ['mainnet', 'testnet', 'regtest']
+
+const argv: Arguments = yargs(process.argv.slice(2))
+  .usage('Usage:   dlcd [options]             start DLCd')
+  .options({
+    p: { alias: 'port', type: 'number', default: 8575 },
+    n: { alias: 'network', type: 'string', choices: networks, default: 'mainnet' },
+    d: { alias: 'daemon', type: 'boolean', default: false }
+  }).argv;
+
+console.log('argv', argv)
 
 const app: Application = express();
 const server: Server = new Server(app);
-let port: number = 8585;
 
-process.title = "dlcd";
+const logger = new Logger("DLCd");
+logger.transports.push(new ConsoleTransport(console));
+logger.level = LogLevel.Debug;
 
-if (process.argv.indexOf("--help") !== -1
-    || process.argv.indexOf("-h") !== -1) {
-  console.error("See the dlcd docs at: https://github.com/atomicfinance/node-dlc.");
-  process.exit(1);
-  throw new Error("Could not exit.");
+logger.info("DLC Daemon version v0.1.0")
+
+async function setup() {
+  app.listen(argv.port, "localhost", function(err: any) {
+    if (err) return err;
+    logger.info(`Server running on http://localhost:${argv.port}`)
+  });
 }
 
-if (process.argv.indexOf("--version") !== -1
-    || process.argv.indexOf("-v") !== -1) {
-  const pkg = require("../package.json");
-  console.log(pkg.version);
-  process.exit(0);
-  throw new Error("Could not exit.");
-}
+setup()
+  .then(() => {
+    process.stdin.resume()
+  })
+  .catch(err => {
+    logger.error(err)
+    process.exit(1)
+  })
 
-if (process.argv.indexOf("--port") !== -1
-    || process.argv.indexOf("-p") !== -1) {
-  const shortForm = process.argv.indexOf("-p") !== -1;
-  try {
-    port = Number(process.argv[process.argv.indexOf(shortForm ? "-p" : "--port") + 1]);
-  } catch (e) {
-    throw new Error(e);
-  }
+interface Arguments {
+  [x: string]: unknown;
+  p: number;
+  n: string;
+  d: boolean;
 }
-
-app.listen(port, "localhost", function(err: any) {
-  if (err) return err;
-  console.info(`Server running on : http://localhost:${port}`);
-});
