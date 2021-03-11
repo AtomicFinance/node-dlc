@@ -39,7 +39,8 @@ export default class DlcdClient {
       url: endpoint,
       timeout: 1000,
       method,
-      params
+      params,
+      responseType: 'json'
     }
 
     return axios(config)
@@ -61,15 +62,20 @@ export default class DlcdClient {
 
   handleError = (error: AxiosError) => {
     if (error.response) {
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-      throw new Error(error.response.data)
+      if (error.response.data.msg) {
+        console.error(`Error: ${error.response.data.msg}`)
+        process.exit(1)
+      } else {
+        console.log(error.response.status);
+        console.log(error.response.headers);
+        throw new Error(error.response.data)
+      }
     } else if (error.code === 'ECONNREFUSED') {
       console.error(`Error: Could not connect to DLCd server ${this.host}:${this.port}`)
       console.error('Make sure the DLCd server is running and that you are connecting to the correct port')
       process.exit(1)
     } else {
+      console.log('error.message')
       console.log(error.message);
       throw new Error(error.message)
     }

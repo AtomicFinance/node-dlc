@@ -5,28 +5,32 @@ export const command = 'create'
 
 export const describe = 'Create Wallet'
 
-// export const builder = (yargs) => {
-//   return yargs
-//     .option('apikey', {
-//       type: 'string'
-//     })
-// }
-
 export const builder = {
   apiKey: {
     default: ''
   }
 }
 
-// exports.builder = function (yargs) {
-//   return yargs
-//     .option('banana', {
-//       default: 'cool',
-//     })
-//     .option('batman', {
-//       default: 'sad',
-//     });
-// };
+const cipherSeedMessageStart = `
+!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
+
+- - - - - - - - - - - - BEGIN DLCD CIPHER SEED - - - - - - - - - - - -
+`
+
+function formatMnemonic(mnemonic): string {
+  let output = ''
+  const mnemonicArray = mnemonic.split(' ')
+  for (let i = 0; i < mnemonicArray.length; i++) {
+    output += `  ${i < 9 ? ' ' : ''}${i + 1}. ${mnemonicArray[i]}   ${' '.repeat(Math.abs(mnemonicArray[i].length - 8))}${(i + 1) % 4 === 0 ? '\n' : ''}`
+  }
+  return output
+}
+
+const cipherSeedMessageEnd = `
+- - - - - - - - - - - - - END DLCD CIPHER SEED - - - - - - - - - - - - -
+
+!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
+`
 
 export async function handler(argv) {
   const { host, port, apiKey } = argv
@@ -37,5 +41,6 @@ export async function handler(argv) {
   }
   const client = new DlcdClient(host, port, apiKey_)
   const response = await client.post('/wallet/create', { apiKey: apiKey_ })
-  console.log('response', response)
+  const { mnemonic } = response
+  console.info(`${cipherSeedMessageStart}\n${formatMnemonic(mnemonic)}\n${cipherSeedMessageEnd}`)
 }

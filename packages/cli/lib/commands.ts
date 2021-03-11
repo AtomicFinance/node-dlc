@@ -13,6 +13,8 @@ config.open('node-dlc.conf'); // TODO: allow users to pass in their on conf dire
 type Network = 'mainnet' | 'testnet' | 'regtest';
 const networks: ReadonlyArray<Network> = ['mainnet', 'testnet', 'regtest'];
 
+// TODO allow user to pass in api-key on startup
+
 const argv: Arguments = yargs(process.argv.slice(2))
   .usage('Usage:   dlccli [options]             start DLCd')
   .scriptName('dlccli')
@@ -42,4 +44,5 @@ interface Arguments {
   apiKey: string;
   network: Network;
   port: number;
+  host: string;
 }
