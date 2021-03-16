@@ -1,7 +1,7 @@
 {
-  "name": "@node-dlc/cli",
+  "name": "@node-dlc/logger",
   "version": "0.1.0",
-  "description": "DLC Daemon",
+  "description": "DLC Logger",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
     "lint": "../../node_modules/.bin/tslint --project tsconfig.json --config ../../tslint.json",
@@ -9,15 +9,12 @@
     "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublish": "npm run build"
   },
-  "bin": {
-    "dlccli": "./bin/dlccli.sh"
-  },
   "keywords": [
     "dlc",
-    "cli"
+    "logger"
   ],
   "author": "Matthew Black <matthew@atomic.finance>",
-  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/cli",
+  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/logger",
   "license": "MIT",
   "main": "dist/index.js",
   "repository": {
@@ -26,17 +23,7 @@
   },
   "dependencies": {
     "@node-lightning/bufio": "^0.21.1",
-    "axios": "0.21.1",
-    "bcfg": "0.1.6",
-    "bcrypto": "5.4.0",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "find-up": "5.0.0",
-    "fs": "0.0.1-security",
-    "@node-dlc/logger": "^0.1.0"
-  },
-  "devDependencies": {
-    "nock": "13.0.11"
+    "@node-lightning/logger": "0.21.1"
   },
   "publishConfig": {
     "access": "public"

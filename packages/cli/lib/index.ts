@@ -1,1 +1,1 @@
-export * from "./client/dlcdClient"
+export * from "./client/dlcdClient";

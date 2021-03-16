@@ -58,20 +58,20 @@ export class RocksdbWalletStore extends RocksdbBase {
   }
 
   public async findApiKeyHash(): Promise<Buffer> {
-    const key = Buffer.from([Prefix.Wallet])
-    const raw = await this._safeGet<Buffer>(key)
+    const key = Buffer.from([Prefix.Wallet]);
+    const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return raw;
   }
 
   public async saveApiKeyHash(apiKey: Buffer): Promise<void> {
-    const value = Buffer.from(sha256(apiKey), 'hex')
-    const key = Buffer.from([Prefix.ApiKey])
-    await this._db.put(key, value)
+    const value = Buffer.from(sha256(apiKey), "hex");
+    const key = Buffer.from([Prefix.ApiKey]);
+    await this._db.put(key, value);
   }
 
   public async deleteApiKeyHash(): Promise<void> {
-    const key = Buffer.from([Prefix.ApiKey])
-    await this._db.del(key)
+    const key = Buffer.from([Prefix.ApiKey]);
+    await this._db.del(key);
   }
 }

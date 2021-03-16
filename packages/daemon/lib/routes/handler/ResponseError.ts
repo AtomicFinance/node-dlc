@@ -1,9 +1,9 @@
-interface ResponseError extends Error {
+interface IResponseError extends Error {
   status?: number;
 }
 
 export function responseError(status, msg) {
-  var err = new Error(msg) as ResponseError;
+  const err = new Error(msg) as IResponseError;
   err.status = status;
   return err;
 }

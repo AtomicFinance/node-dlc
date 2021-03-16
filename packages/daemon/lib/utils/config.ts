@@ -1,6 +1,6 @@
-import { RocksdbWalletStore } from "@node-dlc/rocksdb";
+import { RocksdbDlcStore, RocksdbWalletStore } from "@node-dlc/rocksdb";
 
-export interface Arguments {
+export interface IArguments {
   [x: string]: unknown;
   network?: string;
   n: string;
@@ -9,16 +9,18 @@ export interface Arguments {
   host?: string;
   h: string;
   loglevel?: string;
+  l: string;
   c: string;
   conf?: string;
   d: string;
   datadir?: string;
 }
 
-export interface DB {
-  wallet: RocksdbWalletStore
+export interface IDB {
+  wallet: RocksdbWalletStore;
+  dlc: RocksdbDlcStore;
 }
 
 export function parseConfig(configData) {
-  return JSON.parse(JSON.stringify(configData))
+  return JSON.parse(JSON.stringify(configData));
 }
