@@ -41,8 +41,12 @@ export class ScriptWitnessV0 {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeUInt16BE(this.length);
-    writer.writeBytes(this.witness);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeBytes(this.witness);
+
+    writer.writeUInt16BE(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

@@ -64,15 +64,19 @@ export class FundingInputV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt64BE(this.inputSerialId);
-    writer.writeUInt16BE(this.prevTx.length);
-    writer.writeBytes(this.prevTx);
-    writer.writeUInt32BE(this.prevTxVout);
-    writer.writeUInt32BE(this.sequence);
-    writer.writeUInt16BE(this.maxWitnessLen);
-    writer.writeUInt16BE(this.redeemScript.length);
-    writer.writeBytes(this.redeemScript);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeUInt64BE(this.inputSerialId);
+    dataWriter.writeUInt16BE(this.prevTx.length);
+    dataWriter.writeBytes(this.prevTx);
+    dataWriter.writeUInt32BE(this.prevTxVout);
+    dataWriter.writeUInt32BE(this.sequence);
+    dataWriter.writeUInt16BE(this.maxWitnessLen);
+    dataWriter.writeUInt16BE(this.redeemScript.length);
+    dataWriter.writeBytes(this.redeemScript);
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

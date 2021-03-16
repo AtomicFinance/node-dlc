@@ -66,17 +66,21 @@ export class OracleEventV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt16BE(this.oracleNonces.length);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeUInt16BE(this.oracleNonces.length);
 
     for (const nonce of this.oracleNonces) {
-      writer.writeBytes(nonce);
+      dataWriter.writeBytes(nonce);
     }
 
-    writer.writeUInt32BE(this.eventMaturityEpoch);
-    writer.writeBytes(this.eventDescriptor.serialize());
-    writer.writeBigSize(this.eventId.length);
-    writer.writeBytes(this.eventId);
+    dataWriter.writeUInt32BE(this.eventMaturityEpoch);
+    dataWriter.writeBytes(this.eventDescriptor.serialize());
+    dataWriter.writeBigSize(this.eventId.length);
+    dataWriter.writeBytes(this.eventId);
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

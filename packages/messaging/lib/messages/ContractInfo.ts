@@ -77,10 +77,15 @@ export class ContractInfoV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt64BE(this.totalCollateral);
-    writer.writeBytes(this.contractDescriptor.serialize());
-    writer.writeBytes(this.oracleInfo.serialize());
+
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeUInt64BE(this.totalCollateral);
+    dataWriter.writeBytes(this.contractDescriptor.serialize());
+    dataWriter.writeBytes(this.oracleInfo.serialize());
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
@@ -105,6 +110,7 @@ export class ContractInfoV1 implements IDlcMessage {
     instance.length = reader.readBigSize();
     instance.totalCollateral = reader.readUInt64BE();
 
+    reader.readBigSize(); // read num_disjoint_events
     while (!reader.eof) {
       const contractDescriptor = ContractDescriptor.deserialize(getTlv(reader));
       const oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
@@ -132,14 +138,19 @@ export class ContractInfoV1 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt64BE(this.totalCollateral);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeUInt64BE(this.totalCollateral);
+    dataWriter.writeBigSize(this.contractOraclePairs.length);
 
     for (const contractOraclePair of this.contractOraclePairs) {
       const { contractDescriptor, oracleInfo } = contractOraclePair;
-      writer.writeBytes(contractDescriptor.serialize());
-      writer.writeBytes(oracleInfo.serialize());
+      dataWriter.writeBytes(contractDescriptor.serialize());
+      dataWriter.writeBytes(oracleInfo.serialize());
     }
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { OfferDlcV0 } from '../../lib/messages/OfferDlcV0';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import { FundingInputV0 } from '../../lib/messages/FundingInputV0';
+import { OfferDlcV0 } from '../../lib/messages/OfferDlcV0';
 
 describe('EnumEventDescriptorV0', () => {
   const contractFlags = Buffer.from('00', 'hex');
@@ -79,7 +79,7 @@ describe('EnumEventDescriptorV0', () => {
         FundingInputV0.deserialize(
           Buffer.from(
             'fda714' +
-              '39' + // length
+              '3f' + // length
               '000000000000fa51' + // input_serial_id
               '0029' + // prevtx_len
               '02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000' + // prevtx
@@ -145,7 +145,7 @@ describe('EnumEventDescriptorV0', () => {
         "0001" + // funding_inputs_len
         
         "fda714" + // type funding_input
-        "39" + // length
+        "3f" + // length
         "000000000000fa51" + // input_serial_id
         "0029" + // prevtx_len
         "02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000" + // prevtx

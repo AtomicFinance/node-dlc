@@ -26,18 +26,19 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
+    "@node-dlc/rocksdb": "^0.1.0",
     "@node-lightning/bufio": "^0.21.1",
     "@node-lightning/logger": "0.21.1",
     "bcfg": "0.1.6",
+    "bip39": "^3.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "helmet": "^3.23.3",
     "morgan": "1.10.0",
-    "winston": "3.3.3",
-    "yargs": "^16.2.0",
-    "@node-dlc/rocksdb": "^0.1.0",
+    "os": "0.1.1",
     "path": "0.12.7",
-    "os": "0.1.1"
+    "winston": "3.3.3",
+    "yargs": "^16.2.0"
   },
   "publishConfig": {
     "access": "public"
