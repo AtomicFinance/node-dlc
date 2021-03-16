@@ -1,4 +1,4 @@
-import { FundingInputV0 } from "@node-dlc/messaging";
+import { FundingInputV0 } from '@node-dlc/messaging';
 
 export class DualFundingTxFinalizer {
   constructor(
@@ -8,11 +8,13 @@ export class DualFundingTxFinalizer {
     readonly acceptInputs: FundingInputV0[],
     readonly acceptPayoutSPK: Buffer,
     readonly acceptChangeSPK: Buffer,
-    readonly feeRate: bigint
+    readonly feeRate: bigint,
   ) {}
 
   private computeFees(
-    inputs: FundingInputV0[], payoutSPK: Buffer, changeSPK: Buffer
+    inputs: FundingInputV0[],
+    payoutSPK: Buffer,
+    changeSPK: Buffer,
   ): IFees {
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
     const futureFeeWeight = 249 + 4 * payoutSPK.length;
@@ -33,13 +35,17 @@ export class DualFundingTxFinalizer {
 
   private getOfferFees(): IFees {
     return this.computeFees(
-      this.offerInputs, this.offerPayoutSPK, this.offerChangeSPK
+      this.offerInputs,
+      this.offerPayoutSPK,
+      this.offerChangeSPK,
     );
   }
 
   private getAcceptFees(): IFees {
     return this.computeFees(
-      this.acceptInputs, this.acceptPayoutSPK, this.acceptChangeSPK
+      this.acceptInputs,
+      this.acceptPayoutSPK,
+      this.acceptChangeSPK,
     );
   }
 

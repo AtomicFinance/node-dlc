@@ -1,6 +1,6 @@
-import { MessageType } from "../MessageType";
+import { MessageType } from '../MessageType';
 
 export interface IDlcMessage {
-    type: MessageType;
-    serialize(): Buffer;
+  type: MessageType;
+  serialize(): Buffer;
 }

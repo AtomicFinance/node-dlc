@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 /**
  * ScriptWitness is the data for a witness element in a witness stack.
@@ -7,43 +7,43 @@ import { BufferReader, BufferWriter } from "@node-lightning/bufio";
  * data.
  */
 export class ScriptWitnessV0 {
-    /**
-     * Deserializes an script_witness_v0 message
-     * @param buf
-     */
-    public static deserialize(buf: Buffer): ScriptWitnessV0 {
-        const instance = new ScriptWitnessV0();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes an script_witness_v0 message
+   * @param buf
+   */
+  public static deserialize(buf: Buffer): ScriptWitnessV0 {
+    const instance = new ScriptWitnessV0();
+    const reader = new BufferReader(buf);
 
-        instance.length = reader.readUInt16BE(); // need to fix this
-        instance.witness = reader.readBytes(instance.length);
+    instance.length = reader.readUInt16BE(); // need to fix this
+    instance.witness = reader.readBytes(instance.length);
 
-        return instance;
-    }
+    return instance;
+  }
 
-    public static getWitness(reader: BufferReader): Buffer {
-      const length = reader.readUInt16BE();
-      const body = reader.readBytes(Number(length));
+  public static getWitness(reader: BufferReader): Buffer {
+    const length = reader.readUInt16BE();
+    const body = reader.readBytes(Number(length));
 
-      const writer = new BufferWriter();
-      writer.writeUInt16BE(length);
-      writer.writeBytes(body);
+    const writer = new BufferWriter();
+    writer.writeUInt16BE(length);
+    writer.writeBytes(body);
 
-      return writer.toBuffer();
-    }
+    return writer.toBuffer();
+  }
 
-    public length: number;
+  public length: number;
 
-    public witness: Buffer;
+  public witness: Buffer;
 
-    /**
-     * Serializes the script_witness_v0 message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeUInt16BE(this.length);
-        writer.writeBytes(this.witness);
+  /**
+   * Serializes the script_witness_v0 message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeUInt16BE(this.length);
+    writer.writeBytes(this.witness);
 
-        return writer.toBuffer();
-    }
+    return writer.toBuffer();
+  }
 }

@@ -1,4 +1,4 @@
-import { RocksdbDlcStore, RocksdbWalletStore } from "@node-dlc/rocksdb";
+import { RocksdbDlcStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
 
 export interface IArguments {
   [x: string]: unknown;

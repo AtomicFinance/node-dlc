@@ -1,8 +1,8 @@
-import { Logger } from "@node-lightning/logger";
-import { NextFunction, Request, Response } from "express";
-import { version } from "../../../package.json";
-import { IArguments, IDB } from "../../utils/config";
-import BaseRoutes from "./base";
+import { Logger } from '@node-lightning/logger';
+import { NextFunction, Request, Response } from 'express';
+import { version } from '../../../package.json';
+import { IArguments, IDB } from '../../utils/config';
+import BaseRoutes from './base';
 
 export default class InfoRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger) {
@@ -24,7 +24,7 @@ export default class InfoRoutes extends BaseRoutes {
       version,
       num_dlc_offers: dlcOffers.length,
       num_dlc_accepts: dlcAccepts.length,
-      num_dlc_signs: dlcSigns.length
+      num_dlc_signs: dlcSigns.length,
     });
   }
 }

@@ -1,9 +1,9 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
-import { MessageType } from "../MessageType";
-import { getTlv } from "../serialize/getTlv";
-import { ContractDescriptor } from "./ContractDescriptor";
-import { IDlcMessage } from "./DlcMessage";
-import { OracleInfoV0 } from "./OracleInfoV0";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { MessageType } from '../MessageType';
+import { getTlv } from '../serialize/getTlv';
+import { ContractDescriptor } from './ContractDescriptor';
+import { IDlcMessage } from './DlcMessage';
+import { OracleInfoV0 } from './OracleInfoV0';
 
 export abstract class ContractInfo {
   public static deserialize(buf: Buffer): ContractInfoV0 | ContractInfoV1 {
@@ -18,7 +18,7 @@ export abstract class ContractInfo {
         return ContractInfoV1.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`
+          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
         );
     }
   }
@@ -37,51 +37,53 @@ export abstract class ContractInfo {
  * their corresponding payouts, and the oracles to be used.
  */
 export class ContractInfoV0 implements IDlcMessage {
-    public static type = MessageType.ContractInfoV0;
+  public static type = MessageType.ContractInfoV0;
 
-    /**
-     * Deserializes an contract_info_v0 message
-     * @param buf
-     */
-    public static deserialize(buf: Buffer): ContractInfoV0 {
-        const instance = new ContractInfoV0();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes an contract_info_v0 message
+   * @param buf
+   */
+  public static deserialize(buf: Buffer): ContractInfoV0 {
+    const instance = new ContractInfoV0();
+    const reader = new BufferReader(buf);
 
-        reader.readBigSize(); // read type
-        instance.length = reader.readBigSize();
-        instance.totalCollateral = reader.readUInt64BE();
-        instance.contractDescriptor = ContractDescriptor.deserialize(getTlv(reader));
-        instance.oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+    instance.totalCollateral = reader.readUInt64BE();
+    instance.contractDescriptor = ContractDescriptor.deserialize(
+      getTlv(reader),
+    );
+    instance.oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
 
-        return instance;
-    }
+    return instance;
+  }
 
-    /**
-     * The type for contract_info_v0 message. contract_info_v0 = 55342
-     */
-    public type = ContractInfoV0.type;
+  /**
+   * The type for contract_info_v0 message. contract_info_v0 = 55342
+   */
+  public type = ContractInfoV0.type;
 
-    public length: bigint;
+  public length: bigint;
 
-    public totalCollateral: bigint;
+  public totalCollateral: bigint;
 
-    public contractDescriptor: ContractDescriptor;
+  public contractDescriptor: ContractDescriptor;
 
-    public oracleInfo: OracleInfoV0;
+  public oracleInfo: OracleInfoV0;
 
-    /**
-     * Serializes the contract_info_v0 message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeBigSize(this.type);
-        writer.writeBigSize(this.length);
-        writer.writeUInt64BE(this.totalCollateral);
-        writer.writeBytes(this.contractDescriptor.serialize());
-        writer.writeBytes(this.oracleInfo.serialize());
+  /**
+   * Serializes the contract_info_v0 message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeUInt64BE(this.totalCollateral);
+    writer.writeBytes(this.contractDescriptor.serialize());
+    writer.writeBytes(this.oracleInfo.serialize());
 
-        return writer.toBuffer();
-    }
+    return writer.toBuffer();
+  }
 }
 
 /**
@@ -96,21 +98,21 @@ export class ContractInfoV1 implements IDlcMessage {
    * @param buf
    */
   public static deserialize(buf: Buffer): ContractInfoV1 {
-      const instance = new ContractInfoV1();
-      const reader = new BufferReader(buf);
+    const instance = new ContractInfoV1();
+    const reader = new BufferReader(buf);
 
-      reader.readBigSize(); // read type
-      instance.length = reader.readBigSize();
-      instance.totalCollateral = reader.readUInt64BE();
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+    instance.totalCollateral = reader.readUInt64BE();
 
-      while (!reader.eof) {
-        const contractDescriptor = ContractDescriptor.deserialize(getTlv(reader));
-        const oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
+    while (!reader.eof) {
+      const contractDescriptor = ContractDescriptor.deserialize(getTlv(reader));
+      const oracleInfo = OracleInfoV0.deserialize(getTlv(reader));
 
-        instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
-      }
+      instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
+    }
 
-      return instance;
+    return instance;
   }
 
   /**
@@ -128,18 +130,18 @@ export class ContractInfoV1 implements IDlcMessage {
    * Serializes the contract_info_v0 message into a Buffer
    */
   public serialize(): Buffer {
-      const writer = new BufferWriter();
-      writer.writeBigSize(this.type);
-      writer.writeBigSize(this.length);
-      writer.writeUInt64BE(this.totalCollateral);
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeUInt64BE(this.totalCollateral);
 
-      for (const contractOraclePair of this.contractOraclePairs) {
-        const { contractDescriptor, oracleInfo } = contractOraclePair;
-        writer.writeBytes(contractDescriptor.serialize());
-        writer.writeBytes(oracleInfo.serialize());
-      }
+    for (const contractOraclePair of this.contractOraclePairs) {
+      const { contractDescriptor, oracleInfo } = contractOraclePair;
+      writer.writeBytes(contractDescriptor.serialize());
+      writer.writeBytes(oracleInfo.serialize());
+    }
 
-      return writer.toBuffer();
+    return writer.toBuffer();
   }
 }
 

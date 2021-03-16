@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 export function getTlv(reader: BufferReader): Buffer {
   const type = reader.readBigSize();
