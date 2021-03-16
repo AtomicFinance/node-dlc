@@ -1,9 +1,9 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
-import { MessageType } from "../MessageType";
-import { getTlv } from "../serialize/getTlv";
-import { CetAdaptorSignaturesV0 } from "./CetAdaptorSignaturesV0";
-import { IDlcMessage } from "./DlcMessage";
-import { FundingSignaturesV0 } from "./FundingSignaturesV0";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { MessageType } from '../MessageType';
+import { getTlv } from '../serialize/getTlv';
+import { CetAdaptorSignaturesV0 } from './CetAdaptorSignaturesV0';
+import { IDlcMessage } from './DlcMessage';
+import { FundingSignaturesV0 } from './FundingSignaturesV0';
 
 /**
  * SignDlc gives all of the initiator's signatures, which allows the
@@ -11,49 +11,51 @@ import { FundingSignaturesV0 } from "./FundingSignaturesV0";
  * fully committed to all closing transactions.
  */
 export class SignDlcV0 implements IDlcMessage {
-    public static type = MessageType.SignDlcV0;
+  public static type = MessageType.SignDlcV0;
 
-    /**
-     * Deserializes an sign_dlc_v0 message
-     * @param buf
-     */
-    public static deserialize(buf: Buffer): SignDlcV0 {
-        const instance = new SignDlcV0();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes an sign_dlc_v0 message
+   * @param buf
+   */
+  public static deserialize(buf: Buffer): SignDlcV0 {
+    const instance = new SignDlcV0();
+    const reader = new BufferReader(buf);
 
-        reader.readUInt16BE(); // read type
-        instance.contractId = reader.readBytes(32);
-        instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
-        instance.refundSignature = reader.readBytes(64);
-        instance.fundingSignatures = FundingSignaturesV0.deserialize(getTlv(reader));
+    reader.readUInt16BE(); // read type
+    instance.contractId = reader.readBytes(32);
+    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
+    instance.refundSignature = reader.readBytes(64);
+    instance.fundingSignatures = FundingSignaturesV0.deserialize(
+      getTlv(reader),
+    );
 
-        return instance;
-    }
+    return instance;
+  }
 
-    /**
-     * The type for sign_dlc_v0 message. sign_dlc_v0 = 42782
-     */
-    public type = SignDlcV0.type;
+  /**
+   * The type for sign_dlc_v0 message. sign_dlc_v0 = 42782
+   */
+  public type = SignDlcV0.type;
 
-    public contractId: Buffer;
+  public contractId: Buffer;
 
-    public cetSignatures: CetAdaptorSignaturesV0;
+  public cetSignatures: CetAdaptorSignaturesV0;
 
-    public refundSignature: Buffer;
+  public refundSignature: Buffer;
 
-    public fundingSignatures: FundingSignaturesV0;
+  public fundingSignatures: FundingSignaturesV0;
 
-    /**
-     * Serializes the sign_dlc_v0 message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeUInt16BE(this.type);
-        writer.writeBytes(this.contractId);
-        writer.writeBytes(this.cetSignatures.serialize());
-        writer.writeBytes(this.refundSignature);
-        writer.writeBytes(this.fundingSignatures.serialize());
+  /**
+   * Serializes the sign_dlc_v0 message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeUInt16BE(this.type);
+    writer.writeBytes(this.contractId);
+    writer.writeBytes(this.cetSignatures.serialize());
+    writer.writeBytes(this.refundSignature);
+    writer.writeBytes(this.fundingSignatures.serialize());
 
-        return writer.toBuffer();
-    }
+    return writer.toBuffer();
+  }
 }

@@ -1,11 +1,13 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
-import { MessageType } from "../MessageType";
-import { getTlv } from "../serialize/getTlv";
-import { IDlcMessage } from "./DlcMessage";
-import { RoundingIntervalsV0 } from "./RoundingIntervalsV0";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { MessageType } from '../MessageType';
+import { getTlv } from '../serialize/getTlv';
+import { IDlcMessage } from './DlcMessage';
+import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
 
 export abstract class NegotiationFields {
-  public static deserialize(buf: Buffer): NegotiationFieldsV0 | NegotiationFieldsV1 | NegotiationFieldsV2 {
+  public static deserialize(
+    buf: Buffer,
+  ): NegotiationFieldsV0 | NegotiationFieldsV1 | NegotiationFieldsV2 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
@@ -19,7 +21,7 @@ export abstract class NegotiationFields {
         return NegotiationFieldsV2.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be NegotiationFieldsV0, NegotiationFieldsV1 or NegotiationFieldsV2`
+          `Payout function TLV type must be NegotiationFieldsV0, NegotiationFieldsV1 or NegotiationFieldsV2`,
         );
     }
   }
@@ -36,39 +38,39 @@ export abstract class NegotiationFields {
  * which are taken into account during DLC construction.
  */
 export class NegotiationFieldsV0 implements IDlcMessage {
-    public static type = MessageType.NegotiationFieldsV0;
+  public static type = MessageType.NegotiationFieldsV0;
 
-    /**
-     * Deserializes an negotiation_fields_v0 message
-     * @param buf
-     */
-    public static deserialize(buf: Buffer): NegotiationFieldsV0 {
-        const instance = new NegotiationFieldsV0();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes an negotiation_fields_v0 message
+   * @param buf
+   */
+  public static deserialize(buf: Buffer): NegotiationFieldsV0 {
+    const instance = new NegotiationFieldsV0();
+    const reader = new BufferReader(buf);
 
-        reader.readBigSize(); // read type
-        instance.length = reader.readBigSize();
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
 
-        return instance;
-    }
+    return instance;
+  }
 
-    /**
-     * The type for negotiation_fields_v0 message. negotiation_fields_v0 = 55334
-     */
-    public type = NegotiationFieldsV0.type;
+  /**
+   * The type for negotiation_fields_v0 message. negotiation_fields_v0 = 55334
+   */
+  public type = NegotiationFieldsV0.type;
 
-    public length: bigint;
+  public length: bigint;
 
-    /**
-     * Serializes the negotiation_fields_v0 message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeBigSize(this.type);
-        writer.writeBigSize(this.length);
+  /**
+   * Serializes the negotiation_fields_v0 message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
 
-        return writer.toBuffer();
-    }
+    return writer.toBuffer();
+  }
 }
 
 /**
@@ -83,14 +85,16 @@ export class NegotiationFieldsV1 implements IDlcMessage {
    * @param buf
    */
   public static deserialize(buf: Buffer): NegotiationFieldsV1 {
-      const instance = new NegotiationFieldsV1();
-      const reader = new BufferReader(buf);
+    const instance = new NegotiationFieldsV1();
+    const reader = new BufferReader(buf);
 
-      reader.readBigSize(); // read type
-      instance.length = reader.readBigSize();
-      instance.roundingIntervals = RoundingIntervalsV0.deserialize(getTlv(reader));
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
+      getTlv(reader),
+    );
 
-      return instance;
+    return instance;
   }
 
   /**
@@ -106,12 +110,12 @@ export class NegotiationFieldsV1 implements IDlcMessage {
    * Serializes the negotiation_fields_v1 message into a Buffer
    */
   public serialize(): Buffer {
-      const writer = new BufferWriter();
-      writer.writeBigSize(this.type);
-      writer.writeBigSize(this.length);
-      writer.writeBytes(this.roundingIntervals.serialize());
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeBytes(this.roundingIntervals.serialize());
 
-      return writer.toBuffer();
+    return writer.toBuffer();
   }
 }
 
@@ -127,18 +131,20 @@ export class NegotiationFieldsV2 implements IDlcMessage {
    * @param buf
    */
   public static deserialize(buf: Buffer): NegotiationFieldsV2 {
-      const instance = new NegotiationFieldsV2();
-      const reader = new BufferReader(buf);
+    const instance = new NegotiationFieldsV2();
+    const reader = new BufferReader(buf);
 
-      reader.readBigSize(); // read type
-      instance.length = reader.readBigSize();
-      reader.readBigSize(); // num_disjoint_events
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+    reader.readBigSize(); // num_disjoint_events
 
-      while (!reader.eof) {
-        instance.negotiationFieldsList.push(NegotiationFields.deserialize(getTlv(reader)));
-      }
+    while (!reader.eof) {
+      instance.negotiationFieldsList.push(
+        NegotiationFields.deserialize(getTlv(reader)),
+      );
+    }
 
-      return instance;
+    return instance;
   }
 
   /**
@@ -154,15 +160,15 @@ export class NegotiationFieldsV2 implements IDlcMessage {
    * Serializes the negotiation_fields_v2 message into a Buffer
    */
   public serialize(): Buffer {
-      const writer = new BufferWriter();
-      writer.writeBigSize(this.type);
-      writer.writeBigSize(this.length);
-      writer.writeBigSize(this.negotiationFieldsList.length);
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeBigSize(this.negotiationFieldsList.length);
 
-      for (const negotiationFields of this.negotiationFieldsList) {
-        writer.writeBytes(negotiationFields.serialize());
-      }
+    for (const negotiationFields of this.negotiationFieldsList) {
+      writer.writeBytes(negotiationFields.serialize());
+    }
 
-      return writer.toBuffer();
+    return writer.toBuffer();
   }
 }

@@ -1,14 +1,14 @@
 // tslint:disable: no-unused-expression
 
-import { OfferDlcV0, AcceptDlcV0, SignDlcV0 } from "@node-dlc/messaging"
-import { expect } from "chai";
-import { RocksdbDlcStore } from "../lib/rocksdb-dlc-store";
-import { sha256 } from "@liquality/crypto"
-import * as util from "./rocksdb";
-import { xor } from "@node-lightning/crypto";
-import { DlcTxBuilder } from "@node-dlc/core"
+import { OfferDlcV0, AcceptDlcV0, SignDlcV0 } from '@node-dlc/messaging';
+import { expect } from 'chai';
+import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
+import { sha256 } from '@liquality/crypto';
+import * as util from './rocksdb';
+import { xor } from '@node-lightning/crypto';
+import { DlcTxBuilder } from '@node-dlc/core';
 
-describe("RocksdbGossipStore", () => {
+describe('RocksdbGossipStore', () => {
   let sut: RocksdbDlcStore;
 
   const offerDlcHex = Buffer.from(
@@ -116,12 +116,12 @@ describe("RocksdbGossipStore", () => {
 
   const acceptDlc = AcceptDlcV0.deserialize(acceptDlcHex);
 
-  const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex')
+  const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex');
 
-  const txBuilder = new DlcTxBuilder(offerDlc, acceptDlc.withoutSigs())
-  const tx = txBuilder.buildFundingTransaction()
-  const fundingTxid = tx.txId.serialize()
-  const contractId = xor(fundingTxid, tempContractId)
+  const txBuilder = new DlcTxBuilder(offerDlc, acceptDlc.withoutSigs());
+  const tx = txBuilder.buildFundingTransaction();
+  const fundingTxid = tx.txId.serialize();
+  const contractId = xor(fundingTxid, tempContractId);
 
   const signDlcHex = Buffer.from(
     "a71e" + // sign_dlc_v0
@@ -150,83 +150,83 @@ describe("RocksdbGossipStore", () => {
   const signDlc = SignDlcV0.deserialize(signDlcHex);
 
   before(async () => {
-    util.rmdir(".testdb");
-    sut = new RocksdbDlcStore("./.testdb/nested/dir");
+    util.rmdir('.testdb');
+    sut = new RocksdbDlcStore('./.testdb/nested/dir');
     await sut.open();
   });
 
   after(async () => {
     await sut.close();
-    util.rmdir(".testdb");
+    util.rmdir('.testdb');
   });
 
-  describe("save dlc_offer", () => {
-    it("should save dlc_offer", async () => {
-      await sut.saveDlcOffer(offerDlc)
-    })
-  })
-
-  describe("find dlc_offer by tempContractId", () => {
-    it("should return the dlc_offer object", async () => {
-      const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex')
-      const actual = await sut.findDlcOffer(tempContractId)
-      expect(actual).to.deep.equal(offerDlc)
-    })
-  })
-
-  describe("delete dlc_offer", () => {
-    it("should delete dlc_offer", async () => {
-      const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex')
-
-      await sut.deleteDlcOffer(tempContractId)
-
-      const actual = await sut.findDlcOffer(tempContractId)
-      expect(actual).to.be.undefined
+  describe('save dlc_offer', () => {
+    it('should save dlc_offer', async () => {
+      await sut.saveDlcOffer(offerDlc);
     });
-  })
+  });
 
-  describe("save dlc_accept", () => {
-    it("should save dlc_accept", async () => {
-      await sut.saveDlcOffer(offerDlc)
-      await sut.saveDlcAccept(acceptDlc)
-    })
-  })
-
-  describe("find dlc_accept by contractId", () => {
-    it("should return the dlc_accept object", async () => {
-      const actual = await sut.findDlcAccept(contractId)
-      expect(actual).to.deep.equal(acceptDlc)
-    })
-  })
-
-  describe("delete dlc_offer", () => {
-    it("should delete dlc_offer", async () => {
-      await sut.deleteDlcOffer(contractId)
-
-      const actual = await sut.findDlcOffer(contractId)
-      expect(actual).to.be.undefined
+  describe('find dlc_offer by tempContractId', () => {
+    it('should return the dlc_offer object', async () => {
+      const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex');
+      const actual = await sut.findDlcOffer(tempContractId);
+      expect(actual).to.deep.equal(offerDlc);
     });
-  })
+  });
 
-  describe("save dlc_sign", () => {
-    it("should save dlc_sign", async () => {
-      await sut.saveDlcSign(signDlc)
-    })
-  })
+  describe('delete dlc_offer', () => {
+    it('should delete dlc_offer', async () => {
+      const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex');
 
-  describe("find dlc_sign by contractId", () => {
-    it("should return the dlc_sign object", async () => {
-      const actual = await sut.findDlcSign(signDlc.contractId)
-      expect(actual).to.deep.equal(signDlc)
-    })
-  })
+      await sut.deleteDlcOffer(tempContractId);
 
-  describe("delete dlc_sign", () => {
-    it("should delete dlc_sign", async () => {
-      await sut.deleteDlcSign(signDlc.contractId)
-
-      const actual = await sut.findDlcSign(signDlc.contractId)
-      expect(actual).to.be.undefined
+      const actual = await sut.findDlcOffer(tempContractId);
+      expect(actual).to.be.undefined;
     });
-  })
+  });
+
+  describe('save dlc_accept', () => {
+    it('should save dlc_accept', async () => {
+      await sut.saveDlcOffer(offerDlc);
+      await sut.saveDlcAccept(acceptDlc);
+    });
+  });
+
+  describe('find dlc_accept by contractId', () => {
+    it('should return the dlc_accept object', async () => {
+      const actual = await sut.findDlcAccept(contractId);
+      expect(actual).to.deep.equal(acceptDlc);
+    });
+  });
+
+  describe('delete dlc_offer', () => {
+    it('should delete dlc_offer', async () => {
+      await sut.deleteDlcOffer(contractId);
+
+      const actual = await sut.findDlcOffer(contractId);
+      expect(actual).to.be.undefined;
+    });
+  });
+
+  describe('save dlc_sign', () => {
+    it('should save dlc_sign', async () => {
+      await sut.saveDlcSign(signDlc);
+    });
+  });
+
+  describe('find dlc_sign by contractId', () => {
+    it('should return the dlc_sign object', async () => {
+      const actual = await sut.findDlcSign(signDlc.contractId);
+      expect(actual).to.deep.equal(signDlc);
+    });
+  });
+
+  describe('delete dlc_sign', () => {
+    it('should delete dlc_sign', async () => {
+      await sut.deleteDlcSign(signDlc.contractId);
+
+      const actual = await sut.findDlcSign(signDlc.contractId);
+      expect(actual).to.be.undefined;
+    });
+  });
 });

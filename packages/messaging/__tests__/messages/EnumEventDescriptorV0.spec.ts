@@ -1,23 +1,17 @@
-import { expect } from "chai";
-import { EnumEventDescriptorV0 } from "../../lib/messages/EnumEventDescriptorV0";
+import { expect } from 'chai';
+import { EnumEventDescriptorV0 } from '../../lib/messages/EnumEventDescriptorV0';
 
-describe("EnumEventDescriptorV0", () => {
-  const outcomeOne = Buffer.from(
-    "64756d6d7931",
-    "hex",
-  )
+describe('EnumEventDescriptorV0', () => {
+  const outcomeOne = Buffer.from('64756d6d7931', 'hex');
 
-  const outcomeTwo = Buffer.from(
-    "64756d6d7932",
-    "hex"
-  )
+  const outcomeTwo = Buffer.from('64756d6d7932', 'hex');
 
-  describe("serialize", () => {
-    it("serializes", () => {
+  describe('serialize', () => {
+    it('serializes', () => {
       const instance = new EnumEventDescriptorV0();
 
-      instance.length = BigInt(16)
-      instance.outcomes = [ outcomeOne, outcomeTwo ]
+      instance.length = BigInt(16);
+      instance.outcomes = [outcomeOne, outcomeTwo];
 
       expect(instance.serialize().toString("hex")).to.equal(
         "fdd806" + // type
@@ -31,8 +25,8 @@ describe("EnumEventDescriptorV0", () => {
     });
   });
 
-  describe("deserialize", () => {
-    it("deserializes", () => {
+  describe('deserialize', () => {
+    it('deserializes', () => {
       const buf = Buffer.from(
         "fdd806" + // type
         "10" + // length
@@ -46,10 +40,10 @@ describe("EnumEventDescriptorV0", () => {
 
       const instance = EnumEventDescriptorV0.deserialize(buf);
 
-      expect(Number(instance.outcomes[0].length)).to.equal(outcomeOne.length)
-      expect(instance.outcomes[0]).to.deep.equal(outcomeOne)
-      expect(Number(instance.outcomes[1].length)).to.equal(outcomeTwo.length)
-      expect(instance.outcomes[1]).to.deep.equal(outcomeTwo)
+      expect(Number(instance.outcomes[0].length)).to.equal(outcomeOne.length);
+      expect(instance.outcomes[0]).to.deep.equal(outcomeOne);
+      expect(Number(instance.outcomes[1].length)).to.equal(outcomeTwo.length);
+      expect(instance.outcomes[1]).to.deep.equal(outcomeTwo);
     });
   });
 });

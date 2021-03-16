@@ -1,8 +1,8 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
-import { MessageType } from "../MessageType";
-import { getTlv } from "../serialize/getTlv";
-import { IDlcMessage } from "./DlcMessage";
-import { EnumEventDescriptorV0 } from "./EnumEventDescriptorV0";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { MessageType } from '../MessageType';
+import { getTlv } from '../serialize/getTlv';
+import { IDlcMessage } from './DlcMessage';
+import { EnumEventDescriptorV0 } from './EnumEventDescriptorV0';
 
 /**
  * For users to be able to create DLCs based on a given event, they also
@@ -17,65 +17,67 @@ import { EnumEventDescriptorV0 } from "./EnumEventDescriptorV0";
  *     the event by the oracle
  */
 export class OracleEventV0 implements IDlcMessage {
-    public static type = MessageType.OracleEventV0;
+  public static type = MessageType.OracleEventV0;
 
-    /**
-     * Deserializes an oracle_event message
-     * @param buf
-     */
-    public static deserialize(buf: Buffer): OracleEventV0 {
-        const instance = new OracleEventV0();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes an oracle_event message
+   * @param buf
+   */
+  public static deserialize(buf: Buffer): OracleEventV0 {
+    const instance = new OracleEventV0();
+    const reader = new BufferReader(buf);
 
-        reader.readBigSize(); // read type
-        instance.length = reader.readBigSize();
-        const nonceCount = reader.readUInt16BE();
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+    const nonceCount = reader.readUInt16BE();
 
-        for (let i = 0; i < nonceCount; i++) {
-          instance.oracleNonces.push(reader.readBytes(32));
-        }
-
-        instance.eventMaturityEpoch = reader.readUInt32BE();
-        instance.eventDescriptor = EnumEventDescriptorV0.deserialize(getTlv(reader));
-        const eventIdLength = reader.readBigSize();
-        instance.eventId = reader.readBytes(Number(eventIdLength));
-
-        return instance;
+    for (let i = 0; i < nonceCount; i++) {
+      instance.oracleNonces.push(reader.readBytes(32));
     }
 
-    /**
-     * The type for oracle_event message. oracle_event = 55330
-     */
-    public type = OracleEventV0.type;
+    instance.eventMaturityEpoch = reader.readUInt32BE();
+    instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
+      getTlv(reader),
+    );
+    const eventIdLength = reader.readBigSize();
+    instance.eventId = reader.readBytes(Number(eventIdLength));
 
-    public length: bigint;
+    return instance;
+  }
 
-    public oracleNonces: Buffer[] = [];
+  /**
+   * The type for oracle_event message. oracle_event = 55330
+   */
+  public type = OracleEventV0.type;
 
-    public eventMaturityEpoch: number;
+  public length: bigint;
 
-    public eventDescriptor: EnumEventDescriptorV0;
+  public oracleNonces: Buffer[] = [];
 
-    public eventId: Buffer;
+  public eventMaturityEpoch: number;
 
-    /**
-     * Serializes the oracle_event message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeBigSize(this.type);
-        writer.writeBigSize(this.length);
-        writer.writeUInt16BE(this.oracleNonces.length);
+  public eventDescriptor: EnumEventDescriptorV0;
 
-        for (const nonce of this.oracleNonces) {
-          writer.writeBytes(nonce);
-        }
+  public eventId: Buffer;
 
-        writer.writeUInt32BE(this.eventMaturityEpoch);
-        writer.writeBytes(this.eventDescriptor.serialize());
-        writer.writeBigSize(this.eventId.length);
-        writer.writeBytes(this.eventId);
+  /**
+   * Serializes the oracle_event message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeUInt16BE(this.oracleNonces.length);
 
-        return writer.toBuffer();
+    for (const nonce of this.oracleNonces) {
+      writer.writeBytes(nonce);
     }
+
+    writer.writeUInt32BE(this.eventMaturityEpoch);
+    writer.writeBytes(this.eventDescriptor.serialize());
+    writer.writeBigSize(this.eventId.length);
+    writer.writeBytes(this.eventId);
+
+    return writer.toBuffer();
+  }
 }

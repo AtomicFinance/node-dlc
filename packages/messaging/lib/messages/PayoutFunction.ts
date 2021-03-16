@@ -1,6 +1,6 @@
-import { BufferReader, BufferWriter } from "@node-lightning/bufio";
-import { MessageType } from "../MessageType";
-import { IDlcMessage } from "./DlcMessage";
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { MessageType } from '../MessageType';
+import { IDlcMessage } from './DlcMessage';
 
 export abstract class PayoutFunction {
   public static deserialize(buf: Buffer): PayoutFunctionV0 | PayoutFunctionV1 {
@@ -15,7 +15,7 @@ export abstract class PayoutFunction {
         return PayoutFunctionV1.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`
+          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
         );
     }
   }
@@ -31,59 +31,64 @@ export abstract class PayoutFunction {
  * PayoutFunction V0
  */
 export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
-    public static type = MessageType.PayoutFunctionV0;
+  public static type = MessageType.PayoutFunctionV0;
 
-    /**
-     * Deserializes an payout_function_v0 message
-     * @param buf
-     */
-    public static deserialize(buf: Buffer): PayoutFunctionV0 {
-        const instance = new PayoutFunctionV0();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes an payout_function_v0 message
+   * @param buf
+   */
+  public static deserialize(buf: Buffer): PayoutFunctionV0 {
+    const instance = new PayoutFunctionV0();
+    const reader = new BufferReader(buf);
 
-        reader.readBigSize(); // read type
-        instance.length = reader.readBigSize(); // need to fix this
-        reader.readUInt16BE(); // num_pts
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize(); // need to fix this
+    reader.readUInt16BE(); // num_pts
 
-        while (!reader.eof) {
-          const isEndpoint = reader.readUInt8() === 1;
-          const eventOutcome = reader.readBigSize();
-          const outcomePayout = reader.readBigSize();
-          const extraPrecision = reader.readUInt16BE();
+    while (!reader.eof) {
+      const isEndpoint = reader.readUInt8() === 1;
+      const eventOutcome = reader.readBigSize();
+      const outcomePayout = reader.readBigSize();
+      const extraPrecision = reader.readUInt16BE();
 
-          instance.points.push({ isEndpoint, eventOutcome, outcomePayout, extraPrecision });
-        }
-
-        return instance;
+      instance.points.push({
+        isEndpoint,
+        eventOutcome,
+        outcomePayout,
+        extraPrecision,
+      });
     }
 
-    /**
-     * The type for payout_function_v0 message. payout_function_v0 = 42790
-     */
-    public type = PayoutFunctionV0.type;
+    return instance;
+  }
 
-    public length: bigint;
+  /**
+   * The type for payout_function_v0 message. payout_function_v0 = 42790
+   */
+  public type = PayoutFunctionV0.type;
 
-    public points: IPoint[];
+  public length: bigint;
 
-    /**
-     * Serializes the payout_function_v0 message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeBigSize(this.type);
-        writer.writeBigSize(this.length);
-        writer.writeUInt16BE(this.points.length);
+  public points: IPoint[];
 
-        for (const point of this.points) {
-          writer.writeUInt8(point.isEndpoint ? 1 : 0);
-          writer.writeBigSize(point.eventOutcome);
-          writer.writeBigSize(point.outcomePayout);
-          writer.writeUInt16BE(point.extraPrecision);
-        }
+  /**
+   * Serializes the payout_function_v0 message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeUInt16BE(this.points.length);
 
-        return writer.toBuffer();
+    for (const point of this.points) {
+      writer.writeUInt8(point.isEndpoint ? 1 : 0);
+      writer.writeBigSize(point.eventOutcome);
+      writer.writeBigSize(point.outcomePayout);
+      writer.writeUInt16BE(point.extraPrecision);
     }
+
+    return writer.toBuffer();
+  }
 }
 
 /**
@@ -97,32 +102,32 @@ export class PayoutFunctionV1 extends PayoutFunction implements IDlcMessage {
    * @param buf
    */
   public static deserialize(buf: Buffer): PayoutFunctionV1 {
-      const instance = new PayoutFunctionV1();
-      const reader = new BufferReader(buf);
+    const instance = new PayoutFunctionV1();
+    const reader = new BufferReader(buf);
 
-      reader.readBigSize(); // read type
-      instance.length = reader.readBigSize(); // need to fix this
-      instance.usePositivePiece = reader.readUInt8() === 1;
-      instance.translateOutcomeSign = reader.readUInt8() === 1;
-      instance.translateOutcome = reader.readBigSize();
-      instance.translateOutcomeExtraPrecision = reader.readUInt16BE();
-      instance.translatePayoutSign = reader.readUInt8() === 1;
-      instance.translatePayout = reader.readBigSize();
-      instance.translatePayoutExtraPrecision = reader.readUInt16BE();
-      instance.aSign = reader.readUInt8() === 1;
-      instance.a = reader.readBigSize();
-      instance.aExtraPrecision = reader.readUInt16BE();
-      instance.bSign = reader.readUInt8() === 1;
-      instance.b = reader.readBigSize();
-      instance.bExtraPrecision = reader.readUInt16BE();
-      instance.cSign = reader.readUInt8() === 1;
-      instance.c = reader.readBigSize();
-      instance.cExtraPrecision = reader.readUInt16BE();
-      instance.dSign = reader.readUInt8() === 1;
-      instance.d = reader.readBigSize();
-      instance.dExtraPrecision = reader.readUInt16BE();
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize(); // need to fix this
+    instance.usePositivePiece = reader.readUInt8() === 1;
+    instance.translateOutcomeSign = reader.readUInt8() === 1;
+    instance.translateOutcome = reader.readBigSize();
+    instance.translateOutcomeExtraPrecision = reader.readUInt16BE();
+    instance.translatePayoutSign = reader.readUInt8() === 1;
+    instance.translatePayout = reader.readBigSize();
+    instance.translatePayoutExtraPrecision = reader.readUInt16BE();
+    instance.aSign = reader.readUInt8() === 1;
+    instance.a = reader.readBigSize();
+    instance.aExtraPrecision = reader.readUInt16BE();
+    instance.bSign = reader.readUInt8() === 1;
+    instance.b = reader.readBigSize();
+    instance.bExtraPrecision = reader.readUInt16BE();
+    instance.cSign = reader.readUInt8() === 1;
+    instance.c = reader.readBigSize();
+    instance.cExtraPrecision = reader.readUInt16BE();
+    instance.dSign = reader.readUInt8() === 1;
+    instance.d = reader.readBigSize();
+    instance.dExtraPrecision = reader.readUInt16BE();
 
-      return instance;
+    return instance;
   }
 
   /**
@@ -174,30 +179,30 @@ export class PayoutFunctionV1 extends PayoutFunction implements IDlcMessage {
    * Serializes the enum_event_descriptor_v0 message into a Buffer
    */
   public serialize(): Buffer {
-      const writer = new BufferWriter();
-      writer.writeBigSize(this.type);
-      writer.writeBigSize(this.length);
-      writer.writeUInt8(this.usePositivePiece ? 1 : 0);
-      writer.writeUInt8(this.translateOutcomeSign ? 1 : 0);
-      writer.writeBigSize(this.translateOutcome);
-      writer.writeUInt16BE(this.translateOutcomeExtraPrecision);
-      writer.writeUInt8(this.translatePayoutSign ? 1 : 0);
-      writer.writeBigSize(this.translatePayout);
-      writer.writeUInt16BE(this.translatePayoutExtraPrecision);
-      writer.writeUInt8(this.aSign ? 1 : 0);
-      writer.writeBigSize(this.a);
-      writer.writeUInt16BE(this.aExtraPrecision);
-      writer.writeUInt8(this.bSign ? 1 : 0);
-      writer.writeBigSize(this.b);
-      writer.writeUInt16BE(this.bExtraPrecision);
-      writer.writeUInt8(this.cSign ? 1 : 0);
-      writer.writeBigSize(this.c);
-      writer.writeUInt16BE(this.cExtraPrecision);
-      writer.writeUInt8(this.dSign ? 1 : 0);
-      writer.writeBigSize(this.d);
-      writer.writeUInt16BE(this.dExtraPrecision);
+    const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.length);
+    writer.writeUInt8(this.usePositivePiece ? 1 : 0);
+    writer.writeUInt8(this.translateOutcomeSign ? 1 : 0);
+    writer.writeBigSize(this.translateOutcome);
+    writer.writeUInt16BE(this.translateOutcomeExtraPrecision);
+    writer.writeUInt8(this.translatePayoutSign ? 1 : 0);
+    writer.writeBigSize(this.translatePayout);
+    writer.writeUInt16BE(this.translatePayoutExtraPrecision);
+    writer.writeUInt8(this.aSign ? 1 : 0);
+    writer.writeBigSize(this.a);
+    writer.writeUInt16BE(this.aExtraPrecision);
+    writer.writeUInt8(this.bSign ? 1 : 0);
+    writer.writeBigSize(this.b);
+    writer.writeUInt16BE(this.bExtraPrecision);
+    writer.writeUInt8(this.cSign ? 1 : 0);
+    writer.writeBigSize(this.c);
+    writer.writeUInt16BE(this.cExtraPrecision);
+    writer.writeUInt8(this.dSign ? 1 : 0);
+    writer.writeBigSize(this.d);
+    writer.writeUInt16BE(this.dExtraPrecision);
 
-      return writer.toBuffer();
+    return writer.toBuffer();
   }
 }
 

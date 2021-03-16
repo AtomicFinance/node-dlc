@@ -1,7 +1,7 @@
-import { expect } from "chai";
+import { expect } from 'chai';
 
-describe("core", () => {
+describe('core', () => {
   it('should', () => {
-    expect(1).to.equal(1)
-  })
+    expect(1).to.equal(1);
+  });
 });
