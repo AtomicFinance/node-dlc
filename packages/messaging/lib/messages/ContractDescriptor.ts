@@ -78,13 +78,17 @@ export class ContractDescriptorV0
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeBigSize(this.outcomes.length);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeBigSize(this.outcomes.length);
 
     for (const outcome of this.outcomes) {
-      writer.writeBytes(outcome.outcome);
-      writer.writeUInt64BE(outcome.localPayout);
+      dataWriter.writeBytes(outcome.outcome);
+      dataWriter.writeUInt64BE(outcome.localPayout);
     }
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
@@ -136,10 +140,13 @@ export class ContractDescriptorV1
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
 
-    writer.writeBytes(this.payoutFunction.serialize());
-    writer.writeBytes(this.roundingIntervals.serialize());
+    const dataWriter = new BufferWriter();
+    dataWriter.writeBytes(this.payoutFunction.serialize());
+    dataWriter.writeBytes(this.roundingIntervals.serialize());
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

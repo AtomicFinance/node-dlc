@@ -25,15 +25,16 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
+    "@node-dlc/logger": "^0.1.0",
     "@node-lightning/bufio": "^0.21.1",
     "axios": "0.21.1",
     "bcfg": "0.1.6",
     "bcrypto": "5.4.0",
+    "bip39": "^3.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "find-up": "5.0.0",
-    "fs": "0.0.1-security",
-    "@node-dlc/logger": "^0.1.0"
+    "fs": "0.0.1-security"
   },
   "devDependencies": {
     "nock": "13.0.11"

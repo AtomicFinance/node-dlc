@@ -181,26 +181,31 @@ export class PayoutFunctionV1 extends PayoutFunction implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt8(this.usePositivePiece ? 1 : 0);
-    writer.writeUInt8(this.translateOutcomeSign ? 1 : 0);
-    writer.writeBigSize(this.translateOutcome);
-    writer.writeUInt16BE(this.translateOutcomeExtraPrecision);
-    writer.writeUInt8(this.translatePayoutSign ? 1 : 0);
-    writer.writeBigSize(this.translatePayout);
-    writer.writeUInt16BE(this.translatePayoutExtraPrecision);
-    writer.writeUInt8(this.aSign ? 1 : 0);
-    writer.writeBigSize(this.a);
-    writer.writeUInt16BE(this.aExtraPrecision);
-    writer.writeUInt8(this.bSign ? 1 : 0);
-    writer.writeBigSize(this.b);
-    writer.writeUInt16BE(this.bExtraPrecision);
-    writer.writeUInt8(this.cSign ? 1 : 0);
-    writer.writeBigSize(this.c);
-    writer.writeUInt16BE(this.cExtraPrecision);
-    writer.writeUInt8(this.dSign ? 1 : 0);
-    writer.writeBigSize(this.d);
-    writer.writeUInt16BE(this.dExtraPrecision);
+
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeUInt8(this.usePositivePiece ? 1 : 0);
+    dataWriter.writeUInt8(this.translateOutcomeSign ? 1 : 0);
+    dataWriter.writeBigSize(this.translateOutcome);
+    dataWriter.writeUInt16BE(this.translateOutcomeExtraPrecision);
+    dataWriter.writeUInt8(this.translatePayoutSign ? 1 : 0);
+    dataWriter.writeBigSize(this.translatePayout);
+    dataWriter.writeUInt16BE(this.translatePayoutExtraPrecision);
+    dataWriter.writeUInt8(this.aSign ? 1 : 0);
+    dataWriter.writeBigSize(this.a);
+    dataWriter.writeUInt16BE(this.aExtraPrecision);
+    dataWriter.writeUInt8(this.bSign ? 1 : 0);
+    dataWriter.writeBigSize(this.b);
+    dataWriter.writeUInt16BE(this.bExtraPrecision);
+    dataWriter.writeUInt8(this.cSign ? 1 : 0);
+    dataWriter.writeBigSize(this.c);
+    dataWriter.writeUInt16BE(this.cExtraPrecision);
+    dataWriter.writeUInt8(this.dSign ? 1 : 0);
+    dataWriter.writeBigSize(this.d);
+    dataWriter.writeUInt16BE(this.dExtraPrecision);
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

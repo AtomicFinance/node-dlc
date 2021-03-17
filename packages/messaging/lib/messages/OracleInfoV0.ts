@@ -41,8 +41,12 @@ export class OracleInfoV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeBytes(this.announcement.serialize());
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeBytes(this.announcement.serialize());
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

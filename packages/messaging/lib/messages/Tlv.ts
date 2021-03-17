@@ -28,8 +28,12 @@ export class Tlv {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeBytes(this.body);
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeBytes(this.body);
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

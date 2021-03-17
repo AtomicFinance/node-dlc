@@ -55,10 +55,14 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeBytes(this.announcementSig);
-    writer.writeBytes(this.oraclePubkey);
-    writer.writeBytes(this.oracleEvent.serialize());
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeBytes(this.announcementSig);
+    dataWriter.writeBytes(this.oraclePubkey);
+    dataWriter.writeBytes(this.oracleEvent.serialize());
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

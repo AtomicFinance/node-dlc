@@ -45,14 +45,17 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeBigSize(this.sigs.length);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeBigSize(this.sigs.length);
 
     for (const sig of this.sigs) {
-      writer.writeBytes(sig.encryptedSig);
-      writer.writeBytes(sig.dleqProof);
+      dataWriter.writeBytes(sig.encryptedSig);
+      dataWriter.writeBytes(sig.dleqProof);
     }
 
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
     return writer.toBuffer();
   }
 }

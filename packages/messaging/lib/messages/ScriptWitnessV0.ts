@@ -15,7 +15,7 @@ export class ScriptWitnessV0 {
     const instance = new ScriptWitnessV0();
     const reader = new BufferReader(buf);
 
-    instance.length = reader.readUInt16BE(); // need to fix this
+    instance.length = reader.readUInt16BE();
     instance.witness = reader.readBytes(instance.length);
 
     return instance;
@@ -41,7 +41,8 @@ export class ScriptWitnessV0 {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeUInt16BE(this.length);
+
+    writer.writeUInt16BE(this.witness.length);
     writer.writeBytes(this.witness);
 
     return writer.toBuffer();

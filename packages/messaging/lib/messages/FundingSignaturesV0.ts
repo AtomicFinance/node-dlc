@@ -1,8 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import { write } from 'fs';
-import { Script } from 'vm';
 import { MessageType } from '../MessageType';
-import { readTlvs } from '../serialize/readTlvs';
 import { IDlcMessage } from './DlcMessage';
 import { ScriptWitnessV0 } from './ScriptWitnessV0';
 
@@ -53,15 +50,20 @@ export class FundingSignaturesV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt16BE(this.witnessElements.length);
+
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeUInt16BE(this.witnessElements.length);
 
     for (const witnessElements of this.witnessElements) {
-      writer.writeUInt16BE(witnessElements.length);
+      dataWriter.writeUInt16BE(witnessElements.length);
       for (const witnessElement of witnessElements) {
-        writer.writeBytes(witnessElement.serialize());
+        dataWriter.writeBytes(witnessElement.serialize());
       }
     }
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

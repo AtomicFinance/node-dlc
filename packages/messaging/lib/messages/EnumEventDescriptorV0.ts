@@ -43,13 +43,17 @@ export class EnumEventDescriptorV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt16BE(this.outcomes.length);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeUInt16BE(this.outcomes.length);
 
     for (const outcome of this.outcomes) {
-      writer.writeBigSize(outcome.length);
-      writer.writeBytes(outcome);
+      dataWriter.writeBigSize(outcome.length);
+      dataWriter.writeBytes(outcome);
     }
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

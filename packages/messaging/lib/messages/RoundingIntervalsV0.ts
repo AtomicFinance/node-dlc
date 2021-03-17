@@ -45,13 +45,17 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
-    writer.writeUInt16BE(this.intervals.length);
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeUInt16BE(this.intervals.length);
 
     for (const interval of this.intervals) {
-      writer.writeBigSize(interval.beginInterval);
-      writer.writeBigSize(interval.roundingMod);
+      dataWriter.writeBigSize(interval.beginInterval);
+      dataWriter.writeBigSize(interval.roundingMod);
     }
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
