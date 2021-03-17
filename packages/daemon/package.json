@@ -38,7 +38,15 @@
     "os": "0.1.1",
     "path": "0.12.7",
     "winston": "3.3.3",
-    "yargs": "^16.2.0"
+    "yargs": "^16.2.0",
+    "@liquality/bitcoin-js-wallet-provider": "0.10.1",
+    "@liquality/bitcoin-rpc-provider": "0.10.1",
+    "@liquality/bitcoin-networks": "0.10.1",
+    "@liquality/client": "0.10.1",
+    "@atomicfinance/bitcoin-cfd-provider": "1.0.0-alpha.4",
+    "@atomicfinance/bitcoin-dlc-provider": "1.0.0-alpha.4",
+    "@atomicfinance/bitcoin-wallet-provider": "1.0.0-alpha.4",
+    "@atomicfinance/client": "1.0.0-alpha.4"
   },
   "publishConfig": {
     "access": "public"

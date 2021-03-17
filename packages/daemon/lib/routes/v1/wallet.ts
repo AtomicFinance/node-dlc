@@ -1,6 +1,6 @@
 import { Logger } from '@node-lightning/logger';
 import { generateMnemonic, validateMnemonic } from 'bip39';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { IArguments, IDB } from '../../utils/config';
 import { routeErrorHandler } from '../handler/ErrorHandler';
 import BaseRoutes from './base';
@@ -10,7 +10,7 @@ export default class WalletRoutes extends BaseRoutes {
     super(argv, db, logger);
   }
 
-  public async postCreate(req: Request, res: Response, next: NextFunction) {
+  public async postCreate(req: Request, res: Response) {
     const { apikey, mnemonic: _mnemonic } = req.query;
 
     if (!apikey) return routeErrorHandler(this, res, 401, 'Api Key Required');

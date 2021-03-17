@@ -20,6 +20,7 @@ export default class Server {
     const walletDb = new RocksdbWalletStore(`${datadir}/${network}/wallet`);
     const dlcDb = new RocksdbDlcStore(`${datadir}/${network}/dlc`);
     const db: IDB = { wallet: walletDb, dlc: dlcDb };
+    // wallet defined here. Need to create client if wallet initiated. Otherwise initiate empty client
     this.routesV1 = new RoutesV1(app, argv, db, logger);
   }
 
