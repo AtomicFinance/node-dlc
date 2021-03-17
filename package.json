@@ -10,7 +10,13 @@
     "lint:fix": "lerna run lint:fix",
     "test": "lerna run test",
     "build": "lerna run build",
-    "bootstrap:ci": "lerna bootstrap --hoist"
+    "bootstrap:ci": "lerna bootstrap --hoist",
+    "new:version": "lerna version --no-push --no-git-tag-version && lerna clean --yes && lerna bootstrap",
+    "publish:all": "lerna publish from-package",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "node-dlc",
