@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EnumEventDescriptorV0';
 
 describe('EnumEventDescriptorV0', () => {
-  const outcomeOne = Buffer.from('64756d6d7931', 'hex');
+  const outcomeOne = Buffer.from('64756d6d7931', 'hex').toString();
 
-  const outcomeTwo = Buffer.from('64756d6d7932', 'hex');
+  const outcomeTwo = Buffer.from('64756d6d7932', 'hex').toString();
 
   describe('serialize', () => {
     it('serializes', () => {

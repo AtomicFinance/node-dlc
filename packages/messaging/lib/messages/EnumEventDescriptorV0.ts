@@ -22,7 +22,8 @@ export class EnumEventDescriptorV0 implements IDlcMessage {
 
     while (!reader.eof) {
       const outcomeLen = reader.readBigSize();
-      instance.outcomes.push(reader.readBytes(Number(outcomeLen)));
+      const outcomeBuf = reader.readBytes(Number(outcomeLen));
+      instance.outcomes.push(outcomeBuf.toString());
     }
 
     return instance;
@@ -35,7 +36,7 @@ export class EnumEventDescriptorV0 implements IDlcMessage {
 
   public length: bigint;
 
-  public outcomes: Buffer[] = [];
+  public outcomes: string[] = [];
 
   /**
    * Serializes the enum_event_descriptor_v0 message into a Buffer
@@ -49,7 +50,7 @@ export class EnumEventDescriptorV0 implements IDlcMessage {
 
     for (const outcome of this.outcomes) {
       dataWriter.writeBigSize(outcome.length);
-      dataWriter.writeBytes(outcome);
+      dataWriter.writeBytes(Buffer.from(outcome));
     }
 
     writer.writeBigSize(dataWriter.size);
