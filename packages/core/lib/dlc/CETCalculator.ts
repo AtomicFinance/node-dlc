@@ -237,7 +237,6 @@ export function splitIntoRanges(
         nextMidRoundedPayout,
       );
 
-      // TODO: logic for ascending
       if (
         (!isAscending &&
           curve.getPayout(nextMidRoundedOutcome).lt(nextMidRoundedPayout)) ||
