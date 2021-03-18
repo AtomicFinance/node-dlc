@@ -253,7 +253,7 @@ export function splitIntoRanges(
       }
 
       if (
-        nextRoundedPayoutBigInt >= totalCollateral ||
+        nextRoundedPayoutBigInt > totalCollateral ||
         nextRoundedPayoutBigInt < 0 ||
         nextOutcome > to
       ) {

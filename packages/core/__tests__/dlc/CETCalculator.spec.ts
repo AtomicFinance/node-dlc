@@ -456,7 +456,8 @@ describe('CETCalculator', () => {
         { payout: 60n, indexFrom: 11112n, indexTo: 14285n },
         { payout: 70n, indexFrom: 14286n, indexTo: 19999n },
         { payout: 80n, indexFrom: 20000n, indexTo: 33333n },
-        { payout: 90n, indexFrom: 33334n, indexTo: 999999n },
+        { payout: 90n, indexFrom: 33334n, indexTo: 99999n },
+        { payout: 100n, indexFrom: 100000n, indexTo: 999999n },
       ]);
 
       // for each indexTo, expect payout to round down (except last index)
