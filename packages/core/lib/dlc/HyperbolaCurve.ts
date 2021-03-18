@@ -1,4 +1,4 @@
-// long call, set f2 = 1, d = contractSize * strike
+// long call, set f2 = contractSize, d = contractSize * strike a = -1
 // find max yvalue at max_x. set as total collateral.
 
 // short call, a = 1, d = contractSize * strike

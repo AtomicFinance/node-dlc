@@ -1,5 +1,6 @@
 import HyperbolaPayoutCurve from './HyperbolaCurve';
 import BigNumber from 'bignumber.js';
+import BigIntMath from '../BigIntMath';
 
 export function zipWithIndex<T>(arr: T[]) {
   return arr.map((a, i) => [a, i]);
@@ -246,20 +247,26 @@ export function splitIntoRanges(
         currentPayoutNextMid,
       );
 
+      let nextOutcome = curve.getOutcomeForPayout(currentPayoutNext);
+
       if (
         currentPayoutNextBigInt >= totalCollateral ||
-        currentPayoutNextBigInt < 0n
+        currentPayoutNextBigInt < 0 ||
+        nextOutcome > to
       ) {
         result.push({
-          payout:
-            currentPayoutNextBigInt >= totalCollateral ? totalCollateral : 0n,
-          indexFrom: currentOutcome,
+          payout: BigIntMath.max(
+            0n,
+            BigIntMath.min(
+              totalCollateral,
+              BigInt(currentPayout.integerValue().toString()),
+            ),
+          ),
+          indexFrom: lastCurrentOutcomeMid,
           indexTo: to,
         });
-        return;
+        return result;
       }
-
-      let nextOutcome = curve.getOutcomeForPayout(currentPayoutNext);
 
       if (nextOutcome >= nextFirstRoundingOutcome) {
         nextOutcome = nextFirstRoundingOutcome - 1n;
@@ -298,23 +305,21 @@ const hyperbola = new HyperbolaPayoutCurve(
   new BigNumber(0), // f_2
   true,
 );
-console.log(
-  splitIntoRanges(0n, 999999n, 100000000n, hyperbola, [
-    { beginInterval: 1n, roundingMod: 10000n },
-    { beginInterval: 400n, roundingMod: 250000n },
-    { beginInterval: 50250n, roundingMod: 50000n },
-  ]),
-);
+const ranges = splitIntoRanges(0n, 1009994n, 100000000n, hyperbola, [
+  { beginInterval: 400n, roundingMod: 250000n },
+]);
+
+console.log(ranges[ranges.length - 1]);
 
 console.log(hyperbola.getOutcomeForPayout(new BigNumber(99875000)));
-const test0 = BigInt(hyperbola.getPayout(50063n).integerValue().toNumber());
+const test0 = BigInt(hyperbola.getPayout(975609n).integerValue().toNumber());
 console.log(test0);
 console.log(test0 - (test0 - (test0 % 250000n)));
 console.log(test0 - (test0 - (test0 % 250000n) + 250000n));
 
 console.log('---');
 console.log(hyperbola.getOutcomeForPayout(new BigNumber(99625000)));
-const test1 = BigInt(hyperbola.getPayout(52756n).integerValue().toNumber());
+const test1 = BigInt(hyperbola.getPayout(66116n).integerValue().toNumber());
 console.log(test1);
 console.log(test1 - (test1 - (test1 % 50000n)));
 console.log(test1 - (test1 - (test1 % 50000n) + 50000n));
