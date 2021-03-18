@@ -64,8 +64,7 @@ class HyperbolaPayoutCurve {
         .plus(d.times(f_1).times(f_2))
         .minus(d.times(f_1).times(payout))
         .dividedBy(d.times(f_2.minus(payout)))
-        .integerValue(BigNumber.ROUND_FLOOR)
-        .plus(1);
+        .integerValue();
 
       if (outcome.isFinite()) return BigInt(outcome.toString());
       return -1n;

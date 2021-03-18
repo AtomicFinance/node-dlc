@@ -357,4 +357,77 @@ describe('CETCalculator', () => {
       });
     });
   });
+
+  describe('split ranges hyperbola a=-1 d=5000 f2=100 test', () => {
+    const hyperbola = new HyperbolaPayoutCurve(
+      new BigNumber(-1),
+      new BigNumber(0),
+      new BigNumber(0),
+      new BigNumber(500000),
+      new BigNumber(0),
+      new BigNumber(100),
+      false,
+    );
+
+    it('should properly split and round with one interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 10n,
+        },
+      ];
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        100n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      const rounding = roundingIntervals[0].roundingMod;
+
+      expect(ranges).to.deep.eq([
+        { payout: 0n, indexFrom: 4976n, indexTo: 5263n },
+        { payout: 10n, indexFrom: 5264n, indexTo: 5882n },
+        { payout: 20n, indexFrom: 5883n, indexTo: 6666n },
+        { payout: 30n, indexFrom: 6667n, indexTo: 7692n },
+        { payout: 40n, indexFrom: 7693n, indexTo: 9090n },
+        { payout: 50n, indexFrom: 9091n, indexTo: 11111n },
+        { payout: 60n, indexFrom: 11112n, indexTo: 14285n },
+        { payout: 70n, indexFrom: 14286n, indexTo: 19999n },
+        { payout: 80n, indexFrom: 20000n, indexTo: 33333n },
+        { payout: 90n, indexFrom: 33334n, indexTo: 999999n },
+      ]);
+
+      // for each indexTo, expect payout to round down (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round up (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+    });
+  });
 });

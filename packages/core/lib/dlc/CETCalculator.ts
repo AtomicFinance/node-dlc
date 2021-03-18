@@ -218,31 +218,41 @@ export function splitIntoRanges(
       .getPayout(nextFirstRoundingOutcome)
       .gt(currentPayout);
 
-    let lastMidRoundingOutcome = currentOutcome;
+    let currentMidRoundedOutcome = currentOutcome;
 
     while (currentOutcome <= nextFirstRoundingOutcome) {
-      const currentPayoutNext = currentPayout
+      const nextRoundedPayout = currentPayout
         .integerValue()
         .plus(isAscending ? Number(rounding) : -Number(rounding));
 
-      const currentPayoutNextBigInt = BigInt(
-        currentPayoutNext.integerValue().toString(),
+      const nextRoundedPayoutBigInt = BigInt(
+        nextRoundedPayout.integerValue().toString(),
       );
 
-      const currentPayoutNextMid = currentPayout.plus(
-        isAscending ? Number(rounding / 2n) : -Number(rounding / 2n),
+      const nextMidRoundedPayout = currentPayout.plus(
+        isAscending ? Number(rounding) / 2 : -Number(rounding) / 2,
       );
 
-      let nextMidRoundingOutcome = curve.getOutcomeForPayout(
-        currentPayoutNextMid,
+      let nextMidRoundedOutcome = curve.getOutcomeForPayout(
+        nextMidRoundedPayout,
       );
 
-      let nextOutcome = curve.getOutcomeForPayout(currentPayoutNext);
+      // TODO: logic for ascending
+      if (
+        (!isAscending &&
+          curve.getPayout(nextMidRoundedOutcome).lt(nextMidRoundedPayout)) ||
+        (isAscending &&
+          curve.getPayout(nextMidRoundedOutcome).gte(nextMidRoundedPayout))
+      ) {
+        nextMidRoundedOutcome = nextMidRoundedOutcome - 1n;
+      }
+
+      let nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
       if (nextOutcome < 0) nextOutcome = to - 1n;
 
       if (
-        currentPayoutNextBigInt >= totalCollateral ||
-        currentPayoutNextBigInt < 0 ||
+        nextRoundedPayoutBigInt >= totalCollateral ||
+        nextRoundedPayoutBigInt < 0 ||
         nextOutcome > to
       ) {
         result.push({
@@ -253,7 +263,7 @@ export function splitIntoRanges(
               BigInt(currentPayout.integerValue().toString()),
             ),
           ),
-          indexFrom: lastMidRoundingOutcome,
+          indexFrom: currentMidRoundedOutcome,
           indexTo: to,
         });
         return result;
@@ -261,19 +271,19 @@ export function splitIntoRanges(
 
       if (nextOutcome >= nextFirstRoundingOutcome) {
         nextOutcome = nextFirstRoundingOutcome - 1n;
-        nextMidRoundingOutcome = nextFirstRoundingOutcome;
+        nextMidRoundedOutcome = nextFirstRoundingOutcome;
       }
 
       result.push({
         payout: clamp(BigInt(currentPayout.integerValue().toString())),
-        indexFrom: lastMidRoundingOutcome,
-        indexTo: nextMidRoundingOutcome - 1n,
+        indexFrom: currentMidRoundedOutcome,
+        indexTo: nextMidRoundedOutcome,
       });
 
       currentOutcome = nextOutcome + 1n;
-      currentPayout = currentPayoutNext;
+      currentPayout = nextRoundedPayout;
 
-      lastMidRoundingOutcome = nextMidRoundingOutcome;
+      currentMidRoundedOutcome = nextMidRoundedOutcome + 1n;
     }
   }
   return result;
