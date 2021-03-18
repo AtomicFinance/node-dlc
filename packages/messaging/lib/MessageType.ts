@@ -37,7 +37,7 @@ export enum MessageType {
 
   RoundingIntervalsV0 = 42788,
 
-  OfferDlcV0 = 42778,
-  AcceptDlcV0 = 42780,
-  SignDlcV0 = 42782,
+  DlcOfferV0 = 42778,
+  DlcAcceptV0 = 42780,
+  DlcSignV0 = 42782,
 }

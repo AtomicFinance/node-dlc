@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { FundingInputV0 } from '../../lib/messages/FundingInputV0';
-import { AcceptDlcV0 } from '../../lib/messages/AcceptDlcV0';
+import { DlcAcceptV0 } from '../../lib/messages/DlcAccept';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
 import { NegotiationFields } from '../../lib/messages/NegotiationFields';
 
-describe('AcceptDlcV0', () => {
+describe('DlcAcceptV0', () => {
   const tempContractId = Buffer.from(
     '960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a',
     'hex',
@@ -32,12 +32,13 @@ describe('AcceptDlcV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new AcceptDlcV0();
+      const instance = new DlcAcceptV0();
 
       instance.tempContractId = tempContractId;
       instance.acceptCollateralSatoshis = BigInt(100000000);
       instance.fundingPubKey = fundingPubKey;
       instance.payoutSPK = payoutSPK;
+      instance.payoutSerialId = BigInt(1594186);
       instance.fundingInputs = [
         FundingInputV0.deserialize(
           Buffer.from(
@@ -55,6 +56,7 @@ describe('AcceptDlcV0', () => {
         ),
       ];
       instance.changeSPK = changeSPK;
+      instance.changeSerialId = BigInt(885015);
       instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
         Buffer.from(
           'fda716' + // type cet_adaptor_signatures_v0
@@ -81,6 +83,7 @@ describe('AcceptDlcV0', () => {
         "026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9" + // funding_pubkey
         "0016" + // payout_spk_len
         "001436054fa379f7564b5e458371db643666365c8fb3" + // payout_spk
+        "000000000018534a" + // payout_serial_id
         "0001" + // funding_inputs_len
         "fda714" + // type funding_input_v0
         "3f" + // length
@@ -93,6 +96,7 @@ describe('AcceptDlcV0', () => {
         "0000" + // redeem_script_len
         "0016" + // change_spk_len
         "0014074c82dbe058212905bacc61814456b7415012ed" + // change_spk
+        "00000000000d8117" + // change_serial_id
         "fda716" + // type cet_adaptor_signatures_v0
         "fd01e7" + // length
         "03" + // nb_signatures
@@ -117,6 +121,7 @@ describe('AcceptDlcV0', () => {
         "026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9" + // funding_pubkey
         "0016" + // payout_spk_len
         "001436054fa379f7564b5e458371db643666365c8fb3" + // payout_spk
+        "000000000018534a" + // payout_serial_id
         "0001" + // funding_inputs_len
         "fda714" + // type funding_input_v0
         "3f" + // length
@@ -129,6 +134,7 @@ describe('AcceptDlcV0', () => {
         "0000" + // redeem_script_len
         "0016" + // change_spk_len
         "0014074c82dbe058212905bacc61814456b7415012ed" + // change_spk
+        "00000000000d8117" + // change_serial_id
         "fda716" + // type cet_adaptor_signatures_v0
         "fd01e7" + // length
         "03" + // nb_signatures
@@ -143,12 +149,26 @@ describe('AcceptDlcV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = AcceptDlcV0.deserialize(buf);
+      const instance = DlcAcceptV0.deserialize(buf);
 
       expect(instance.tempContractId).to.deep.equal(tempContractId);
       expect(Number(instance.acceptCollateralSatoshis)).to.equal(100000000);
       expect(instance.fundingPubKey).to.deep.equal(fundingPubKey);
+      expect(instance.payoutSPK).to.deep.equal(payoutSPK);
+      expect(Number(instance.payoutSerialId)).to.equal(1594186);
+      expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
+        'fda714' + // type funding_input_v0
+          '3f' + // length
+          '000000000000dae8' + // input_serial_id
+          '0029' + // prevtx_len
+          '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevtx
+          '00000000' + // prevtx_vout
+          'ffffffff' + // sequence
+          '006b' + // max_witness_len
+          '0000', // redeem_script_len
+      );
       expect(instance.changeSPK).to.deep.equal(changeSPK);
+      expect(Number(instance.changeSerialId)).to.equal(885015);
       expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
         'fda716' + // type cet_adaptor_signatures_v0
           'fd01e7' + // length

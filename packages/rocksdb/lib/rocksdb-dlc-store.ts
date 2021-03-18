@@ -1,6 +1,6 @@
 import { sha256 } from '@liquality/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
-import { AcceptDlcV0, OfferDlcV0, SignDlcV0 } from '@node-dlc/messaging';
+import { DlcAcceptV0, DlcOfferV0, DlcSignV0 } from '@node-dlc/messaging';
 import { xor } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
@@ -11,13 +11,13 @@ enum Prefix {
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
-  public async findDlcOffers(): Promise<OfferDlcV0[]> {
+  public async findDlcOffers(): Promise<DlcOfferV0[]> {
     return new Promise((resolve, reject) => {
       const stream = this._db.createReadStream();
-      const results: OfferDlcV0[] = [];
+      const results: DlcOfferV0[] = [];
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.OfferV0) {
-          results.push(OfferDlcV0.deserialize(data.value));
+          results.push(DlcOfferV0.deserialize(data.value));
         }
       });
       stream.on('end', () => {
@@ -27,14 +27,14 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
-  public async findDlcOffer(tempContractId: Buffer): Promise<OfferDlcV0> {
+  public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
     const key = Buffer.concat([Buffer.from([Prefix.OfferV0]), tempContractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return OfferDlcV0.deserialize(raw);
+    return DlcOfferV0.deserialize(raw);
   }
 
-  public async saveDlcOffer(dlcOffer: OfferDlcV0): Promise<void> {
+  public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
     const value = dlcOffer.serialize();
     const tempContractId = Buffer.from(sha256(value), 'hex');
     const key = Buffer.concat([Buffer.from([Prefix.OfferV0]), tempContractId]);
@@ -46,13 +46,13 @@ export class RocksdbDlcStore extends RocksdbBase {
     await this._db.del(key);
   }
 
-  public async findDlcAccepts(): Promise<AcceptDlcV0[]> {
+  public async findDlcAccepts(): Promise<DlcAcceptV0[]> {
     return new Promise((resolve, reject) => {
       const stream = this._db.createReadStream();
-      const results: AcceptDlcV0[] = [];
+      const results: DlcAcceptV0[] = [];
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.AcceptV0) {
-          results.push(AcceptDlcV0.deserialize(data.value));
+          results.push(DlcAcceptV0.deserialize(data.value));
         }
       });
       stream.on('end', () => {
@@ -62,14 +62,14 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
-  public async findDlcAccept(contractId: Buffer): Promise<AcceptDlcV0> {
+  public async findDlcAccept(contractId: Buffer): Promise<DlcAcceptV0> {
     const key = Buffer.concat([Buffer.from([Prefix.AcceptV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return AcceptDlcV0.deserialize(raw);
+    return DlcAcceptV0.deserialize(raw);
   }
 
-  public async saveDlcAccept(dlcAccept: AcceptDlcV0): Promise<void> {
+  public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {
     const dlcOffer = await this.findDlcOffer(dlcAccept.tempContractId);
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
@@ -85,13 +85,13 @@ export class RocksdbDlcStore extends RocksdbBase {
     await this._db.del(key);
   }
 
-  public async findDlcSigns(): Promise<SignDlcV0[]> {
+  public async findDlcSigns(): Promise<DlcSignV0[]> {
     return new Promise((resolve, reject) => {
       const stream = this._db.createReadStream();
-      const results: SignDlcV0[] = [];
+      const results: DlcSignV0[] = [];
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.AcceptV0) {
-          results.push(SignDlcV0.deserialize(data.value));
+          results.push(DlcSignV0.deserialize(data.value));
         }
       });
       stream.on('end', () => {
@@ -101,14 +101,14 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
-  public async findDlcSign(contractId: Buffer): Promise<SignDlcV0> {
+  public async findDlcSign(contractId: Buffer): Promise<DlcSignV0> {
     const key = Buffer.concat([Buffer.from([Prefix.SignV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return SignDlcV0.deserialize(raw);
+    return DlcSignV0.deserialize(raw);
   }
 
-  public async saveDlcSign(dlcSign: SignDlcV0): Promise<void> {
+  public async saveDlcSign(dlcSign: DlcSignV0): Promise<void> {
     const value = dlcSign.serialize();
     const key = Buffer.concat([
       Buffer.from([Prefix.SignV0]),

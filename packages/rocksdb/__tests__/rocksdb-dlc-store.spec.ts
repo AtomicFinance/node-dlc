@@ -1,6 +1,6 @@
 // tslint:disable: no-unused-expression
 
-import { OfferDlcV0, AcceptDlcV0, SignDlcV0 } from '@node-dlc/messaging';
+import { DlcOfferV0, DlcAcceptV0, DlcSignV0 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
 import { sha256 } from '@liquality/crypto';
@@ -11,7 +11,7 @@ import { DlcTxBuilder } from '@node-dlc/core';
 describe('RocksdbGossipStore', () => {
   let sut: RocksdbDlcStore;
 
-  const offerDlcHex = Buffer.from(
+  const dlcOfferHex = Buffer.from(
     "a71a" + // type
     "00" + // contract_flags
     "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
@@ -55,6 +55,8 @@ describe('RocksdbGossipStore', () => {
     "0016" + // payout_spk_len
     "00142bbdec425007dc360523b0294d2c64d2213af498" + // payout_spk
 
+    "0000000000b051dc" + // payout_serial_id
+
     "0000000005f5e100" + // total_collateral_satoshis
 
     "0001" + // funding_inputs_len
@@ -72,22 +74,26 @@ describe('RocksdbGossipStore', () => {
     "0016" + // change_spk_len
     "0014afa16f949f3055f38bd3a73312bed00b61558884" + // change_spk
 
-    "0000000000000001" + // fee_rate
+    "00000000001ea3ed" + // change_serial_id
+    "000000000052947a" + // funding_output_serial_id
 
-    "00000064" + // contract_maturity_bound
-    "000000c8" // contract_timeout
+    "0000000000000001" + // fee_rate_per_vb
+
+    "00000064" + // cet_locktime
+    "000000c8" // refund_locktime
     , "hex"
   ); // prettier-ignore
 
-  const offerDlc = OfferDlcV0.deserialize(offerDlcHex);
+  const dlcOffer = DlcOfferV0.deserialize(dlcOfferHex);
 
-  const acceptDlcHex = Buffer.from(
+  const dlcAcceptHex = Buffer.from(
     "a71c" + // type accept_dlc_v0
-    "5ee80bf145f31d2b05da8f629967ef54efb5c0aabdcec7bff091bdd5313b1345" + // temp_contract_id
+    "d5c1f8c466681e3e00830cef2de76e32705271790ea3d211ed2ab9f02780bece" + // temp_contract_id
     "0000000005f5e100" + // total_collateral_satoshis
     "026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9" + // funding_pubkey
     "0016" + // payout_spk_len
     "001436054fa379f7564b5e458371db643666365c8fb3" + // payout_spk
+    "000000000018534a" + // payout_serial_id
     "0001" + // funding_inputs_len
     "fda714" + // type funding_input_v0
     "3f" + // length
@@ -100,6 +106,7 @@ describe('RocksdbGossipStore', () => {
     "0000" + // redeem_script_len
     "0016" + // change_spk_len
     "0014074c82dbe058212905bacc61814456b7415012ed" + // change_spk
+    "00000000000d8117" + // change_serial_id
     "fda716" + // type cet_adaptor_signatures_v0
     "fd01e7" + // length
     "03" + // nb_signatures
@@ -114,16 +121,16 @@ describe('RocksdbGossipStore', () => {
     , "hex"
   ); // prettier-ignore
 
-  const acceptDlc = AcceptDlcV0.deserialize(acceptDlcHex);
+  const dlcAccept = DlcAcceptV0.deserialize(dlcAcceptHex);
 
-  const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex');
+  const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
 
-  const txBuilder = new DlcTxBuilder(offerDlc, acceptDlc.withoutSigs());
+  const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
   const tx = txBuilder.buildFundingTransaction();
   const fundingTxid = tx.txId.serialize();
   const contractId = xor(fundingTxid, tempContractId);
 
-  const signDlcHex = Buffer.from(
+  const dlcSignHex = Buffer.from(
     "a71e" + // sign_dlc_v0
     contractId.toString('hex') + // contract_id
     "fda716" + // type cet_adaptor_signatures_v0
@@ -147,7 +154,7 @@ describe('RocksdbGossipStore', () => {
     , "hex"
   ); // prettier-ignore
 
-  const signDlc = SignDlcV0.deserialize(signDlcHex);
+  const dlcSign = DlcSignV0.deserialize(dlcSignHex);
 
   before(async () => {
     util.rmdir('.testdb');
@@ -162,21 +169,21 @@ describe('RocksdbGossipStore', () => {
 
   describe('save dlc_offer', () => {
     it('should save dlc_offer', async () => {
-      await sut.saveDlcOffer(offerDlc);
+      await sut.saveDlcOffer(dlcOffer);
     });
   });
 
   describe('find dlc_offer by tempContractId', () => {
     it('should return the dlc_offer object', async () => {
-      const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex');
+      const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
       const actual = await sut.findDlcOffer(tempContractId);
-      expect(actual).to.deep.equal(offerDlc);
+      expect(actual).to.deep.equal(dlcOffer);
     });
   });
 
   describe('delete dlc_offer', () => {
     it('should delete dlc_offer', async () => {
-      const tempContractId = Buffer.from(sha256(offerDlcHex), 'hex');
+      const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
 
       await sut.deleteDlcOffer(tempContractId);
 
@@ -187,15 +194,15 @@ describe('RocksdbGossipStore', () => {
 
   describe('save dlc_accept', () => {
     it('should save dlc_accept', async () => {
-      await sut.saveDlcOffer(offerDlc);
-      await sut.saveDlcAccept(acceptDlc);
+      await sut.saveDlcOffer(dlcOffer);
+      await sut.saveDlcAccept(dlcAccept);
     });
   });
 
   describe('find dlc_accept by contractId', () => {
     it('should return the dlc_accept object', async () => {
       const actual = await sut.findDlcAccept(contractId);
-      expect(actual).to.deep.equal(acceptDlc);
+      expect(actual).to.deep.equal(dlcAccept);
     });
   });
 
@@ -210,22 +217,22 @@ describe('RocksdbGossipStore', () => {
 
   describe('save dlc_sign', () => {
     it('should save dlc_sign', async () => {
-      await sut.saveDlcSign(signDlc);
+      await sut.saveDlcSign(dlcSign);
     });
   });
 
   describe('find dlc_sign by contractId', () => {
     it('should return the dlc_sign object', async () => {
-      const actual = await sut.findDlcSign(signDlc.contractId);
-      expect(actual).to.deep.equal(signDlc);
+      const actual = await sut.findDlcSign(dlcSign.contractId);
+      expect(actual).to.deep.equal(dlcSign);
     });
   });
 
   describe('delete dlc_sign', () => {
     it('should delete dlc_sign', async () => {
-      await sut.deleteDlcSign(signDlc.contractId);
+      await sut.deleteDlcSign(dlcSign.contractId);
 
-      const actual = await sut.findDlcSign(signDlc.contractId);
+      const actual = await sut.findDlcSign(dlcSign.contractId);
       expect(actual).to.be.undefined;
     });
   });
