@@ -18,8 +18,6 @@ export function dropUntil<T>(data: T[], check: (T: any) => boolean): T[] {
 export function decompose(num: bigint, base: number, numDigits: number) {
   let currentNumber = num;
   const digits = [];
-  console.log('num', num);
-  console.log('base', base);
   while (numDigits > 0) {
     digits.push(Number(currentNumber % BigInt(base)));
     currentNumber = currentNumber / BigInt(base);
@@ -190,7 +188,6 @@ export function splitIntoRanges(
 
     if (payout >= 0n && payout <= totalCollateral) {
       firstValidOutcome = i;
-      console.log('First valid outcome and payout', i, payout);
       break;
     }
   }
@@ -215,17 +212,11 @@ export function splitIntoRanges(
     const nextFirstRoundingOutcome =
       reversedIntervals[roundingIndex - 1]?.beginInterval || to;
 
-    console.log(round(curve.getPayout(currentOutcome), rounding).toNumber());
     let currentPayout = round(curve.getPayout(currentOutcome), rounding);
-
-    console.log('currentPayout', currentPayout.toNumber());
-    console.log(firstValidOutcome);
 
     const isAscending = curve
       .getPayout(nextFirstRoundingOutcome)
       .gt(currentPayout);
-
-    console.log(isAscending);
 
     let lastMidRoundingOutcome = currentOutcome;
 
@@ -233,8 +224,6 @@ export function splitIntoRanges(
       const currentPayoutNext = currentPayout
         .integerValue()
         .plus(isAscending ? Number(rounding) : -Number(rounding));
-
-      console.log(currentPayoutNext.toNumber());
 
       const currentPayoutNextBigInt = BigInt(
         currentPayoutNext.integerValue().toString(),

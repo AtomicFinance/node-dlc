@@ -34,4 +34,21 @@ export default class BigIntMath {
     }
     return min;
   }
+
+  static sign(value: bigint): bigint {
+    if (value > 0n) {
+      return 1n;
+    }
+    if (value < 0n) {
+      return -1n;
+    }
+    return 0n;
+  }
+
+  static abs(value: bigint): bigint {
+    if (this.sign(value) === -1n) {
+      return -value;
+    }
+    return value;
+  }
 }

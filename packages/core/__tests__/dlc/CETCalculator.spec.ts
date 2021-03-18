@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
+import BigIntMath from '../../lib/BigIntMath';
 import {
   decompose,
   groupByIgnoringDigits,
@@ -302,8 +303,6 @@ describe('CETCalculator', () => {
         },
       ];
 
-      console.log(hyperbola.getOutcomeForPayout(new BigNumber(100)));
-
       const ranges = splitIntoRanges(
         0n,
         999999n,
@@ -320,11 +319,42 @@ describe('CETCalculator', () => {
         { payout: 60n, indexFrom: 7693n, indexTo: 9090n },
         { payout: 50n, indexFrom: 9091n, indexTo: 11111n },
         { payout: 40n, indexFrom: 11112n, indexTo: 14285n },
-        { payout: 30n, indexFrom: 14286n, indexTo: 19999n },
-        { payout: 20n, indexFrom: 20000n, indexTo: 33333n },
-        { payout: 10n, indexFrom: 33334n, indexTo: 99999n },
-        { payout: 0n, indexFrom: 100000n, indexTo: 999999n },
+        { payout: 30n, indexFrom: 14286n, indexTo: 20000n },
+        { payout: 20n, indexFrom: 20001n, indexTo: 33333n },
+        { payout: 10n, indexFrom: 33334n, indexTo: 100000n },
+        { payout: 0n, indexFrom: 100001n, indexTo: 999999n },
       ]);
+
+      const rounding = roundingIntervals[0].roundingMod;
+
+      // for each indexTo, expect payout to round up (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round down (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
     });
   });
 });
