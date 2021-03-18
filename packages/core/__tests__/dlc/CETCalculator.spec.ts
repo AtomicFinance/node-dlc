@@ -284,7 +284,7 @@ describe('CETCalculator', () => {
     });
   });
 
-  describe('split ranges hyperbola a=1 d=5000 test', () => {
+  describe('descending hyperbola a=1 d=5000 tests', () => {
     const hyperbola = new HyperbolaPayoutCurve(
       new BigNumber(1),
       new BigNumber(0),
@@ -358,7 +358,7 @@ describe('CETCalculator', () => {
     });
   });
 
-  describe('split ranges hyperbola a=-1 d=5000 f2=100 test', () => {
+  describe('ascending hyperbola a=-1 d=5000 f2=100 tests', () => {
     const hyperbola = new HyperbolaPayoutCurve(
       new BigNumber(-1),
       new BigNumber(0),
