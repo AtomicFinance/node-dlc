@@ -156,8 +156,6 @@ export function groupByIgnoringDigits(
   }
 }
 
-// x1 -> x2 == rounding
-// [x1, round1], [x2, round2]
 export interface RoundingInterval {
   beginInterval: bigint;
   roundingMod: bigint;
@@ -169,8 +167,15 @@ export type CETPayout = {
   payout: bigint;
 };
 
-// Temporary optimized covered call range calculation
-// Hyperbolas w/ b=c=0
+/**
+ * Performs optimized rounding for strictly monotonic hyperbolas on intervals (from, to)
+ * e.g. hyperbolas with the form b = c = 0
+ *
+ * The next start of a payout range is determined by finding the outcome at the next mid-rounding payout.
+ * Uses an inverse function of the hyperbola to find the outcome.
+ *
+ * Optimizes rounding from O(from - to) to O(totalCollateral / rounding)
+ */
 export function splitIntoRanges(
   from: bigint,
   to: bigint,
