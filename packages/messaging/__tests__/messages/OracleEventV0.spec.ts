@@ -29,7 +29,7 @@ describe('OracleEventV0', () => {
           'hex',
         ),
       );
-      instance.eventId = eventId;
+      instance.eventId = eventId.toString();
 
       expect(instance.serialize().toString("hex")).to.equal(
         "fdd822" + // type oracle_event
@@ -83,7 +83,7 @@ describe('OracleEventV0', () => {
           '06' + // outcome_2_len
           '64756d6d7932', // outcome_2
       );
-      expect(instance.eventId).to.deep.equal(eventId);
+      expect(instance.eventId).to.equal(eventId.toString());
     });
   });
 });

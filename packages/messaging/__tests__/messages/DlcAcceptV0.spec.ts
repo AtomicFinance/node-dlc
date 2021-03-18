@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { FundingInputV0 } from '../../lib/messages/FundingInputV0';
+import { FundingInputV0 } from '../../lib/messages/FundingInput';
 import { DlcAcceptV0 } from '../../lib/messages/DlcAccept';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
 import { NegotiationFields } from '../../lib/messages/NegotiationFields';
