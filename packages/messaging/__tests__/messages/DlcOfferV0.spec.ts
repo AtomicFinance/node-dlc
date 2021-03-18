@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
-import { FundingInputV0 } from '../../lib/messages/FundingInputV0';
+import { FundingInputV0 } from '../../lib/messages/FundingInput';
 import { DlcOfferV0 } from '../../lib/messages/DlcOffer';
 
 describe('EnumEventDescriptorV0', () => {
