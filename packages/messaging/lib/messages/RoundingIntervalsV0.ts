@@ -61,7 +61,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   }
 }
 
-interface IInterval {
+export interface IInterval {
   beginInterval: bigint;
   roundingMod: bigint;
 }
