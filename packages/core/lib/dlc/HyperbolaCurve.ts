@@ -1,10 +1,3 @@
-// long call, set f2 = contractSize, d = contractSize * strike a = -1
-// find max yvalue at max_x. set as total collateral.
-
-// short call, a = 1, d = contractSize * strike
-// set f2 to be - yvalue at max_x
-// set total collateral to be contractSize negative yvalue at max_x
-
 import BigNumber from 'bignumber.js';
 
 class HyperbolaPayoutCurve {
@@ -59,9 +52,8 @@ class HyperbolaPayoutCurve {
   getOutcomeForPayout(payout: BigNumber): bigint {
     const { a, b, c, d, f_1, f_2 } = this;
 
-    // inverse fn
+    // Inverse function
     // y=(-ad^{2}-bf_{2}^{2}+2bf_{2}x-bx^{2}+df_{1}f_{2}-df_{1}x)/(d(f_{2}-x))
-
     if (c.eq(0)) {
       return BigInt(
         a
@@ -82,19 +74,5 @@ class HyperbolaPayoutCurve {
     }
   }
 }
-
-const hyperbola = new HyperbolaPayoutCurve(
-  new BigNumber(-0.3), // a
-  new BigNumber(0), // b
-  new BigNumber(0), // c
-  new BigNumber(50), // d
-  new BigNumber(3.5), // f_1
-  new BigNumber(1.8), // f_2
-  true,
-);
-
-console.log(hyperbola.getPayout(6n).toNumber());
-
-// console.log(hyperbola.getOutcomeForPayout(payout).toNumber());
 
 export default HyperbolaPayoutCurve;

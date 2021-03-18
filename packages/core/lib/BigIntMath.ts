@@ -1,5 +1,5 @@
 export default class BigIntMath {
-  static max(...values) {
+  static max(...values: bigint[]): bigint {
     if (values.length === 0) {
       return null;
     }
@@ -17,7 +17,7 @@ export default class BigIntMath {
     return max;
   }
 
-  static min(...values) {
+  static min(...values: bigint[]): bigint {
     if (values.length === 0) {
       return null;
     }

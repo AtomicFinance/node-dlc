@@ -18,6 +18,8 @@ export function dropUntil<T>(data: T[], check: (T: any) => boolean): T[] {
 export function decompose(num: bigint, base: number, numDigits: number) {
   let currentNumber = num;
   const digits = [];
+  console.log('num', num);
+  console.log('base', base);
   while (numDigits > 0) {
     digits.push(Number(currentNumber % BigInt(base)));
     currentNumber = currentNumber / BigInt(base);
@@ -288,31 +290,3 @@ const round = (payout: BigNumber, rounding: bigint) => {
   if (hi.gte(low)) return hi;
   return low;
 };
-
-const hyperbola = new HyperbolaPayoutCurve(
-  new BigNumber(1), // a
-  new BigNumber(0), // b
-  new BigNumber(0), // c
-  new BigNumber(5000000000000), // d
-  new BigNumber(0), // f_1
-  new BigNumber(0), // f_2
-  true,
-);
-const ranges = splitIntoRanges(0n, 1009994n, 100000000n, hyperbola, [
-  { beginInterval: 400n, roundingMod: 250000n },
-]);
-
-console.log(ranges[ranges.length - 1]);
-
-console.log(hyperbola.getOutcomeForPayout(new BigNumber(99875000)));
-const test0 = BigInt(hyperbola.getPayout(975609n).integerValue().toNumber());
-console.log(test0);
-console.log(test0 - (test0 - (test0 % 250000n)));
-console.log(test0 - (test0 - (test0 % 250000n) + 250000n));
-
-console.log('---');
-console.log(hyperbola.getOutcomeForPayout(new BigNumber(99625000)));
-const test1 = BigInt(hyperbola.getPayout(66116n).integerValue().toNumber());
-console.log(test1);
-console.log(test1 - (test1 - (test1 % 50000n)));
-console.log(test1 - (test1 - (test1 % 50000n) + 50000n));
