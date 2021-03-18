@@ -1,6 +1,6 @@
 import HyperbolaPayoutCurve from './HyperbolaCurve';
 import BigNumber from 'bignumber.js';
-import BigIntMath from '../BigIntMath';
+import BigIntMath from '../utils/BigIntMath';
 
 export function zipWithIndex<T>(arr: T[]) {
   return arr.map((a, i) => [a, i]);

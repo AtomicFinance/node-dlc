@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
-import BigIntMath from '../../lib/BigIntMath';
+import BigIntMath from '../../lib/utils/BigIntMath';
 import {
   decompose,
   groupByIgnoringDigits,
