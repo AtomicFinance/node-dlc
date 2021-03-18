@@ -113,7 +113,7 @@ export class ContractDescriptorV1
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    reader.readBigSize(); // num_digits
+    instance.numDigits = reader.readUInt16BE(); // num_digits
 
     instance.payoutFunction = PayoutFunction.deserialize(getTlv(reader));
     instance.roundingIntervals = RoundingIntervalsV0.deserialize(
@@ -130,6 +130,8 @@ export class ContractDescriptorV1
 
   public length: bigint;
 
+  public numDigits: number;
+
   public payoutFunction: PayoutFunction;
 
   public roundingIntervals: RoundingIntervalsV0;
@@ -142,6 +144,7 @@ export class ContractDescriptorV1
     writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
+    dataWriter.writeUInt16BE(this.numDigits);
     dataWriter.writeBytes(this.payoutFunction.serialize());
     dataWriter.writeBytes(this.roundingIntervals.serialize());
 
