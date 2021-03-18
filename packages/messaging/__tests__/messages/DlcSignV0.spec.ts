@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
-import { SignDlcV0 } from '../../lib/messages/SignDlcV0';
+import { DlcSignV0 } from '../../lib/messages/DlcSign';
 import { FundingSignaturesV0 } from '../../lib/messages/FundingSignaturesV0';
 
-describe('SignDlcV0', () => {
+describe('DlcSignV0', () => {
   const contractId = Buffer.from(
     'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269',
     'hex',
@@ -16,7 +16,7 @@ describe('SignDlcV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new SignDlcV0();
+      const instance = new DlcSignV0();
 
       instance.contractId = contractId;
       instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
@@ -99,7 +99,7 @@ describe('SignDlcV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = SignDlcV0.deserialize(buf);
+      const instance = DlcSignV0.deserialize(buf);
 
       expect(instance.contractId).to.deep.equal(contractId);
       expect(instance.cetSignatures.serialize().toString('hex')).to.equal(

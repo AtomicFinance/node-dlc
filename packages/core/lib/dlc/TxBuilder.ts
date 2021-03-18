@@ -1,19 +1,9 @@
 import {
-  AcceptDlcWithoutSigs,
+  DlcAcceptWithoutSigs,
   FundingInputV0,
-  MessageType,
-  OfferDlcV0,
+  DlcOfferV0,
 } from '@node-dlc/messaging';
-import {
-  HashValue,
-  LockTime,
-  OutPoint,
-  Script,
-  Sequence,
-  TxIn,
-  TxOut,
-  Value,
-} from '@node-lightning/bitcoin';
+import { LockTime, OutPoint, Script, Value } from '@node-lightning/bitcoin';
 import { StreamReader } from '@node-lightning/bufio';
 import { Tx } from '../Tx';
 import { TxBuilder } from '../TxBuilder';
@@ -21,8 +11,8 @@ import { DualFundingTxFinalizer } from './TxFinalizer';
 
 export class DlcTxBuilder {
   constructor(
-    readonly offerDlc: OfferDlcV0,
-    readonly acceptDlc: AcceptDlcWithoutSigs,
+    readonly dlcOffer: DlcOfferV0,
+    readonly dlcAccept: DlcAcceptWithoutSigs,
   ) {}
 
   public buildFundingTransaction(): Tx {
@@ -32,27 +22,27 @@ export class DlcTxBuilder {
 
     const multisigScript = Script.p2msLock(
       2,
-      this.offerDlc.fundingPubKey,
-      this.acceptDlc.fundingPubKey,
+      this.dlcOffer.fundingPubKey,
+      this.dlcAccept.fundingPubKey,
     );
     const witScript = Script.p2wshLock(multisigScript);
 
-    const offerInput = this.offerDlc.offerCollateralSatoshis;
-    const acceptInput = this.acceptDlc.acceptCollateralSatoshis;
+    const offerInput = this.dlcOffer.offerCollateralSatoshis;
+    const acceptInput = this.dlcAccept.acceptCollateralSatoshis;
 
     const totalInput = offerInput + acceptInput;
 
     const finalizer = new DualFundingTxFinalizer(
-      this.offerDlc.fundingInputs,
-      this.offerDlc.payoutSPK,
-      this.offerDlc.changeSPK,
-      this.acceptDlc.fundingInputs,
-      this.acceptDlc.payoutSPK,
-      this.acceptDlc.changeSPK,
-      this.offerDlc.feeRate,
+      this.dlcOffer.fundingInputs,
+      this.dlcOffer.payoutSPK,
+      this.dlcOffer.changeSPK,
+      this.dlcAccept.fundingInputs,
+      this.dlcAccept.payoutSPK,
+      this.dlcAccept.changeSPK,
+      this.dlcOffer.feeRatePerVb,
     );
 
-    const offerTotalFunding = this.offerDlc.fundingInputs.reduce(
+    const offerTotalFunding = this.dlcOffer.fundingInputs.reduce(
       (total, input) => {
         const prevTx = Tx.parse(StreamReader.fromBuffer(input.prevTx));
         return total + prevTx.outputs[input.prevTxVout].value.sats;
@@ -60,7 +50,7 @@ export class DlcTxBuilder {
       BigInt(0),
     );
 
-    const acceptTotalFunding = this.acceptDlc.fundingInputs.reduce(
+    const acceptTotalFunding = this.dlcAccept.fundingInputs.reduce(
       (total, input) => {
         const prevTx = Tx.parse(StreamReader.fromBuffer(input.prevTx));
         return total + prevTx.outputs[input.prevTxVout].value.sats;
@@ -69,8 +59,8 @@ export class DlcTxBuilder {
     );
 
     const fundingInputs: FundingInputV0[] = [
-      ...this.offerDlc.fundingInputs,
-      ...this.acceptDlc.fundingInputs,
+      ...this.dlcOffer.fundingInputs,
+      ...this.dlcAccept.fundingInputs,
     ];
 
     fundingInputs.forEach((input) => {
@@ -90,11 +80,11 @@ export class DlcTxBuilder {
     tx.addOutput(Value.fromSats(Number(fundingValue)), witScript);
     tx.addOutput(
       Value.fromSats(Number(offerChangeValue)),
-      Script.parse(StreamReader.fromBuffer(this.offerDlc.changeSPK)),
+      Script.parse(StreamReader.fromBuffer(this.dlcOffer.changeSPK)),
     );
     tx.addOutput(
       Value.fromSats(Number(acceptChangeValue)),
-      Script.parse(StreamReader.fromBuffer(this.acceptDlc.changeSPK)),
+      Script.parse(StreamReader.fromBuffer(this.dlcAccept.changeSPK)),
     );
 
     return tx.toTx();
