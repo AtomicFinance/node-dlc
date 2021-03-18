@@ -40,7 +40,8 @@ export class OracleEventV0 implements IDlcMessage {
       getTlv(reader),
     );
     const eventIdLength = reader.readBigSize();
-    instance.eventId = reader.readBytes(Number(eventIdLength));
+    const eventIdBuf = reader.readBytes(Number(eventIdLength));
+    instance.eventId = eventIdBuf.toString();
 
     return instance;
   }
@@ -58,7 +59,7 @@ export class OracleEventV0 implements IDlcMessage {
 
   public eventDescriptor: EnumEventDescriptorV0;
 
-  public eventId: Buffer;
+  public eventId: string;
 
   /**
    * Serializes the oracle_event message into a Buffer
@@ -77,7 +78,7 @@ export class OracleEventV0 implements IDlcMessage {
     dataWriter.writeUInt32BE(this.eventMaturityEpoch);
     dataWriter.writeBytes(this.eventDescriptor.serialize());
     dataWriter.writeBigSize(this.eventId.length);
-    dataWriter.writeBytes(this.eventId);
+    dataWriter.writeBytes(Buffer.from(this.eventId));
 
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());

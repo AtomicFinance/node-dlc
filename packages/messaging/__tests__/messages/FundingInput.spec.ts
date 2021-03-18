@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { FundingInputV0 } from '../../lib/messages/FundingInputV0';
+import { FundingInputV0 } from '../../lib/messages/FundingInput';
 
 describe('FundingInputV0', () => {
   const prevTx = Buffer.from(

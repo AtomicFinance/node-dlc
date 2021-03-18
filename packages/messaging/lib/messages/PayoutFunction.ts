@@ -9,13 +9,13 @@ export abstract class PayoutFunction {
     const type = Number(reader.readBigSize());
 
     switch (type) {
-      case MessageType.ContractDescriptorV0:
+      case MessageType.PayoutFunctionV0:
         return PayoutFunctionV0.deserialize(buf);
-      case MessageType.ContractDescriptorV1:
+      case MessageType.PayoutFunctionV1:
         return PayoutFunctionV1.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
+          `Payout function TLV type must be PayoutFunctionV0 or PayoutFunctionV1`,
         );
     }
   }
