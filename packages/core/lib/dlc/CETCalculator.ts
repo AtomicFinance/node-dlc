@@ -217,18 +217,23 @@ export function splitIntoRanges(
     const nextFirstRoundingOutcome =
       reversedIntervals[roundingIndex - 1]?.beginInterval || to;
 
-    let currentPayout = curve.getPayout(currentOutcome);
+    let currentPayout = BigNumber.min(
+      round(curve.getPayout(currentOutcome), rounding),
+      Number(totalCollateral),
+    );
+
     const isAscending = curve
       .getPayout(nextFirstRoundingOutcome)
       .gt(currentPayout);
 
     let lastCurrentOutcomeMid = currentOutcome;
+    console.log(isAscending);
 
     while (currentOutcome < nextFirstRoundingOutcome) {
+      console.log(currentPayout.toNumber());
       const currentPayoutNext = currentPayout
         .integerValue()
         .plus(isAscending ? Number(rounding) : -Number(rounding));
-
       const currentPayoutNextBigInt = BigInt(
         currentPayoutNext.integerValue().toString(),
       );
@@ -237,7 +242,7 @@ export function splitIntoRanges(
         isAscending ? Number(rounding / 2n) : -Number(rounding / 2n),
       );
 
-      const currentOutcomeNextMid = curve.getOutcomeForPayout(
+      let currentOutcomeNextMid = curve.getOutcomeForPayout(
         currentPayoutNextMid,
       );
 
@@ -256,10 +261,9 @@ export function splitIntoRanges(
 
       let nextOutcome = curve.getOutcomeForPayout(currentPayoutNext);
 
-      console.log('nextOutcome', nextOutcome);
-
       if (nextOutcome >= nextFirstRoundingOutcome) {
-        nextOutcome = nextFirstRoundingOutcome;
+        nextOutcome = nextFirstRoundingOutcome - 1n;
+        currentOutcomeNextMid = nextFirstRoundingOutcome;
       }
 
       result.push({
@@ -276,15 +280,14 @@ export function splitIntoRanges(
   }
   return result;
 }
-// const hyperbola = new HyperbolaPayoutCurve(
-//   new BigNumber(1), // a
-//   new BigNumber(0), // b
-//   new BigNumber(0), // c
-//   new BigNumber(50), // d
-//   new BigNumber(0), // f_1
-//   new BigNumber(0), // f_2
-//   true,
-// );
+
+const round = (payout: BigNumber, rounding: bigint) => {
+  const low = payout.minus(payout.mod(rounding.toString()));
+  const hi = low.plus(rounding.toString());
+
+  if (hi.gte(low)) return hi;
+  return low;
+};
 
 const hyperbola = new HyperbolaPayoutCurve(
   new BigNumber(1), // a
@@ -299,9 +302,10 @@ console.log(
   splitIntoRanges(0n, 999999n, 100000000n, hyperbola, [
     { beginInterval: 1n, roundingMod: 10000n },
     { beginInterval: 400n, roundingMod: 250000n },
-    // { beginInterval: 50250n, roundingMod: 50000n },
+    { beginInterval: 50250n, roundingMod: 50000n },
   ]),
 );
+
 console.log(hyperbola.getOutcomeForPayout(new BigNumber(99875000)));
 const test0 = BigInt(hyperbola.getPayout(50063n).integerValue().toNumber());
 console.log(test0);
@@ -310,7 +314,7 @@ console.log(test0 - (test0 - (test0 % 250000n) + 250000n));
 
 console.log('---');
 console.log(hyperbola.getOutcomeForPayout(new BigNumber(99625000)));
-const test1 = BigInt(hyperbola.getPayout(57720n).integerValue().toNumber());
+const test1 = BigInt(hyperbola.getPayout(52756n).integerValue().toNumber());
 console.log(test1);
-console.log(test1 - (test1 - (test1 % 250000n)));
-console.log(test1 - (test1 - (test1 % 250000n) + 250000n));
+console.log(test1 - (test1 - (test1 % 50000n)));
+console.log(test1 - (test1 - (test1 % 50000n) + 50000n));
