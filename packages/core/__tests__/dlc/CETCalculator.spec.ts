@@ -312,7 +312,19 @@ describe('CETCalculator', () => {
         roundingIntervals,
       );
 
-      console.log(ranges);
+      expect(ranges).deep.eq([
+        { payout: 100n, indexFrom: 4976n, indexTo: 5263n },
+        { payout: 90n, indexFrom: 5264n, indexTo: 5882n },
+        { payout: 80n, indexFrom: 5883n, indexTo: 6666n },
+        { payout: 70n, indexFrom: 6667n, indexTo: 7692n },
+        { payout: 60n, indexFrom: 7693n, indexTo: 9090n },
+        { payout: 50n, indexFrom: 9091n, indexTo: 11111n },
+        { payout: 40n, indexFrom: 11112n, indexTo: 14285n },
+        { payout: 30n, indexFrom: 14286n, indexTo: 19999n },
+        { payout: 20n, indexFrom: 20000n, indexTo: 33333n },
+        { payout: 10n, indexFrom: 33334n, indexTo: 99999n },
+        { payout: 0n, indexFrom: 100000n, indexTo: 999999n },
+      ]);
     });
   });
 });
