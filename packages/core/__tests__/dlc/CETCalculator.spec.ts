@@ -547,4 +547,112 @@ describe('CETCalculator', () => {
       });
     });
   });
+
+  describe('large descending hyperbola a=1 d=5000000000000 tests (50k 1BTC covered call)', () => {
+    const hyperbola = new HyperbolaPayoutCurve(
+      new BigNumber(1),
+      new BigNumber(0),
+      new BigNumber(0),
+      new BigNumber(5000000000000),
+      new BigNumber(0),
+      new BigNumber(0),
+      false,
+    );
+
+    it('should properly split and round with one interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 100000n,
+        },
+      ];
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        100000000n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      const rounding = roundingIntervals[0].roundingMod;
+
+      // for each indexTo, expect payout to round up (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round down (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
+    });
+
+    it('should properly split and round with non-even rounding mod', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 150000n,
+        },
+      ];
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        100000000n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      const rounding = roundingIntervals[0].roundingMod;
+
+      // for each indexTo, expect payout to round up (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round down (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
+    });
+  });
 });
