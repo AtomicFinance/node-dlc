@@ -1,5 +1,12 @@
+import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
-import { decompose, groupByIgnoringDigits } from '../../lib/dlc/CETCalculator';
+import {
+  decompose,
+  groupByIgnoringDigits,
+  RoundingInterval,
+  splitIntoRanges,
+} from '../../lib/dlc/CETCalculator';
+import HyperbolaPayoutCurve from '../../lib/dlc/HyperbolaCurve';
 
 const decompositionTestCases: {
   decomposed: number[];
@@ -251,10 +258,9 @@ const groupingTestCases: {
 ];
 
 describe('CETCalculator', () => {
-  describe('outcome (de)composition tests', () => {
+  describe('outcome decomposition tests', () => {
     it('should properly decompose values', () => {
       for (const test of decompositionTestCases) {
-        console.log(test.base);
         expect(
           decompose(BigInt(parseInt(test.composed)), test.base, test.nbDigits),
         ).deep.eq(test.decomposed);
@@ -274,6 +280,39 @@ describe('CETCalculator', () => {
           ),
         ).deep.equals(test.expected);
       }
+    });
+  });
+
+  describe('split ranges hyperbola a=1 d=5000 test', () => {
+    const hyperbola = new HyperbolaPayoutCurve(
+      new BigNumber(1),
+      new BigNumber(0),
+      new BigNumber(0),
+      new BigNumber(500000),
+      new BigNumber(0),
+      new BigNumber(0),
+      false,
+    );
+
+    it('should properly split and round with one interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 10n,
+        },
+      ];
+
+      console.log(hyperbola.getOutcomeForPayout(new BigNumber(100)));
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        100n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      console.log(ranges);
     });
   });
 });

@@ -160,12 +160,12 @@ export function groupByIgnoringDigits(
 
 // x1 -> x2 == rounding
 // [x1, round1], [x2, round2]
-interface Interval {
+export interface RoundingInterval {
   beginInterval: bigint;
   roundingMod: bigint;
 }
 
-type CETPayout = {
+export type CETPayout = {
   indexFrom: bigint;
   indexTo: bigint;
   payout: bigint;
@@ -178,7 +178,7 @@ export function splitIntoRanges(
   to: bigint,
   totalCollateral: bigint,
   curve: HyperbolaPayoutCurve,
-  roundingIntervals: Interval[],
+  roundingIntervals: RoundingInterval[],
 ): CETPayout[] {
   const reversedIntervals = roundingIntervals.reverse();
 
@@ -190,6 +190,7 @@ export function splitIntoRanges(
 
     if (payout >= 0n && payout <= totalCollateral) {
       firstValidOutcome = i;
+      console.log('First valid outcome and payout', i, payout);
       break;
     }
   }
@@ -200,6 +201,9 @@ export function splitIntoRanges(
   const result: CETPayout[] = [];
 
   let currentOutcome = firstValidOutcome;
+  const clamp = (val: bigint) =>
+    BigIntMath.max(0n, BigIntMath.min(val, totalCollateral));
+
   while (currentOutcome < to) {
     const roundingIndex = reversedIntervals.findIndex(
       (interval) => interval.beginInterval <= currentOutcome,
@@ -211,24 +215,26 @@ export function splitIntoRanges(
     const nextFirstRoundingOutcome =
       reversedIntervals[roundingIndex - 1]?.beginInterval || to;
 
-    let currentPayout = BigNumber.max(
-      BigNumber.min(
-        round(curve.getPayout(currentOutcome), rounding),
-        Number(totalCollateral),
-      ),
-      0,
-    );
+    console.log(round(curve.getPayout(currentOutcome), rounding).toNumber());
+    let currentPayout = round(curve.getPayout(currentOutcome), rounding);
+
+    console.log('currentPayout', currentPayout.toNumber());
+    console.log(firstValidOutcome);
 
     const isAscending = curve
       .getPayout(nextFirstRoundingOutcome)
       .gt(currentPayout);
 
+    console.log(isAscending);
+
     let lastMidRoundingOutcome = currentOutcome;
 
-    while (currentOutcome < nextFirstRoundingOutcome) {
+    while (currentOutcome <= nextFirstRoundingOutcome) {
       const currentPayoutNext = currentPayout
         .integerValue()
         .plus(isAscending ? Number(rounding) : -Number(rounding));
+
+      console.log(currentPayoutNext.toNumber());
 
       const currentPayoutNextBigInt = BigInt(
         currentPayoutNext.integerValue().toString(),
@@ -243,6 +249,7 @@ export function splitIntoRanges(
       );
 
       let nextOutcome = curve.getOutcomeForPayout(currentPayoutNext);
+      if (nextOutcome < 0) nextOutcome = to - 1n;
 
       if (
         currentPayoutNextBigInt >= totalCollateral ||
@@ -269,7 +276,7 @@ export function splitIntoRanges(
       }
 
       result.push({
-        payout: BigInt(currentPayout.integerValue().toString()),
+        payout: clamp(BigInt(currentPayout.integerValue().toString())),
         indexFrom: lastMidRoundingOutcome,
         indexTo: nextMidRoundingOutcome - 1n,
       });
@@ -287,6 +294,9 @@ const round = (payout: BigNumber, rounding: bigint) => {
   const low = payout.minus(payout.mod(rounding.toString()));
   const hi = low.plus(rounding.toString());
 
-  if (hi.gte(low)) return hi;
+  const low_diff = payout.minus(low).abs();
+  const hi_diff = payout.minus(hi).abs();
+
+  if (hi_diff.lte(low_diff)) return hi;
   return low;
 };
