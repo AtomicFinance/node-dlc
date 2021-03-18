@@ -184,8 +184,12 @@ export function splitIntoRanges(
   roundingIntervals: RoundingInterval[],
 ): CETPayout[] {
   const reversedIntervals = roundingIntervals.reverse();
+  const clamp = (val: bigint) =>
+    BigIntMath.max(0n, BigIntMath.min(val, totalCollateral));
+  const result: CETPayout[] = [];
 
   let firstValidOutcome: bigint;
+
   for (let i = from; i < to; i++) {
     const _payout = curve.getPayout(i).integerValue();
     if (!_payout.isFinite()) continue;
@@ -200,12 +204,7 @@ export function splitIntoRanges(
   if (firstValidOutcome === undefined)
     throw new Error('Cannot find a valid outcome');
 
-  const result: CETPayout[] = [];
-
   let currentOutcome = firstValidOutcome;
-  const clamp = (val: bigint) =>
-    BigIntMath.max(0n, BigIntMath.min(val, totalCollateral));
-
   while (currentOutcome < to) {
     const roundingIndex = reversedIntervals.findIndex(
       (interval) => interval.beginInterval <= currentOutcome,
@@ -218,12 +217,11 @@ export function splitIntoRanges(
       reversedIntervals[roundingIndex - 1]?.beginInterval || to;
 
     let currentPayout = round(curve.getPayout(currentOutcome), rounding);
+    let currentMidRoundedOutcome = currentOutcome;
 
     const isAscending = curve
       .getPayout(nextFirstRoundingOutcome)
       .gt(currentPayout);
-
-    let currentMidRoundedOutcome = currentOutcome;
 
     while (currentOutcome <= nextFirstRoundingOutcome) {
       const nextRoundedPayout = currentPayout
@@ -242,6 +240,9 @@ export function splitIntoRanges(
         nextMidRoundedPayout,
       );
 
+      let nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
+      if (nextOutcome < 0) nextOutcome = to - 1n;
+
       if (
         (!isAscending &&
           curve.getPayout(nextMidRoundedOutcome).lt(nextMidRoundedPayout)) ||
@@ -250,9 +251,6 @@ export function splitIntoRanges(
       ) {
         nextMidRoundedOutcome = nextMidRoundedOutcome - 1n;
       }
-
-      let nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
-      if (nextOutcome < 0) nextOutcome = to - 1n;
 
       if (
         nextRoundedPayoutBigInt >= totalCollateral ||

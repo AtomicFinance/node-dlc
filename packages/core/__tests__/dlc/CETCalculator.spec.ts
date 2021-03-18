@@ -264,7 +264,7 @@ describe('CETCalculator', () => {
       for (const test of decompositionTestCases) {
         expect(
           decompose(BigInt(parseInt(test.composed)), test.base, test.nbDigits),
-        ).deep.eq(test.decomposed);
+        ).deep.equal(test.decomposed);
       }
     });
   });
@@ -279,7 +279,7 @@ describe('CETCalculator', () => {
             test.base,
             test.nbDigits,
           ),
-        ).deep.equals(test.expected);
+        ).deep.equal(test.expected);
       }
     });
   });
@@ -311,7 +311,7 @@ describe('CETCalculator', () => {
         roundingIntervals,
       );
 
-      expect(ranges).deep.eq([
+      expect(ranges).deep.equal([
         { payout: 100n, indexFrom: 4976n, indexTo: 5263n },
         { payout: 90n, indexFrom: 5264n, indexTo: 5882n },
         { payout: 80n, indexFrom: 5883n, indexTo: 6666n },
@@ -326,6 +326,65 @@ describe('CETCalculator', () => {
       ]);
 
       const rounding = roundingIntervals[0].roundingMod;
+
+      // for each indexTo, expect payout to round up (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round down (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
+    });
+
+    it('should properly split and round with non-even rounding mod', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 15n,
+        },
+      ];
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        100n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      const rounding = roundingIntervals[0].roundingMod;
+
+      expect(ranges).to.deep.equal([
+        { payout: 100n, indexFrom: 4976n, indexTo: 5128n },
+        { payout: 90n, indexFrom: 5129n, indexTo: 6060n },
+        { payout: 75n, indexFrom: 6061n, indexTo: 7407n },
+        { payout: 60n, indexFrom: 7408n, indexTo: 9523n },
+        { payout: 45n, indexFrom: 9524n, indexTo: 13333n },
+        { payout: 30n, indexFrom: 13334n, indexTo: 22222n },
+        { payout: 15n, indexFrom: 22223n, indexTo: 66666n },
+        { payout: 0n, indexFrom: 66667n, indexTo: 999999n },
+      ]);
 
       // for each indexTo, expect payout to round up (except last index)
       ranges.forEach((range, index) => {
@@ -387,7 +446,7 @@ describe('CETCalculator', () => {
 
       const rounding = roundingIntervals[0].roundingMod;
 
-      expect(ranges).to.deep.eq([
+      expect(ranges).to.deep.equal([
         { payout: 0n, indexFrom: 4976n, indexTo: 5263n },
         { payout: 10n, indexFrom: 5264n, indexTo: 5882n },
         { payout: 20n, indexFrom: 5883n, indexTo: 6666n },
@@ -398,6 +457,63 @@ describe('CETCalculator', () => {
         { payout: 70n, indexFrom: 14286n, indexTo: 19999n },
         { payout: 80n, indexFrom: 20000n, indexTo: 33333n },
         { payout: 90n, indexFrom: 33334n, indexTo: 999999n },
+      ]);
+
+      // for each indexTo, expect payout to round down (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round up (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+    });
+
+    it('should properly split and round with non-even rounding mod', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 15n,
+        },
+      ];
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        100n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      const rounding = roundingIntervals[0].roundingMod;
+      expect(ranges).to.deep.equal([
+        { payout: 0n, indexFrom: 4976n, indexTo: 5405n },
+        { payout: 15n, indexFrom: 5406n, indexTo: 6451n },
+        { payout: 30n, indexFrom: 6452n, indexTo: 7999n },
+        { payout: 45n, indexFrom: 8000n, indexTo: 10526n },
+        { payout: 60n, indexFrom: 10527n, indexTo: 15384n },
+        { payout: 75n, indexFrom: 15385n, indexTo: 28571n },
+        { payout: 90n, indexFrom: 28572n, indexTo: 999999n },
       ]);
 
       // for each indexTo, expect payout to round down (except last index)
