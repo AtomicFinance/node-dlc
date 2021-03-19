@@ -174,7 +174,7 @@ export type CETPayout = {
  * The next start of a payout range is determined by finding the outcome at the next mid-rounding payout.
  * Uses an inverse function of the hyperbola to find the outcome.
  *
- * Optimizes rounding from O(from - to) to O(totalCollateral / rounding)
+ * Optimizes rounding from O(to - from) to O(totalCollateral / rounding)
  */
 export function splitIntoRanges(
   from: bigint,
