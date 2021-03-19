@@ -25,11 +25,11 @@ const buildCurve = (
   );
 
   const maxOutcome = BigInt(new BN(oracleBase).pow(oracleDigits).toString(10));
-  const maxPayout = _tempHyperbolaPayoutCurve
+  const maxOutcomePayout = _tempHyperbolaPayoutCurve
     .getPayout(maxOutcome)
     .integerValue();
 
-  return new HyperbolaPayoutCurve(a, b, c, d, f_1, maxPayout.negated());
+  return new HyperbolaPayoutCurve(a, b, c, d, f_1, maxOutcomePayout.negated());
 };
 
 export default { buildCurve };
