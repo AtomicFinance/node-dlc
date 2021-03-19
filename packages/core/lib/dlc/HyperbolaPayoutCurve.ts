@@ -1,3 +1,4 @@
+import { PayoutFunctionV1 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
 
 export class HyperbolaPayoutCurve {
@@ -72,5 +73,92 @@ export class HyperbolaPayoutCurve {
       // y=\left((\sqrt{((adf_{2}-adx+bcf_{2}-bcx-2c\cdot d\cdot f_{1})^{2}-4cd(a^{2}d^{2}-2abcd+abf_{2}^{2}-2abf_{2}x+abx^{2}-adf_{1}f_{2}+adf_{1}x+b^{2}c^{2}-bcf_{1}f_{2}+bcf_{1}x+c\cdot d\cdot f_{1}^{2}))}-adf_{2}+adx-bcf_{2}+bcx+2c\cdot d\cdot f_{1})\right)/(2cd)
       throw new Error('Not supported');
     }
+  }
+
+  toPayoutFunction(): PayoutFunctionV1 {
+    const { a, b, c, d, f_1, f_2, positive } = this;
+
+    const pf = new PayoutFunctionV1();
+    pf.usePositivePiece = positive;
+    pf.translateOutcomeSign = f_1.isPositive();
+    pf.translateOutcome = BigInt(f_1.abs().toString());
+    pf.translateOutcomeExtraPrecision = f_1
+      .decimalPlaces(16)
+      .abs()
+      .modulo(1)
+      .shiftedBy(16)
+      .toNumber();
+    pf.translatePayoutSign = false;
+    pf.translatePayout = BigInt(f_2.abs().toString());
+    pf.translatePayoutExtraPrecision = f_2
+      .decimalPlaces(16)
+      .abs()
+      .modulo(1)
+      .shiftedBy(16)
+      .toNumber();
+    pf.aSign = a.isPositive();
+    pf.a = BigInt(a.abs().toString());
+    pf.aExtraPrecision = a
+      .decimalPlaces(16)
+      .abs()
+      .modulo(1)
+      .shiftedBy(16)
+      .toNumber();
+    pf.bSign = a.isPositive();
+    pf.b = BigInt(b.abs().toString());
+    pf.bExtraPrecision = b
+      .decimalPlaces(16)
+      .abs()
+      .modulo(1)
+      .shiftedBy(16)
+      .toNumber();
+    0;
+    pf.cSign = c.isPositive();
+    pf.c = BigInt(c.abs().toString());
+    pf.cExtraPrecision = c
+      .decimalPlaces(16)
+      .abs()
+      .modulo(1)
+      .shiftedBy(16)
+      .toNumber();
+    0;
+    pf.dSign = d.isPositive();
+    pf.d = BigInt(d.integerValue().toString());
+    pf.dExtraPrecision = d
+      .decimalPlaces(16)
+      .abs()
+      .modulo(1)
+      .shiftedBy(16)
+      .toNumber();
+
+    return pf;
+  }
+
+  static fromPayoutFunction(pf: PayoutFunctionV1): HyperbolaPayoutCurve {
+    const a = new BigNumber(pf.a.toString())
+      .times(pf.aSign ? 1 : -1)
+      .plus(new BigNumber(pf.aExtraPrecision).shiftedBy(-16));
+
+    const b = new BigNumber(pf.b.toString())
+      .times(pf.bSign ? 1 : -1)
+      .plus(new BigNumber(pf.bExtraPrecision).shiftedBy(-16));
+
+    const c = new BigNumber(pf.c.toString())
+      .times(pf.cSign ? 1 : -1)
+      .plus(new BigNumber(pf.cExtraPrecision).shiftedBy(-16));
+
+    const d = new BigNumber(pf.d.toString())
+      .times(pf.dSign ? 1 : -1)
+      .plus(new BigNumber(pf.dExtraPrecision).shiftedBy(-16));
+
+    const f_1 = new BigNumber(pf.translateOutcome.toString())
+      .times(pf.translateOutcomeSign ? 1 : -1)
+      .plus(new BigNumber(pf.translateOutcomeExtraPrecision).shiftedBy(-16));
+
+    const f_2 = new BigNumber(pf.translatePayout.toString())
+      .times(pf.translatePayoutSign ? 1 : -1)
+      .plus(new BigNumber(pf.translatePayoutExtraPrecision).shiftedBy(-16));
+
+    return new HyperbolaPayoutCurve(a, b, c, d, f_1, f_2, pf.usePositivePiece);
   }
 }
