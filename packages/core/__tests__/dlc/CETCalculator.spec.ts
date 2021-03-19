@@ -514,7 +514,8 @@ describe('CETCalculator', () => {
         { payout: 45n, indexFrom: 8000n, indexTo: 10526n },
         { payout: 60n, indexFrom: 10527n, indexTo: 15384n },
         { payout: 75n, indexFrom: 15385n, indexTo: 28571n },
-        { payout: 90n, indexFrom: 28572n, indexTo: 999999n },
+        { payout: 90n, indexFrom: 28572n, indexTo: 199999n },
+        { payout: 100n, indexFrom: 200000n, indexTo: 999999n },
       ]);
 
       // for each indexTo, expect payout to round down (except last index)
@@ -619,6 +620,66 @@ describe('CETCalculator', () => {
         0n,
         999999n,
         100000000n,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      const rounding = roundingIntervals[0].roundingMod;
+
+      // for each indexTo, expect payout to round up (except last index)
+      ranges.forEach((range, index) => {
+        if (index === ranges.length - 1) return;
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.lte(low_diff)).to.be.true;
+      });
+
+      // for each indexFrom, expect payout to round down (except first index)
+      ranges.forEach((range, index) => {
+        if (index === 0) return;
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const low = payout.minus(payout.mod(rounding.toString()));
+        const hi = low.plus(rounding.toString());
+
+        const low_diff = payout.minus(low).abs();
+        const hi_diff = payout.minus(hi).abs();
+
+        expect(hi_diff.gt(low_diff)).to.be.true;
+      });
+    });
+  });
+
+  describe('descending hyperbola a=1 d=7500000000000 f2=-7500000 tests', () => {
+    const hyperbola = new HyperbolaPayoutCurve(
+      new BigNumber(1),
+      new BigNumber(0),
+      new BigNumber(0),
+      new BigNumber(7500000000000),
+      new BigNumber(0),
+      new BigNumber(-7500008),
+      false,
+    );
+
+    it('should properly split and round with one interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: 0n,
+          roundingMod: 250000n,
+        },
+      ];
+
+      const ranges = splitIntoRanges(
+        0n,
+        999999n,
+        92499992n,
         hyperbola,
         roundingIntervals,
       );

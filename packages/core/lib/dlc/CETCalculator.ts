@@ -241,7 +241,7 @@ export function splitIntoRanges(
       );
 
       let nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
-      if (nextOutcome < 0) nextOutcome = to - 1n;
+      if (nextOutcome < 0) nextOutcome = to;
 
       if (
         (!isAscending &&
@@ -255,22 +255,25 @@ export function splitIntoRanges(
       if (
         nextRoundedPayoutBigInt > totalCollateral ||
         nextRoundedPayoutBigInt < 0 ||
-        nextOutcome > to
+        nextOutcome >= to
       ) {
-        result.push({
-          payout: BigIntMath.max(
-            0n,
-            BigIntMath.min(
-              totalCollateral,
-              BigInt(currentPayout.integerValue().toString()),
-            ),
-          ),
-          indexFrom: currentMidRoundedOutcome,
-          indexTo: to,
-        });
+        result.push(
+          {
+            payout: clamp(BigInt(currentPayout.integerValue().toString())),
+            indexFrom: currentMidRoundedOutcome,
+            indexTo: nextMidRoundedOutcome,
+          },
+          {
+            payout: clamp(BigInt(nextRoundedPayout.integerValue().toString())),
+            indexFrom: nextMidRoundedOutcome + 1n,
+            indexTo: to,
+          },
+        );
+
         return result;
       }
 
+      // next rounding interval
       if (nextOutcome >= nextFirstRoundingOutcome) {
         nextOutcome = nextFirstRoundingOutcome - 1n;
         nextMidRoundedOutcome = nextFirstRoundingOutcome;
