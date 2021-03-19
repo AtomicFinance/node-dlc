@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 
-class HyperbolaPayoutCurve {
+export class HyperbolaPayoutCurve {
   constructor(
     private a: BigNumber,
     private b: BigNumber,
@@ -74,5 +74,3 @@ class HyperbolaPayoutCurve {
     }
   }
 }
-
-export default HyperbolaPayoutCurve;

@@ -1,4 +1,4 @@
-import HyperbolaPayoutCurve from './HyperbolaCurve';
+import { HyperbolaPayoutCurve } from './HyperbolaPayoutCurve';
 import BigNumber from 'bignumber.js';
 import BigIntMath from '../utils/BigIntMath';
 
