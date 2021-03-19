@@ -7,7 +7,7 @@ import {
   RoundingInterval,
   splitIntoRanges,
 } from '../../lib/dlc/CETCalculator';
-import HyperbolaPayoutCurve from '../../lib/dlc/HyperbolaCurve';
+import { HyperbolaPayoutCurve } from '../../lib/dlc/HyperbolaPayoutCurve';
 
 const decompositionTestCases: {
   decomposed: number[];
