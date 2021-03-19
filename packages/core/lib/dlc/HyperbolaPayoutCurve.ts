@@ -8,7 +8,7 @@ export class HyperbolaPayoutCurve {
     private d: BigNumber,
     private f_1: BigNumber,
     private f_2: BigNumber,
-    private positive: boolean,
+    private positive: boolean = true,
   ) {}
 
   getPayout(_x: bigint): BigNumber {
