@@ -23,7 +23,7 @@
     "dlc",
     "bitcoin"
   ],
-  "author": "Matthew Black <matthew@atomic.finance>",
+  "author": "Atomic Finance <info@atomic.finance>",
   "license": "MIT",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
