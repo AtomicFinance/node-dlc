@@ -24,7 +24,9 @@ const buildCurve = (
     _f_2,
   );
 
-  const maxOutcome = BigInt(new BN(oracleBase).pow(oracleDigits).toString(10));
+  const maxOutcome = BigInt(
+    new BN(oracleBase).pow(oracleDigits).minus(1).toString(10),
+  );
   const maxOutcomePayout = _tempHyperbolaPayoutCurve
     .getPayout(maxOutcome)
     .integerValue();

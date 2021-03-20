@@ -186,7 +186,7 @@ export function splitIntoRanges(
   if (to - from <= 0) {
     throw new Error('`to` must be strictly greater than `from`');
   }
-  if (roundingIntervals.length === 1) {
+  if (roundingIntervals.length !== 1) {
     throw new Error('Multiple rounding intervals are currently not supported');
   }
 
