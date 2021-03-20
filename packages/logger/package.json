@@ -13,7 +13,7 @@
     "dlc",
     "logger"
   ],
-  "author": "Matthew Black <matthew@atomic.finance>",
+  "author": "Atomic Finance <info@atomic.finance>",
   "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/logger",
   "license": "MIT",
   "main": "dist/index.js",

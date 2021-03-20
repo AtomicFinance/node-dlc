@@ -16,7 +16,7 @@
     "dlc",
     "cli"
   ],
-  "author": "Matthew Black <matthew@atomic.finance>",
+  "author": "Atomic Finance <info@atomic.finance>",
   "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/cli",
   "license": "MIT",
   "main": "dist/index.js",
