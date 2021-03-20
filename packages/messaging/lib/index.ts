@@ -2,7 +2,7 @@ export * from './messages/DlcAccept';
 export * from './messages/CetAdaptorSignaturesV0';
 export * from './messages/ContractDescriptor';
 export * from './messages/ContractInfo';
-export * from './messages/EnumEventDescriptorV0';
+export * from './messages/EventDescriptor';
 export * from './messages/FundingInput';
 export * from './messages/FundingSignaturesV0';
 export * from './messages/NegotiationFields';

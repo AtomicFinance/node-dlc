@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { EnumEventDescriptorV0 } from './EnumEventDescriptorV0';
+import { EnumEventDescriptorV0 } from './EventDescriptor';
 
 /**
  * For users to be able to create DLCs based on a given event, they also
