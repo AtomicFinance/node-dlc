@@ -183,6 +183,13 @@ export function splitIntoRanges(
   curve: HyperbolaPayoutCurve,
   roundingIntervals: RoundingInterval[],
 ): CETPayout[] {
+  if (to - from <= 0) {
+    throw new Error('`to` must be strictly greater than `from`');
+  }
+  if (roundingIntervals.length !== 1) {
+    throw new Error('Multiple rounding intervals are currently not supported');
+  }
+
   const reversedIntervals = roundingIntervals.reverse();
   const clamp = (val: bigint) =>
     BigIntMath.max(0n, BigIntMath.min(val, totalCollateral));

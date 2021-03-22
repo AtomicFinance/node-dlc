@@ -13,7 +13,7 @@ export abstract class FundingInput {
         return FundingInputV0.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
+          `FundingInput function TLV type must be FundingInputV0`,
         );
     }
   }
@@ -29,7 +29,7 @@ export abstract class FundingInput {
  * FundingInput V0 contains information about a specific input to be used
  * in a funding transaction, as well as its corresponding on-chain UTXO.
  */
-export class FundingInputV0 implements IDlcMessage {
+export class FundingInputV0 extends FundingInput implements IDlcMessage {
   public static type = MessageType.FundingInputV0;
 
   /**
