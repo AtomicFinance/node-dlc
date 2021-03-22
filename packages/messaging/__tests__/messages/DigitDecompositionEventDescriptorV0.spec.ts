@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 
-describe('EnumEventDescriptorV0', () => {
+describe('DigitDecompositionEventDescriptorV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new DigitDecompositionEventDescriptorV0();
@@ -15,7 +15,7 @@ describe('EnumEventDescriptorV0', () => {
 
       expect(instance.serialize().toString("hex")).to.equal(
         'fdd80a' + // type
-        '11' + // length
+        '10' + // length
         '02' + // base
         '00' + // isSigned
         '07' + // unit_Len
@@ -44,7 +44,8 @@ describe('EnumEventDescriptorV0', () => {
 
       expect(Number(instance.length)).to.equal(17);
       expect(Number(instance.base)).to.equal(2);
-      expect(instance.isSigned).to.equal('btc/usd');
+      expect(instance.isSigned).to.equal(false);
+      expect(instance.unit).to.equal('btc/usd');
       expect(instance.precision).to.equal(0);
       expect(instance.nbDigits).to.equal(17);
     });
