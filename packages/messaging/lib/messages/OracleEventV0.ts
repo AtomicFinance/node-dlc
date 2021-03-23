@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { EnumEventDescriptorV0 } from './EnumEventDescriptorV0';
+import { EventDescriptor } from './EventDescriptor';
 
 /**
  * For users to be able to create DLCs based on a given event, they also
@@ -36,9 +36,7 @@ export class OracleEventV0 implements IDlcMessage {
     }
 
     instance.eventMaturityEpoch = reader.readUInt32BE();
-    instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
-      getTlv(reader),
-    );
+    instance.eventDescriptor = EventDescriptor.deserialize(getTlv(reader));
     const eventIdLength = reader.readBigSize();
     const eventIdBuf = reader.readBytes(Number(eventIdLength));
     instance.eventId = eventIdBuf.toString();
@@ -57,7 +55,7 @@ export class OracleEventV0 implements IDlcMessage {
 
   public eventMaturityEpoch: number;
 
-  public eventDescriptor: EnumEventDescriptorV0;
+  public eventDescriptor: EventDescriptor;
 
   public eventId: string;
 

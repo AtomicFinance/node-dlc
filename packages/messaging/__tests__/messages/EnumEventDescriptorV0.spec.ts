@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { EnumEventDescriptorV0 } from '../../lib/messages/EnumEventDescriptorV0';
+import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 
 describe('EnumEventDescriptorV0', () => {
   const outcomeOne = Buffer.from('64756d6d7931', 'hex').toString();

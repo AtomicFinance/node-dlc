@@ -42,7 +42,7 @@
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-prettier": "^3.3.1",
     "lerna": "^3.22.1",
-    "mocha": "^7.2.0",
+    "mocha": "^8.3.2",
     "nodemon": "^2.0.4",
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
@@ -50,5 +50,8 @@
     "source-map-support": "^0.5.19",
     "ts-node": "^8.10.2",
     "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "bignumber.js": "^9.0.1"
   }
 }
