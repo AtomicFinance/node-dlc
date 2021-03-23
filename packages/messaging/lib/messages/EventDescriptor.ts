@@ -108,7 +108,12 @@ export class DigitDecompositionEventDescriptorV0
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize(); // need to fix this
 
-    instance.base = reader.readBigSize();
+    /**
+     * NOTE: BASE IS INCORRECT FORMAT FOR DLC SPEC (SHOULD BE BIGSIZE)
+     * Will be fixed in oracle_announcement_v1
+     * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Oracle.md#version-0-digit_decomposition_event_descriptor
+     */
+    instance.base = reader.readUInt16BE();
     instance.isSigned = reader.readUInt8() === 1;
     const unitLen = reader.readBigSize();
     const unitBuf = reader.readBytes(Number(unitLen));
@@ -126,7 +131,7 @@ export class DigitDecompositionEventDescriptorV0
 
   public length: bigint;
 
-  public base: bigint;
+  public base: number; // Switch to bigint in oracle_announcement_v1
 
   public isSigned: boolean;
 
@@ -144,7 +149,7 @@ export class DigitDecompositionEventDescriptorV0
     writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
-    dataWriter.writeBigSize(this.base);
+    dataWriter.writeUInt16BE(this.base); // Switch to BigSize in oracle_announcement_v1
     dataWriter.writeUInt8(this.isSigned ? 1 : 0);
     dataWriter.writeBigSize(this.unit.length);
     dataWriter.writeBytes(Buffer.from(this.unit));
