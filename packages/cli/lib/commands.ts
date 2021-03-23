@@ -40,7 +40,7 @@ const argv: IArguments = yargs(process.argv.slice(2))
       global: true,
     },
   })
-  .check((_argv, _) => {
+  .check((_argv: IArguments, _) => {
     const { port } = _argv;
     if (isNaN(port)) {
       throw new Error('Port must be a number');
@@ -51,8 +51,13 @@ const argv: IArguments = yargs(process.argv.slice(2))
 interface IArguments {
   [x: string]: unknown;
   apiKey: string;
+  a: string;
   network: Network;
+  n: Network;
   port: number;
+  p: number;
   host: string;
+  h: string;
   loglevel: string;
+  l: string;
 }
