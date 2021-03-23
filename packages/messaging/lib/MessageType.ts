@@ -33,7 +33,9 @@ export enum MessageType {
   FundingSignaturesV0 = 42776,
 
   PayoutFunctionV0 = 42790,
-  PayoutFunctionV1 = 42792, // temporary type
+
+  PolynomialPayoutCurvePiece = 42794, // TODO: Temporary type
+  HyperbolaPayoutCurvePiece = 42796, // TODO: Temporary type
 
   RoundingIntervalsV0 = 42788,
 

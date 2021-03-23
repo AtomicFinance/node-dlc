@@ -1,4 +1,4 @@
-import { PayoutFunctionV1 } from '@node-dlc/messaging';
+import { HyperbolaPayoutCurvePiece } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import CoveredCall from '../../../lib/dlc/finance/CoveredCall';
 import { HyperbolaPayoutCurve } from '../../../lib/dlc/HyperbolaPayoutCurve';
@@ -25,10 +25,10 @@ describe('CoveredCall', () => {
     it('should serialize and deserialize properly', () => {
       const payout = curve.getPayout(strikePrice);
 
-      const _tlv = curve.toPayoutFunction().serialize();
-      const pf = PayoutFunctionV1.deserialize(_tlv);
+      const _tlv = curve.toPayoutCurvePiece().serialize();
+      const pf = HyperbolaPayoutCurvePiece.deserialize(_tlv);
 
-      const deserializedCurve = HyperbolaPayoutCurve.fromPayoutFunction(pf);
+      const deserializedCurve = HyperbolaPayoutCurve.fromPayoutCurvePiece(pf);
 
       expect(payout.toNumber()).to.be.eq(
         deserializedCurve.getPayout(strikePrice).toNumber(),
