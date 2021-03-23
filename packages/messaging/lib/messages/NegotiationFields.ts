@@ -21,7 +21,7 @@ export abstract class NegotiationFields {
         return NegotiationFieldsV2.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be NegotiationFieldsV0, NegotiationFieldsV1 or NegotiationFieldsV2`,
+          `Negotiation fields TLV type must be NegotiationFieldsV0, NegotiationFieldsV1 or NegotiationFieldsV2`,
         );
     }
   }

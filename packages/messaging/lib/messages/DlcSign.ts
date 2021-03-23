@@ -9,7 +9,7 @@ export abstract class DlcSign {
   public static deserialize(buf: Buffer): DlcSignV0 {
     const reader = new BufferReader(buf);
 
-    const type = Number(reader.readBigSize());
+    const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcOfferV0:
