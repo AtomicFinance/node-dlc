@@ -3,7 +3,7 @@
 process.title = 'dlccli';
 
 import Config from 'bcfg';
-import yargs from 'yargs/yargs';
+import yargs from 'yargs';
 import { parseConfig } from './utils/config';
 
 const config = new Config('node-dlc');
