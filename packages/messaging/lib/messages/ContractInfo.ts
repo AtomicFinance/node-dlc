@@ -18,7 +18,7 @@ export abstract class ContractInfo {
         return ContractInfoV1.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
+          `Contract info TLV type must be ContractInfoV0 or ContractInfoV1`,
         );
     }
   }

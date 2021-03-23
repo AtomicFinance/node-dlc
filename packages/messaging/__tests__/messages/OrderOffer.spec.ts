@@ -1,36 +1,17 @@
 import { expect } from 'chai';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
-import { DlcOfferV0 } from '../../lib/messages/DlcOffer';
+import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
 
-describe('DlcOfferV0', () => {
-  const contractFlags = Buffer.from('00', 'hex');
-
+describe('OrderOffer', () => {
   const chainHash = Buffer.from(
     '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
     'hex',
   );
 
-  const fundingPubKey = Buffer.from(
-    '0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3',
-    'hex',
-  );
-
-  const payoutSPK = Buffer.from(
-    '00142bbdec425007dc360523b0294d2c64d2213af498',
-    'hex',
-  );
-
-  const changeSPK = Buffer.from(
-    '0014afa16f949f3055f38bd3a73312bed00b61558884',
-    'hex',
-  );
-
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new DlcOfferV0();
+      const instance = new OrderOfferV0();
 
-      instance.contractFlags = contractFlags;
       instance.chainHash = chainHash;
 
       instance.contractInfo = ContractInfo.deserialize(
@@ -72,36 +53,13 @@ describe('DlcOfferV0', () => {
         ),
       );
 
-      instance.fundingPubKey = fundingPubKey;
-      instance.payoutSPK = payoutSPK;
-      instance.payoutSerialId = BigInt(11555292);
       instance.offerCollateralSatoshis = BigInt(100000000);
-      instance.fundingInputs = [
-        FundingInputV0.deserialize(
-          Buffer.from(
-            'fda714' +
-              '3f' + // length
-              '000000000000fa51' + // input_serial_id
-              '0029' + // prevtx_len
-              '02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000' + // prevtx
-              '00000000' + // prevtx_vout
-              'ffffffff' + // sequence
-              '006b' + // max_witness_len
-              '0000', // redeemscript_len
-            'hex',
-          ),
-        ),
-      ];
-      instance.changeSPK = changeSPK;
-      instance.changeSerialId = BigInt(2008045);
-      instance.fundOutputSerialId = BigInt(5411962);
       instance.feeRatePerVb = BigInt(1);
       instance.cetLocktime = 100;
       instance.refundLocktime = 200;
 
       expect(instance.serialize().toString("hex")).to.equal(
-        "a71a" + // type
-        "00" + // contract_flags
+        "f532" + // type
         "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
 
         "fdd82e" + // type contract_info
@@ -138,32 +96,7 @@ describe('DlcOfferV0', () => {
         "05" + // event_id_length
         "64756d6d79" + // event_id
 
-        "0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3" + // funding_pubkey
-
-        "0016" + // payout_spk_len
-        "00142bbdec425007dc360523b0294d2c64d2213af498" + // payout_spk
-
-        "0000000000b051dc" + // payout_serial_id
-
         "0000000005f5e100" + // total_collateral_satoshis
-
-        "0001" + // funding_inputs_len
-        
-        "fda714" + // type funding_input
-        "3f" + // length
-        "000000000000fa51" + // input_serial_id
-        "0029" + // prevtx_len
-        "02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000" + // prevtx
-        "00000000" + // prevtx_vout
-        "ffffffff" + // sequence
-        "006b" + // max_witness_len
-        "0000" + // redeemscript_len
-
-        "0016" + // change_spk_len
-        "0014afa16f949f3055f38bd3a73312bed00b61558884" + // change_spk
-
-        "00000000001ea3ed" + // change_serial_id
-        "000000000052947a" + // funding_output_serial_id
 
         "0000000000000001" + // fee_rate_per_vb
 
@@ -176,8 +109,7 @@ describe('DlcOfferV0', () => {
   describe('deserialize', () => {
     it('deserializes', () => {
       const buf = Buffer.from(
-        "a71a" + // type
-        "00" + // contract_flags
+        "f532" + // type
         "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
 
         "fdd82e" + // type contract_info
@@ -214,32 +146,7 @@ describe('DlcOfferV0', () => {
         "05" + // event_id_length
         "64756d6d79" + // event_id
 
-        "0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3" + // funding_pubkey
-
-        "0016" + // payout_spk_len
-        "00142bbdec425007dc360523b0294d2c64d2213af498" + // payout_spk
-
-        "0000000000b051dc" + // payout_serial_id
-
         "0000000005f5e100" + // total_collateral_satoshis
-
-        "0001" + // funding_inputs_len
-        
-        "fda714" + // type funding_input
-        "3f" + // length
-        "000000000000fa51" + // input_serial_id
-        "0029" + // prevtx_len
-        "02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000" + // prevtx
-        "00000000" + // prevtx_vout
-        "ffffffff" + // sequence
-        "006b" + // max_witness_len
-        "0000" + // redeemscript_len
-
-        "0016" + // change_spk_len
-        "0014afa16f949f3055f38bd3a73312bed00b61558884" + // change_spk
-
-        "00000000001ea3ed" + // change_serial_id
-        "000000000052947a" + // funding_output_serial_id
 
         "0000000000000001" + // fee_rate_per_vb
 
@@ -248,9 +155,8 @@ describe('DlcOfferV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = DlcOfferV0.deserialize(buf);
+      const instance = OrderOfferV0.deserialize(buf);
 
-      expect(instance.contractFlags).to.deep.equal(contractFlags);
       expect(instance.chainHash).to.deep.equal(chainHash);
       expect(instance.contractInfo.serialize().toString('hex')).to.equal(
         'fdd82e' + // type contract_info
@@ -287,24 +193,7 @@ describe('DlcOfferV0', () => {
           '05' + // event_id_length
           '64756d6d79', // event_id
       );
-      expect(instance.fundingPubKey).to.deep.equal(fundingPubKey);
-      expect(instance.payoutSPK).to.deep.equal(payoutSPK);
-      expect(Number(instance.payoutSerialId)).to.equal(11555292);
       expect(Number(instance.offerCollateralSatoshis)).to.equal(100000000);
-      expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
-        'fda714' +
-          '3f' + // length
-          '000000000000fa51' + // input_serial_id
-          '0029' + // prevtx_len
-          '02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000' + // prevtx
-          '00000000' + // prevtx_vout
-          'ffffffff' + // sequence
-          '006b' + // max_witness_len
-          '0000', // redeemscript_len
-      );
-      expect(instance.changeSPK).to.deep.equal(changeSPK);
-      expect(Number(instance.changeSerialId)).to.equal(2008045);
-      expect(Number(instance.fundOutputSerialId)).to.equal(5411962);
       expect(Number(instance.feeRatePerVb)).to.equal(1);
       expect(instance.cetLocktime).to.equal(100);
       expect(instance.refundLocktime).to.equal(200);
