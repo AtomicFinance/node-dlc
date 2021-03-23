@@ -71,7 +71,7 @@ const buildPayoutFunction = (
 
   const payoutFunction = new PayoutFunctionV0();
   payoutFunction.endpoint0 = 0n;
-  payoutFunction.endpointPayout0 = 0n;
+  payoutFunction.endpointPayout0 = totalCollateral;
   payoutFunction.extraPrecision0 = 0;
 
   payoutFunction.pieces.push({
