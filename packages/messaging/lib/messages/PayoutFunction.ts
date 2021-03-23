@@ -74,7 +74,7 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   public endpointPayout0: bigint;
   public extraPrecision0: number;
 
-  public pieces: IPayoutCurvePieces[];
+  public pieces: IPayoutCurvePieces[] = [];
 
   /**
    * Serializes the payout_function_v0 message into a Buffer
@@ -82,7 +82,6 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.length);
 
     const dataWriter = new BufferWriter();
     dataWriter.writeUInt16BE(this.pieces.length);

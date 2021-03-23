@@ -1,4 +1,4 @@
-import { PayoutFunctionV1 } from '@node-dlc/messaging';
+import { HyperbolaPayoutCurvePiece } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
 
 const getPrecision = (num: BigNumber): number =>
@@ -81,63 +81,65 @@ export class HyperbolaPayoutCurve {
     }
   }
 
-  toPayoutFunction(): PayoutFunctionV1 {
+  toPayoutCurvePiece(): HyperbolaPayoutCurvePiece {
     const { a, b, c, d, translateOutcome, translatePayout, positive } = this;
 
-    const pf = new PayoutFunctionV1();
-    pf.usePositivePiece = positive;
+    const piece = new HyperbolaPayoutCurvePiece();
+    piece.usePositivePiece = positive;
 
-    pf.translateOutcomeSign = translateOutcome.isPositive();
-    pf.translateOutcome = BigInt(translateOutcome.abs().toString());
-    pf.translateOutcomeExtraPrecision = getPrecision(translateOutcome);
+    piece.translateOutcomeSign = translateOutcome.isPositive();
+    piece.translateOutcome = BigInt(translateOutcome.abs().toString());
+    piece.translateOutcomeExtraPrecision = getPrecision(translateOutcome);
 
-    pf.translatePayoutSign = false;
-    pf.translatePayout = BigInt(translatePayout.abs().toString());
-    pf.translatePayoutExtraPrecision = getPrecision(translatePayout);
+    piece.translatePayoutSign = false;
+    piece.translatePayout = BigInt(translatePayout.abs().toString());
+    piece.translatePayoutExtraPrecision = getPrecision(translatePayout);
 
-    pf.aSign = a.isPositive();
-    pf.a = BigInt(a.abs().toString());
-    pf.aExtraPrecision = getPrecision(a);
+    piece.aSign = a.isPositive();
+    piece.a = BigInt(a.abs().toString());
+    piece.aExtraPrecision = getPrecision(a);
 
-    pf.bSign = a.isPositive();
-    pf.b = BigInt(b.abs().toString());
-    pf.bExtraPrecision = getPrecision(b);
+    piece.bSign = a.isPositive();
+    piece.b = BigInt(b.abs().toString());
+    piece.bExtraPrecision = getPrecision(b);
 
-    pf.cSign = c.isPositive();
-    pf.c = BigInt(c.abs().toString());
-    pf.cExtraPrecision = getPrecision(c);
+    piece.cSign = c.isPositive();
+    piece.c = BigInt(c.abs().toString());
+    piece.cExtraPrecision = getPrecision(c);
 
-    pf.dSign = d.isPositive();
-    pf.d = BigInt(d.integerValue().toString());
-    pf.dExtraPrecision = getPrecision(d);
+    piece.dSign = d.isPositive();
+    piece.d = BigInt(d.integerValue().toString());
+    piece.dExtraPrecision = getPrecision(d);
 
-    return pf;
+    return piece;
   }
 
-  static fromPayoutFunction(pf: PayoutFunctionV1): HyperbolaPayoutCurve {
-    const a = new BigNumber(pf.a.toString())
-      .times(pf.aSign ? 1 : -1)
-      .plus(fromPrecision(pf.aExtraPrecision));
+  static fromPayoutCurvePiece(
+    piece: HyperbolaPayoutCurvePiece,
+  ): HyperbolaPayoutCurve {
+    const a = new BigNumber(piece.a.toString())
+      .times(piece.aSign ? 1 : -1)
+      .plus(fromPrecision(piece.aExtraPrecision));
 
-    const b = new BigNumber(pf.b.toString())
-      .times(pf.bSign ? 1 : -1)
-      .plus(fromPrecision(pf.bExtraPrecision));
+    const b = new BigNumber(piece.b.toString())
+      .times(piece.bSign ? 1 : -1)
+      .plus(fromPrecision(piece.bExtraPrecision));
 
-    const c = new BigNumber(pf.c.toString())
-      .times(pf.cSign ? 1 : -1)
-      .plus(fromPrecision(pf.cExtraPrecision));
+    const c = new BigNumber(piece.c.toString())
+      .times(piece.cSign ? 1 : -1)
+      .plus(fromPrecision(piece.cExtraPrecision));
 
-    const d = new BigNumber(pf.d.toString())
-      .times(pf.dSign ? 1 : -1)
-      .plus(fromPrecision(pf.dExtraPrecision));
+    const d = new BigNumber(piece.d.toString())
+      .times(piece.dSign ? 1 : -1)
+      .plus(fromPrecision(piece.dExtraPrecision));
 
-    const translateOutcome = new BigNumber(pf.translateOutcome.toString())
-      .times(pf.translateOutcomeSign ? 1 : -1)
-      .plus(fromPrecision(pf.translateOutcomeExtraPrecision));
+    const translateOutcome = new BigNumber(piece.translateOutcome.toString())
+      .times(piece.translateOutcomeSign ? 1 : -1)
+      .plus(fromPrecision(piece.translateOutcomeExtraPrecision));
 
-    const translatePayout = new BigNumber(pf.translatePayout.toString())
-      .times(pf.translatePayoutSign ? 1 : -1)
-      .plus(fromPrecision(pf.translatePayoutExtraPrecision));
+    const translatePayout = new BigNumber(piece.translatePayout.toString())
+      .times(piece.translatePayoutSign ? 1 : -1)
+      .plus(fromPrecision(piece.translatePayoutExtraPrecision));
 
     return new HyperbolaPayoutCurve(
       a,
@@ -146,7 +148,7 @@ export class HyperbolaPayoutCurve {
       d,
       translateOutcome,
       translatePayout,
-      pf.usePositivePiece,
+      piece.usePositivePiece,
     );
   }
 }

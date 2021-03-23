@@ -14,5 +14,6 @@ export * from './messages/OracleInfoV0';
 export * from './messages/PayoutFunction';
 export * from './messages/RoundingIntervalsV0';
 export * from './messages/ScriptWitnessV0';
+export * from './messages/PayoutCurvePiece';
 export * from './messages/DlcSign';
 export * from './MessageType';
