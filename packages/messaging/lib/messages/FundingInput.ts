@@ -1,4 +1,9 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import {
+  BufferReader,
+  BufferWriter,
+  StreamReader,
+} from '@node-lightning/bufio';
+import { Tx, Sequence } from '@node-dlc/bitcoin';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
@@ -44,9 +49,11 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
     instance.length = reader.readBigSize();
     instance.inputSerialId = reader.readUInt64BE();
     const prevTxLen = reader.readUInt16BE();
-    instance.prevTx = reader.readBytes(prevTxLen);
+    instance.prevTx = Tx.parse(
+      StreamReader.fromBuffer(reader.readBytes(prevTxLen)),
+    );
     instance.prevTxVout = reader.readUInt32BE();
-    instance.sequence = reader.readUInt32BE();
+    instance.sequence = new Sequence(reader.readUInt32LE());
     instance.maxWitnessLen = reader.readUInt16BE();
     const redeemScriptLen = reader.readUInt16BE();
     instance.redeemScript = reader.readBytes(redeemScriptLen);
@@ -63,11 +70,11 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
 
   public inputSerialId: bigint;
 
-  public prevTx: Buffer;
+  public prevTx: Tx;
 
   public prevTxVout: number;
 
-  public sequence: number;
+  public sequence: Sequence;
 
   public maxWitnessLen: number;
 
@@ -90,10 +97,10 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
 
     const dataWriter = new BufferWriter();
     dataWriter.writeUInt64BE(this.inputSerialId);
-    dataWriter.writeUInt16BE(this.prevTx.length);
-    dataWriter.writeBytes(this.prevTx);
+    dataWriter.writeUInt16BE(this.prevTx.serialize().length);
+    dataWriter.writeBytes(this.prevTx.serialize());
     dataWriter.writeUInt32BE(this.prevTxVout);
-    dataWriter.writeUInt32BE(this.sequence);
+    dataWriter.writeUInt32BE(this.sequence.value);
     dataWriter.writeUInt16BE(this.maxWitnessLen);
     dataWriter.writeUInt16BE(this.redeemScript.length);
     dataWriter.writeBytes(this.redeemScript);

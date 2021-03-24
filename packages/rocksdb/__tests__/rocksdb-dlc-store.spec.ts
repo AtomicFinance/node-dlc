@@ -177,7 +177,11 @@ describe('RocksdbGossipStore', () => {
     it('should return the dlc_offer object', async () => {
       const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
       const actual = await sut.findDlcOffer(tempContractId);
-      expect(actual).to.deep.equal(dlcOffer);
+
+      expect(
+        actual.fundingInputs[0].prevTx.serialize().toString('hex'),
+      ).to.equal(dlcOffer.fundingInputs[0].prevTx.serialize().toString('hex'));
+      expect(actual.contractInfo).to.deep.equal(dlcOffer.contractInfo);
     });
   });
 
@@ -202,7 +206,11 @@ describe('RocksdbGossipStore', () => {
   describe('find dlc_accept by contractId', () => {
     it('should return the dlc_accept object', async () => {
       const actual = await sut.findDlcAccept(contractId);
-      expect(actual).to.deep.equal(dlcAccept);
+
+      expect(
+        actual.fundingInputs[0].prevTx.serialize().toString('hex'),
+      ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
+      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
     });
   });
 

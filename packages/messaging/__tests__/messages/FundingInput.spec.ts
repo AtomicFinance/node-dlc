@@ -1,4 +1,6 @@
 import { expect } from 'chai';
+import { StreamReader } from '@node-lightning/bufio';
+import { Tx, Sequence } from '@node-dlc/bitcoin';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
 
 describe('FundingInputV0', () => {
@@ -13,9 +15,9 @@ describe('FundingInputV0', () => {
 
       instance.length = BigInt(63);
       instance.inputSerialId = BigInt(56040);
-      instance.prevTx = prevTx;
+      instance.prevTx = Tx.parse(StreamReader.fromBuffer(prevTx));
       instance.prevTxVout = 0;
-      instance.sequence = 4294967295;
+      instance.sequence = Sequence.default();
       instance.maxWitnessLen = 107;
       instance.redeemScript = Buffer.from('', 'hex');
 
@@ -52,9 +54,9 @@ describe('FundingInputV0', () => {
 
       expect(Number(instance.length)).to.equal(63);
       expect(Number(instance.inputSerialId)).to.equal(56040);
-      expect(instance.prevTx).to.deep.equal(prevTx);
+      expect(instance.prevTx.serialize()).to.deep.equal(prevTx);
       expect(instance.prevTxVout).to.equal(0);
-      expect(instance.sequence).to.equal(4294967295);
+      expect(instance.sequence.value).to.equal(4294967295);
       expect(instance.maxWitnessLen).to.equal(107);
       expect(instance.redeemScript).to.deep.equal(Buffer.from('', 'hex'));
     });
