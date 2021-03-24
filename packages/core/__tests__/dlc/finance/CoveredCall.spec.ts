@@ -1,6 +1,6 @@
 import { HyperbolaPayoutCurvePiece } from '@node-dlc/messaging';
 import { expect } from 'chai';
-import CoveredCall from '../../../lib/dlc/finance/CoveredCall';
+import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
 import { HyperbolaPayoutCurve } from '../../../lib/dlc/HyperbolaPayoutCurve';
 
 describe('CoveredCall', () => {
@@ -10,7 +10,7 @@ describe('CoveredCall', () => {
     const oracleBase = 2;
     const oracleDigits = 20;
 
-    const curve = CoveredCall.buildCurve(
+    const { maxOutcome, totalCollateral, payoutCurve } = CoveredCall.buildCurve(
       strikePrice,
       contractSize,
       oracleBase,
@@ -18,14 +18,21 @@ describe('CoveredCall', () => {
     );
 
     it('should be a negative payout past max outcome', () => {
-      const maxOutcome = 2n ** 20n - 1n;
-      expect(curve.getPayout(maxOutcome + 1n).toNumber()).to.be.lessThan(0);
+      expect(payoutCurve.getPayout(maxOutcome + 1n).toNumber()).to.be.lessThan(
+        0,
+      );
+    });
+
+    it('should be equal to totalCollateral at strike price', () => {
+      expect(payoutCurve.getPayout(strikePrice).toNumber()).to.equal(
+        Number(totalCollateral),
+      );
     });
 
     it('should serialize and deserialize properly', () => {
-      const payout = curve.getPayout(strikePrice);
+      const payout = payoutCurve.getPayout(strikePrice);
 
-      const _tlv = curve.toPayoutCurvePiece().serialize();
+      const _tlv = payoutCurve.toPayoutCurvePiece().serialize();
       const pf = HyperbolaPayoutCurvePiece.deserialize(_tlv);
 
       const deserializedCurve = HyperbolaPayoutCurve.fromPayoutCurvePiece(pf);

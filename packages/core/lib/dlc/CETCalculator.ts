@@ -351,7 +351,8 @@ export function splitIntoRanges(
     const prev = acc[acc.length - 1];
     if (prev) {
       if (
-        prev.indexTo + 1n === range.indexFrom &&
+        (prev.indexTo === range.indexFrom ||
+          prev.indexTo + 1n === range.indexFrom) &&
         prev.payout === range.payout
       ) {
         prev.indexTo = range.indexTo;
