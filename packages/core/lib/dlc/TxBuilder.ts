@@ -2,6 +2,7 @@ import {
   DlcAcceptWithoutSigs,
   FundingInputV0,
   DlcOfferV0,
+  MessageType,
 } from '@node-dlc/messaging';
 import {
   Tx,
@@ -47,12 +48,17 @@ export class DlcTxBuilder {
       this.dlcOffer.feeRatePerVb,
     );
 
-    const offerTotalFunding = this.dlcOffer.fundingInputs.reduce(
-      (total, input) => {
-        return total + input.prevTx.outputs[input.prevTxVout].value.sats;
-      },
-      BigInt(0),
+    this.dlcOffer.fundingInputs.forEach((input) => {
+      if (input.type !== MessageType.FundingInputV0)
+        throw Error('FundingInput must be V0');
+    });
+    const offerFundingInputs: FundingInputV0[] = this.dlcOffer.fundingInputs.map(
+      (input) => input as FundingInputV0,
     );
+
+    const offerTotalFunding = offerFundingInputs.reduce((total, input) => {
+      return total + input.prevTx.outputs[input.prevTxVout].value.sats;
+    }, BigInt(0));
 
     const acceptTotalFunding = this.dlcAccept.fundingInputs.reduce(
       (total, input) => {
@@ -62,7 +68,7 @@ export class DlcTxBuilder {
     );
 
     const fundingInputs: FundingInputV0[] = [
-      ...this.dlcOffer.fundingInputs,
+      ...offerFundingInputs,
       ...this.dlcAccept.fundingInputs,
     ];
 
