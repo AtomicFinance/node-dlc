@@ -5,15 +5,10 @@ process.title = 'dlccli';
 import Config from 'bcfg';
 import yargs from 'yargs';
 import { parseConfig } from './utils/config';
+import { IArguments, networks, logs } from './arguments';
 
 const config = new Config('node-dlc');
 config.open('node-dlc.conf'); // TODO: allow users to pass in their on conf directory
-
-type Network = 'mainnet' | 'testnet' | 'regtest';
-const networks: ReadonlyArray<Network> = ['mainnet', 'testnet', 'regtest'];
-
-type Log = 'trace' | 'debug' | 'info' | 'warn' | 'error';
-const logs: ReadonlyArray<Log> = ['trace', 'debug', 'info', 'warn', 'error'];
 
 // TODO allow user to pass in api-key on startup
 
@@ -47,17 +42,3 @@ const argv: IArguments = yargs(process.argv.slice(2))
     }
     return true;
   }).argv;
-
-interface IArguments {
-  [x: string]: unknown;
-  apiKey: string;
-  a: string;
-  network: Network;
-  n: Network;
-  port: number;
-  p: number;
-  host: string;
-  h: string;
-  loglevel: string;
-  l: string;
-}
