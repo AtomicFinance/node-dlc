@@ -2,6 +2,7 @@ import { Logger } from '@node-dlc/logger';
 import bcrypto from 'bcrypto';
 import DlcdClient from '../../client/DlcdClient';
 import { getLogger } from '../../utils/config';
+import { IArguments } from '../../arguments';
 
 export const command = 'create';
 
@@ -38,7 +39,7 @@ const cipherSeedMessageEnd = `
 !!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
 `;
 
-export async function handler(argv) {
+export async function handler(argv: IArguments): Promise<void> {
   const { host, port, apiKey, loglevel } = argv;
   const logger: Logger = getLogger(loglevel);
   let _apiKey: string = apiKey;
