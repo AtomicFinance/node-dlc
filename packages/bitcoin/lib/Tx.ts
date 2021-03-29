@@ -40,7 +40,6 @@ export class Tx {
 
     let vinLen: number;
     let inputs: TxIn[];
-    let voutLen: number;
     let outputs: TxOut[];
     let parsedInputs: { vinLen: number; inputs: TxIn[] };
     let parsedOutputs: { voutLen: number; outputs: TxOut[] };
@@ -64,7 +63,6 @@ export class Tx {
       inputs = parsedInputs.inputs;
     }
     if (parsedOutputs) {
-      voutLen = parsedOutputs.voutLen;
       outputs = parsedOutputs.outputs;
     }
 

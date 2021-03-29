@@ -1,3 +1,9 @@
+/**
+ * Bitcoin module is included in @node-dlc/bitcoin temporarily
+ * until issue with parsing base Tx with no inputs and one output
+ * is resolved
+ * https://github.com/altangent/node-lightning/issues/167
+ */
 export * from './Base58';
 export * from './Base58Check';
 export * from './BitcoinError';

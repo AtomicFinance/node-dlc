@@ -3,7 +3,7 @@ import {
   BufferWriter,
   StreamReader,
 } from '@node-lightning/bufio';
-import { Tx, Sequence } from '@node-dlc/bitcoin';
+import { Tx, Sequence } from '@node-dlc/bitcoin'; // TODO: switch to @node-lightning/bitcoin once parsing base tx is resolved: https://github.com/altangent/node-lightning/issues/167
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 

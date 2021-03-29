@@ -10,7 +10,7 @@ import {
   OutPoint,
   Script,
   Value,
-} from '@node-dlc/bitcoin';
+} from '@node-dlc/bitcoin'; // TODO: switch to @node-lightning/bitcoin once parsing base tx is resolved: https://github.com/altangent/node-lightning/issues/167
 import { StreamReader } from '@node-lightning/bufio';
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
