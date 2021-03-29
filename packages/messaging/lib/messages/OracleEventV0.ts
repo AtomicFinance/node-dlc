@@ -2,7 +2,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { EventDescriptor } from './EventDescriptor';
+import {
+  EventDescriptor,
+  IEnumEventDescriptorV0JSON,
+  IDigitDecompositionEventDescriptorV0JSON,
+} from './EventDescriptor';
 
 /**
  * For users to be able to create DLCs based on a given event, they also
@@ -60,6 +64,19 @@ export class OracleEventV0 implements IDlcMessage {
   public eventId: string;
 
   /**
+   * Converts oracle_event to JSON
+   */
+  public toJSON(): IOracleEventV0JSON {
+    return {
+      type: this.type,
+      oracleNonces: this.oracleNonces.map((oracle) => oracle.toString('hex')),
+      eventMaturityEpoch: this.eventMaturityEpoch,
+      eventDescriptor: this.eventDescriptor.toJSON(),
+      eventId: this.eventId,
+    };
+  }
+
+  /**
    * Serializes the oracle_event message into a Buffer
    */
   public serialize(): Buffer {
@@ -83,4 +100,14 @@ export class OracleEventV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IOracleEventV0JSON {
+  type: number;
+  oracleNonces: string[];
+  eventMaturityEpoch: number;
+  eventDescriptor:
+    | IEnumEventDescriptorV0JSON
+    | IDigitDecompositionEventDescriptorV0JSON;
+  eventId: string;
 }

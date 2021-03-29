@@ -26,6 +26,10 @@ export abstract class EventDescriptor {
 
   public abstract length: bigint;
 
+  public abstract toJSON():
+    | IEnumEventDescriptorV0JSON
+    | IDigitDecompositionEventDescriptorV0JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -66,6 +70,16 @@ export class EnumEventDescriptorV0
   public length: bigint;
 
   public outcomes: string[] = [];
+
+  /**
+   * Converts enum_event_descriptor_v0 to JSON
+   */
+  public toJSON(): IEnumEventDescriptorV0JSON {
+    return {
+      type: this.type,
+      outcomes: this.outcomes,
+    };
+  }
 
   /**
    * Serializes the enum_event_descriptor_v0 message into a Buffer
@@ -142,6 +156,20 @@ export class DigitDecompositionEventDescriptorV0
   public nbDigits: number;
 
   /**
+   * Converts digit_decomposition_event_descriptor_v0 to JSON
+   */
+  public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
+    return {
+      type: this.type,
+      base: this.base,
+      isSigned: this.isSigned,
+      unit: this.unit,
+      precision: this.precision,
+      nbDigits: this.nbDigits,
+    };
+  }
+
+  /**
    * Serializes the digit_decomposition_event_descriptor_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -161,4 +189,18 @@ export class DigitDecompositionEventDescriptorV0
 
     return writer.toBuffer();
   }
+}
+
+export interface IEnumEventDescriptorV0JSON {
+  type: number;
+  outcomes: string[];
+}
+
+export interface IDigitDecompositionEventDescriptorV0JSON {
+  type: number;
+  base: number;
+  isSigned: boolean;
+  unit: string;
+  precision: number;
+  nbDigits: number;
 }

@@ -2,8 +2,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { PayoutFunction } from './PayoutFunction';
-import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
+import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
+import {
+  RoundingIntervalsV0,
+  RoundingIntervalsV0JSON,
+} from './RoundingIntervalsV0';
 
 export abstract class ContractDescriptor {
   public static deserialize(
@@ -20,7 +23,7 @@ export abstract class ContractDescriptor {
         return ContractDescriptorV1.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
+          `Contract Descriptor TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
         );
     }
   }
@@ -28,6 +31,8 @@ export abstract class ContractDescriptor {
   public abstract type: number;
 
   public abstract length: bigint;
+
+  public abstract toJSON(): ContractDescriptorV0JSON | ContractDescriptorV1JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -71,6 +76,21 @@ export class ContractDescriptorV0
   public length: bigint;
 
   public outcomes: IOutcome[] = [];
+
+  /**
+   * Converts contract_descriptor_v0 to JSON
+   */
+  public toJSON(): ContractDescriptorV0JSON {
+    return {
+      type: this.type,
+      outcomes: this.outcomes.map((outcome) => {
+        return {
+          outcome: outcome.outcome.toString('hex'),
+          localPayout: Number(outcome.localPayout),
+        };
+      }),
+    };
+  }
 
   /**
    * Serializes the contract_descriptor_v0 message into a Buffer
@@ -137,6 +157,18 @@ export class ContractDescriptorV1
   public roundingIntervals: RoundingIntervalsV0;
 
   /**
+   * Converts contract_descriptor_v1 to JSON
+   */
+  public toJSON(): ContractDescriptorV1JSON {
+    return {
+      type: this.type,
+      numDigits: this.numDigits,
+      payoutFunction: this.payoutFunction.toJSON(),
+      roundingIntervals: this.roundingIntervals.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the contract_descriptor_v1 message into a Buffer
    */
   public serialize(): Buffer {
@@ -158,4 +190,21 @@ export class ContractDescriptorV1
 interface IOutcome {
   outcome: Buffer;
   localPayout: bigint;
+}
+
+interface IOutcomeJSON {
+  outcome: string;
+  localPayout: number;
+}
+
+export interface ContractDescriptorV0JSON {
+  type: number;
+  outcomes: IOutcomeJSON[];
+}
+
+export interface ContractDescriptorV1JSON {
+  type: number;
+  numDigits: number;
+  payoutFunction: PayoutFunctionV0JSON;
+  roundingIntervals: RoundingIntervalsV0JSON;
 }

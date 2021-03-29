@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OracleEventV0 } from './OracleEventV0';
+import { OracleEventV0, IOracleEventV0JSON } from './OracleEventV0';
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -50,6 +50,18 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   public oracleEvent: OracleEventV0;
 
   /**
+   * Converts oracle_announcement_v0 to JSON
+   */
+  public toJSON(): OracleAnnouncementV0JSON {
+    return {
+      type: this.type,
+      announcementSig: this.announcementSig.toString('hex'),
+      oraclePubkey: this.oraclePubkey.toString('hex'),
+      oracleEvent: this.oracleEvent.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the oracle_announcement_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -66,4 +78,11 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface OracleAnnouncementV0JSON {
+  type: number;
+  announcementSig: string;
+  oraclePubkey: string;
+  oracleEvent: IOracleEventV0JSON;
 }

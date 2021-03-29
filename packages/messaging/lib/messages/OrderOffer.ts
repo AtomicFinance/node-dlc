@@ -68,6 +68,19 @@ export class OrderOfferV0 implements IDlcMessage {
   public refundLocktime: number;
 
   /**
+   * Converts order_offer_v0 to JSON
+   */
+  public toJson(): IOrderOfferJSON {
+    return {
+      chainHash: this.chainHash.toString('hex'),
+      offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
+      feeRatePerVb: Number(this.feeRatePerVb),
+      cetLocktime: this.cetLocktime,
+      refundLocktime: this.refundLocktime,
+    };
+  }
+
+  /**
    * Serializes the order_offer_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -82,4 +95,12 @@ export class OrderOfferV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+interface IOrderOfferJSON {
+  chainHash: string;
+  offerCollateralSatoshis: number;
+  feeRatePerVb: number;
+  cetLocktime: number;
+  refundLocktime: number;
 }

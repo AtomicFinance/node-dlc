@@ -61,7 +61,6 @@ describe('OrderOffer', () => {
       expect(instance.serialize().toString("hex")).to.equal(
         "f532" + // type
         "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-
         "fdd82e" + // type contract_info
         "fd0131" + // length
         "000000000bebc200" + // total_collateral
@@ -95,11 +94,8 @@ describe('OrderOffer', () => {
         "64756d6d7932" + // outcome_2
         "05" + // event_id_length
         "64756d6d79" + // event_id
-
         "0000000005f5e100" + // total_collateral_satoshis
-
         "0000000000000001" + // fee_rate_per_vb
-
         "00000064" + // cet_locktime
         "000000c8" // refund_locktime
       ); // prettier-ignore
@@ -111,7 +107,6 @@ describe('OrderOffer', () => {
       const buf = Buffer.from(
         "f532" + // type
         "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-
         "fdd82e" + // type contract_info
         "fd0131" + // length
         "000000000bebc200" + // total_collateral
@@ -145,11 +140,8 @@ describe('OrderOffer', () => {
         "64756d6d7932" + // outcome_2
         "05" + // event_id_length
         "64756d6d79" + // event_id
-
         "0000000005f5e100" + // total_collateral_satoshis
-
         "0000000000000001" + // fee_rate_per_vb
-
         "00000064" + // cet_locktime
         "000000c8" // refund_locktime
         , "hex"

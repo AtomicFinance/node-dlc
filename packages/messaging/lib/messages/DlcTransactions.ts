@@ -56,7 +56,9 @@ export class DlcTransactionsV0 implements IDlcMessage {
 
   public cets: Tx[];
 
-  // TODO: Add tempContractId or contractId
+  public tempContractId: Buffer;
+
+  public contractId: Buffer;
 
   /**
    * Serializes the offer_dlc_v0 message into a Buffer
