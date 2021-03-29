@@ -1,0 +1,37 @@
+{
+  "name": "@node-dlc/transport",
+  "version": "0.1.0",
+  "description": "DLC Transport",
+  "scripts": {
+    "start": "npm run build && node dist/index.js",
+    "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --timeout 20000 --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
+    "lint": "../../node_modules/.bin/eslint --ignore-path ../../.eslintignore  -c ../../.eslintrc.js .",
+    "lint:fix": "../../node_modules/.bin/eslint --fix --ignore-path ../../.eslintignore  -c ../../.eslintrc.js .",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "dlc",
+    "transport",
+    "irc"
+  ],
+  "author": "Atomic Finance <info@atomic.finance>",
+  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/transport",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomicfinance/node-dlc.git"
+  },
+  "dependencies": {
+    "@node-dlc/messaging": "^0.1.0",
+    "@node-dlc/core": "^0.1.0",
+    "irc": "0.5.2"
+  },
+  "devDependencies": {
+    "@liquality/utils": "0.10.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
