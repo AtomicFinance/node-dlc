@@ -9,7 +9,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   public static type = MessageType.RoundingIntervalsV0;
 
   /**
-   * Deserializes an enum_event_descriptor_v0 message
+   * Deserializes an rounding_intervals_v0 tlv
    * @param buf
    */
   public static deserialize(buf: Buffer): RoundingIntervalsV0 {
@@ -31,7 +31,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   }
 
   /**
-   * The type for enum_event_descriptor_v0 message. enum_event_descriptor_v0 = 55302
+   * The type for rounding_intervals_v0 tlv. rounding_intervals_v0 = 42788
    */
   public type = RoundingIntervalsV0.type;
 
@@ -40,7 +40,22 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   public intervals: IInterval[] = [];
 
   /**
-   * Serializes the enum_event_descriptor_v0 message into a Buffer
+   * Converts rounding_intervals_v0 to JSON
+   */
+  public toJSON(): RoundingIntervalsV0JSON {
+    return {
+      type: this.type,
+      intervals: this.intervals.map((interval) => {
+        return {
+          beginInterval: Number(interval.beginInterval),
+          roundingMod: Number(interval.roundingMod),
+        };
+      }),
+    };
+  }
+
+  /**
+   * Serializes the rounding_intervals_v0 tlv into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -64,4 +79,14 @@ export class RoundingIntervalsV0 implements IDlcMessage {
 interface IInterval {
   beginInterval: bigint;
   roundingMod: bigint;
+}
+
+interface IIntervalJSON {
+  beginInterval: number;
+  roundingMod: number;
+}
+
+export interface RoundingIntervalsV0JSON {
+  type: number;
+  intervals: IIntervalJSON[];
 }

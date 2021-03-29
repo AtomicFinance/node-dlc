@@ -2,7 +2,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { PayoutCurvePiece } from './PayoutCurvePiece';
+import {
+  PolynomialPayoutCurvePieceJSON,
+  HyperbolaPayoutCurvePieceJSON,
+  PayoutCurvePiece,
+} from './PayoutCurvePiece';
 
 export abstract class PayoutFunction {
   public static deserialize(buf: Buffer): PayoutFunctionV0 {
@@ -21,6 +25,8 @@ export abstract class PayoutFunction {
   public abstract type: number;
 
   public abstract length: bigint;
+
+  public abstract toJSON(): PayoutFunctionV0JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -77,6 +83,26 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   public pieces: IPayoutCurvePieces[] = [];
 
   /**
+   * Converts payout_function_v0 to JSON
+   */
+  public toJSON(): PayoutFunctionV0JSON {
+    return {
+      type: this.type,
+      endpoint0: Number(this.endpoint0),
+      endpointPayout0: Number(this.endpointPayout0),
+      extraPrecision0: this.extraPrecision0,
+      pieces: this.pieces.map((piece) => {
+        return {
+          payoutCurvePiece: piece.payoutCurvePiece.toJSON(),
+          endpoint: Number(piece.endpoint),
+          endpointPayout: Number(piece.endpointPayout),
+          extraPrecision: piece.extraPrecision,
+        };
+      }),
+    };
+  }
+
+  /**
    * Serializes the payout_function_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -108,4 +134,21 @@ interface IPayoutCurvePieces {
   endpoint: bigint;
   endpointPayout: bigint;
   extraPrecision: number;
+}
+
+interface IPayoutCurvePiecesJSON {
+  payoutCurvePiece:
+    | PolynomialPayoutCurvePieceJSON
+    | HyperbolaPayoutCurvePieceJSON;
+  endpoint: number;
+  endpointPayout: number;
+  extraPrecision: number;
+}
+
+export interface PayoutFunctionV0JSON {
+  type: number;
+  endpoint0: number;
+  endpointPayout0: number;
+  extraPrecision0: number;
+  pieces: IPayoutCurvePiecesJSON[];
 }

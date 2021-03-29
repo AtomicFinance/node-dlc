@@ -1,9 +1,13 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
-import { ContractDescriptor } from './ContractDescriptor';
+import {
+  ContractDescriptor,
+  ContractDescriptorV0JSON,
+  ContractDescriptorV1JSON,
+} from './ContractDescriptor';
 import { IDlcMessage } from './DlcMessage';
-import { OracleInfoV0 } from './OracleInfoV0';
+import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
 
 export abstract class ContractInfo {
   public static deserialize(buf: Buffer): ContractInfoV0 | ContractInfoV1 {
@@ -28,6 +32,8 @@ export abstract class ContractInfo {
   public abstract length: bigint;
 
   public abstract totalCollateral: bigint;
+
+  public abstract toJSON(): IContractInfoV0JSON | IContractInfoV1JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -70,6 +76,18 @@ export class ContractInfoV0 implements IDlcMessage {
   public contractDescriptor: ContractDescriptor;
 
   public oracleInfo: OracleInfoV0;
+
+  /**
+   * Converts contract_info_v0 to JSON
+   */
+  public toJSON(): IContractInfoV0JSON {
+    return {
+      type: this.type,
+      totalCollateral: Number(this.totalCollateral),
+      contractDescriptor: this.contractDescriptor.toJSON(),
+      oracleInfo: this.oracleInfo.toJSON(),
+    };
+  }
 
   /**
    * Serializes the contract_info_v0 message into a Buffer
@@ -122,7 +140,7 @@ export class ContractInfoV1 implements IDlcMessage {
   }
 
   /**
-   * The type for contract_info_v0 message. contract_info_v0 = 55342
+   * The type for contract_info_v1 message. contract_info_v0 = 55342
    */
   public type = ContractInfoV1.type;
 
@@ -133,7 +151,23 @@ export class ContractInfoV1 implements IDlcMessage {
   public contractOraclePairs: IContractOraclePair[] = [];
 
   /**
-   * Serializes the contract_info_v0 message into a Buffer
+   * Converts contract_info_v1 to JSON
+   */
+  public toJSON(): IContractInfoV1JSON {
+    return {
+      type: this.type,
+      totalCollateral: Number(this.totalCollateral),
+      contractOraclePairs: this.contractOraclePairs.map((oraclePairs) => {
+        return {
+          contractDescriptor: oraclePairs.contractDescriptor.toJSON(),
+          oracleInfo: oraclePairs.oracleInfo.toJSON(),
+        };
+      }),
+    };
+  }
+
+  /**
+   * Serializes the contract_info_v1 message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -159,4 +193,22 @@ export class ContractInfoV1 implements IDlcMessage {
 interface IContractOraclePair {
   contractDescriptor: ContractDescriptor;
   oracleInfo: OracleInfoV0;
+}
+
+interface IContractOraclePairJSON {
+  contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
+  oracleInfo: OracleInfoV0JSON;
+}
+
+export interface IContractInfoV0JSON {
+  type: number;
+  totalCollateral: number;
+  contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
+  oracleInfo: OracleInfoV0JSON;
+}
+
+export interface IContractInfoV1JSON {
+  type: number;
+  totalCollateral: number;
+  contractOraclePairs: IContractOraclePairJSON[];
 }

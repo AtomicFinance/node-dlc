@@ -2,7 +2,10 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
+import {
+  OracleAnnouncementV0,
+  OracleAnnouncementV0JSON,
+} from './OracleAnnouncementV0';
 
 /**
  * OracleInfo contains information about the oracles to be used in
@@ -36,6 +39,16 @@ export class OracleInfoV0 implements IDlcMessage {
   public announcement: OracleAnnouncementV0;
 
   /**
+   * Converts oracle_info_v0 to JSON
+   */
+  public toJSON(): OracleInfoV0JSON {
+    return {
+      type: this.type,
+      announcement: this.announcement.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the oracle_info_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -50,4 +63,9 @@ export class OracleInfoV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface OracleInfoV0JSON {
+  type: number;
+  announcement: OracleAnnouncementV0JSON;
 }

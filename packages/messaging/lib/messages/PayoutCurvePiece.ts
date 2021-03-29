@@ -26,6 +26,10 @@ export abstract class PayoutCurvePiece {
 
   public abstract length: bigint;
 
+  public abstract toJSON():
+    | PolynomialPayoutCurvePieceJSON
+    | HyperbolaPayoutCurvePieceJSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -72,6 +76,22 @@ export class PolynomialPayoutCurvePiece
   public length: bigint;
 
   public points: IPoint[];
+
+  /**
+   * Converts polynomial_payout_curve_piece to JSON
+   */
+  public toJSON(): PolynomialPayoutCurvePieceJSON {
+    return {
+      type: this.type,
+      points: this.points.map((point) => {
+        return {
+          eventOutcome: Number(point.eventOutcome),
+          outcomePayout: Number(point.outcomePayout),
+          extraPrecision: Number(point.extraPrecision),
+        };
+      }),
+    };
+  }
 
   /**
    * Serializes the polynomial_payout_curve_piece message into a Buffer
@@ -183,6 +203,34 @@ export class HyperbolaPayoutCurvePiece
   public dExtraPrecision: number;
 
   /**
+   * Converts hyperbola_payout_curve_piece to JSON
+   */
+  public toJSON(): HyperbolaPayoutCurvePieceJSON {
+    return {
+      type: this.type,
+      usePositivePiece: this.usePositivePiece,
+      translateOutcomeSign: this.translateOutcomeSign,
+      translateOutcome: Number(this.translateOutcome),
+      translateOutcomeExtraPrecision: this.translateOutcomeExtraPrecision,
+      translatePayoutSign: this.translatePayoutSign,
+      translatePayout: Number(this.translatePayout),
+      translatePayoutExtraPrecision: this.translatePayoutExtraPrecision,
+      aSign: this.aSign,
+      a: Number(this.a),
+      aExtraPrecision: this.aExtraPrecision,
+      bSign: this.bSign,
+      b: Number(this.b),
+      bExtraPrecision: this.bExtraPrecision,
+      cSign: this.cSign,
+      c: Number(this.c),
+      cExtraPrecision: this.cExtraPrecision,
+      dSign: this.dSign,
+      d: Number(this.d),
+      dExtraPrecision: this.dExtraPrecision,
+    };
+  }
+
+  /**
    * Serializes the hyperbola_payout_curve_piece message into a Buffer
    */
   public serialize(): Buffer {
@@ -222,4 +270,38 @@ interface IPoint {
   eventOutcome: bigint;
   outcomePayout: bigint;
   extraPrecision: number;
+}
+
+interface IPointJSON {
+  eventOutcome: number;
+  outcomePayout: number;
+  extraPrecision: number;
+}
+
+export interface PolynomialPayoutCurvePieceJSON {
+  type: number;
+  points: IPointJSON[];
+}
+
+export interface HyperbolaPayoutCurvePieceJSON {
+  type: number;
+  usePositivePiece: boolean;
+  translateOutcomeSign: boolean;
+  translateOutcome: number;
+  translateOutcomeExtraPrecision: number;
+  translatePayoutSign: boolean;
+  translatePayout: number;
+  translatePayoutExtraPrecision: number;
+  aSign: boolean;
+  a: number;
+  aExtraPrecision: number;
+  bSign: boolean;
+  b: number;
+  bExtraPrecision: number;
+  cSign: boolean;
+  c: number;
+  cExtraPrecision: number;
+  dSign: boolean;
+  d: number;
+  dExtraPrecision: number;
 }
