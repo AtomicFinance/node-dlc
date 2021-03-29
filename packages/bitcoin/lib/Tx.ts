@@ -1,13 +1,13 @@
-import { HashValue } from '@node-lightning/bitcoin';
-import { LockTime } from '@node-lightning/bitcoin';
-import { OutPoint } from '@node-lightning/bitcoin';
-import { Script } from '@node-lightning/bitcoin';
-import { Sequence } from '@node-lightning/bitcoin';
-import { SizeResult } from '@node-lightning/bitcoin';
-import { TxIn } from '@node-lightning/bitcoin';
-import { TxOut } from '@node-lightning/bitcoin';
-import { Value } from '@node-lightning/bitcoin';
-import { Witness } from '@node-lightning/bitcoin';
+import { HashValue } from './HashValue';
+import { LockTime } from './LockTime';
+import { OutPoint } from './OutPoint';
+import { Script } from './Script';
+import { Sequence } from './Sequence';
+import { SizeResult } from './SizeResult';
+import { TxIn } from './TxIn';
+import { TxOut } from './TxOut';
+import { Value } from './Value';
+import { Witness } from './Witness';
 import { BufferWriter, StreamReader, varIntBytes } from '@node-lightning/bufio';
 import { hash256 } from '@node-lightning/crypto';
 
@@ -40,7 +40,6 @@ export class Tx {
 
     let vinLen: number;
     let inputs: TxIn[];
-    let voutLen: number;
     let outputs: TxOut[];
     let parsedInputs: { vinLen: number; inputs: TxIn[] };
     let parsedOutputs: { voutLen: number; outputs: TxOut[] };
@@ -64,7 +63,6 @@ export class Tx {
       inputs = parsedInputs.inputs;
     }
     if (parsedOutputs) {
-      voutLen = parsedOutputs.voutLen;
       outputs = parsedOutputs.outputs;
     }
 

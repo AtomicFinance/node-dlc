@@ -22,7 +22,8 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-lightning/bufio": "^0.21.1"
+    "@node-lightning/bufio": "^0.21.1",
+    "@node-dlc/bitcoin": "^0.1.0"
   },
   "publishConfig": {
     "access": "public"

@@ -3,10 +3,15 @@ import {
   FundingInputV0,
   DlcOfferV0,
 } from '@node-dlc/messaging';
-import { LockTime, OutPoint, Script, Value } from '@node-lightning/bitcoin';
+import {
+  Tx,
+  TxBuilder,
+  LockTime,
+  OutPoint,
+  Script,
+  Value,
+} from '@node-dlc/bitcoin'; // TODO: switch to @node-lightning/bitcoin once parsing base tx is resolved: https://github.com/altangent/node-lightning/issues/167
 import { StreamReader } from '@node-lightning/bufio';
-import { Tx } from '../Tx';
-import { TxBuilder } from '../TxBuilder';
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
 export class DlcTxBuilder {
@@ -44,16 +49,14 @@ export class DlcTxBuilder {
 
     const offerTotalFunding = this.dlcOffer.fundingInputs.reduce(
       (total, input) => {
-        const prevTx = Tx.parse(StreamReader.fromBuffer(input.prevTx));
-        return total + prevTx.outputs[input.prevTxVout].value.sats;
+        return total + input.prevTx.outputs[input.prevTxVout].value.sats;
       },
       BigInt(0),
     );
 
     const acceptTotalFunding = this.dlcAccept.fundingInputs.reduce(
       (total, input) => {
-        const prevTx = Tx.parse(StreamReader.fromBuffer(input.prevTx));
-        return total + prevTx.outputs[input.prevTxVout].value.sats;
+        return total + input.prevTx.outputs[input.prevTxVout].value.sats;
       },
       BigInt(0),
     );
@@ -64,9 +67,10 @@ export class DlcTxBuilder {
     ];
 
     fundingInputs.forEach((input) => {
-      const prevTx = Tx.parse(StreamReader.fromBuffer(input.prevTx));
       tx.addInput(
-        OutPoint.fromString(`${prevTx.txId.toString()}:${input.prevTxVout}`),
+        OutPoint.fromString(
+          `${input.prevTx.txId.toString()}:${input.prevTxVout}`,
+        ),
       );
     });
 

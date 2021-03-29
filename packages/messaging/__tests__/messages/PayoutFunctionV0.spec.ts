@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunctionV0 } from '../../lib/messages/PayoutFunction';
 
-describe.only('PayoutFunctionV0', () => {
+describe('PayoutFunctionV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new PayoutFunctionV0();

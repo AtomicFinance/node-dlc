@@ -25,6 +25,7 @@
   "dependencies": {
     "@node-dlc/messaging": "^0.1.0",
     "@node-dlc/core": "^0.1.0",
+    "@node-dlc/bitcoin": "^0.1.0",
     "@node-lightning/bufio": "^0.21.1",
     "@node-lightning/core": "^0.21.1",
     "@node-lightning/gossip-rocksdb": "^0.21.1",

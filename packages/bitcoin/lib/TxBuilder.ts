@@ -1,16 +1,16 @@
-import { HashByteOrder } from '@node-lightning/bitcoin';
-import { LockTime } from '@node-lightning/bitcoin';
-import { OutPoint } from '@node-lightning/bitcoin';
-import { Script } from '@node-lightning/bitcoin';
-import { Sequence } from '@node-lightning/bitcoin';
-import { SigHashType } from '@node-lightning/bitcoin';
-import { Sorter } from '@node-lightning/bitcoin';
-import { TxIn } from '@node-lightning/bitcoin';
-import { TxOut } from '@node-lightning/bitcoin';
-import { Value } from '@node-lightning/bitcoin';
+import { HashByteOrder } from './HashByteOrder';
+import { LockTime } from './LockTime';
+import { OutPoint } from './OutPoint';
+import { Script } from './Script';
+import { Sequence } from './Sequence';
+import { SigHashType } from './SigHashType';
+import { Sorter } from './Sorter';
+import { Tx } from './Tx';
+import { TxIn } from './TxIn';
+import { TxOut } from './TxOut';
+import { Value } from './Value';
 import { BufferWriter } from '@node-lightning/bufio';
 import { hash256, sign, sigToDER } from '@node-lightning/crypto';
-import { Tx } from './Tx';
 
 export class TxBuilder {
   public inputSorter: Sorter<TxIn>;
