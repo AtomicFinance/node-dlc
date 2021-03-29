@@ -1,21 +1,28 @@
-import { FundingInputV0 } from '@node-dlc/messaging';
+import { FundingInput, FundingInputV0, MessageType } from '@node-dlc/messaging';
 
 export class DualFundingTxFinalizer {
   constructor(
-    readonly offerInputs: FundingInputV0[],
+    readonly offerInputs: FundingInput[],
     readonly offerPayoutSPK: Buffer,
     readonly offerChangeSPK: Buffer,
-    readonly acceptInputs: FundingInputV0[],
+    readonly acceptInputs: FundingInput[],
     readonly acceptPayoutSPK: Buffer,
     readonly acceptChangeSPK: Buffer,
     readonly feeRate: bigint,
   ) {}
 
   private computeFees(
-    inputs: FundingInputV0[],
+    _inputs: FundingInput[],
     payoutSPK: Buffer,
     changeSPK: Buffer,
   ): IFees {
+    _inputs.forEach((input) => {
+      if (input.type !== MessageType.FundingInputV0)
+        throw Error('FundingInput must be V0');
+    });
+    const inputs: FundingInputV0[] = _inputs.map(
+      (input) => input as FundingInputV0,
+    );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
     const futureFeeWeight = 249 + 4 * payoutSPK.length;
     const futureFeeVBytes = Math.ceil(futureFeeWeight / 4);

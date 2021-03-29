@@ -1,4 +1,4 @@
-import { sha256 } from '@liquality/crypto';
+import { sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
 import { DlcAcceptV0, DlcOfferV0, DlcSignV0 } from '@node-dlc/messaging';
 import { xor } from '@node-lightning/crypto';
@@ -36,7 +36,7 @@ export class RocksdbDlcStore extends RocksdbBase {
 
   public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
     const value = dlcOffer.serialize();
-    const tempContractId = Buffer.from(sha256(value), 'hex');
+    const tempContractId = sha256(value);
     const key = Buffer.concat([Buffer.from([Prefix.OfferV0]), tempContractId]);
     await this._db.put(key, value);
   }

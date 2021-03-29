@@ -1,11 +1,15 @@
 // tslint:disable: no-unused-expression
 
-import { DlcOfferV0, DlcAcceptV0, DlcSignV0 } from '@node-dlc/messaging';
+import {
+  DlcOfferV0,
+  DlcAcceptV0,
+  DlcSignV0,
+  FundingInputV0,
+} from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
-import { sha256 } from '@liquality/crypto';
 import * as util from './rocksdb';
-import { xor } from '@node-lightning/crypto';
+import { xor, sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
 
 describe('RocksdbGossipStore', () => {
@@ -123,7 +127,7 @@ describe('RocksdbGossipStore', () => {
 
   const dlcAccept = DlcAcceptV0.deserialize(dlcAcceptHex);
 
-  const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
+  const tempContractId = sha256(dlcOfferHex);
 
   const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
   const tx = txBuilder.buildFundingTransaction();
@@ -175,19 +179,22 @@ describe('RocksdbGossipStore', () => {
 
   describe('find dlc_offer by tempContractId', () => {
     it('should return the dlc_offer object', async () => {
-      const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
+      const tempContractId = sha256(dlcOfferHex);
       const actual = await sut.findDlcOffer(tempContractId);
 
+      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
+      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInputV0[];
+
       expect(
-        actual.fundingInputs[0].prevTx.serialize().toString('hex'),
-      ).to.equal(dlcOffer.fundingInputs[0].prevTx.serialize().toString('hex'));
+        actualFundingInputs[0].prevTx.serialize().toString('hex'),
+      ).to.equal(expectedFundingInputs[0].prevTx.serialize().toString('hex'));
       expect(actual.contractInfo).to.deep.equal(dlcOffer.contractInfo);
     });
   });
 
   describe('delete dlc_offer', () => {
     it('should delete dlc_offer', async () => {
-      const tempContractId = Buffer.from(sha256(dlcOfferHex), 'hex');
+      const tempContractId = sha256(dlcOfferHex);
 
       await sut.deleteDlcOffer(tempContractId);
 

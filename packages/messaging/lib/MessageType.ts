@@ -44,6 +44,11 @@ export enum MessageType {
   DlcSignV0 = 42782,
 
   /**
+   * Dlc Storage Types
+   */
+  DlcTransactionsV0 = 61230,
+
+  /**
    * Order Message Types
    */
   OrderOfferV0 = 62770,

@@ -3,7 +3,7 @@ import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { ContractInfo } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0 } from './FundingInput';
+import { FundingInput } from './FundingInput';
 
 export abstract class DlcOffer {
   public static deserialize(buf: Buffer): DlcOfferV0 {
@@ -15,7 +15,7 @@ export abstract class DlcOffer {
       case MessageType.DlcOfferV0:
         return DlcOfferV0.deserialize(buf);
       default:
-        throw new Error(`Payout function TLV type must be DlcOfferV0`);
+        throw new Error(`DLC Offer message type must be DlcOfferV0`);
     }
   }
 
@@ -52,7 +52,7 @@ export class DlcOfferV0 implements IDlcMessage {
     const fundingInputsLen = reader.readUInt16BE();
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
     }
 
     const changeSPKLen = reader.readUInt16BE();
@@ -85,7 +85,7 @@ export class DlcOfferV0 implements IDlcMessage {
 
   public offerCollateralSatoshis: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInput[] = [];
 
   public changeSPK: Buffer;
 
