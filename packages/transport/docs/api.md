@@ -74,10 +74,14 @@ Authentication is accomplished via HTTP basic Auth, using your daemon's API Key.
 | POST     | `/api/v1/contract/offers`                 | Create Contract Offer (Dlc Offer V0) and send to counterparty  |
 | GET      | `/api/v1/contract/accepts`                | Retrieve all contract accepts                                  |
 | GET      | `/api/v1/contract/accepts/:contractId`    | Retrieve contract accepts by `contractId`                      |
-| POST     | `/api/v1/contract/accepts`                | Create Contract Offer (Dlc Accept V0)                          |
+| POST     | `/api/v1/contract/accepts`                | Create Contract Accept (Dlc Accept V0)                         |
 | GET      | `/api/v1/contract/signs`                  | Retrieve all contract signs                                    |
 | GET      | `/api/v1/contract/signs/:contractId`      | Retrieve contract signs by `contractId`                        |
-| POST     | `/api/v1/contract/signs`                  | Create Contract Offer (Dlc Sign V0) and send to counterparty   |
+| POST     | `/api/v1/contract/signs`                  | Create Contract Sign (Dlc Sign V0) and send to counterparty    |
+| GET      | `/api/v1/contract/finalize`               | Retrieve all contract finalize                                 |
+| GET      | `/api/v1/contract/finalize/:contractId`   | Retrieve contract signs by `contractId`                        |
+| POST     | `/api/v1/contract/finalize`               | Create Contract Finalize                                       |
+| POST     | `/api/v1/contract/broadcast`              | Broadcast DLC Funding Tx                                       |
 | POST     | `/api/v1/contract/close`                  | Close Contract using oracle attestation                        |
 | POST     | `/api/v1/contract/cancel`                 | Cancel Contract                                                |
 | GET      | `/api/v1/contracts`                       | Retrieve all contracts                                         |
@@ -87,6 +91,8 @@ Authentication is accomplished via HTTP basic Auth, using your daemon's API Key.
 
 ##### Contract Interaction Endpoints for IRC Transport
 Endpoints that allow a client to fetch contract state from transport daemon
+
+Note: IRC Nickname refers to counterparty
 
 | Method   | Path                         | Description                                                                              |
 | -------- | ---------------------------  | ---------------------------------------------------------------------------------------- |
