@@ -98,7 +98,7 @@ Note: IRC Nickname refers to counterparty
 | -------- | ---------------------------  | ---------------------------------------------------------------------------------------- |
 | POST     | `/api/v1/contract/:ircNickname/offers`                  | Send contract offer to counterparty                           |
 | GET      | `/api/v1/contract/:ircNickname/accepts`                 | Retrieve all contract accepts by `ircNickname`                |
-| GET      | `/api/v1/contract/:ircNickname/accepts/:tempContractId` | Retrive contract accept by `ircNickname` and `tempContractId` |
+| GET      | `/api/v1/contract/:ircNickname/accepts/:tempContractId` | Retrieve contract accept by `ircNickname` and `tempContractId` |
 | POST     | `/api/v1/contract/:ircNickname/signs`                   | Send contract sign to counterparty                            |
 | GET      | `/api/v1/contract/:ircNickname/:contractId`             | Retrieve contract by `ircNickname` and `tempContractId`       |
 
