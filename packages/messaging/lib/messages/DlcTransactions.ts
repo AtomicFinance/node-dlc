@@ -54,7 +54,7 @@ export class DlcTransactionsV0 implements IDlcMessage {
 
   public refundTx: Tx;
 
-  public cets: Tx[];
+  public cets: Tx[] = [];
 
   public tempContractId: Buffer;
 
