@@ -5,7 +5,9 @@ import {
   ContractDescriptor,
   ContractDescriptorV0JSON,
   ContractDescriptorV1JSON,
+  ContractDescriptorV1,
 } from './ContractDescriptor';
+import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
 import { IDlcMessage } from './DlcMessage';
 import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
 
@@ -32,6 +34,8 @@ export abstract class ContractInfo {
   public abstract length: bigint;
 
   public abstract totalCollateral: bigint;
+
+  public abstract validate(): void;
 
   public abstract toJSON(): IContractInfoV0JSON | IContractInfoV1JSON;
 
@@ -76,6 +80,25 @@ export class ContractInfoV0 implements IDlcMessage {
   public contractDescriptor: ContractDescriptor;
 
   public oracleInfo: OracleInfoV0;
+
+  public validate(): void {
+    switch (this.contractDescriptor.type) {
+      case MessageType.ContractDescriptorV1:
+        // eslint-disable-next-line no-case-declarations
+        const contractDescriptor = this
+          .contractDescriptor as ContractDescriptorV1;
+        switch (this.oracleInfo.announcement.oracleEvent.type) {
+          case MessageType.DigitDecompositionEventDescriptorV0:
+            // eslint-disable-next-line no-case-declarations
+            const eventDescriptor = this.oracleInfo.announcement.oracleEvent
+              .eventDescriptor as DigitDecompositionEventDescriptorV0;
+            if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
+              throw Error(
+                'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
+              );
+        }
+    }
+  }
 
   /**
    * Converts contract_info_v0 to JSON
@@ -149,6 +172,27 @@ export class ContractInfoV1 implements IDlcMessage {
   public totalCollateral: bigint;
 
   public contractOraclePairs: IContractOraclePair[] = [];
+
+  public validate(): void {
+    this.contractOraclePairs.forEach((oraclePair) => {
+      switch (oraclePair.contractDescriptor.type) {
+        case MessageType.ContractDescriptorV1:
+          // eslint-disable-next-line no-case-declarations
+          const contractDescriptor = oraclePair.contractDescriptor as ContractDescriptorV1;
+          switch (oraclePair.oracleInfo.announcement.oracleEvent.type) {
+            case MessageType.DigitDecompositionEventDescriptorV0:
+              // eslint-disable-next-line no-case-declarations
+              const eventDescriptor = oraclePair.oracleInfo.announcement
+                .oracleEvent
+                .eventDescriptor as DigitDecompositionEventDescriptorV0;
+              if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
+                throw Error(
+                  'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
+                );
+          }
+      }
+    });
+  }
 
   /**
    * Converts contract_info_v1 to JSON
