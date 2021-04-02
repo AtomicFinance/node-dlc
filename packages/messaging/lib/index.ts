@@ -5,6 +5,7 @@ export * from './messages/DlcAccept';
 export * from './messages/DlcOffer';
 export * from './messages/DlcTransactions';
 export * from './messages/DlcSign';
+export * from './messages/DlcMessage';
 export * from './messages/EventDescriptor';
 export * from './messages/FundingInput';
 export * from './messages/FundingSignaturesV0';
