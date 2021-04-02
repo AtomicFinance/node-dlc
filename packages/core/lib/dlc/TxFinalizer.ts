@@ -83,6 +83,67 @@ export class DualFundingTxFinalizer {
   }
 }
 
+export class DualClosingTxFinalizer {
+  constructor(
+    readonly initiatorInputs: FundingInput[],
+    readonly offerPayoutSPK: Buffer,
+    readonly acceptPayoutSPK: Buffer,
+    readonly feeRate: bigint,
+  ) {}
+
+  private computeFees(payoutSPK: Buffer, _inputs: FundingInput[] = []): bigint {
+    _inputs.forEach((input) => {
+      if (input.type !== MessageType.FundingInputV0)
+        throw Error('FundingInput must be V0');
+    });
+    const inputs: FundingInputV0[] = _inputs.map(
+      (input) => input as FundingInputV0,
+    );
+    // https://gist.github.com/matthewjablack/08c36baa513af9377508111405b22e03
+    const inputWeight = inputs.reduce((total, input) => {
+      return total + 164 + input.maxWitnessLen + input.scriptSigLength();
+    }, 0);
+    const outputWeight = 36 + 4 * payoutSPK.length;
+    const weight = 213 + outputWeight + inputWeight;
+    const vbytes = Math.ceil(weight / 4);
+    const fee = this.feeRate * BigInt(vbytes);
+
+    return fee;
+  }
+
+  private getOfferInitiatorFees(): bigint {
+    return this.computeFees(this.offerPayoutSPK, this.initiatorInputs);
+  }
+
+  private getOfferReciprocatorFees(): bigint {
+    return this.computeFees(this.offerPayoutSPK);
+  }
+
+  private getAcceptInitiatorFees(): bigint {
+    return this.computeFees(this.acceptPayoutSPK, this.initiatorInputs);
+  }
+
+  private getAcceptReciprocatorFees(): bigint {
+    return this.computeFees(this.acceptPayoutSPK);
+  }
+
+  public get offerInitiatorFees(): bigint {
+    return this.getOfferInitiatorFees();
+  }
+
+  public get offerReciprocatorFees(): bigint {
+    return this.getOfferReciprocatorFees();
+  }
+
+  public get acceptInitiatorFees(): bigint {
+    return this.getAcceptInitiatorFees();
+  }
+
+  public get acceptReciprocatorFees(): bigint {
+    return this.getAcceptReciprocatorFees();
+  }
+}
+
 interface IFees {
   futureFee: bigint;
   fundingFee: bigint;
