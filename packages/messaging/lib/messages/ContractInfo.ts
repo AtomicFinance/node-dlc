@@ -87,15 +87,20 @@ export class ContractInfoV0 implements IDlcMessage {
         // eslint-disable-next-line no-case-declarations
         const contractDescriptor = this
           .contractDescriptor as ContractDescriptorV1;
-        switch (this.oracleInfo.announcement.oracleEvent.type) {
+        switch (this.oracleInfo.announcement.oracleEvent.eventDescriptor.type) {
           case MessageType.DigitDecompositionEventDescriptorV0:
             // eslint-disable-next-line no-case-declarations
             const eventDescriptor = this.oracleInfo.announcement.oracleEvent
               .eventDescriptor as DigitDecompositionEventDescriptorV0;
             if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
-              throw Error(
+              throw new Error(
                 'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
               );
+            break;
+          default:
+            throw new Error(
+              'Only ContractDescriptorV1 can be used with DigitDecompositionEventDescriptor',
+            );
         }
     }
   }
@@ -179,14 +184,16 @@ export class ContractInfoV1 implements IDlcMessage {
         case MessageType.ContractDescriptorV1:
           // eslint-disable-next-line no-case-declarations
           const contractDescriptor = oraclePair.contractDescriptor as ContractDescriptorV1;
-          switch (oraclePair.oracleInfo.announcement.oracleEvent.type) {
+          switch (
+            oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
+          ) {
             case MessageType.DigitDecompositionEventDescriptorV0:
               // eslint-disable-next-line no-case-declarations
               const eventDescriptor = oraclePair.oracleInfo.announcement
                 .oracleEvent
                 .eventDescriptor as DigitDecompositionEventDescriptorV0;
               if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
-                throw Error(
+                throw new Error(
                   'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
                 );
           }
