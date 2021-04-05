@@ -2,6 +2,7 @@ import {
   PayoutFunctionV0,
   RoundingIntervalsV0,
   HyperbolaPayoutCurvePiece,
+  MessageType,
 } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
 import { toBigInt } from '../../utils/BigIntUtils';
@@ -100,10 +101,12 @@ const computePayouts = (
     payoutCurvePiece,
   } = payoutFunction.pieces[0];
 
-  if (!(payoutCurvePiece instanceof HyperbolaPayoutCurvePiece))
+  if (payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece)
     throw new Error('Payout curve piece must be a hyperbola');
 
-  const curve = HyperbolaPayoutCurve.fromPayoutCurvePiece(payoutCurvePiece);
+  const _payoutCurvePiece = payoutCurvePiece as HyperbolaPayoutCurvePiece;
+
+  const curve = HyperbolaPayoutCurve.fromPayoutCurvePiece(_payoutCurvePiece);
 
   return splitIntoRanges(
     payoutFunction.endpoint0,
