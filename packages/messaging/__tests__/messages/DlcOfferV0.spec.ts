@@ -251,7 +251,7 @@ describe('DlcOfferV0', () => {
 
       const unknownInstance = DlcOffer.deserialize(buf);
 
-      if (unknownInstance.type === MessageType.ContractInfoV0) {
+      if (unknownInstance.type === MessageType.DlcOfferV0) {
         const instance = unknownInstance as DlcOfferV0;
 
         expect(instance.contractFlags).to.deep.equal(contractFlags);
@@ -312,6 +312,8 @@ describe('DlcOfferV0', () => {
         expect(Number(instance.feeRatePerVb)).to.equal(1);
         expect(instance.cetLocktime).to.equal(100);
         expect(instance.refundLocktime).to.equal(200);
+      } else {
+        throw Error('DlcOffer Incorrect type');
       }
     });
   });

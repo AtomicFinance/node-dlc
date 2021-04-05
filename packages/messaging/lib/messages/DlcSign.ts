@@ -12,10 +12,10 @@ export abstract class DlcSign {
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
-      case MessageType.DlcOfferV0:
+      case MessageType.DlcSignV0:
         return DlcSignV0.deserialize(buf);
       default:
-        throw new Error(`Payout function TLV type must be DlcSignV0`);
+        throw new Error(`Dlc Sign message type must be DlcSignV0`);
     }
   }
 
