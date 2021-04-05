@@ -21,6 +21,6 @@ export interface IDB {
   dlc: RocksdbDlcStore;
 }
 
-export function parseConfig(configData) {
+export function parseConfig(configData: any): any {
   return JSON.parse(JSON.stringify(configData));
 }
