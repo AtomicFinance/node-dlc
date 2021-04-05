@@ -16,7 +16,7 @@ export abstract class DlcAccept {
       case MessageType.DlcAcceptV0:
         return DlcAcceptV0.deserialize(buf);
       default:
-        throw new Error(`Payout function TLV type must be DlcAcceptV0`);
+        throw new Error(`Dlc Accept message type must be DlcAcceptV0`);
     }
   }
 

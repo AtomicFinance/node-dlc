@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
-import { DlcSignV0 } from '../../lib/messages/DlcSign';
+import { DlcSign, DlcSignV0 } from '../../lib/messages/DlcSign';
 import { FundingSignaturesV0 } from '../../lib/messages/FundingSignaturesV0';
+import { MessageType } from '../../lib/MessageType';
 
 describe('DlcSignV0', () => {
   const contractId = Buffer.from(
@@ -99,31 +100,37 @@ describe('DlcSignV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = DlcSignV0.deserialize(buf);
+      const unknownInstance = DlcSign.deserialize(buf);
 
-      expect(instance.contractId).to.deep.equal(contractId);
-      expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
-        'fda716' + // type cet_adaptor_signatures_v0
-          'fd01e7' + // length
-          '03' + // nb_signatures
-          '00c706fe7ed70197a77397fb7ce8445fcf1d0b239b4ab41ebdad4f76e0a671d7830470f4fef96d0838e8f3cec33176a6a427d777b57d256f8545b570cd70297291' + // ecdsa_adaptor_signature_1
-          '0192f8ad4eb341ac2867d203360516028b967b46ef0e5d1603b59a7d8ebc81d655dd11673febcf098006eba74b3604d0a1da818208ea2833079505a3dee7392255f0682e5b357a7382aae6e5bdcc728b94c9d0a52fb6f49ac5cbe32804fcfb71b1' + // dleq_proof_1
-          '0125e92381be588737f6ac5c28325c843c6551995880f830d926abd35ee3f8ed9fdfc47a5fd277d0df2a1f1d0bafba8efad7b127e2a232a4846ed90810c81e6575' + // ecdsa_adaptor_signature_2
-          '0039dba803adb78100f20ca12b09b68a92b996b07a5ee47806379cedfa217848644f48d96ed6443ea7143adf1ce19a4386d0841b5071e31f5d3e4c479eab6a856b426c80d091da3de3959b29e4c2e3ae47ddba2758c2ca1c6a064dfee4671ba501' + // dleq_proof_2
-          '0098f2595778a1596054ffcafb599f8f4a65c4215de757548c142d50b12eb67d4c1407690b808e33eba95fe818223886fd8e9ce4c758b4662636af663e00553763' + // ecdsa_adaptor_signature_3
-          '00a915ee71914ee8ae2c18d55b397649c0057a01f0a85c6ecf1b0eb26f7485f21b24c89013e1cb15a4bf40256e52a66751f33de46032db0801975933be2977a1e37d5d5f2d43f48481cc68783dbfeb21a35c62c1ca2eb6ee2ccfc12b74e9fd7a08', // dleq_proof_3
-      );
-      expect(instance.refundSignature).to.deep.equal(refundSignature);
-      expect(instance.fundingSignatures.serialize().toString('hex')).to.equal(
-        'fda718' + // type funding_signatures_v0
-          '70' + // length
-          '0001' + // num_witnesses
-          '0002' + // stack_len
-          '0047' + // stack_element_len
-          '304402203812d7d194d44ec68f244cc3fd68507c563ec8c729fdfa3f4a79395b98abe84f0220704ab3f3ffd9c50c2488e59f90a90465fccc2d924d67a1e98a133676bf52f37201' + // stack_element
-          '0021' + // stack_element_len
-          '02dde41aa1f21671a2e28ad92155d2d66e0b5428de15d18db4cbcf216bf00de919', // stack_element
-      );
+      if (unknownInstance.type === MessageType.DlcSignV0) {
+        const instance = unknownInstance as DlcSignV0;
+
+        expect(instance.contractId).to.deep.equal(contractId);
+        expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
+          'fda716' + // type cet_adaptor_signatures_v0
+            'fd01e7' + // length
+            '03' + // nb_signatures
+            '00c706fe7ed70197a77397fb7ce8445fcf1d0b239b4ab41ebdad4f76e0a671d7830470f4fef96d0838e8f3cec33176a6a427d777b57d256f8545b570cd70297291' + // ecdsa_adaptor_signature_1
+            '0192f8ad4eb341ac2867d203360516028b967b46ef0e5d1603b59a7d8ebc81d655dd11673febcf098006eba74b3604d0a1da818208ea2833079505a3dee7392255f0682e5b357a7382aae6e5bdcc728b94c9d0a52fb6f49ac5cbe32804fcfb71b1' + // dleq_proof_1
+            '0125e92381be588737f6ac5c28325c843c6551995880f830d926abd35ee3f8ed9fdfc47a5fd277d0df2a1f1d0bafba8efad7b127e2a232a4846ed90810c81e6575' + // ecdsa_adaptor_signature_2
+            '0039dba803adb78100f20ca12b09b68a92b996b07a5ee47806379cedfa217848644f48d96ed6443ea7143adf1ce19a4386d0841b5071e31f5d3e4c479eab6a856b426c80d091da3de3959b29e4c2e3ae47ddba2758c2ca1c6a064dfee4671ba501' + // dleq_proof_2
+            '0098f2595778a1596054ffcafb599f8f4a65c4215de757548c142d50b12eb67d4c1407690b808e33eba95fe818223886fd8e9ce4c758b4662636af663e00553763' + // ecdsa_adaptor_signature_3
+            '00a915ee71914ee8ae2c18d55b397649c0057a01f0a85c6ecf1b0eb26f7485f21b24c89013e1cb15a4bf40256e52a66751f33de46032db0801975933be2977a1e37d5d5f2d43f48481cc68783dbfeb21a35c62c1ca2eb6ee2ccfc12b74e9fd7a08', // dleq_proof_3
+        );
+        expect(instance.refundSignature).to.deep.equal(refundSignature);
+        expect(instance.fundingSignatures.serialize().toString('hex')).to.equal(
+          'fda718' + // type funding_signatures_v0
+            '70' + // length
+            '0001' + // num_witnesses
+            '0002' + // stack_len
+            '0047' + // stack_element_len
+            '304402203812d7d194d44ec68f244cc3fd68507c563ec8c729fdfa3f4a79395b98abe84f0220704ab3f3ffd9c50c2488e59f90a90465fccc2d924d67a1e98a133676bf52f37201' + // stack_element
+            '0021' + // stack_element_len
+            '02dde41aa1f21671a2e28ad92155d2d66e0b5428de15d18db4cbcf216bf00de919', // stack_element
+        );
+      } else {
+        throw Error('DlcSign Incorrect type');
+      }
     });
   });
 });
