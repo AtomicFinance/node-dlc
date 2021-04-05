@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DLC Daemon",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
@@ -25,7 +25,7 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/logger": "^0.1.1",
+    "@node-dlc/logger": "^0.1.2",
     "@node-lightning/bufio": "^0.21.1",
     "axios": "0.21.1",
     "bcfg": "0.1.6",
