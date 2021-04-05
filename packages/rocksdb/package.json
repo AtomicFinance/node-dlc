@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/rocksdb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DLC RocksDB",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -24,9 +24,9 @@
   },
   "dependencies": {
     "@liquality/crypto": "^0.9.1",
-    "@node-dlc/bitcoin": "^0.1.1",
-    "@node-dlc/core": "^0.1.1",
-    "@node-dlc/messaging": "^0.1.1",
+    "@node-dlc/bitcoin": "^0.1.2",
+    "@node-dlc/core": "^0.1.2",
+    "@node-dlc/messaging": "^0.1.2",
     "@node-lightning/bufio": "^0.21.1",
     "@node-lightning/core": "^0.21.1",
     "@node-lightning/crypto": "0.21.1",

@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/bitcoin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DLC Bitcoin",
   "scripts": {
     "start": "npm run build && node dist/index.js",
