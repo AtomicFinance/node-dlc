@@ -33,17 +33,24 @@
     "@atomicfinance/client": "2.0.0-alpha.0",
     "@liquality/bitcoin-js-wallet-provider": "0.10.3",
     "@liquality/bitcoin-rpc-provider": "0.10.3",
+    "@liquality/bitcoin-esplora-api-provider": "0.10.3",
+    "@liquality/bitcoin-esplora-batch-api-provider": "0.10.3",
     "@liquality/client": "0.10.3",
     "@node-dlc/bitcoin": "^0.1.2",
+    "@node-dlc/messaging": "^0.1.2",
     "@node-dlc/rocksdb": "^0.1.2",
     "@node-lightning/bufio": "^0.21.1",
     "@node-lightning/logger": "0.21.1",
     "bcfg": "0.1.6",
     "bip39": "^3.0.3",
+    "cfd-dlc-js": "https://github.com/atomicfinance/cfd-dlc-js.git#v0.0.18",
+    "cfd-js": "https://github.com/cryptogarageinc/cfd-js.git#v0.3.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "express-basic-auth": "1.2.0",
     "helmet": "^3.23.3",
     "morgan": "1.10.0",
+    "node-worker-threads-pool": "^1.4.3",
     "os": "0.1.1",
     "path": "0.12.7",
     "winston": "3.3.3",
@@ -53,6 +60,8 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/yargs": "^16.0.0"
+    "@types/yargs": "^16.0.0",
+    "@types/express": "4.11.1",
+    "@types/node": "12.12.2"
   }
 }

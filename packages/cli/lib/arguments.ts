@@ -26,4 +26,5 @@ export interface IArguments {
   h: string;
   loglevel: string;
   l: string;
+  contractinfo: string;
 }

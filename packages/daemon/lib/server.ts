@@ -10,9 +10,11 @@ import * as path from 'path';
 import * as winston from 'winston';
 import { RoutesV1 } from './routes';
 import { IArguments, IDB } from './utils/config';
+import { Client } from './client';
 
 export default class Server {
   public routesV1: RoutesV1;
+  public client: Client;
   constructor(app: Application, argv: IArguments, logger: Logger) {
     const { datadir, network } = argv;
 
@@ -20,7 +22,8 @@ export default class Server {
     const walletDb = new RocksdbWalletStore(`${datadir}/${network}/wallet`);
     const dlcDb = new RocksdbDlcStore(`${datadir}/${network}/dlc`);
     const db: IDB = { wallet: walletDb, dlc: dlcDb };
-    this.routesV1 = new RoutesV1(app, argv, db, logger);
+    this.client = new Client(argv, db, logger);
+    this.routesV1 = new RoutesV1(app, argv, db, logger, this.client);
   }
 
   public config(app: Application, argv: IArguments): void {

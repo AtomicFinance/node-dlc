@@ -12,7 +12,8 @@ config.open('node-dlc.conf'); // TODO: allow users to pass in their on conf dire
 
 // TODO allow user to pass in api-key on startup
 
-const argv: IArguments = yargs(process.argv.slice(2))
+// const argv: IArguments =
+yargs(process.argv.slice(2))
   .usage('Usage:   dlccli [options]             start DLCd')
   .scriptName('dlccli')
   .config(parseConfig(config.data))

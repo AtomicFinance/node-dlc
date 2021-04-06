@@ -3,6 +3,7 @@ import bcrypto from 'bcrypto';
 import DlcdClient from '../../client/DlcdClient';
 import { getLogger } from '../../utils/config';
 import { IArguments } from '../../arguments';
+import { Endpoint } from '@node-dlc/daemon';
 
 export const command = 'create';
 
@@ -43,16 +44,21 @@ export async function handler(argv: IArguments): Promise<void> {
   const { host, port, apiKey, loglevel } = argv;
   const logger: Logger = getLogger(loglevel);
   let _apiKey: string = apiKey;
+  let noApiKey = false;
   if (!apiKey) {
     // No API Key provided, generate one
     _apiKey = bcrypto.random.randomBytes(32).toString('hex');
+    noApiKey = true;
   }
   const client = new DlcdClient(host, port, logger, _apiKey);
-  const response = await client.post('/wallet/create', { apiKey: _apiKey });
+  const response = await client.post('/wallet/create');
   const { mnemonic } = response;
   logger.log(
     `${cipherSeedMessageStart}\n${formatMnemonic(
       mnemonic,
     )}\n${cipherSeedMessageEnd}`,
   );
+  if (noApiKey) {
+    logger.log(`Generated API KEY: ${_apiKey}`);
+  }
 }

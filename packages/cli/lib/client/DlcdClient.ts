@@ -1,5 +1,10 @@
 import { Logger } from '@node-dlc/logger';
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosBasicCredentials,
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 
 export type Method =
   | 'get'
@@ -23,7 +28,7 @@ export type Method =
   | 'unlink'
   | 'UNLINK';
 
-export type ApiVersion = 'v1';
+export type ApiPrefix = 'api' | 'api/v0';
 
 export default class DlcdClient {
   public host: string;
@@ -36,13 +41,13 @@ export default class DlcdClient {
 
   public logger: Logger;
 
-  public apiVersion: ApiVersion;
+  public apiPrefix: ApiPrefix;
   constructor(
     host: string,
     port: number,
     logger: Logger,
     apiKey = '',
-    apiVersion: ApiVersion = 'v1',
+    apiPrefix: ApiPrefix = 'api',
     ssl = false,
   ) {
     this.host = host;
@@ -50,7 +55,7 @@ export default class DlcdClient {
     this.logger = logger;
     this.ssl = ssl;
     this.apiKey = apiKey;
-    this.apiVersion = apiVersion;
+    this.apiPrefix = apiPrefix;
   }
 
   public async request(
@@ -58,11 +63,9 @@ export default class DlcdClient {
     endpoint: string,
     params: IParams = {},
   ): Promise<any> {
-    if (this.apiKey) params.apikey = this.apiKey;
-
     const config: AxiosRequestConfig = {
       baseURL: `${this.ssl ? 'https' : 'http'}://${this.host}:${this.port}/${
-        this.apiVersion
+        this.apiPrefix
       }/`,
       url: endpoint,
       timeout: 1000,
@@ -71,24 +74,33 @@ export default class DlcdClient {
       responseType: 'json',
     };
 
+    if (this.apiKey) {
+      const auth: AxiosBasicCredentials = {
+        username: 'test',
+        password: this.apiKey,
+      };
+
+      config.auth = auth;
+    }
+
     return axios(config)
       .then((response: AxiosResponse) => response.data)
       .catch(this.handleError);
   }
 
-  public get(endpoint: string, params: IParams = {}) {
+  public get(endpoint: string, params: IParams = {}): any {
     return this.request('GET', endpoint, params);
   }
 
-  public post(endpoint: string, params: IParams = {}) {
+  public post(endpoint: string, params: IParams = {}): any {
     return this.request('POST', endpoint, params);
   }
 
-  public put(endpoint: string, params: IParams = {}) {
+  public put(endpoint: string, params: IParams = {}): any {
     return this.request('PUT', endpoint, params);
   }
 
-  public handleError = (error: AxiosError) => {
+  public handleError = (error: AxiosError): void => {
     if (error.response) {
       if (error.response.data.msg) {
         this.logger.log(`Error: ${error.response.data.msg}`);

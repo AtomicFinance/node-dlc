@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import BaseRoute from '../v1/base';
+import BaseRoute from '../base';
 
 export function routeErrorHandler(
   route: BaseRoute,
