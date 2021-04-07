@@ -51,7 +51,7 @@ export async function handler(argv: IArguments): Promise<void> {
     noApiKey = true;
   }
   const client = new DlcdClient(host, port, logger, _apiKey);
-  const response = await client.post('/wallet/create');
+  const response = await client.post(Endpoint.WalletCreate);
   const { mnemonic } = response;
   logger.log(
     `${cipherSeedMessageStart}\n${formatMnemonic(

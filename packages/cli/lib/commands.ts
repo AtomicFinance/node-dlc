@@ -17,7 +17,10 @@ yargs(process.argv.slice(2))
   .usage('Usage:   dlccli [options]             start DLCd')
   .scriptName('dlccli')
   .config(parseConfig(config.data))
-  .commandDir('cmds', { recurse: true })
+  .commandDir('cmds/basic', { recurse: true })
+  .commandDir('cmds/contract', { recurse: true })
+  .commandDir('cmds/order', { recurse: true })
+  .commandDir('cmds/wallet', { recurse: true })
   .options({
     p: { alias: 'port', type: 'number', default: 8575, global: true },
     n: {

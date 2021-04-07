@@ -42,6 +42,7 @@ export default class DlcdClient {
   public logger: Logger;
 
   public apiPrefix: ApiPrefix;
+
   constructor(
     host: string,
     port: number,
