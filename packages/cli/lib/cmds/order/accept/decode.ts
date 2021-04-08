@@ -4,22 +4,22 @@ import { getLogger } from '../../../utils/config';
 import { IArguments } from '../../../arguments';
 import { Endpoint } from '@node-dlc/daemon';
 
-export const command = 'createdlcorderaccept [orderoffer]';
+export const command = 'decoderaworderaccept [orderaccept]';
 
-export const describe = 'Create Dlc Order Accept';
+export const describe = 'Decode Raw OrderAccept';
 
 export const builder = {
-  apikey: {
+  apiKey: {
     default: '',
   },
 };
 
 export async function handler(argv: IArguments): Promise<void> {
-  const { host, port, apikey, loglevel, orderoffer } = argv;
+  const { host, port, apiKey, loglevel } = argv;
   const logger: Logger = getLogger(loglevel);
-  const client = new DlcdClient(host, port, logger, apikey, 'api/v0');
-  const response = await client.post(Endpoint.OrderAccept, {
-    orderoffer,
+  const client = new DlcdClient(host, port, logger, apiKey);
+  const response = await client.post(`${Endpoint.OrderAccept}/decode`, {
+    orderaccept: argv.orderaccept,
   });
-  logger.log(response.hex);
+  logger.log(JSON.stringify(response, null, 2));
 }

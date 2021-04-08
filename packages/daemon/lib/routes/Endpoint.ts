@@ -6,6 +6,9 @@ export enum Endpoint {
   GetInfo = 'getinfo',
 
   WalletCreate = 'wallet/create',
+  WalletNewAddress = 'wallet/newaddress',
+  WalletUsedAddresses = 'wallet/usedaddresses',
+  WalletBalance = 'wallet/balance',
 
   OrderOffer = 'order/offer',
   OrderAccept = 'order/accept',

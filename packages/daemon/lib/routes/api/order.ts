@@ -11,6 +11,8 @@ import {
   ContractInfo,
   ContractInfoV0,
   MessageType,
+  OrderAccept,
+  OrderAcceptV0,
 } from '@node-dlc/messaging';
 
 export default class OrderRoutes extends BaseRoutes {
@@ -22,10 +24,15 @@ export default class OrderRoutes extends BaseRoutes {
     const { orderoffer } = req.query;
 
     if (!orderoffer)
-      return routeErrorHandler(this, res, 401, 'No Contract Info Provided');
+      return routeErrorHandler(
+        this,
+        res,
+        401,
+        `No ${OrderOffer.name} Provided`,
+      );
 
     if (!(typeof orderoffer === 'string'))
-      return routeErrorHandler(this, res, 400, 'Invalid Contract Info');
+      return routeErrorHandler(this, res, 400, `Invalid ${OrderOffer.name}`);
 
     const orderOffer = OrderOffer.deserialize(
       Buffer.from(orderoffer as string, 'hex'),
@@ -33,13 +40,47 @@ export default class OrderRoutes extends BaseRoutes {
 
     switch (orderOffer.type) {
       case MessageType.OrderOfferV0:
-        return res.json((orderOffer as ContractInfoV0).toJSON());
+        return res.json((orderOffer as OrderOfferV0).toJSON());
       default:
         return routeErrorHandler(
           this,
           res,
           401,
-          'Only OrderOfferV1 Decoding Supported',
+          `Only ${OrderOfferV0.name} Decoding Supported`,
+        );
+    }
+  }
+
+  public async postAcceptDecode(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    const { orderaccept } = req.query;
+
+    if (!orderaccept)
+      return routeErrorHandler(
+        this,
+        res,
+        401,
+        `No ${OrderAccept.name} Provided`,
+      );
+
+    if (!(typeof orderaccept === 'string'))
+      return routeErrorHandler(this, res, 400, `Invalid ${OrderAccept.name}`);
+
+    const orderAccept = OrderAccept.deserialize(
+      Buffer.from(orderaccept as string, 'hex'),
+    );
+
+    switch (orderAccept.type) {
+      case MessageType.OrderAcceptV0:
+        return res.json((orderAccept as OrderAcceptV0).toJSON());
+      default:
+        return routeErrorHandler(
+          this,
+          res,
+          401,
+          `Only ${OrderAcceptV0.name} Decoding Supported`,
         );
     }
   }

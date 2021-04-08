@@ -103,8 +103,8 @@ export default class DlcdClient {
 
   public handleError = (error: AxiosError): void => {
     if (error.response) {
-      if (error.response.data.msg) {
-        this.logger.log(`Error: ${error.response.data.msg}`);
+      if (error.response.data.error) {
+        this.logger.log(`Error: ${error.response.data.error}`);
         process.exit(1);
       } else {
         this.logger.log(error.response.status);

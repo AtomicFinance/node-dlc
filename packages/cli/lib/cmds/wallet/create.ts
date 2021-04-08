@@ -10,7 +10,7 @@ export const command = 'create';
 export const describe = 'Create Wallet';
 
 export const builder = {
-  apiKey: {
+  apikey: {
     default: '',
   },
 };
@@ -41,16 +41,16 @@ const cipherSeedMessageEnd = `
 `;
 
 export async function handler(argv: IArguments): Promise<void> {
-  const { host, port, apiKey, loglevel } = argv;
+  const { host, port, apikey, loglevel } = argv;
   const logger: Logger = getLogger(loglevel);
-  let _apiKey: string = apiKey;
+  let _apikey: string = apikey;
   let noApiKey = false;
-  if (!apiKey) {
+  if (!_apikey) {
     // No API Key provided, generate one
-    _apiKey = bcrypto.random.randomBytes(32).toString('hex');
+    _apikey = bcrypto.random.randomBytes(32).toString('hex');
     noApiKey = true;
   }
-  const client = new DlcdClient(host, port, logger, _apiKey);
+  const client = new DlcdClient(host, port, logger, _apikey);
   const response = await client.post(Endpoint.WalletCreate);
   const { mnemonic } = response;
   logger.log(
@@ -59,6 +59,6 @@ export async function handler(argv: IArguments): Promise<void> {
     )}\n${cipherSeedMessageEnd}`,
   );
   if (noApiKey) {
-    logger.log(`Generated API KEY: ${_apiKey}`);
+    logger.log(`Generated API KEY: ${_apikey}`);
   }
 }

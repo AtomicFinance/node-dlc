@@ -13,14 +13,17 @@ config.open('node-dlc.conf'); // TODO: allow users to pass in their on conf dire
 // TODO allow user to pass in api-key on startup
 
 // const argv: IArguments =
-yargs(process.argv.slice(2))
+const argv = yargs(process.argv.slice(2))
   .usage('Usage:   dlccli [options]             start DLCd')
-  .scriptName('dlccli')
+  .scriptName('')
   .config(parseConfig(config.data))
   .commandDir('cmds/basic', { recurse: true })
-  .commandDir('cmds/contract', { recurse: true })
-  .commandDir('cmds/order', { recurse: true })
   .commandDir('cmds/wallet', { recurse: true })
+  .commandDir('cmds/contract', { recurse: true })
+  .commandDir('cmds/order/offer', { recurse: true })
+  .commandDir('cmds/order/accept', { recurse: true })
+  .commandDir('cmds/dlc/offer', { recurse: true })
+  .commandDir('cmds/dlc/accept', { recurse: true })
   .options({
     p: { alias: 'port', type: 'number', default: 8575, global: true },
     n: {
@@ -38,7 +41,9 @@ yargs(process.argv.slice(2))
       choices: logs,
       global: true,
     },
+    a: { alias: 'apikey', type: 'string', default: '', global: true },
   })
+  .demandCommand(1)
   .check((_argv: IArguments, _) => {
     const { port } = _argv;
     if (isNaN(port)) {

@@ -9,17 +9,17 @@ export const command = 'decoderaworderoffer [orderoffer]';
 export const describe = 'Decode Raw OrderOffer';
 
 export const builder = {
-  apiKey: {
+  apikey: {
     default: '',
   },
 };
 
 export async function handler(argv: IArguments): Promise<void> {
-  const { host, port, apiKey, loglevel } = argv;
+  const { host, port, apikey, loglevel } = argv;
   const logger: Logger = getLogger(loglevel);
-  const client = new DlcdClient(host, port, logger, apiKey);
+  const client = new DlcdClient(host, port, logger, apikey);
   const response = await client.post(`${Endpoint.OrderOffer}/decode`, {
-    contractinfo: argv.contractinfo,
+    orderoffer: argv.orderoffer,
   });
   logger.log(JSON.stringify(response, null, 2));
 }

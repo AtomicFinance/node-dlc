@@ -26,11 +26,11 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@atomicfinance/bitcoin-cfd-provider": "2.0.0-alpha.0",
-    "@atomicfinance/bitcoin-dlc-provider": "2.0.0-alpha.0",
-    "@atomicfinance/bitcoin-networks": "2.0.0-alpha.0",
-    "@atomicfinance/bitcoin-wallet-provider": "2.0.0-alpha.0",
-    "@atomicfinance/client": "2.0.0-alpha.0",
+    "@atomicfinance/bitcoin-cfd-provider": "2.0.0-alpha.2",
+    "@atomicfinance/bitcoin-dlc-provider": "2.0.0-alpha.2",
+    "@atomicfinance/bitcoin-networks": "2.0.0-alpha.2",
+    "@atomicfinance/bitcoin-wallet-provider": "2.0.0-alpha.2",
+    "@atomicfinance/client": "2.0.0-alpha.2",
     "@liquality/bitcoin-js-wallet-provider": "0.10.3",
     "@liquality/bitcoin-rpc-provider": "0.10.3",
     "@liquality/bitcoin-esplora-api-provider": "0.10.3",

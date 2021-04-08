@@ -10,7 +10,7 @@ export const command =
 export const describe = 'Create Dlc Order Offer';
 
 export const builder = {
-  apiKey: {
+  apikey: {
     default: '',
   },
 };
@@ -19,7 +19,7 @@ export async function handler(argv: IArguments): Promise<void> {
   const {
     host,
     port,
-    apiKey,
+    apikey,
     loglevel,
     contractinfo,
     collateral,
@@ -28,7 +28,7 @@ export async function handler(argv: IArguments): Promise<void> {
     refundlocktime,
   } = argv;
   const logger: Logger = getLogger(loglevel);
-  const client = new DlcdClient(host, port, logger, apiKey, 'api/v0');
+  const client = new DlcdClient(host, port, logger, apikey, 'api/v0');
   const response = await client.post(Endpoint.OrderOffer, {
     contractinfo,
     collateral,
