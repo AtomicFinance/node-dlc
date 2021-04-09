@@ -24,6 +24,7 @@ const argv = yargs(process.argv.slice(2))
   .commandDir('cmds/order/accept', { recurse: true })
   .commandDir('cmds/dlc/offer', { recurse: true })
   .commandDir('cmds/dlc/accept', { recurse: true })
+  .commandDir('cmds/dlc/sign', { recurse: true })
   .options({
     p: { alias: 'port', type: 'number', default: 8575, global: true },
     n: {

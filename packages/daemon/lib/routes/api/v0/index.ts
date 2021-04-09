@@ -57,6 +57,11 @@ export class RoutesV1 {
       basicAuth(options),
       wrapAsync(this.dlc.postAccept.bind(this.dlc)),
     );
+    app.post(
+      this.getEndpoint(Endpoint.DlcSign),
+      basicAuth(options),
+      wrapAsync(this.dlc.postSign.bind(this.dlc)),
+    );
   }
 
   private getEndpoint(endpoint: Endpoint): string {

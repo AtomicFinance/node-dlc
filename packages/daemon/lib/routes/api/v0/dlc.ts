@@ -10,6 +10,8 @@ import {
   DlcOffer,
   DlcOfferV0,
   DlcAccept,
+  DlcTransactionsV0,
+  DlcAcceptV0,
 } from '@node-dlc/messaging';
 import {
   validateBigInt,
@@ -17,8 +19,12 @@ import {
   validateString,
   validateType,
 } from '../../validate/ValidateFields';
-import { AcceptDlcOfferResponse } from '@atomicfinance/bitcoin-dlc-provider';
+import {
+  AcceptDlcOfferResponse,
+  SignDlcAcceptResponse,
+} from '@atomicfinance/bitcoin-dlc-provider';
 import { DlcTxBuilder } from '@node-dlc/core';
+import { sha256, xor } from '@node-lightning/crypto';
 
 export default class DlcRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
@@ -52,7 +58,10 @@ export default class DlcRoutes extends BaseRoutes {
       Number(refundlocktime),
     );
 
-    return res.json({ hex: dlcOffer.serialize().toString('hex') });
+    return res.json({
+      hex: dlcOffer.serialize().toString('hex'),
+      tempContractId: sha256(dlcOffer.serialize()),
+    });
   }
 
   public async postAccept(req: Request, res: Response): Promise<Response> {
@@ -69,19 +78,61 @@ export default class DlcRoutes extends BaseRoutes {
     }: AcceptDlcOfferResponse = await this.client.acceptDlcOffer(dlcOffer);
 
     const _dlcOffer = dlcOffer as DlcOfferV0;
-    console.log('_dlcOffer.changeSPK', _dlcOffer.changeSPK.toString('hex'));
-    console.log('dlcAccept.changeSPK', dlcAccept.changeSPK.toString('hex'));
+    const _dlcAccept = dlcAccept as DlcAcceptV0;
+    const _dlcTransactions = dlcTransactions as DlcTransactionsV0;
 
-    const txBuilder = new DlcTxBuilder(_dlcOffer, dlcAccept.withoutSigs());
+    const txBuilder = new DlcTxBuilder(_dlcOffer, _dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
-    const fundingTxid = tx.serialize().toString('hex');
-    console.log('fundingTxid', fundingTxid);
+    const fundingTxid = tx.txId.serialize();
+    const contractId = xor(fundingTxid, _dlcAccept.tempContractId);
 
-    console.log(
-      'dlcTransactions',
-      dlcTransactions.fundTx.serialize().toString('hex'),
-    );
+    if (Buffer.compare(contractId, _dlcTransactions.contractId) !== 0)
+      return routeErrorHandler(this, res, 400, `Contract Id doesn't match`);
 
-    return res.json({ hex: dlcAccept.serialize().toString('hex') });
+    return res.json({
+      hex: dlcAccept.serialize().toString('hex'),
+    });
+  }
+
+  public async postSign(req: Request, res: Response): Promise<Response> {
+    const { dlcaccept } = req.query;
+
+    // get Dlc offer from db
+
+    throw Error('testing');
+
+    // validateType(dlcoffer, 'Dlc Offer', DlcOffer, this, res);
+    // const dlcOffer: DlcOffer = DlcOffer.deserialize(
+    //   Buffer.from(dlcoffer as string, 'hex'),
+    // );
+
+    // validateType(dlcaccept, 'Dlc Accept', DlcAccept, this, res);
+    // const dlcAccept: DlcAccept = DlcAccept.deserialize(
+    //   Buffer.from(dlcaccept as string, 'hex'),
+    // );
+
+    // const {
+    //   dlcSign,
+    //   dlcTransactions,
+    // }: SignDlcAcceptResponse = await this.client.signDlcAccept(
+    //   dlcOffer,
+    //   dlcAccept,
+    // );
+
+    // const _dlcOffer = dlcOffer as DlcOfferV0;
+    // const _dlcAccept = dlcAccept as DlcAcceptV0;
+    // const _dlcTransactions = dlcTransactions as DlcTransactionsV0;
+
+    // const txBuilder = new DlcTxBuilder(_dlcOffer, _dlcAccept.withoutSigs());
+    // const tx = txBuilder.buildFundingTransaction();
+    // const fundingTxid = tx.txId.serialize();
+    // const contractId = xor(fundingTxid, _dlcAccept.tempContractId);
+
+    // if (Buffer.compare(contractId, _dlcTransactions.contractId) !== 0)
+    //   return routeErrorHandler(this, res, 400, `Contract Id doesn't match`);
+
+    // return res.json({
+    //   hex: dlcSign.serialize().toString('hex'),
+    // });
   }
 }

@@ -91,6 +91,10 @@ export class Client {
     return this.client.finance.dlc.acceptDlcOffer.bind(this.client.finance.dlc);
   }
 
+  get signDlcAccept() {
+    return this.client.finance.dlc.signDlcAccept.bind(this.client.finance.dlc);
+  }
+
   get newAddress() {
     return this.client.finance.wallet.getUnusedAddress.bind(
       this.client.finance.wallet,

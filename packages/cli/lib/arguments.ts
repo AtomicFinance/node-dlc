@@ -31,4 +31,5 @@ export interface IArguments {
   orderoffer: string;
   orderaccept: string;
   change: boolean;
+  filepath: string;
 }
