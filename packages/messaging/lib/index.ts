@@ -1,3 +1,4 @@
+export * from './messages/AddressCache';
 export * from './messages/CetAdaptorSignaturesV0';
 export * from './messages/ContractDescriptor';
 export * from './messages/ContractInfo';
@@ -21,4 +22,5 @@ export * from './messages/PayoutFunction';
 export * from './messages/RoundingIntervalsV0';
 export * from './messages/ScriptWitnessV0';
 export * from './messages/PayoutCurvePiece';
+export * from './validation/validate';
 export * from './MessageType';

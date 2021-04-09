@@ -1,6 +1,7 @@
 import { Logger } from '@node-lightning/logger';
 import { Application } from 'express';
 import basicAuth, { IAsyncAuthorizerOptions } from 'express-basic-auth';
+import { sha256 } from '@node-lightning/crypto';
 import { IArguments, IDB } from '../../../utils/config';
 import { wrapAsync, validApiKey } from '../../../utils/helper';
 import OrderRoutes from './order';
@@ -63,7 +64,6 @@ export class RoutesV1 {
   }
 
   private async authorizer(_: string, password: string, cb) {
-    console.log('password', password);
     const walletExists = await this.db.wallet.checkSeed();
     if (!walletExists) return cb('Wallet not created', false);
 
@@ -72,6 +72,9 @@ export class RoutesV1 {
 
     try {
       const apiKey = Buffer.from(password, 'hex');
+      const apiKeyHash = await this.db.wallet.findApiKeyHash();
+      if (Buffer.compare(apiKeyHash, sha256(apiKey)) !== 0)
+        throw Error('Invalid API Key');
       const mnemonic = await this.db.wallet.findSeed(apiKey);
       if (!this.client.seedSet) {
         this.client.setSeed(mnemonic);

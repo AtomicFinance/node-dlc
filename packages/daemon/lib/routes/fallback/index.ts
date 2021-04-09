@@ -20,6 +20,7 @@ export class RoutesFallback {
         next: NextFunction,
       ): Response => {
         logger.error(err.message);
+        logger.error(err.stack);
         return res.status(500).send({
           status: 500,
           error: err.message,

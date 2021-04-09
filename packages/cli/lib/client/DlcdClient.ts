@@ -82,6 +82,7 @@ export default class DlcdClient {
       };
 
       config.auth = auth;
+      config.timeout = 5000;
     }
 
     return axios(config)
@@ -104,7 +105,7 @@ export default class DlcdClient {
   public handleError = (error: AxiosError): void => {
     if (error.response) {
       if (error.response.data.error) {
-        this.logger.log(`Error: ${error.response.data.error}`);
+        this.logger.error(`Error: ${error.response.data.error}`);
         process.exit(1);
       } else {
         this.logger.log(error.response.status);
@@ -127,6 +128,5 @@ export default class DlcdClient {
 }
 
 interface IParams {
-  apikey?: string;
   [x: string]: unknown;
 }

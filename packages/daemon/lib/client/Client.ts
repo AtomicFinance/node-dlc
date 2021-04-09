@@ -19,6 +19,7 @@ import * as cfdJs from 'cfd-js';
 import { getWrappedCfdDlcJs } from '../wrappers/WrappedCfdDlcJs';
 
 import { Network } from '../utils/config';
+import { AddressCache } from '@node-dlc/messaging';
 
 export class Client {
   private client;
@@ -104,6 +105,18 @@ export class Client {
     return this.client.chain.getBalance.bind(this.client.chain);
   }
 
+  get unusedAddressesBlacklist() {
+    return this.client.finance
+      .getMethod('getUnusedAddressesBlacklist')
+      .bind(this.client.finance);
+  }
+
+  get setUnusedAddressesBlacklist() {
+    return this.client.finance
+      .getMethod('setUnusedAddressesBlacklist')
+      .bind(this.client.finance);
+  }
+
   get getMethod() {
     return this.client.finance.getMethod.bind(this.client.finance);
   }
@@ -115,6 +128,24 @@ export class Client {
       new BitcoinJsWalletProvider(this.network, mnemonic),
     );
     this.seedSet = true;
+  }
+
+  async setAddressCache(): Promise<void> {
+    const addressCache = await this.db.wallet.findAddressCache();
+    if (addressCache) {
+      await this.setUnusedAddressesBlacklist(
+        addressCache.toAddressCache(this.financeNetwork),
+      );
+    }
+  }
+
+  async saveAddressCache(): Promise<void> {
+    const _addressCache = await this.unusedAddressesBlacklist();
+    const addressCache = AddressCache.fromAddressCache(
+      _addressCache,
+      this.financeNetwork,
+    );
+    await this.db.wallet.saveAddressCache(addressCache);
   }
 
   private getNetwork(): INetwork {

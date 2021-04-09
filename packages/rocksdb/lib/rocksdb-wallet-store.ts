@@ -1,10 +1,12 @@
 import { sha256 } from '@liquality/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
+import { AddressCache } from '@node-dlc/messaging';
 import Cryptr from 'cryptr';
 
 enum Prefix {
   Wallet = 30,
   ApiKey = 31,
+  AddressCache = 32,
 }
 
 export class RocksdbWalletStore extends RocksdbBase {
@@ -66,7 +68,7 @@ export class RocksdbWalletStore extends RocksdbBase {
   }
 
   public async findApiKeyHash(): Promise<Buffer> {
-    const key = Buffer.from([Prefix.Wallet]);
+    const key = Buffer.from([Prefix.ApiKey]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return raw;
@@ -81,5 +83,18 @@ export class RocksdbWalletStore extends RocksdbBase {
   public async deleteApiKeyHash(): Promise<void> {
     const key = Buffer.from([Prefix.ApiKey]);
     await this._db.del(key);
+  }
+
+  public async findAddressCache(): Promise<AddressCache> {
+    const key = Buffer.from([Prefix.AddressCache]);
+    const raw = await this._safeGet<Buffer>(key);
+    if (!raw) return;
+    return AddressCache.deserialize(raw);
+  }
+
+  public async saveAddressCache(addressCache: AddressCache): Promise<void> {
+    const value = addressCache.serialize();
+    const key = Buffer.from([Prefix.AddressCache]);
+    await this._db.put(key, value);
   }
 }

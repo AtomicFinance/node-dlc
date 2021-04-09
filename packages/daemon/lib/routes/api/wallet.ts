@@ -19,6 +19,7 @@ export default class WalletRoutes extends BaseRoutes {
     if (typeof change === 'string' && change === 'true') _change = true;
 
     const address: Address = await this.client.newAddress(_change);
+    await this.client.saveAddressCache();
 
     if (this.client.rpc) {
       await this.client.getMethod('jsonrpc')(

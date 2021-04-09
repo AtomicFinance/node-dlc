@@ -25,6 +25,7 @@ export default class Server {
     const dlcDb = new RocksdbDlcStore(`${datadir}/${network}/dlc`);
     const db: IDB = { wallet: walletDb, dlc: dlcDb };
     this.client = new Client(argv, db, logger);
+    this.client.setAddressCache();
     this.routesAPI = new RoutesAPI(app, argv, db, logger, this.client);
     this.routesV1 = new RoutesV1(app, argv, db, logger, this.client);
     this.RoutesFallback = new RoutesFallback(app, logger);
