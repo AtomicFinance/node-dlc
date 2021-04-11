@@ -18,16 +18,13 @@ export const validateString = (
 };
 
 export const validateNumber = (
-  value: string | core.Query | string[] | core.Query[],
+  value: number,
   fieldName: string,
   route: BaseRoute,
   res: Response,
 ): void | Response => {
-  const validateRes = validateString(value, fieldName, route, res);
-  if (validateRes) return validateRes;
-
   try {
-    Number(value as string);
+    Number(value);
   } catch (e) {
     return routeErrorHandler(
       route,
@@ -39,16 +36,13 @@ export const validateNumber = (
 };
 
 export const validateBigInt = (
-  value: string | core.Query | string[] | core.Query[],
+  value: number,
   fieldName: string,
   route: BaseRoute,
   res: Response,
 ): void | Response => {
-  const validateRes = validateString(value, fieldName, route, res);
-  if (validateRes) return validateRes;
-
   try {
-    BigInt(value as string);
+    BigInt(value);
   } catch (e) {
     return routeErrorHandler(
       route,
@@ -60,15 +54,12 @@ export const validateBigInt = (
 };
 
 export const validateType = <T extends typeof DlcMessage>(
-  value: string | core.Query | string[] | core.Query[],
+  value: string,
   className: string,
   dlcMessage: T,
   route: BaseRoute,
   res: Response,
 ): void | Response => {
-  const validateRes = validateString(value, dlcMessage.name, route, res);
-  if (validateRes) return validateRes;
-
   let valueBuf: Buffer;
   try {
     valueBuf = Buffer.from(value as string, 'hex');
@@ -104,7 +95,7 @@ export const validateType = <T extends typeof DlcMessage>(
   //   );
   // }
 
-  if (_dlcMessage.serialize().toString('hex') !== value)
+  if (Buffer.compare(_dlcMessage.serialize(), valueBuf) !== 0)
     return routeErrorHandler(
       route,
       res,

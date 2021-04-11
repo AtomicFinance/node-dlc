@@ -43,20 +43,25 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
+    console.log('test1');
 
     instance.contractId = reader.readBytes(32);
+    console.log('test2');
 
     const fundTxLen = reader.readUInt16BE();
     instance.fundTx = Tx.parse(
       StreamReader.fromBuffer(reader.readBytes(fundTxLen)),
     );
+    console.log('test3');
 
     instance.fundTxOutAmount = reader.readBigSize();
+    console.log('test4');
 
     const refundTxLen = reader.readUInt16BE();
     instance.refundTx = Tx.parse(
       StreamReader.fromBuffer(reader.readBytes(refundTxLen)),
     );
+    console.log('test5');
 
     reader.readBigSize(); // num_cets
     while (!reader.eof) {

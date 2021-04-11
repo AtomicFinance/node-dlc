@@ -30,7 +30,7 @@ export default class OrderRoutes extends BaseRoutes {
       feerate,
       locktime,
       refundlocktime,
-    } = req.query;
+    } = req.body;
 
     const contractInfo = ContractInfo.deserialize(
       Buffer.from(contractinfo as string, 'hex'),
@@ -55,7 +55,7 @@ export default class OrderRoutes extends BaseRoutes {
       feerate,
       locktime,
       refundlocktime,
-    } = req.query;
+    } = req.body;
 
     const orderOffer = OrderOffer.deserialize(
       Buffer.from(orderoffer as string, 'hex'),

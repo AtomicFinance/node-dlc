@@ -4,10 +4,9 @@ import { getLogger } from '../../../utils/config';
 import { IArguments } from '../../../arguments';
 import { Endpoint } from '@node-dlc/daemon';
 
-export const command =
-  'createdlcoffer [contractinfo] [collateral] [feerate] [locktime] [refundlocktime]';
+export const command = 'finalizedlcsign [dlcsign]';
 
-export const describe = 'Create Dlc Offer';
+export const describe = 'Finalize Dlc Sign';
 
 export const builder = {
   apikey: {
@@ -16,25 +15,11 @@ export const builder = {
 };
 
 export async function handler(argv: IArguments): Promise<void> {
-  const {
-    host,
-    port,
-    apikey,
-    loglevel,
-    contractinfo,
-    collateral,
-    feerate,
-    locktime,
-    refundlocktime,
-  } = argv;
+  const { host, port, apikey, loglevel, dlcsign } = argv;
   const logger: Logger = getLogger(loglevel);
   const client = new DlcdClient(host, port, logger, apikey, 'api/v0');
-  const response = await client.post(Endpoint.DlcOffer, {
-    contractinfo,
-    collateral,
-    feerate,
-    locktime,
-    refundlocktime,
+  const response = await client.post(Endpoint.DlcFinalize, {
+    dlcsign,
   });
   logger.log(response.hex);
 }

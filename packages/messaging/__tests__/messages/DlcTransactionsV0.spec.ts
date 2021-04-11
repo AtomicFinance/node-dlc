@@ -62,8 +62,6 @@ describe('DlcTransactionsV0', () => {
       instance.cets.push(cet0);
       instance.cets.push(cet1);
 
-      console.log('instance', instance.serialize().toString('hex'));
-
       expect(instance.serialize().toString("hex")).to.equal(
         "ef2e" + // type
         "6010a7e779c5079493ad06abbcaca06b8a04d501890cd724104d1df6e20968e8" + // contract_id

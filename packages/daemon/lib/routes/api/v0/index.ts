@@ -62,6 +62,11 @@ export class RoutesV1 {
       basicAuth(options),
       wrapAsync(this.dlc.postSign.bind(this.dlc)),
     );
+    app.post(
+      this.getEndpoint(Endpoint.DlcFinalize),
+      basicAuth(options),
+      wrapAsync(this.dlc.postFinalize.bind(this.dlc)),
+    );
   }
 
   private getEndpoint(endpoint: Endpoint): string {
@@ -69,6 +74,7 @@ export class RoutesV1 {
   }
 
   private async authorizer(_: string, password: string, cb) {
+    console.log('password', password);
     const walletExists = await this.db.wallet.checkSeed();
     if (!walletExists) return cb('Wallet not created', false);
 

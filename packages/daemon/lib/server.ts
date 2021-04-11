@@ -1,7 +1,7 @@
 import { RocksdbDlcStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
 import { ConsoleTransport, Logger, LogLevel } from '@node-lightning/logger';
 import * as bodyParser from 'body-parser';
-import { Application, ErrorRequestHandler } from 'express';
+import { Application, ErrorRequestHandler, urlencoded, json } from 'express';
 import * as fs from 'fs';
 import { WriteStream } from 'fs';
 import helmet from 'helmet';
@@ -37,10 +37,24 @@ export default class Server {
       `${datadir}/${network}/access.log`,
       { flags: 'a' },
     );
-    app.use(morgan('combined', { stream: accessLogStream }));
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
-    app.use(helmet());
+    app.use(json({ limit: '50mb' }));
+    app.use(
+      urlencoded({
+        extended: false,
+        limit: '50mb',
+      }),
+    );
+    // app.use(morgan('combined', { stream: accessLogStream }));
+    // app.use(helmet());
+    app.use(function (req, res, next) {
+      res.setTimeout(480000, function () {
+        // 4 minute timeout adjust for larger uploads
+        console.log('Request has timed out.');
+        res.send(408);
+      });
+
+      next();
+    });
   }
 }
 

@@ -21,7 +21,7 @@ export default class OrderRoutes extends BaseRoutes {
   }
 
   public async postOfferDecode(req: Request, res: Response): Promise<Response> {
-    const { orderoffer } = req.query;
+    const { orderoffer } = req.body;
 
     if (!orderoffer)
       return routeErrorHandler(
@@ -55,7 +55,7 @@ export default class OrderRoutes extends BaseRoutes {
     req: Request,
     res: Response,
   ): Promise<Response> {
-    const { orderaccept } = req.query;
+    const { orderaccept } = req.body;
 
     if (!orderaccept)
       return routeErrorHandler(

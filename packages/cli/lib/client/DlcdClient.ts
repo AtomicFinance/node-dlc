@@ -63,6 +63,7 @@ export default class DlcdClient {
     method: Method,
     endpoint: string,
     params: IParams = {},
+    data: IParams = {},
   ): Promise<any> {
     const config: AxiosRequestConfig = {
       baseURL: `${this.ssl ? 'https' : 'http'}://${this.host}:${this.port}/${
@@ -72,6 +73,7 @@ export default class DlcdClient {
       timeout: 1000,
       method,
       params,
+      data,
       responseType: 'json',
     };
 
@@ -95,11 +97,11 @@ export default class DlcdClient {
   }
 
   public post(endpoint: string, params: IParams = {}): any {
-    return this.request('POST', endpoint, params);
+    return this.request('POST', endpoint, {}, params);
   }
 
   public put(endpoint: string, params: IParams = {}): any {
-    return this.request('PUT', endpoint, params);
+    return this.request('PUT', endpoint, {}, params);
   }
 
   public handleError = (error: AxiosError): void => {
@@ -120,6 +122,8 @@ export default class DlcdClient {
         'Make sure the DLCd server is running and that you are connecting to the correct port',
       );
       process.exit(1);
+    } else if (error.code === 'EPIPE') {
+      process.exit(0);
     } else {
       this.logger.log(error.message);
       throw new Error(error.message);

@@ -52,7 +52,7 @@ export default class WalletRoutes extends BaseRoutes {
         .toString()
         .split(':')[1];
     }
-    const { mnemonic: _mnemonic } = req.query;
+    const { mnemonic: _mnemonic } = req.body;
 
     if (!apikey) return routeErrorHandler(this, res, 401, 'Api Key Required');
 
