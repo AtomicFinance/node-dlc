@@ -1,9 +1,13 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
-import { ContractInfo } from './ContractInfo';
+import {
+  ContractInfo,
+  IContractInfoV0JSON,
+  IContractInfoV1JSON,
+} from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInput } from './FundingInput';
+import { FundingInput, IFundingInputV0Json } from './FundingInput';
 
 export abstract class DlcOffer {
   public static deserialize(buf: Buffer): DlcOfferV0 {
@@ -21,6 +25,8 @@ export abstract class DlcOffer {
 
   public abstract type: number;
 
+  public abstract toJSON(): IDlcOfferV0JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -29,7 +35,7 @@ export abstract class DlcOffer {
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class DlcOfferV0 implements IDlcMessage {
+export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   public static type = MessageType.DlcOfferV0;
 
   /**
@@ -100,6 +106,29 @@ export class DlcOfferV0 implements IDlcMessage {
   public refundLocktime: number;
 
   /**
+   * Converts dlc_offer_v0 to JSON
+   */
+  public toJSON(): IDlcOfferV0JSON {
+    return {
+      type: this.type,
+      contractFlags: this.contractFlags.toString('hex'),
+      chainHash: this.chainHash.toString('hex'),
+      contractInfo: this.contractInfo.toJSON(),
+      fundingPubKey: this.fundingPubKey.toString('hex'),
+      payoutSPK: this.payoutSPK.toString('hex'),
+      payoutSerialId: Number(this.payoutSerialId),
+      offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
+      fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
+      changeSPK: this.changeSPK.toString('hex'),
+      changeSerialId: Number(this.changeSerialId),
+      fundOutputSerialId: Number(this.fundOutputSerialId),
+      feeRatePerVb: Number(this.feeRatePerVb),
+      cetLocktime: this.cetLocktime,
+      refundLocktime: this.refundLocktime,
+    };
+  }
+
+  /**
    * Serializes the offer_dlc_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -129,4 +158,22 @@ export class DlcOfferV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IDlcOfferV0JSON {
+  type: number;
+  contractFlags: string;
+  chainHash: string;
+  contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
+  fundingPubKey: string;
+  payoutSPK: string;
+  payoutSerialId: number;
+  offerCollateralSatoshis: number;
+  fundingInputs: IFundingInputV0Json[];
+  changeSPK: string;
+  changeSerialId: number;
+  fundOutputSerialId: number;
+  feeRatePerVb: number;
+  cetLocktime: number;
+  refundLocktime: number;
 }
