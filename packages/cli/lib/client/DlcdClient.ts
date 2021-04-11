@@ -1,5 +1,10 @@
 import { Logger } from '@node-dlc/logger';
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosBasicCredentials,
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 
 export type Method =
   | 'get'
@@ -23,7 +28,7 @@ export type Method =
   | 'unlink'
   | 'UNLINK';
 
-export type ApiVersion = 'v1';
+export type ApiPrefix = 'api' | 'api/v0';
 
 export default class DlcdClient {
   public host: string;
@@ -36,13 +41,14 @@ export default class DlcdClient {
 
   public logger: Logger;
 
-  public apiVersion: ApiVersion;
+  public apiPrefix: ApiPrefix;
+
   constructor(
     host: string,
     port: number,
     logger: Logger,
     apiKey = '',
-    apiVersion: ApiVersion = 'v1',
+    apiPrefix: ApiPrefix = 'api',
     ssl = false,
   ) {
     this.host = host;
@@ -50,48 +56,58 @@ export default class DlcdClient {
     this.logger = logger;
     this.ssl = ssl;
     this.apiKey = apiKey;
-    this.apiVersion = apiVersion;
+    this.apiPrefix = apiPrefix;
   }
 
   public async request(
     method: Method,
     endpoint: string,
     params: IParams = {},
+    data: IParams = {},
   ): Promise<any> {
-    if (this.apiKey) params.apikey = this.apiKey;
-
     const config: AxiosRequestConfig = {
       baseURL: `${this.ssl ? 'https' : 'http'}://${this.host}:${this.port}/${
-        this.apiVersion
+        this.apiPrefix
       }/`,
       url: endpoint,
       timeout: 1000,
       method,
       params,
+      data,
       responseType: 'json',
     };
+
+    if (this.apiKey) {
+      const auth: AxiosBasicCredentials = {
+        username: 'test',
+        password: this.apiKey,
+      };
+
+      config.auth = auth;
+      config.timeout = 5000;
+    }
 
     return axios(config)
       .then((response: AxiosResponse) => response.data)
       .catch(this.handleError);
   }
 
-  public get(endpoint: string, params: IParams = {}) {
+  public get(endpoint: string, params: IParams = {}): any {
     return this.request('GET', endpoint, params);
   }
 
-  public post(endpoint: string, params: IParams = {}) {
-    return this.request('POST', endpoint, params);
+  public post(endpoint: string, params: IParams = {}): any {
+    return this.request('POST', endpoint, {}, params);
   }
 
-  public put(endpoint: string, params: IParams = {}) {
-    return this.request('PUT', endpoint, params);
+  public put(endpoint: string, params: IParams = {}): any {
+    return this.request('PUT', endpoint, {}, params);
   }
 
-  public handleError = (error: AxiosError) => {
+  public handleError = (error: AxiosError): void => {
     if (error.response) {
-      if (error.response.data.msg) {
-        this.logger.log(`Error: ${error.response.data.msg}`);
+      if (error.response.data.error) {
+        this.logger.error(`Error: ${error.response.data.error}`);
         process.exit(1);
       } else {
         this.logger.log(error.response.status);
@@ -106,6 +122,8 @@ export default class DlcdClient {
         'Make sure the DLCd server is running and that you are connecting to the correct port',
       );
       process.exit(1);
+    } else if (error.code === 'EPIPE') {
+      process.exit(0);
     } else {
       this.logger.log(error.message);
       throw new Error(error.message);
@@ -114,6 +132,5 @@ export default class DlcdClient {
 }
 
 interface IParams {
-  apikey?: string;
   [x: string]: unknown;
 }

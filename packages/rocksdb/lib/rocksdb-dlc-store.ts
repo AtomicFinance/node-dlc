@@ -1,13 +1,19 @@
 import { sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
-import { DlcAcceptV0, DlcOfferV0, DlcSignV0 } from '@node-dlc/messaging';
+import {
+  DlcAcceptV0,
+  DlcOfferV0,
+  DlcSignV0,
+  DlcTransactionsV0,
+} from '@node-dlc/messaging';
 import { xor } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
 enum Prefix {
-  OfferV0 = 40,
-  AcceptV0 = 41,
-  SignV0 = 42,
+  DlcOfferV0 = 50,
+  DlcAcceptV0 = 51,
+  DlcSignV0 = 52,
+  DlcTransactionsV0 = 53,
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
@@ -16,7 +22,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       const stream = this._db.createReadStream();
       const results: DlcOfferV0[] = [];
       stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OfferV0) {
+        if (data.key[0] === Prefix.DlcOfferV0) {
           results.push(DlcOfferV0.deserialize(data.value));
         }
       });
@@ -28,7 +34,10 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
-    const key = Buffer.concat([Buffer.from([Prefix.OfferV0]), tempContractId]);
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcOfferV0]),
+      tempContractId,
+    ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcOfferV0.deserialize(raw);
@@ -37,12 +46,18 @@ export class RocksdbDlcStore extends RocksdbBase {
   public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
     const value = dlcOffer.serialize();
     const tempContractId = sha256(value);
-    const key = Buffer.concat([Buffer.from([Prefix.OfferV0]), tempContractId]);
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcOfferV0]),
+      tempContractId,
+    ]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcOffer(tempContractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.OfferV0]), tempContractId]);
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcOfferV0]),
+      tempContractId,
+    ]);
     await this._db.del(key);
   }
 
@@ -51,7 +66,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       const stream = this._db.createReadStream();
       const results: DlcAcceptV0[] = [];
       stream.on('data', (data) => {
-        if (data.key[0] === Prefix.AcceptV0) {
+        if (data.key[0] === Prefix.DlcAcceptV0) {
           results.push(DlcAcceptV0.deserialize(data.value));
         }
       });
@@ -63,7 +78,7 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcAccept(contractId: Buffer): Promise<DlcAcceptV0> {
-    const key = Buffer.concat([Buffer.from([Prefix.AcceptV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcAcceptV0.deserialize(raw);
@@ -76,12 +91,12 @@ export class RocksdbDlcStore extends RocksdbBase {
     const fundingTxid = tx.txId.serialize();
     const contractId = xor(fundingTxid, dlcAccept.tempContractId);
     const value = dlcAccept.serialize();
-    const key = Buffer.concat([Buffer.from([Prefix.AcceptV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcAccept(contractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.AcceptV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     await this._db.del(key);
   }
 
@@ -90,7 +105,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       const stream = this._db.createReadStream();
       const results: DlcSignV0[] = [];
       stream.on('data', (data) => {
-        if (data.key[0] === Prefix.AcceptV0) {
+        if (data.key[0] === Prefix.DlcAcceptV0) {
           results.push(DlcSignV0.deserialize(data.value));
         }
       });
@@ -102,7 +117,7 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcSign(contractId: Buffer): Promise<DlcSignV0> {
-    const key = Buffer.concat([Buffer.from([Prefix.SignV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcSignV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcSignV0.deserialize(raw);
@@ -111,14 +126,46 @@ export class RocksdbDlcStore extends RocksdbBase {
   public async saveDlcSign(dlcSign: DlcSignV0): Promise<void> {
     const value = dlcSign.serialize();
     const key = Buffer.concat([
-      Buffer.from([Prefix.SignV0]),
+      Buffer.from([Prefix.DlcSignV0]),
       dlcSign.contractId,
     ]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcSign(contractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.SignV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcSignV0]), contractId]);
+    await this._db.del(key);
+  }
+
+  public async findDlcTransactions(
+    contractId: Buffer,
+  ): Promise<DlcTransactionsV0> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcTransactionsV0]),
+      contractId,
+    ]);
+    const raw = await this._safeGet<Buffer>(key);
+    if (!raw) return;
+    console.log('raw', raw);
+    return DlcTransactionsV0.deserialize(raw);
+  }
+
+  public async saveDlcTransactions(
+    dlcTransactions: DlcTransactionsV0,
+  ): Promise<void> {
+    const value = dlcTransactions.serialize();
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcTransactionsV0]),
+      dlcTransactions.contractId,
+    ]);
+    await this._db.put(key, value);
+  }
+
+  public async deleteDlcTransactions(contractId: Buffer): Promise<void> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcTransactionsV0]),
+      contractId,
+    ]);
     await this._db.del(key);
   }
 }

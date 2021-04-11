@@ -8,10 +8,10 @@ import {
   ContractDescriptorV1,
 } from './ContractDescriptor';
 import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
-import { IDlcMessage } from './DlcMessage';
+import { DlcMessage, IDlcMessage } from './DlcMessage';
 import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
 
-export abstract class ContractInfo {
+export abstract class ContractInfo extends DlcMessage {
   public static deserialize(buf: Buffer): ContractInfoV0 | ContractInfoV1 {
     const reader = new BufferReader(buf);
 

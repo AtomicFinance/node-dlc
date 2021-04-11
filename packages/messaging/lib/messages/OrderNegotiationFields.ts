@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { OrderOffer } from './OrderOffer';
+import { OrderOffer, IOrderOfferJSON } from './OrderOffer';
 
 export abstract class OrderNegotiationFields {
   public static deserialize(
@@ -27,6 +27,10 @@ export abstract class OrderNegotiationFields {
 
   public abstract length: bigint;
 
+  public abstract toJSON():
+    | IOrderNegotiationFieldsV0JSON
+    | IOrderNegotiationFieldsV1JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -34,7 +38,9 @@ export abstract class OrderNegotiationFields {
  * OrderNegotiationFields V0 contains preferences of the accepter of a order
  * offer which are taken into account during DLC construction.
  */
-export class OrderNegotiationFieldsV0 implements IDlcMessage {
+export class OrderNegotiationFieldsV0
+  extends OrderNegotiationFields
+  implements IDlcMessage {
   public static type = MessageType.OrderNegotiationFieldsV0;
 
   /**
@@ -59,6 +65,15 @@ export class OrderNegotiationFieldsV0 implements IDlcMessage {
   public length: bigint;
 
   /**
+   * Converts order_negotiation_fields_v0 to JSON
+   */
+  public toJSON(): IOrderNegotiationFieldsV0JSON {
+    return {
+      type: this.type,
+    };
+  }
+
+  /**
    * Serializes the order_negotiation_fields_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -74,7 +89,9 @@ export class OrderNegotiationFieldsV0 implements IDlcMessage {
  * OrderNegotiationFields V1 contains preferences of the acceptor of a order
  * offer which are taken into account during DLC construction.
  */
-export class OrderNegotiationFieldsV1 implements IDlcMessage {
+export class OrderNegotiationFieldsV1
+  extends OrderNegotiationFields
+  implements IDlcMessage {
   public static type = MessageType.OrderNegotiationFieldsV1;
 
   /**
@@ -103,6 +120,16 @@ export class OrderNegotiationFieldsV1 implements IDlcMessage {
   public orderOffer: OrderOffer;
 
   /**
+   * Converts order_negotiation_fields_v1 to JSON
+   */
+  public toJSON(): IOrderNegotiationFieldsV1JSON {
+    return {
+      type: this.type,
+      orderOffer: this.orderOffer.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the order_negotiation_fields_v1 message into a Buffer
    */
   public serialize(): Buffer {
@@ -117,4 +144,13 @@ export class OrderNegotiationFieldsV1 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IOrderNegotiationFieldsV0JSON {
+  type: number;
+}
+
+export interface IOrderNegotiationFieldsV1JSON {
+  type: number;
+  orderOffer: IOrderOfferJSON;
 }
