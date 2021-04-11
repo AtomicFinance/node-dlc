@@ -27,6 +27,8 @@ export abstract class FundingInput {
 
   public abstract length: bigint;
 
+  public abstract toJSON(): IFundingInputV0Json;
+
   public abstract serialize(): Buffer;
 }
 
@@ -89,6 +91,21 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
+   * Converts funding_input_v0 to JSON
+   */
+  public toJSON(): IFundingInputV0Json {
+    return {
+      type: this.type,
+      inputSerialId: Number(this.inputSerialId),
+      prevTx: this.prevTx.serialize().toString('hex'),
+      prevTxVout: this.prevTxVout,
+      sequence: this.sequence.value,
+      maxWitnessLen: this.maxWitnessLen,
+      redeemScript: this.redeemScript.toString('hex'),
+    };
+  }
+
+  /**
    * Serializes the funding_input_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -110,4 +127,14 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IFundingInputV0Json {
+  type: number;
+  inputSerialId: number;
+  prevTx: string;
+  prevTxVout: number;
+  sequence: number;
+  maxWitnessLen: number;
+  redeemScript: string;
 }
