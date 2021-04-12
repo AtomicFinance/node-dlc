@@ -12,7 +12,7 @@ import * as util from './rocksdb';
 import { xor, sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
 
-describe('RocksdbGossipStore', () => {
+describe('RocksdbDlcStore', () => {
   let sut: RocksdbDlcStore;
 
   const dlcOfferHex = Buffer.from(

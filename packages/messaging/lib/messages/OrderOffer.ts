@@ -1,7 +1,16 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
-import { ContractInfo } from './ContractInfo';
+import {
+  validateBuffer,
+  validateBigInt,
+  validateNumber,
+} from '../validation/validate';
+import {
+  ContractInfo,
+  IContractInfoV0JSON,
+  IContractInfoV1JSON,
+} from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class OrderOffer {
@@ -20,6 +29,10 @@ export abstract class OrderOffer {
 
   public abstract type: number;
 
+  public abstract validate(): void;
+
+  public abstract toJSON(): IOrderOfferJSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -28,7 +41,7 @@ export abstract class OrderOffer {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderOfferV0 implements IDlcMessage {
+export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public static type = MessageType.OrderOfferV0;
 
   /**
@@ -67,12 +80,26 @@ export class OrderOfferV0 implements IDlcMessage {
 
   public refundLocktime: number;
 
+  public validate(): void {
+    validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
+    this.contractInfo.validate();
+    validateBigInt(
+      this.offerCollateralSatoshis,
+      'offerCollateralSatoshis',
+      OrderOfferV0.name,
+    );
+    validateBigInt(this.feeRatePerVb, 'feeRatePerVb', OrderOfferV0.name);
+    validateNumber(this.cetLocktime, 'cetLocktime', OrderOfferV0.name);
+    validateNumber(this.refundLocktime, 'refundLocktime', OrderOfferV0.name);
+  }
+
   /**
    * Converts order_offer_v0 to JSON
    */
-  public toJson(): IOrderOfferJSON {
+  public toJSON(): IOrderOfferJSON {
     return {
       chainHash: this.chainHash.toString('hex'),
+      contractInfo: this.contractInfo.toJSON(),
       offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
       feeRatePerVb: Number(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
@@ -97,8 +124,9 @@ export class OrderOfferV0 implements IDlcMessage {
   }
 }
 
-interface IOrderOfferJSON {
+export interface IOrderOfferJSON {
   chainHash: string;
+  contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
   offerCollateralSatoshis: number;
   feeRatePerVb: number;
   cetLocktime: number;
