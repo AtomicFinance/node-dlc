@@ -17,6 +17,7 @@ export const logs: ReadonlyArray<Log> = [
 export interface IArguments {
   [x: string]: unknown;
   apiKey: string;
+  apikey: string;
   a: string;
   network: Network;
   n: Network;
@@ -26,4 +27,9 @@ export interface IArguments {
   h: string;
   loglevel: string;
   l: string;
+  contractinfo: string;
+  orderoffer: string;
+  orderaccept: string;
+  change: boolean;
+  filepath: string;
 }
