@@ -2,7 +2,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OrderNegotiationFields } from './OrderNegotiationFields';
+import {
+  IOrderNegotiationFieldsV0JSON,
+  IOrderNegotiationFieldsV1JSON,
+  OrderNegotiationFields,
+} from './OrderNegotiationFields';
 
 export abstract class OrderAccept {
   public static deserialize(buf: Buffer): OrderAccept {
@@ -20,6 +24,8 @@ export abstract class OrderAccept {
 
   public abstract type: number;
 
+  public abstract toJSON(): IOrderAcceptV0JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -28,7 +34,7 @@ export abstract class OrderAccept {
  * acceptance of the new order offer. This is the second step towards
  * order negotiation.
  */
-export class OrderAcceptV0 implements IDlcMessage {
+export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
   public static type = MessageType.OrderAcceptV0;
 
   /**
@@ -58,6 +64,17 @@ export class OrderAcceptV0 implements IDlcMessage {
   public negotiationFields: OrderNegotiationFields;
 
   /**
+   * Converts order_negotiation_fields_v0 to JSON
+   */
+  public toJSON(): IOrderAcceptV0JSON {
+    return {
+      type: this.type,
+      tempOrderId: this.tempOrderId.toString('hex'),
+      negotiationFields: this.negotiationFields.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the order_accept_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -68,4 +85,12 @@ export class OrderAcceptV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IOrderAcceptV0JSON {
+  type: number;
+  tempOrderId: string;
+  negotiationFields:
+    | IOrderNegotiationFieldsV0JSON
+    | IOrderNegotiationFieldsV1JSON;
 }
