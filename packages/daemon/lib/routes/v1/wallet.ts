@@ -19,7 +19,7 @@ export default class WalletRoutes extends BaseRoutes {
     if (walletExists)
       return routeErrorHandler(this, res, 403, 'Wallet already created');
 
-    let mnemonic: string = _mnemonic;
+    let mnemonic: string = _mnemonic as string;
     if (!mnemonic) {
       this.logger.info(`Cipher seed mnemonic not provided. Generating...`);
       mnemonic = generateMnemonic(256);
@@ -29,7 +29,7 @@ export default class WalletRoutes extends BaseRoutes {
       return routeErrorHandler(this, res, 400, 'Invalid Mnemonic');
 
     this.logger.info(`Saving cipher seed mnemonic to DB...`);
-    await this.db.wallet.saveSeed(mnemonic, Buffer.from(apikey));
+    await this.db.wallet.saveSeed(mnemonic, Buffer.from(apikey as string));
 
     res.json({ mnemonic });
   }

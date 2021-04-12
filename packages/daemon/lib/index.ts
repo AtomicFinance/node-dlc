@@ -84,8 +84,7 @@ for (const key of Object.keys(argv)) {
 }
 
 async function setup() {
-  app.listen(argv.port, 'localhost', (err: any) => {
-    if (err) return err;
+  app.listen(argv.port, 'localhost', () => {
     logger.info(`Server running on http://localhost:${argv.port}`);
   });
 }

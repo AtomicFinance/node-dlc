@@ -5,7 +5,7 @@ import {
 } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { Tx } from '@node-dlc/bitcoin';
+import { Tx } from '@node-lightning/bitcoin';
 
 export abstract class DlcTransactions {
   public static deserialize(buf: Buffer): DlcTransactionsV0 {
@@ -47,14 +47,14 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     instance.contractId = reader.readBytes(32);
 
     const fundTxLen = reader.readUInt16BE();
-    instance.fundTx = Tx.parse(
+    instance.fundTx = Tx.decode(
       StreamReader.fromBuffer(reader.readBytes(fundTxLen)),
     );
 
     instance.fundTxOutAmount = reader.readBigSize();
 
     const refundTxLen = reader.readUInt16BE();
-    instance.refundTx = Tx.parse(
+    instance.refundTx = Tx.decode(
       StreamReader.fromBuffer(reader.readBytes(refundTxLen)),
     );
 
@@ -62,7 +62,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     while (!reader.eof) {
       const cetLen = reader.readUInt16BE();
       instance.cets.push(
-        Tx.parse(StreamReader.fromBuffer(reader.readBytes(cetLen))),
+        Tx.decode(StreamReader.fromBuffer(reader.readBytes(cetLen))),
       );
     }
 

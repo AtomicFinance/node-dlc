@@ -11,7 +11,7 @@ import {
   OutPoint,
   Script,
   Value,
-} from '@node-dlc/bitcoin'; // TODO: switch to @node-lightning/bitcoin once parsing base tx is resolved: https://github.com/altangent/node-lightning/issues/167
+} from '@node-lightning/bitcoin';
 import { StreamReader } from '@node-lightning/bufio';
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
@@ -90,11 +90,11 @@ export class DlcTxBuilder {
     tx.addOutput(Value.fromSats(Number(fundingValue)), witScript);
     tx.addOutput(
       Value.fromSats(Number(offerChangeValue)),
-      Script.parse(StreamReader.fromBuffer(this.dlcOffer.changeSPK)),
+      Script.p2wpkhLock(this.dlcOffer.changeSPK.slice(2)),
     );
     tx.addOutput(
       Value.fromSats(Number(acceptChangeValue)),
-      Script.parse(StreamReader.fromBuffer(this.dlcAccept.changeSPK)),
+      Script.p2wpkhLock(this.dlcAccept.changeSPK.slice(2)),
     );
 
     return tx.toTx();

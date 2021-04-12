@@ -3,7 +3,7 @@ import {
   BufferWriter,
   StreamReader,
 } from '@node-lightning/bufio';
-import { Tx, Sequence } from '@node-dlc/bitcoin'; // TODO: switch to @node-lightning/bitcoin once parsing base tx is resolved: https://github.com/altangent/node-lightning/issues/167
+import { Tx, Sequence } from '@node-lightning/bitcoin';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
@@ -51,7 +51,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
     instance.length = reader.readBigSize();
     instance.inputSerialId = reader.readUInt64BE();
     const prevTxLen = reader.readUInt16BE();
-    instance.prevTx = Tx.parse(
+    instance.prevTx = Tx.decode(
       StreamReader.fromBuffer(reader.readBytes(prevTxLen)),
     );
     instance.prevTxVout = reader.readUInt32BE();
