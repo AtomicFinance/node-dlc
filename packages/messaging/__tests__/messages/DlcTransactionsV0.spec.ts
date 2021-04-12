@@ -4,7 +4,7 @@ import {
   DlcTransactions,
   DlcTransactionsV0,
 } from '../../lib/messages/DlcTransactions';
-import { Tx } from '@node-dlc/bitcoin';
+import { Tx } from '@node-lightning/bitcoin';
 import { StreamReader } from '@node-lightning/bufio';
 
 describe('DlcTransactionsV0', () => {
@@ -13,7 +13,7 @@ describe('DlcTransactionsV0', () => {
     'hex',
   );
 
-  const fundTx = Tx.parse(
+  const fundTx = Tx.decode(
     StreamReader.fromBuffer(
       Buffer.from(
         '02000000022f76d0509ca3ad7559e0f45489aa2efea70f8657e3cdfce6b8194019012370a10100000000ffffffffd295f485f2d181eb06ae6d5e62007db4bfe52ad31e6e1a5c576e2f396bbda9470100000000ffffffff03aed10e000000000022002034e21059bdd0c5d1d3f2d03075b33ec89c9a018a855158a6c605d921e41db8fd88f6dc0b00000000160014ccd5d5d8249b94c4381c478907c2ad81f0c35227f2b1eb0b000000001600149212ec2ed940f3cd93bfbd16c5f817ee079243bb00000000',
@@ -24,7 +24,7 @@ describe('DlcTransactionsV0', () => {
 
   const fundTxOutAmount = BigInt(971182);
 
-  const refundTx = Tx.parse(
+  const refundTx = Tx.decode(
     StreamReader.fromBuffer(
       Buffer.from(
         '02000000017f19d63285e628c1b0702cd1a11df6fe4d2acc75595dc52fb8d2842b13aa56220000000000feffffff023ac30e000000000016001442795b177d2bd1d538d379af766a979e4056d43cd007000000000000160014f9e38ab4d13bc36fd4df0381e355d9f7b50d69808c106460',
@@ -33,7 +33,7 @@ describe('DlcTransactionsV0', () => {
     ),
   );
 
-  const cet0 = Tx.parse(
+  const cet0 = Tx.decode(
     StreamReader.fromBuffer(
       Buffer.from(
         '02000000017f19d63285e628c1b0702cd1a11df6fe4d2acc75595dc52fb8d2842b13aa56220000000000ffffffff010acb0e000000000016001442795b177d2bd1d538d379af766a979e4056d43c00000000',
@@ -42,7 +42,7 @@ describe('DlcTransactionsV0', () => {
     ),
   );
 
-  const cet1 = Tx.parse(
+  const cet1 = Tx.decode(
     StreamReader.fromBuffer(
       Buffer.from(
         '02000000017f19d63285e628c1b0702cd1a11df6fe4d2acc75595dc52fb8d2842b13aa56220000000000ffffffff010acb0e000000000016001442795b177d2bd1d538d379af766a979e4056d43c00000000',

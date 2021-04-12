@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { StreamReader } from '@node-lightning/bufio';
-import { Tx, Sequence } from '@node-dlc/bitcoin'; // TODO: switch to @node-lightning/bitcoin once parsing base tx is resolved: https://github.com/altangent/node-lightning/issues/167
+import { Tx, Sequence } from '@node-lightning/bitcoin';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
 
 describe('FundingInputV0', () => {
@@ -15,7 +15,7 @@ describe('FundingInputV0', () => {
 
       instance.length = BigInt(63);
       instance.inputSerialId = BigInt(56040);
-      instance.prevTx = Tx.parse(StreamReader.fromBuffer(prevTx));
+      instance.prevTx = Tx.decode(StreamReader.fromBuffer(prevTx));
       instance.prevTxVout = 0;
       instance.sequence = Sequence.default();
       instance.maxWitnessLen = 107;
