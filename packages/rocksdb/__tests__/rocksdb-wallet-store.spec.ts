@@ -6,15 +6,28 @@ import { RocksdbWalletStore } from '../lib/rocksdb-wallet-store';
 import { generateMnemonic } from 'bip39';
 import * as bcrypto from 'bcrypto';
 import * as util from './rocksdb';
+import { AddressCache } from '@node-dlc/messaging';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe('RocksdbGossipStore', () => {
+describe('RocksdbWalletStore', () => {
   let sut: RocksdbWalletStore;
 
   const mnemonic = generateMnemonic(256);
   const apiKey = bcrypto.random.randomBytes(32);
+
+  const addressCacheHex = Buffer.from(
+    "fe6c" + // type address_cache
+      "02" + // num_cache_spks
+      "16" + // cache_spk_1_len
+      "0014c9c950ceb96d430394cfcad2a64b033d3178b189" + // cache_spk_1
+      "16" + // cache_spk_2_len
+      "00145e350a1eb28fbc5f5e102e627ae54038e6fddc5c" // cache_spk_2
+    , "hex"
+  ); // prettier-ignore
+
+  const addressCache = AddressCache.deserialize(addressCacheHex);
 
   before(async () => {
     util.rmdir('.testdb');
@@ -65,6 +78,19 @@ describe('RocksdbGossipStore', () => {
       await sut.deleteSeed(apiKey);
 
       expect(sut.findSeed(apiKey)).to.be.eventually.rejectedWith(Error);
+    });
+  });
+
+  describe('save address cache', () => {
+    it('should save address cache', async () => {
+      await sut.saveAddressCache(addressCache);
+    });
+  });
+
+  describe('find address cache', () => {
+    it('should return the address cache object', async () => {
+      const actual = await sut.findAddressCache();
+      expect(actual.serialize()).to.deep.equal(addressCacheHex);
     });
   });
 });

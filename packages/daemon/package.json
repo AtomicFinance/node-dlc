@@ -53,6 +53,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/yargs": "^16.0.0"
+    "@types/yargs": "^16.0.0",
+    "@types/node": "^14.0.13"
   }
 }

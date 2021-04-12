@@ -56,4 +56,6 @@ export enum MessageType {
 
   OrderNegotiationFieldsV0 = 65334,
   OrderNegotiationFieldsV1 = 65336,
+
+  AddressCache = 65132,
 }
