@@ -25,6 +25,7 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
+    "@node-dlc/daemon": "^0.1.3",
     "@node-dlc/logger": "^0.1.3",
     "@node-lightning/bufio": "^0.21.1",
     "axios": "0.21.1",
