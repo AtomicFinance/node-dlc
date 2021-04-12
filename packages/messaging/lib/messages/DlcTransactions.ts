@@ -1,4 +1,8 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import {
+  BufferReader,
+  BufferWriter,
+  StreamReader,
+} from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import { Tx } from '@node-dlc/bitcoin';
@@ -27,7 +31,7 @@ export abstract class DlcTransactions {
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class DlcTransactionsV0 implements IDlcMessage {
+export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   public static type = MessageType.DlcTransactionsV0;
 
   /**
@@ -40,6 +44,28 @@ export class DlcTransactionsV0 implements IDlcMessage {
 
     reader.readUInt16BE(); // read type
 
+    instance.contractId = reader.readBytes(32);
+
+    const fundTxLen = reader.readUInt16BE();
+    instance.fundTx = Tx.parse(
+      StreamReader.fromBuffer(reader.readBytes(fundTxLen)),
+    );
+
+    instance.fundTxOutAmount = reader.readBigSize();
+
+    const refundTxLen = reader.readUInt16BE();
+    instance.refundTx = Tx.parse(
+      StreamReader.fromBuffer(reader.readBytes(refundTxLen)),
+    );
+
+    reader.readBigSize(); // num_cets
+    while (!reader.eof) {
+      const cetLen = reader.readUInt16BE();
+      instance.cets.push(
+        Tx.parse(StreamReader.fromBuffer(reader.readBytes(cetLen))),
+      );
+    }
+
     return instance;
   }
 
@@ -47,6 +73,8 @@ export class DlcTransactionsV0 implements IDlcMessage {
    * The type for offer_dlc_v0 message. offer_dlc_v0 = 42778
    */
   public type = DlcTransactionsV0.type;
+
+  public contractId: Buffer;
 
   public fundTx: Tx;
 
@@ -56,16 +84,24 @@ export class DlcTransactionsV0 implements IDlcMessage {
 
   public cets: Tx[] = [];
 
-  public tempContractId: Buffer;
-
-  public contractId: Buffer;
-
   /**
-   * Serializes the offer_dlc_v0 message into a Buffer
+   * Serializes the dlc_transactions_v0 message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
+    writer.writeBytes(this.contractId);
+    writer.writeUInt16BE(this.fundTx.serialize().length);
+    writer.writeBytes(this.fundTx.serialize());
+    writer.writeBigSize(this.fundTxOutAmount);
+    writer.writeUInt16BE(this.refundTx.serialize().length);
+    writer.writeBytes(this.refundTx.serialize());
+
+    writer.writeBigSize(this.cets.length);
+    for (const cet of this.cets) {
+      writer.writeUInt16BE(cet.serialize().length);
+      writer.writeBytes(cet.serialize());
+    }
 
     return writer.toBuffer();
   }

@@ -6,7 +6,7 @@ import { IDlcMessage } from './DlcMessage';
 import { FundingInputV0 } from './FundingInput';
 import { NegotiationFields } from './NegotiationFields';
 
-export abstract class DlcAccept {
+export abstract class DlcAccept implements IDlcMessage {
   public static deserialize(buf: Buffer): DlcAcceptV0 {
     const reader = new BufferReader(buf);
 
