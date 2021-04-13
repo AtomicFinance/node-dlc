@@ -27,7 +27,7 @@ export abstract class FundingInput {
 
   public abstract length: bigint;
 
-  public abstract toJSON(): IFundingInputV0Json;
+  public abstract toJSON(): IFundingInputV0JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -93,7 +93,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   /**
    * Converts funding_input_v0 to JSON
    */
-  public toJSON(): IFundingInputV0Json {
+  public toJSON(): IFundingInputV0JSON {
     return {
       type: this.type,
       inputSerialId: Number(this.inputSerialId),
@@ -129,7 +129,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 }
 
-export interface IFundingInputV0Json {
+export interface IFundingInputV0JSON {
   type: number;
   inputSerialId: number;
   prevTx: string;

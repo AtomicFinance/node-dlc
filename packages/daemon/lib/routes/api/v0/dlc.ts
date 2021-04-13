@@ -99,9 +99,6 @@ export default class DlcRoutes extends BaseRoutes {
     const fundingTxid = tx.txId.serialize();
     const contractId = xor(fundingTxid, dlcAccept.tempContractId);
 
-    console.log('dlcTxs', dlcTxs.fundTx.serialize().toString('hex'));
-    console.log('tx', tx.serialize().toString('hex'));
-
     if (Buffer.compare(contractId, dlcTxs.contractId) !== 0)
       return routeErrorHandler(this, res, 400, `Contract Id doesn't match`);
 

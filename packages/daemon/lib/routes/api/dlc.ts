@@ -12,6 +12,7 @@ import {
   DlcAccept,
   DlcAcceptV0,
 } from '@node-dlc/messaging';
+import { validateType } from '../validate/ValidateFields';
 
 export default class DlcRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
@@ -44,32 +45,17 @@ export default class DlcRoutes extends BaseRoutes {
     }
   }
 
-  // public async postAcceptDecode(
-  //   req: Request,
-  //   res: Response,
-  // ): Promise<Response> {
-  //   const { dlcaccept } = req.query;
+  public async postAcceptDecode(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    const { dlcaccept } = req.body;
 
-  //   if (!dlcaccept)
-  //     return routeErrorHandler(this, res, 401, `No ${DlcAccept.name} Provided`);
+    validateType(dlcaccept, 'DlcAccept', DlcAcceptV0, this, res);
+    const dlcAccept = DlcAcceptV0.deserialize(
+      Buffer.from(dlcaccept as string, 'hex'),
+    );
 
-  //   if (!(typeof dlcaccept === 'string'))
-  //     return routeErrorHandler(this, res, 400, `Invalid ${DlcAccept.name}`);
-
-  //   const dlcAccept = DlcAccept.deserialize(
-  //     Buffer.from(dlcaccept as string, 'hex'),
-  //   );
-
-  //   switch (dlcAccept.type) {
-  //     case MessageType.DlcAcceptV0:
-  //       return res.json((dlcAccept as DlcAcceptV0).toJSON());
-  //     default:
-  //       return routeErrorHandler(
-  //         this,
-  //         res,
-  //         401,
-  //         `Only ${DlcAcceptV0.name} Decoding Supported`,
-  //       );
-  //   }
-  // }
+    return res.json(dlcAccept.toJSON());
+  }
 }

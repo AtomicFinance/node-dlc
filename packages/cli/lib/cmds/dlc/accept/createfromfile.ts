@@ -7,7 +7,7 @@ import fs from 'fs';
 
 export const command = 'acceptdlcofferfromfile [filepath]';
 
-export const describe = 'Accept Dlc Offer From File';
+export const describe = 'Accept DlcOffer From File';
 
 export const builder = {
   apikey: {

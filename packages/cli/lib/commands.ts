@@ -28,6 +28,7 @@ const argv = yargs(process.argv.slice(2))
   .commandDir('cmds/dlc/finalize', { recurse: true })
   .commandDir('cmds/dlc/txs', { recurse: true })
   .commandDir('cmds/dlc/execute', { recurse: true })
+  .commandDir('cmds/dlc/refund', { recurse: true })
   .commandDir('cmds/oracle/announcement', { recurse: true })
   .commandDir('cmds/oracle/attestation', { recurse: true })
   .options({

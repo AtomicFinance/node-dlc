@@ -1,10 +1,18 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
-import { CetAdaptorSignaturesV0 } from './CetAdaptorSignaturesV0';
+import {
+  CetAdaptorSignaturesV0,
+  ICetAdaptorSignaturesV0JSON,
+} from './CetAdaptorSignaturesV0';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0 } from './FundingInput';
-import { NegotiationFields } from './NegotiationFields';
+import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import {
+  INegotiationFieldsV0JSON,
+  INegotiationFieldsV1JSON,
+  INegotiationFieldsV2JSON,
+  NegotiationFields,
+} from './NegotiationFields';
 
 export abstract class DlcAccept implements IDlcMessage {
   public static deserialize(buf: Buffer): DlcAcceptV0 {
@@ -22,6 +30,8 @@ export abstract class DlcAccept implements IDlcMessage {
 
   public abstract type: number;
 
+  public abstract toJSON(): IDlcAcceptV0JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -31,7 +41,7 @@ export abstract class DlcAccept implements IDlcMessage {
  * transaction signatures. This is the second step toward creating
  * the funding transaction and closing transactions.
  */
-export class DlcAcceptV0 implements IDlcMessage {
+export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   public static type = MessageType.DlcAcceptV0;
 
   /**
@@ -91,6 +101,26 @@ export class DlcAcceptV0 implements IDlcMessage {
   public negotiationFields: NegotiationFields;
 
   /**
+   * Converts dlc_accept_v0 to JSON
+   */
+  public toJSON(): IDlcAcceptV0JSON {
+    return {
+      type: this.type,
+      tempContractId: this.tempContractId.toString('hex'),
+      acceptCollateralSatoshis: Number(this.acceptCollateralSatoshis),
+      fundingPubKey: this.fundingPubKey.toString('hex'),
+      payoutSPK: this.payoutSPK.toString('hex'),
+      payoutSerialId: Number(this.payoutSerialId),
+      fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
+      changeSPK: this.changeSPK.toString('hex'),
+      changeSerialId: Number(this.changeSerialId),
+      cetSignatures: this.cetSignatures.toJSON(),
+      refundSignature: this.refundSignature.toString('hex'),
+      negotiationFields: this.negotiationFields.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the accept_channel message into a Buffer
    */
   public serialize(): Buffer {
@@ -145,4 +175,22 @@ export class DlcAcceptWithoutSigs {
     readonly changeSerialId: bigint,
     readonly negotiationFields: NegotiationFields,
   ) {}
+}
+
+export interface IDlcAcceptV0JSON {
+  type: number;
+  tempContractId: string;
+  acceptCollateralSatoshis: number;
+  fundingPubKey: string;
+  payoutSPK: string;
+  payoutSerialId: number;
+  fundingInputs: IFundingInputV0JSON[];
+  changeSPK: string;
+  changeSerialId: number;
+  cetSignatures: ICetAdaptorSignaturesV0JSON;
+  refundSignature: string;
+  negotiationFields:
+    | INegotiationFieldsV0JSON
+    | INegotiationFieldsV1JSON
+    | INegotiationFieldsV2JSON;
 }

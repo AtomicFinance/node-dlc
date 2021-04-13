@@ -37,6 +37,15 @@ export class ScriptWitnessV0 {
   public witness: Buffer;
 
   /**
+   * Converts script_witness_v0 to JSON
+   */
+  public toJSON(): IScriptWitnessV0JSON {
+    return {
+      witness: this.witness.toString('hex'),
+    };
+  }
+
+  /**
    * Serializes the script_witness_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -47,4 +56,8 @@ export class ScriptWitnessV0 {
 
     return writer.toBuffer();
   }
+}
+
+export interface IScriptWitnessV0JSON {
+  witness: string;
 }

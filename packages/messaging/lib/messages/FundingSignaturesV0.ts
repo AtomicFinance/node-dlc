@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { ScriptWitnessV0 } from './ScriptWitnessV0';
+import { ScriptWitnessV0, IScriptWitnessV0JSON } from './ScriptWitnessV0';
 
 /**
  * FundingSignatures V0 contains signatures of the funding transaction
@@ -45,6 +45,18 @@ export class FundingSignaturesV0 implements IDlcMessage {
   public witnessElements: ScriptWitnessV0[][] = [];
 
   /**
+   * Converts funding_signatures_v0 to JSON
+   */
+  public toJSON(): IFundingSignaturesV0JSON {
+    return {
+      type: this.type,
+      witnessElements: this.witnessElements.map((witnessElement) => {
+        return witnessElement.map((witness) => witness.toJSON());
+      }),
+    };
+  }
+
+  /**
    * Serializes the funding_signatures_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -67,4 +79,9 @@ export class FundingSignaturesV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IFundingSignaturesV0JSON {
+  type: number;
+  witnessElements: IScriptWitnessV0JSON[][];
 }
