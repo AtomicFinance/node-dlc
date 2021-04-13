@@ -116,4 +116,26 @@ describe('DlcTransactionsV0', () => {
       }
     });
   });
+
+  describe('toJSON', () => {
+    it('convert to JSON', async () => {
+      const instance = new DlcTransactionsV0();
+
+      instance.contractId = contractId;
+      instance.fundTx = fundTx;
+      instance.fundTxOutAmount = fundTxOutAmount;
+      instance.refundTx = refundTx;
+      instance.cets.push(cet0);
+      instance.cets.push(cet1);
+
+      const jsonInstance = instance.toJSON();
+
+      expect(jsonInstance.contractId).to.equal(contractId.toString('hex'));
+      expect(jsonInstance.fundTx).to.equal(fundTx.serialize().toString('hex'));
+      expect(jsonInstance.refundTx).to.equal(
+        refundTx.serialize().toString('hex'),
+      );
+      expect(jsonInstance.cets[0]).to.equal(cet0.serialize().toString('hex'));
+    });
+  });
 });

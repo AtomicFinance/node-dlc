@@ -193,4 +193,69 @@ describe('DlcAcceptV0', () => {
       }
     });
   });
+
+  describe('toJSON', () => {
+    it('convert to JSON', async () => {
+      const instance = new DlcAcceptV0();
+
+      instance.tempContractId = tempContractId;
+      instance.acceptCollateralSatoshis = BigInt(100000000);
+      instance.fundingPubKey = fundingPubKey;
+      instance.payoutSPK = payoutSPK;
+      instance.payoutSerialId = BigInt(1594186);
+      instance.fundingInputs = [
+        FundingInputV0.deserialize(
+          Buffer.from(
+            'fda714' + // type funding_input_v0
+              '3f' + // length
+              '000000000000dae8' + // input_serial_id
+              '0029' + // prevtx_len
+              '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevtx
+              '00000000' + // prevtx_vout
+              'ffffffff' + // sequence
+              '006b' + // max_witness_len
+              '0000', // redeem_script_len
+            'hex',
+          ),
+        ),
+      ];
+      instance.changeSPK = changeSPK;
+      instance.changeSerialId = BigInt(885015);
+      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+        Buffer.from(
+          'fda716' + // type cet_adaptor_signatures_v0
+            'fd01e7' + // length
+            '03' + // nb_signatures
+            '016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8' + // ecdsa_adaptor_signature_1
+            '01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292' + // dleq_proof_1
+            '00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab' + // ecdsa_adaptor_signature_2
+            '01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce' + // dleq_proof_2
+            '006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4' + // ecdsa_adaptor_signature_3
+            '01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f', // dleq_proof_3
+          'hex',
+        ),
+      );
+      instance.refundSignature = refundSignature;
+      instance.negotiationFields = NegotiationFields.deserialize(
+        Buffer.from('fdd82600', 'hex'),
+      );
+
+      const jsonInstance = instance.toJSON();
+
+      expect(jsonInstance.tempContractId).to.equal(
+        tempContractId.toString('hex'),
+      );
+      expect(jsonInstance.fundingPubKey).to.equal(
+        fundingPubKey.toString('hex'),
+      );
+      expect(jsonInstance.payoutSPK).to.equal(payoutSPK.toString('hex'));
+      expect(jsonInstance.fundingInputs[0].prevTx).to.equal(
+        instance.fundingInputs[0].prevTx.serialize().toString('hex'),
+      );
+      expect(jsonInstance.changeSPK).to.equal(changeSPK.toString('hex'));
+      expect(jsonInstance.refundSignature).to.equal(
+        refundSignature.toString('hex'),
+      );
+    });
+  });
 });

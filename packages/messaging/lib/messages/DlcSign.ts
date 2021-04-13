@@ -1,9 +1,15 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
-import { CetAdaptorSignaturesV0 } from './CetAdaptorSignaturesV0';
+import {
+  CetAdaptorSignaturesV0,
+  ICetAdaptorSignaturesV0JSON,
+} from './CetAdaptorSignaturesV0';
 import { IDlcMessage } from './DlcMessage';
-import { FundingSignaturesV0 } from './FundingSignaturesV0';
+import {
+  FundingSignaturesV0,
+  IFundingSignaturesV0JSON,
+} from './FundingSignaturesV0';
 
 export abstract class DlcSign {
   public static deserialize(buf: Buffer): DlcSignV0 {
@@ -21,6 +27,8 @@ export abstract class DlcSign {
 
   public abstract type: number;
 
+  public abstract toJSON(): IDlcSignV0JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -29,7 +37,7 @@ export abstract class DlcSign {
  * receiver to broadcast the funding transaction with both parties being
  * fully committed to all closing transactions.
  */
-export class DlcSignV0 implements IDlcMessage {
+export class DlcSignV0 extends DlcSign implements IDlcMessage {
   public static type = MessageType.DlcSignV0;
 
   /**
@@ -65,6 +73,19 @@ export class DlcSignV0 implements IDlcMessage {
   public fundingSignatures: FundingSignaturesV0;
 
   /**
+   * Converts sign_dlc_v0 to JSON
+   */
+  public toJSON(): IDlcSignV0JSON {
+    return {
+      type: this.type,
+      contractId: this.contractId.toString('hex'),
+      cetSignatures: this.cetSignatures.toJSON(),
+      refundSignature: this.refundSignature.toString('hex'),
+      fundingSignatures: this.fundingSignatures.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the sign_dlc_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -77,4 +98,12 @@ export class DlcSignV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IDlcSignV0JSON {
+  type: number;
+  contractId: string;
+  cetSignatures: ICetAdaptorSignaturesV0JSON;
+  refundSignature: string;
+  fundingSignatures: IFundingSignaturesV0JSON;
 }
