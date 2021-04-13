@@ -27,6 +27,9 @@
     "@node-lightning/bitcoin": "^0.22.0",
     "@node-lightning/core": "^0.22.0"
   },
+  "devDependencies": {
+    "@types/node": "^14.0.13"
+  },
   "publishConfig": {
     "access": "public"
   }

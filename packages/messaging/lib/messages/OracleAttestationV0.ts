@@ -66,6 +66,19 @@ export class OracleAttestationV0 implements IDlcMessage {
   public outcomes: string[] = [];
 
   /**
+   * Converts oracle_attestation_v0 to JSON
+   */
+  public toJSON(): OracleAttestationV0JSON {
+    return {
+      type: this.type,
+      eventId: this.eventId,
+      oraclePubkey: this.oraclePubkey.toString('hex'),
+      signatures: this.signatures.map((sig) => sig.toString('hex')),
+      outcomes: this.outcomes,
+    };
+  }
+
+  /**
    * Serializes the oracle_announcement_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -92,4 +105,12 @@ export class OracleAttestationV0 implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface OracleAttestationV0JSON {
+  type: number;
+  eventId: string;
+  oraclePubkey: string;
+  signatures: string[];
+  outcomes: string[];
 }
