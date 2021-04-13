@@ -7,7 +7,7 @@ import {
   IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInput, IFundingInputV0Json } from './FundingInput';
+import { FundingInput, IFundingInputV0JSON } from './FundingInput';
 
 export abstract class DlcOffer {
   public static deserialize(buf: Buffer): DlcOfferV0 {
@@ -169,7 +169,7 @@ export interface IDlcOfferV0JSON {
   payoutSPK: string;
   payoutSerialId: number;
   offerCollateralSatoshis: number;
-  fundingInputs: IFundingInputV0Json[];
+  fundingInputs: IFundingInputV0JSON[];
   changeSPK: string;
   changeSerialId: number;
   fundOutputSerialId: number;

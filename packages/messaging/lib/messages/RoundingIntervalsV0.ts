@@ -42,7 +42,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   /**
    * Converts rounding_intervals_v0 to JSON
    */
-  public toJSON(): RoundingIntervalsV0JSON {
+  public toJSON(): IRoundingIntervalsV0JSON {
     return {
       type: this.type,
       intervals: this.intervals.map((interval) => {
@@ -86,7 +86,7 @@ interface IIntervalJSON {
   roundingMod: number;
 }
 
-export interface RoundingIntervalsV0JSON {
+export interface IRoundingIntervalsV0JSON {
   type: number;
   intervals: IIntervalJSON[];
 }

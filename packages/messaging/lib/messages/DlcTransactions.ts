@@ -23,6 +23,8 @@ export abstract class DlcTransactions {
 
   public abstract type: number;
 
+  public abstract toJSON(): IDlcTransactionsV0JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -85,6 +87,20 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   public cets: Tx[] = [];
 
   /**
+   * Converts dlc_transactions_v0 to JSON
+   */
+  public toJSON(): IDlcTransactionsV0JSON {
+    return {
+      type: this.type,
+      contractId: this.contractId.toString('hex'),
+      fundTx: this.fundTx.serialize().toString('hex'),
+      fundTxOutAmount: Number(this.fundTxOutAmount),
+      refundTx: this.refundTx.serialize().toString('hex'),
+      cets: this.cets.map((cet) => cet.serialize().toString('hex')),
+    };
+  }
+
+  /**
    * Serializes the dlc_transactions_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -105,4 +121,13 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
     return writer.toBuffer();
   }
+}
+
+export interface IDlcTransactionsV0JSON {
+  type: number;
+  contractId: string;
+  fundTx: string;
+  fundTxOutAmount: number;
+  refundTx: string;
+  cets: string[];
 }

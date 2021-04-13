@@ -40,6 +40,21 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   public sigs: ISig[] = [];
 
   /**
+   * Converts cet_adaptor_signature to JSON
+   */
+  public toJSON(): ICetAdaptorSignaturesV0JSON {
+    return {
+      type: this.type,
+      sigs: this.sigs.map((sig) => {
+        return {
+          encryptedSig: sig.encryptedSig.toString('hex'),
+          dleqProof: sig.dleqProof.toString('hex'),
+        };
+      }),
+    };
+  }
+
+  /**
    * Serializes the cet_adaptor_signature message into a Buffer
    */
   public serialize(): Buffer {
@@ -63,4 +78,14 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
 interface ISig {
   encryptedSig: Buffer;
   dleqProof: Buffer;
+}
+
+export interface ICetAdaptorSignaturesV0JSON {
+  type: number;
+  sigs: ISigJSON[];
+}
+
+export interface ISigJSON {
+  encryptedSig: string;
+  dleqProof: string;
 }

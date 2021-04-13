@@ -5,7 +5,7 @@ import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
 import {
   RoundingIntervalsV0,
-  RoundingIntervalsV0JSON,
+  IRoundingIntervalsV0JSON,
 } from './RoundingIntervalsV0';
 
 export abstract class ContractDescriptor {
@@ -206,5 +206,5 @@ export interface ContractDescriptorV1JSON {
   type: number;
   numDigits: number;
   payoutFunction: PayoutFunctionV0JSON;
-  roundingIntervals: RoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsV0JSON;
 }

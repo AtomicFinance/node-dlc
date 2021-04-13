@@ -3,6 +3,7 @@ import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
+import { IRoundingIntervalsV0JSON } from './RoundingIntervalsV0';
 
 export abstract class NegotiationFields {
   public static deserialize(
@@ -30,6 +31,11 @@ export abstract class NegotiationFields {
 
   public abstract length: bigint;
 
+  public abstract toJSON():
+    | INegotiationFieldsV0JSON
+    | INegotiationFieldsV1JSON
+    | INegotiationFieldsV2JSON;
+
   public abstract serialize(): Buffer;
 }
 
@@ -37,7 +43,9 @@ export abstract class NegotiationFields {
  * NegotiationFields V0 contains preferences of the accepter of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV0 implements IDlcMessage {
+export class NegotiationFieldsV0
+  extends NegotiationFields
+  implements IDlcMessage {
   public static type = MessageType.NegotiationFieldsV0;
 
   /**
@@ -62,6 +70,15 @@ export class NegotiationFieldsV0 implements IDlcMessage {
   public length: bigint;
 
   /**
+   * Converts negotiation_fields_v0 to JSON
+   */
+  public toJSON(): INegotiationFieldsV0JSON {
+    return {
+      type: this.type,
+    };
+  }
+
+  /**
    * Serializes the negotiation_fields_v0 message into a Buffer
    */
   public serialize(): Buffer {
@@ -77,7 +94,9 @@ export class NegotiationFieldsV0 implements IDlcMessage {
  * NegotiationFields V1 contains preferences of the acceptor of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV1 implements IDlcMessage {
+export class NegotiationFieldsV1
+  extends NegotiationFields
+  implements IDlcMessage {
   public static type = MessageType.NegotiationFieldsV1;
 
   /**
@@ -107,6 +126,16 @@ export class NegotiationFieldsV1 implements IDlcMessage {
   public roundingIntervals: RoundingIntervalsV0;
 
   /**
+   * Converts negotiation_fields_v1 to JSON
+   */
+  public toJSON(): INegotiationFieldsV1JSON {
+    return {
+      type: this.type,
+      roundingIntervals: this.roundingIntervals.toJSON(),
+    };
+  }
+
+  /**
    * Serializes the negotiation_fields_v1 message into a Buffer
    */
   public serialize(): Buffer {
@@ -127,7 +156,9 @@ export class NegotiationFieldsV1 implements IDlcMessage {
  * NegotiationFields V2 contains preferences of the acceptor of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV2 implements IDlcMessage {
+export class NegotiationFieldsV2
+  extends NegotiationFields
+  implements IDlcMessage {
   public static type = MessageType.NegotiationFieldsV2;
 
   /**
@@ -161,6 +192,18 @@ export class NegotiationFieldsV2 implements IDlcMessage {
   public negotiationFieldsList: NegotiationFields[] = [];
 
   /**
+   * Converts negotiation_fields_v2 to JSON
+   */
+  public toJSON(): INegotiationFieldsV2JSON {
+    return {
+      type: this.type,
+      negotiationFieldsList: this.negotiationFieldsList.map((field) =>
+        field.toJSON(),
+      ),
+    };
+  }
+
+  /**
    * Serializes the negotiation_fields_v2 message into a Buffer
    */
   public serialize(): Buffer {
@@ -178,4 +221,21 @@ export class NegotiationFieldsV2 implements IDlcMessage {
     writer.writeBytes(dataWriter.toBuffer());
     return writer.toBuffer();
   }
+}
+
+export interface INegotiationFieldsV0JSON {
+  type: number;
+}
+
+export interface INegotiationFieldsV1JSON {
+  type: number;
+  roundingIntervals: IRoundingIntervalsV0JSON;
+}
+
+export interface INegotiationFieldsV2JSON {
+  type: number;
+  negotiationFieldsList:
+    | INegotiationFieldsV0JSON[]
+    | INegotiationFieldsV1JSON[]
+    | INegotiationFieldsV2JSON[];
 }
