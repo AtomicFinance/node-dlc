@@ -14,6 +14,12 @@ export interface IArguments {
   conf?: string;
   d: string;
   datadir?: string;
+  rpcuser?: string;
+  rpcpass?: string;
+  rpchost?: string;
+  rpcport?: string;
+  electrsapi?: string;
+  electrsbatchapi?: string;
 }
 
 export interface IDB {
@@ -21,6 +27,13 @@ export interface IDB {
   dlc: RocksdbDlcStore;
 }
 
-export function parseConfig(configData) {
+export function parseConfig(configData: any): any {
   return JSON.parse(JSON.stringify(configData));
 }
+
+export type Network = 'mainnet' | 'testnet' | 'regtest';
+export const networks: ReadonlyArray<Network> = [
+  'mainnet',
+  'testnet',
+  'regtest',
+];
