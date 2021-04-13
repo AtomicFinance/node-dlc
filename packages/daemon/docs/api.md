@@ -132,7 +132,7 @@ JSON
 #### Accept
 
 ```shell
-dlccli acceptdlcorderoffer [orderOffer]
+dlccli acceptdlcorderoffer [orderOffer] [contractInfo?] [collateral?] [feerate?] [locktime?] [refundlocktime?]
 ```
 
 > Returns:

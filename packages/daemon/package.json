@@ -36,6 +36,7 @@
     "@liquality/bitcoin-js-wallet-provider": "0.10.3",
     "@liquality/bitcoin-rpc-provider": "0.10.3",
     "@liquality/client": "0.10.3",
+    "@node-dlc/core": "^0.1.4",
     "@node-dlc/messaging": "^0.1.4",
     "@node-dlc/rocksdb": "^0.1.4",
     "@node-lightning/bitcoin": "^0.22.0",

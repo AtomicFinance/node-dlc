@@ -25,7 +25,7 @@ describe('DlcdClient', () => {
 
     beforeEach(() => {
       nock(`http://${host}:${port}`)
-        .get('/v1/getinfo')
+        .get('/api/getinfo')
         .reply(200, expectedInfoResponse);
     });
 
@@ -41,11 +41,10 @@ describe('DlcdClient', () => {
 
     beforeEach(() => {
       nock(`http://${host}:${port}`)
-        .post('/v1/wallet/create')
-        .query({ apikey: apiKey })
+        .post('/api/wallet/create')
         .reply(200, { mnemonic })
-        .post('/v1/wallet/create')
-        .reply(400, { msg: 'Api Key Required' });
+        .post('/api/wallet/create')
+        .reply(400, { error: 'Api Key Required' });
     });
 
     it('should return response data if status 200', async () => {
