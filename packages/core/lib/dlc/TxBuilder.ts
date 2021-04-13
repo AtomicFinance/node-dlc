@@ -26,11 +26,21 @@ export class DlcTxBuilder {
     tx.version = 2;
     tx.locktime = LockTime.zero();
 
-    const multisigScript = Script.p2msLock(
-      2,
-      this.dlcOffer.fundingPubKey,
-      this.dlcAccept.fundingPubKey,
-    );
+    const multisigScript =
+      Buffer.compare(
+        this.dlcOffer.fundingPubKey,
+        this.dlcAccept.fundingPubKey,
+      ) === -1
+        ? Script.p2msLock(
+            2,
+            this.dlcOffer.fundingPubKey,
+            this.dlcAccept.fundingPubKey,
+          )
+        : Script.p2msLock(
+            2,
+            this.dlcAccept.fundingPubKey,
+            this.dlcOffer.fundingPubKey,
+          );
     const witScript = Script.p2wshLock(multisigScript);
 
     const offerInput = this.dlcOffer.offerCollateralSatoshis;

@@ -1,9 +1,11 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BufferReader } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { ContractInfoV0, ContractInfoV1 } from './ContractInfo';
 import { DlcAcceptV0 } from './DlcAccept';
 import { DlcOfferV0 } from './DlcOffer';
 import { DlcSignV0 } from './DlcSign';
+import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
+import { OracleAttestationV0 } from './OracleAttestationV0';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
 
@@ -22,7 +24,9 @@ export abstract class DlcMessage {
     | OrderAcceptV0
     | DlcOfferV0
     | DlcAcceptV0
-    | DlcSignV0 {
+    | DlcSignV0
+    | OracleAttestationV0
+    | OracleAnnouncementV0 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
@@ -42,6 +46,10 @@ export abstract class DlcMessage {
         return DlcAcceptV0.deserialize(buf);
       case MessageType.DlcSignV0:
         return DlcSignV0.deserialize(buf);
+      case MessageType.OracleAttestationV0:
+        return OracleAttestationV0.deserialize(buf);
+      case MessageType.OracleAnnouncementV0:
+        return OracleAnnouncementV0.deserialize(buf);
       default:
         throw new Error(`Dlc Message type invalid`);
     }
