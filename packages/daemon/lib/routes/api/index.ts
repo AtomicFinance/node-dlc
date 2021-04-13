@@ -10,12 +10,14 @@ import { Endpoint } from '../Endpoint';
 import InfoRoutes from './getinfo';
 import WalletRoutes from './wallet';
 import OrderRoutes from './order';
+import OracleRoutes from './oracle';
 
 export class RoutesAPI {
   public info: InfoRoutes;
   public wallet: WalletRoutes;
   public contract: ContractRoutes;
   public order: OrderRoutes;
+  public oracle: OracleRoutes;
   public db: IDB;
   public client: Client;
   public prefix = 'api';
@@ -33,6 +35,7 @@ export class RoutesAPI {
     this.wallet = new WalletRoutes(argv, db, logger, client);
     this.contract = new ContractRoutes(argv, db, logger, client);
     this.order = new OrderRoutes(argv, db, logger, client);
+    this.oracle = new OracleRoutes(argv, db, logger, client);
 
     const options: IAsyncAuthorizerOptions = {
       authorizeAsync: true,
@@ -68,6 +71,14 @@ export class RoutesAPI {
     app.post(
       this.getEndpoint(Endpoint.OrderAccept, 'decode'),
       wrapAsync(this.order.postAcceptDecode.bind(this.order)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.OracleAnnouncement, 'decode'),
+      wrapAsync(this.oracle.postAnnouncementDecode.bind(this.oracle)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.OracleAttestation, 'decode'),
+      wrapAsync(this.oracle.postAttestationDecode.bind(this.oracle)),
     );
   }
 

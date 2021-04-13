@@ -146,7 +146,6 @@ export class RocksdbDlcStore extends RocksdbBase {
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    console.log('raw', raw);
     return DlcTransactionsV0.deserialize(raw);
   }
 

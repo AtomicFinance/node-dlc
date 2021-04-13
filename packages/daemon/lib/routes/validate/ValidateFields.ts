@@ -53,6 +53,24 @@ export const validateBigInt = (
   }
 };
 
+export const validateBuffer = (
+  value: string,
+  fieldName: string,
+  route: BaseRoute,
+  res: Response,
+): void | Response => {
+  try {
+    Buffer.from(value, 'hex');
+  } catch (e) {
+    return routeErrorHandler(
+      route,
+      res,
+      400,
+      `Invalid hex for ${fieldName} provided.`,
+    );
+  }
+};
+
 export const validateType = <T extends typeof DlcMessage>(
   value: string,
   className: string,

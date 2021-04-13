@@ -13,12 +13,14 @@ import {
   DlcTransactionsV0,
   DlcAcceptV0,
   DlcSign,
+  OracleAttestationV0,
 } from '@node-dlc/messaging';
 import { Tx } from '@node-lightning/bitcoin';
 import {
   validateBigInt,
   validateNumber,
   validateString,
+  validateBuffer,
   validateType,
 } from '../../validate/ValidateFields';
 import {
@@ -89,10 +91,16 @@ export default class DlcRoutes extends BaseRoutes {
       _dlcTxs,
     });
 
+    if (Buffer.compare(dlcOffer.fundingPubKey, dlcAccept.fundingPubKey) === 0)
+      throw Error('DlcOffer and DlcAccept FundingPubKey cannot be the same');
+
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
     const fundingTxid = tx.txId.serialize();
     const contractId = xor(fundingTxid, dlcAccept.tempContractId);
+
+    console.log('dlcTxs', dlcTxs.fundTx.serialize().toString('hex'));
+    console.log('tx', tx.serialize().toString('hex'));
 
     if (Buffer.compare(contractId, dlcTxs.contractId) !== 0)
       return routeErrorHandler(this, res, 400, `Contract Id doesn't match`);
@@ -116,6 +124,9 @@ export default class DlcRoutes extends BaseRoutes {
     );
     const { dlcAccept } = checkTypes({ _dlcAccept });
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+
+    if (Buffer.compare(dlcOffer.fundingPubKey, dlcAccept.fundingPubKey) === 0)
+      throw Error('DlcOffer and DlcAccept FundingPubKey cannot be the same');
 
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
@@ -147,17 +158,13 @@ export default class DlcRoutes extends BaseRoutes {
         `Contract Id doesn't match on DlcTransactions`,
       );
 
-    console.log('dlcAccept', dlcAccept);
-    console.log('dlcSign', dlcSign);
-    console.log('dlcTxs', dlcTxs);
-    console.log('dlcTxs.contractId');
-
     await this.db.dlc.saveDlcAccept(dlcAccept);
     await this.db.dlc.saveDlcSign(dlcSign);
     await this.db.dlc.saveDlcTransactions(dlcTxs);
 
     return res.json({
       hex: dlcSign.serialize().toString('hex'),
+      txs: dlcTxs.serialize().toString('hex'),
       contractId: contractId.toString('hex'),
     });
   }
@@ -173,10 +180,6 @@ export default class DlcRoutes extends BaseRoutes {
     const dlcTxs = await this.db.dlc.findDlcTransactions(dlcSign.contractId);
     const dlcAccept = await this.db.dlc.findDlcAccept(dlcSign.contractId);
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
-
-    console.log('dlcOffer', dlcOffer);
-    console.log('dlcAccept', dlcAccept);
-    console.log('dlcSign', dlcSign);
 
     const fundTx: Tx = await this.client.finalizeDlcSign(
       dlcOffer,
@@ -194,15 +197,76 @@ export default class DlcRoutes extends BaseRoutes {
   }
 
   public async getContract(req: Request, res: Response): Promise<Response> {
-    const { contractid } = req.query;
+    const { contractid } = req.params;
 
     validateString(contractid, 'ContractId', this, res);
+    validateBuffer(contractid as string, 'ContractId', this, res);
     const contractId = Buffer.from(contractid as string, 'hex');
 
     const dlcTxs = await this.db.dlc.findDlcTransactions(contractId);
 
     return res.json({
       fundTx: dlcTxs.fundTx.serialize().toString('hex'),
+    });
+  }
+
+  public async postExecute(req: Request, res: Response): Promise<Response> {
+    const { contractid, oracleattestation } = req.body;
+
+    validateString(contractid, 'ContractId', this, res);
+    validateString(oracleattestation, 'OracleAttestation', this, res);
+    validateType(
+      oracleattestation,
+      'OracleAttestation',
+      OracleAttestationV0,
+      this,
+      res,
+    );
+    const contractId = Buffer.from(contractid as string, 'hex');
+    const oracleAttestation: OracleAttestationV0 = OracleAttestationV0.deserialize(
+      Buffer.from(oracleattestation as string, 'hex'),
+    );
+    const dlcTxs = await this.db.dlc.findDlcTransactions(contractId);
+    const dlcSign = await this.db.dlc.findDlcSign(contractId);
+    const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
+    const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+
+    const isOfferer = await this.client.isOfferer(dlcOffer, dlcAccept);
+
+    const executeTx: Tx = await this.client.execute(
+      dlcOffer,
+      dlcAccept,
+      dlcSign,
+      dlcTxs,
+      oracleAttestation,
+      isOfferer,
+    );
+
+    return res.json({
+      hex: executeTx.serialize().toString('hex'),
+    });
+  }
+
+  public async postRefund(req: Request, res: Response): Promise<Response> {
+    const { contractid } = req.body;
+
+    validateString(contractid, 'ContractId', this, res);
+    const contractId = Buffer.from(contractid as string, 'hex');
+
+    const dlcTxs = await this.db.dlc.findDlcTransactions(contractId);
+    const dlcSign = await this.db.dlc.findDlcSign(contractId);
+    const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
+    const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+
+    const refundTx: Tx = await this.client.refund(
+      dlcOffer,
+      dlcAccept,
+      dlcSign,
+      dlcTxs,
+    );
+
+    return res.json({
+      hex: refundTx.serialize().toString('hex'),
     });
   }
 }

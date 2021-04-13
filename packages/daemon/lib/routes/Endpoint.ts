@@ -19,6 +19,10 @@ export enum Endpoint {
   DlcFinalize = 'dlc/finalize',
   DlcExecute = 'dlc/execute',
   DlcRefund = 'dlc/refund',
+  DlcContract = 'dlc/contract',
+
+  OracleAnnouncement = 'oracle/announcement',
+  OracleAttestation = 'oracle/attestation',
 
   ContractInfo = 'contract/info',
 }

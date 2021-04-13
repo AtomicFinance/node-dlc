@@ -79,7 +79,7 @@ export default class DlcdClient {
 
     if (this.apiKey) {
       const auth: AxiosBasicCredentials = {
-        username: 'test',
+        username: 'admin',
         password: this.apiKey,
       };
 

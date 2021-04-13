@@ -46,7 +46,6 @@ export class RoutesV1 {
       basicAuth(options),
       wrapAsync(this.order.postAccept.bind(this.order)),
     );
-
     app.post(
       this.getEndpoint(Endpoint.DlcOffer),
       basicAuth(options),
@@ -67,14 +66,28 @@ export class RoutesV1 {
       basicAuth(options),
       wrapAsync(this.dlc.postFinalize.bind(this.dlc)),
     );
+    app.get(
+      this.getEndpoint(Endpoint.DlcContract, ':contractid'),
+      basicAuth(options),
+      wrapAsync(this.dlc.getContract.bind(this.dlc)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.DlcExecute),
+      basicAuth(options),
+      wrapAsync(this.dlc.postExecute.bind(this.dlc)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.DlcRefund),
+      basicAuth(options),
+      wrapAsync(this.dlc.postRefund.bind(this.dlc)),
+    );
   }
 
-  private getEndpoint(endpoint: Endpoint): string {
-    return `/${this.prefix}/${endpoint}`;
+  private getEndpoint(endpoint: Endpoint, suffix?: string): string {
+    return `/${this.prefix}/${endpoint}${suffix ? `/${suffix}` : ``}`;
   }
 
   private async authorizer(_: string, password: string, cb) {
-    console.log('password', password);
     const walletExists = await this.db.wallet.checkSeed();
     if (!walletExists) return cb('Wallet not created', false);
 

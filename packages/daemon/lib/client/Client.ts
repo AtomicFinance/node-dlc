@@ -101,6 +101,18 @@ export class Client {
     );
   }
 
+  get execute() {
+    return this.client.finance.dlc.execute.bind(this.client.finance.dlc);
+  }
+
+  get refund() {
+    return this.client.finance.dlc.refund.bind(this.client.finance.dlc);
+  }
+
+  get isOfferer() {
+    return this.client.finance.dlc.isOfferer.bind(this.client.finance.dlc);
+  }
+
   get newAddress() {
     return this.client.finance.wallet.getUnusedAddress.bind(
       this.client.finance.wallet,
