@@ -24,7 +24,8 @@
   "dependencies": {
     "@atomicfinance/bitcoin-networks": "^2.0.0-alpha.4",
     "@node-lightning/bitcoin": "^0.22.0",
-    "@node-lightning/bufio": "^0.22.0"
+    "@node-lightning/bufio": "^0.22.0",
+    "bitcoinjs-lib": "5.2.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.13"

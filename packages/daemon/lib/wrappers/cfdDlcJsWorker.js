@@ -3,8 +3,17 @@
 const { parentPort } = require('worker_threads');
 const cfdDlcJs = require('cfd-dlc-js');
 
+let idle = true;
+
 parentPort.on('message', async (message) => {
   const { method, args } = message;
 
-  return parentPort.postMessage(cfdDlcJs[method](...args));
+  if (!idle) {
+    throw new Error('NOT IDLE');
+  }
+
+  idle = false;
+  const response = cfdDlcJs[method](...args);
+  idle = true;
+  return parentPort.postMessage(response);
 });
