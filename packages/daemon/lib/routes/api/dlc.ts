@@ -2,7 +2,7 @@ import { Logger } from '@node-lightning/logger';
 import { generateMnemonic, validateMnemonic } from 'bip39';
 import { NextFunction, Request, Response } from 'express';
 import { IArguments, IDB } from '../../utils/config';
-import { routeErrorHandler } from '../handler/ErrorHandler';
+import { routeErrorHandler, longVal } from '../handler/ErrorHandler';
 import BaseRoutes from '../base';
 import { Client } from '../../client';
 import {
@@ -11,6 +11,7 @@ import {
   DlcOfferV0,
   DlcAccept,
   DlcAcceptV0,
+  DlcSignV0,
 } from '@node-dlc/messaging';
 import { validateType } from '../validate/ValidateFields';
 
@@ -21,28 +22,14 @@ export default class DlcRoutes extends BaseRoutes {
 
   public async postOfferDecode(req: Request, res: Response): Promise<Response> {
     const { dlcoffer } = req.body;
+    this.logger.info(`Decode DlcOffer: ${longVal(dlcoffer)}`);
 
-    if (!dlcoffer)
-      return routeErrorHandler(this, res, 401, `No ${DlcOffer.name} Provided`);
-
-    if (!(typeof dlcoffer === 'string'))
-      return routeErrorHandler(this, res, 400, `Invalid ${DlcOffer.name}`);
-
-    const dlcOffer = DlcOffer.deserialize(
+    validateType(dlcoffer, 'DlcOffer', DlcOfferV0, this, res);
+    const dlcOffer = DlcOfferV0.deserialize(
       Buffer.from(dlcoffer as string, 'hex'),
     );
 
-    switch (dlcOffer.type) {
-      case MessageType.DlcOfferV0:
-        return res.json((dlcOffer as DlcOfferV0).toJSON());
-      default:
-        return routeErrorHandler(
-          this,
-          res,
-          401,
-          `Only ${DlcOfferV0.name} Decoding Supported`,
-        );
-    }
+    return res.json(dlcOffer.toJSON());
   }
 
   public async postAcceptDecode(
@@ -50,6 +37,7 @@ export default class DlcRoutes extends BaseRoutes {
     res: Response,
   ): Promise<Response> {
     const { dlcaccept } = req.body;
+    this.logger.info(`Decode DlcAccept: ${longVal(dlcaccept)}`);
 
     validateType(dlcaccept, 'DlcAccept', DlcAcceptV0, this, res);
     const dlcAccept = DlcAcceptV0.deserialize(
@@ -57,5 +45,17 @@ export default class DlcRoutes extends BaseRoutes {
     );
 
     return res.json(dlcAccept.toJSON());
+  }
+
+  public async postSignDecode(req: Request, res: Response): Promise<Response> {
+    const { dlcsign } = req.body;
+    this.logger.info(`Decode DlcSign: ${longVal(dlcsign)}`);
+
+    validateType(dlcsign, 'DlcSign', DlcSignV0, this, res);
+    const dlcSign = DlcSignV0.deserialize(
+      Buffer.from(dlcsign as string, 'hex'),
+    );
+
+    return res.json(dlcSign.toJSON());
   }
 }

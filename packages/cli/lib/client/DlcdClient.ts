@@ -84,7 +84,7 @@ export default class DlcdClient {
       };
 
       config.auth = auth;
-      config.timeout = 5000;
+      config.timeout = 10000;
     }
 
     return axios(config)

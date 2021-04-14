@@ -23,7 +23,6 @@ export function getWrappedCfdDlcJs(): CfdDlcJs {
         if (METHODS_TO_PARALLELIZE.indexOf(method as string) !== -1) {
           return async (...args) => {
             await new Promise((res) => {
-              console.log('Running cfd', method);
               res(1);
             });
             const res = await pool.exec({ method, args });

@@ -11,6 +11,7 @@ import InfoRoutes from './getinfo';
 import WalletRoutes from './wallet';
 import OrderRoutes from './order';
 import OracleRoutes from './oracle';
+import DlcRoutes from './dlc';
 
 export class RoutesAPI {
   public info: InfoRoutes;
@@ -18,6 +19,7 @@ export class RoutesAPI {
   public contract: ContractRoutes;
   public order: OrderRoutes;
   public oracle: OracleRoutes;
+  public dlc: DlcRoutes;
   public db: IDB;
   public client: Client;
   public prefix = 'api';
@@ -36,6 +38,7 @@ export class RoutesAPI {
     this.contract = new ContractRoutes(argv, db, logger, client);
     this.order = new OrderRoutes(argv, db, logger, client);
     this.oracle = new OracleRoutes(argv, db, logger, client);
+    this.dlc = new DlcRoutes(argv, db, logger, client);
 
     const options: IAsyncAuthorizerOptions = {
       authorizeAsync: true,
@@ -71,6 +74,14 @@ export class RoutesAPI {
     app.post(
       this.getEndpoint(Endpoint.OrderAccept, 'decode'),
       wrapAsync(this.order.postAcceptDecode.bind(this.order)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.DlcOffer, 'decode'),
+      wrapAsync(this.dlc.postOfferDecode.bind(this.dlc)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.DlcAccept, 'decode'),
+      wrapAsync(this.dlc.postAcceptDecode.bind(this.dlc)),
     );
     app.post(
       this.getEndpoint(Endpoint.OracleAnnouncement, 'decode'),

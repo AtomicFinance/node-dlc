@@ -36,6 +36,18 @@ export default class DlcRoutes extends BaseRoutes {
     super(argv, db, logger, client);
   }
 
+  public async getOffer(req: Request, res: Response): Promise<Response> {
+    const { tempcontractid } = req.query;
+
+    validateString(tempcontractid, 'TempContractId', this, res);
+    validateBuffer(tempcontractid as string, 'TempContractId', this, res);
+    const tempContractId = Buffer.from(tempcontractid as string, 'hex');
+
+    const dlcOffer = await this.db.dlc.findDlcOffer(tempContractId);
+
+    return res.json({ hex: dlcOffer.serialize().toString('hex') });
+  }
+
   public async postOffer(req: Request, res: Response): Promise<Response> {
     const {
       contractinfo,
@@ -45,6 +57,8 @@ export default class DlcRoutes extends BaseRoutes {
       refundlocktime,
     } = req.body;
 
+    this.logger.info('Start Offer DLC');
+    this.logger.info('Validate ContractInfo...');
     validateType(contractinfo, 'Contract Info', ContractInfo, this, res);
     const contractInfo = ContractInfo.deserialize(
       Buffer.from(contractinfo as string, 'hex'),
@@ -54,7 +68,9 @@ export default class DlcRoutes extends BaseRoutes {
     validateBigInt(feerate, 'feerate', this, res);
     validateNumber(locktime, 'locktime', this, res);
     validateNumber(refundlocktime, 'refundlocktime', this, res);
+    this.logger.info('ContractInfo Valid');
 
+    this.logger.info('Generating offer...');
     const _dlcOffer: DlcOffer = await this.client.createDlcOffer(
       contractInfo,
       BigInt(collateral as string),
@@ -62,9 +78,15 @@ export default class DlcRoutes extends BaseRoutes {
       Number(locktime),
       Number(refundlocktime),
     );
+    this.logger.info('Offer generated');
 
     const { dlcOffer } = checkTypes({ _dlcOffer });
+
+    this.logger.info('Saving DLC Offer to DB...');
     await this.db.dlc.saveDlcOffer(dlcOffer);
+    this.logger.info('DLC Offer saved');
+
+    this.logger.info('End Offer DLC');
 
     return res.json({
       hex: dlcOffer.serialize().toString('hex'),
@@ -72,18 +94,35 @@ export default class DlcRoutes extends BaseRoutes {
     });
   }
 
+  public async getAccept(req: Request, res: Response): Promise<Response> {
+    const { contractid } = req.query;
+
+    validateString(contractid, 'ContractId', this, res);
+    validateBuffer(contractid as string, 'ContractId', this, res);
+    const contractId = Buffer.from(contractid as string, 'hex');
+
+    const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
+
+    return res.json({ hex: dlcAccept.serialize().toString('hex') });
+  }
+
   public async postAccept(req: Request, res: Response): Promise<Response> {
     const { dlcoffer } = req.body;
 
+    this.logger.info('Start Accept DLC');
+    this.logger.info('Validate DlcOffer...');
     validateType(dlcoffer, 'Dlc Offer', DlcOffer, this, res);
     const _dlcOffer: DlcOffer = DlcOffer.deserialize(
       Buffer.from(dlcoffer as string, 'hex'),
     );
+    this.logger.info('DlcOffer Valid');
 
+    this.logger.info('Generating sigs...');
     const {
       dlcAccept: _dlcAccept,
       dlcTransactions: _dlcTxs,
     }: AcceptDlcOfferResponse = await this.client.acceptDlcOffer(_dlcOffer);
+    this.logger.info('Sigs generated');
 
     const { dlcOffer, dlcAccept, dlcTxs } = checkTypes({
       _dlcOffer,
@@ -102,9 +141,13 @@ export default class DlcRoutes extends BaseRoutes {
     if (Buffer.compare(contractId, dlcTxs.contractId) !== 0)
       return routeErrorHandler(this, res, 400, `Contract Id doesn't match`);
 
+    this.logger.info('Saving DLC messages to DB...');
     await this.db.dlc.saveDlcOffer(dlcOffer);
     await this.db.dlc.saveDlcAccept(dlcAccept);
     await this.db.dlc.saveDlcTransactions(dlcTxs);
+    this.logger.info('DLC messages saved');
+
+    this.logger.info('End Accept DLC');
 
     return res.json({
       hex: dlcAccept.serialize().toString('hex'),
@@ -112,15 +155,33 @@ export default class DlcRoutes extends BaseRoutes {
     });
   }
 
+  public async getSign(req: Request, res: Response): Promise<Response> {
+    const { contractid } = req.query;
+
+    validateString(contractid, 'ContractId', this, res);
+    validateBuffer(contractid as string, 'ContractId', this, res);
+    const contractId = Buffer.from(contractid as string, 'hex');
+
+    const dlcSign = await this.db.dlc.findDlcSign(contractId);
+
+    return res.json({ hex: dlcSign.serialize().toString('hex') });
+  }
+
   public async postSign(req: Request, res: Response): Promise<Response> {
     const { dlcaccept } = req.body;
 
+    this.logger.info('Start Sign DLC');
+    this.logger.info('Validate DlcAccept...');
     validateType(dlcaccept, 'Dlc Accept', DlcAccept, this, res);
     const _dlcAccept: DlcAccept = DlcAccept.deserialize(
       Buffer.from(dlcaccept as string, 'hex'),
     );
+    this.logger.info('DlcAccept Valid');
     const { dlcAccept } = checkTypes({ _dlcAccept });
+
+    this.logger.info('Fetch DlcOffer from DB');
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+    this.logger.info('DlcOffer fetched');
 
     if (Buffer.compare(dlcOffer.fundingPubKey, dlcAccept.fundingPubKey) === 0)
       throw Error('DlcOffer and DlcAccept FundingPubKey cannot be the same');
@@ -130,6 +191,7 @@ export default class DlcRoutes extends BaseRoutes {
     const fundingTxid = tx.txId.serialize();
     const contractId = xor(fundingTxid, dlcAccept.tempContractId);
 
+    this.logger.info('Generating sigs...');
     const {
       dlcSign: _dlcSign,
       dlcTransactions: _dlcTxs,
@@ -137,6 +199,7 @@ export default class DlcRoutes extends BaseRoutes {
       dlcOffer,
       dlcAccept,
     );
+    this.logger.info('Sigs generated');
 
     const { dlcSign, dlcTxs } = checkTypes({ _dlcSign, _dlcTxs });
 
@@ -155,9 +218,13 @@ export default class DlcRoutes extends BaseRoutes {
         `Contract Id doesn't match on DlcTransactions`,
       );
 
+    this.logger.info('Saving DLC messages to DB...');
     await this.db.dlc.saveDlcAccept(dlcAccept);
     await this.db.dlc.saveDlcSign(dlcSign);
     await this.db.dlc.saveDlcTransactions(dlcTxs);
+    this.logger.info('DLC messages saved');
+
+    this.logger.info('End Sign DLC');
 
     return res.json({
       hex: dlcSign.serialize().toString('hex'),
@@ -169,24 +236,37 @@ export default class DlcRoutes extends BaseRoutes {
   public async postFinalize(req: Request, res: Response): Promise<Response> {
     const { dlcsign } = req.body;
 
+    this.logger.info('Start Finalize DLC');
+    this.logger.info('Validate DlcSign...');
     validateType(dlcsign, 'Dlc Sign', DlcSign, this, res);
     const _dlcSign: DlcSign = DlcSign.deserialize(
       Buffer.from(dlcsign as string, 'hex'),
     );
+    this.logger.info('DlcSign Valid');
+
     const { dlcSign } = checkTypes({ _dlcSign });
+
+    this.logger.info('Fetch Dlc Messages from DB');
     const dlcTxs = await this.db.dlc.findDlcTransactions(dlcSign.contractId);
     const dlcAccept = await this.db.dlc.findDlcAccept(dlcSign.contractId);
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+    this.logger.info('Dlc Messages fetched');
 
+    this.logger.info('Generating sigs...');
     const fundTx: Tx = await this.client.finalizeDlcSign(
       dlcOffer,
       dlcAccept,
       dlcSign,
       dlcTxs,
     );
+    this.logger.info('Sigs generated');
 
     dlcTxs.fundTx = fundTx;
+    this.logger.info('Saving DLC Transactions to DB...');
     await this.db.dlc.saveDlcTransactions(dlcTxs);
+    this.logger.info('DLC Transactions saved');
+
+    this.logger.info('End Finalize DLC');
 
     return res.json({
       contractId: dlcSign.contractId.toString('hex'),

@@ -46,10 +46,20 @@ export class RoutesV1 {
       basicAuth(options),
       wrapAsync(this.order.postAccept.bind(this.order)),
     );
+    app.get(
+      this.getEndpoint(Endpoint.DlcOffer),
+      basicAuth(options),
+      wrapAsync(this.dlc.getOffer.bind(this.dlc)),
+    );
     app.post(
       this.getEndpoint(Endpoint.DlcOffer),
       basicAuth(options),
       wrapAsync(this.dlc.postOffer.bind(this.dlc)),
+    );
+    app.get(
+      this.getEndpoint(Endpoint.DlcAccept),
+      basicAuth(options),
+      wrapAsync(this.dlc.getAccept.bind(this.dlc)),
     );
     app.post(
       this.getEndpoint(Endpoint.DlcAccept),

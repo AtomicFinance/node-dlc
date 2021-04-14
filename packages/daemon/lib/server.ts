@@ -1,7 +1,15 @@
 import { RocksdbDlcStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
 import { ConsoleTransport, Logger, LogLevel } from '@node-lightning/logger';
 import * as bodyParser from 'body-parser';
-import { Application, ErrorRequestHandler, urlencoded, json } from 'express';
+import {
+  Application,
+  ErrorRequestHandler,
+  urlencoded,
+  json,
+  Request,
+  Response,
+  NextFunction,
+} from 'express';
 import * as fs from 'fs';
 import { WriteStream } from 'fs';
 import helmet from 'helmet';
@@ -20,7 +28,7 @@ export default class Server {
   constructor(app: Application, argv: IArguments, logger: Logger) {
     const { datadir, network } = argv;
 
-    this.config(app, argv);
+    this.config(app, argv, logger);
     const walletDb = new RocksdbWalletStore(`${datadir}/${network}/wallet`);
     const dlcDb = new RocksdbDlcStore(`${datadir}/${network}/dlc`);
     const db: IDB = { wallet: walletDb, dlc: dlcDb };
@@ -31,7 +39,7 @@ export default class Server {
     this.RoutesFallback = new RoutesFallback(app, logger);
   }
 
-  public config(app: Application, argv: IArguments): void {
+  public config(app: Application, argv: IArguments, logger: Logger): void {
     const { datadir, network } = argv;
     const accessLogStream: WriteStream = fs.createWriteStream(
       `${datadir}/${network}/access.log`,
@@ -44,9 +52,16 @@ export default class Server {
         limit: '50mb',
       }),
     );
-    // app.use(morgan('combined', { stream: accessLogStream }));
-    // app.use(helmet());
-    app.use(function (req, res, next) {
+    app.use(morgan('combined', { stream: accessLogStream }));
+    app.use(helmet());
+    app.use(function (req: Request, res: Response, next: NextFunction) {
+      const ip =
+        req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress;
+
+      logger.info(`${req.method} ${req.url} from ${ip}`);
+
       res.setTimeout(480000, function () {
         // 4 minute timeout adjust for larger uploads
         console.log('Request has timed out.');

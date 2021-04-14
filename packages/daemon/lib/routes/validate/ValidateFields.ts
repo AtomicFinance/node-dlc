@@ -1,6 +1,7 @@
 import BaseRoute from '../base';
 import { Response } from 'express';
 import { routeErrorHandler } from '../handler/ErrorHandler';
+import { diffError, longVal } from '../handler/ErrorHandler';
 import { DlcMessage } from '@node-dlc/messaging';
 import * as core from 'express-serve-static-core';
 
@@ -98,7 +99,7 @@ export const validateType = <T extends typeof DlcMessage>(
       route,
       res,
       400,
-      `Deserialization of ${className} failed. Hex: ${value}`,
+      `Deserialization of ${className} failed. Hex: ${longVal(value)}`,
     );
   }
 
@@ -118,8 +119,6 @@ export const validateType = <T extends typeof DlcMessage>(
       route,
       res,
       400,
-      `Serialized ${className} does not equal provided ${className}. \n
-      Provided: ${value}\n
-      Actual: ${_dlcMessage.serialize().toString('hex')}`,
+      diffError(className, value, _dlcMessage.serialize().toString('hex')),
     );
 };

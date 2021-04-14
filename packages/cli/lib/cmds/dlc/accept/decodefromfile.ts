@@ -18,7 +18,7 @@ export const builder = {
 export async function handler(argv: IArguments): Promise<void> {
   const { host, port, apikey, loglevel, filepath } = argv;
   const logger: Logger = getLogger(loglevel);
-  const client = new DlcdClient(host, port, logger, apikey, 'api/v0');
+  const client = new DlcdClient(host, port, logger, apikey);
   const dlcaccept = fs.readFileSync(filepath, 'utf8');
   const response = await client.post(`${Endpoint.DlcAccept}/decode`, {
     dlcaccept,

@@ -91,7 +91,6 @@ const argv: IArguments = yargs(process.argv.slice(2))
     }
     return true;
   }).argv;
-console.log('argv', argv);
 
 const logger = new Logger('DLCd');
 logger.transports.push(new ConsoleTransport(console));
