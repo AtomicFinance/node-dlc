@@ -58,6 +58,7 @@ export default class DlcRoutes extends BaseRoutes {
     } = req.body;
 
     this.logger.info('Start Offer DLC');
+
     this.logger.info('Validate ContractInfo...');
     validateType(contractinfo, 'Contract Info', ContractInfo, this, res);
     const contractInfo = ContractInfo.deserialize(
@@ -290,6 +291,9 @@ export default class DlcRoutes extends BaseRoutes {
   public async postExecute(req: Request, res: Response): Promise<Response> {
     const { contractid, oracleattestation } = req.body;
 
+    this.logger.info('Start Execute DLC');
+
+    this.logger.info('Validate OracleAttestation...');
     validateString(contractid, 'ContractId', this, res);
     validateString(oracleattestation, 'OracleAttestation', this, res);
     validateType(
@@ -303,13 +307,18 @@ export default class DlcRoutes extends BaseRoutes {
     const oracleAttestation: OracleAttestationV0 = OracleAttestationV0.deserialize(
       Buffer.from(oracleattestation as string, 'hex'),
     );
+    this.logger.info('OracleAttestation Valid');
+
+    this.logger.info('Fetch Dlc Messages from DB');
     const dlcTxs = await this.db.dlc.findDlcTransactions(contractId);
     const dlcSign = await this.db.dlc.findDlcSign(contractId);
     const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+    this.logger.info('Dlc Messages fetched');
 
     const isOfferer = await this.client.isOfferer(dlcOffer, dlcAccept);
 
+    this.logger.info('Execute...');
     const executeTx: Tx = await this.client.execute(
       dlcOffer,
       dlcAccept,
@@ -318,6 +327,9 @@ export default class DlcRoutes extends BaseRoutes {
       oracleAttestation,
       isOfferer,
     );
+    this.logger.info('Executed');
+
+    this.logger.info('End Execute DLC');
 
     return res.json({
       hex: executeTx.serialize().toString('hex'),
@@ -327,20 +339,30 @@ export default class DlcRoutes extends BaseRoutes {
   public async postRefund(req: Request, res: Response): Promise<Response> {
     const { contractid } = req.body;
 
+    this.logger.info('Start Refund DLC');
+
+    this.logger.info('Validate ContractId...');
     validateString(contractid, 'ContractId', this, res);
     const contractId = Buffer.from(contractid as string, 'hex');
+    this.logger.info('ContractId Valid');
 
+    this.logger.info('Fetch Dlc Messages from DB');
     const dlcTxs = await this.db.dlc.findDlcTransactions(contractId);
     const dlcSign = await this.db.dlc.findDlcSign(contractId);
     const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+    this.logger.info('Dlc Messages fetched');
 
+    this.logger.info('Refund...');
     const refundTx: Tx = await this.client.refund(
       dlcOffer,
       dlcAccept,
       dlcSign,
       dlcTxs,
     );
+    this.logger.info('Refunded');
+
+    this.logger.info('End Refund DLC');
 
     return res.json({
       hex: refundTx.serialize().toString('hex'),

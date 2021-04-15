@@ -5,14 +5,21 @@ process.title = 'dlcd';
 import * as dotenv from 'dotenv';
 import yargs from 'yargs/yargs';
 dotenv.config();
-import { ConsoleTransport, Logger, LogLevel } from '@node-lightning/logger';
+import { ConsoleTransport, Logger } from '@node-lightning/logger';
 import Config from 'bcfg';
 import express from 'express';
 import { Application } from 'express';
 import * as os from 'os';
 import * as Path from 'path';
 import Server from './server';
-import { IArguments, parseConfig, networks } from './utils/config';
+import {
+  IArguments,
+  parseConfig,
+  networks,
+  loglevels,
+  confToLogLevel,
+} from './utils/config';
+import { version } from '../package.json';
 
 const HOME = os.homedir ? os.homedir() : '/';
 
@@ -21,7 +28,7 @@ config.open('node-dlc.conf'); // TODO: allow users to pass in their on conf dire
 
 const defaultDatadir = Path.join(HOME, `.node-dlc`);
 
-const argv: IArguments = yargs(process.argv.slice(2))
+export const argv: IArguments = yargs(process.argv.slice(2))
   .usage('Usage:   dlcd [options]             start DLCd')
   .scriptName('dlcd')
   .config(parseConfig(config.data))
@@ -50,7 +57,8 @@ const argv: IArguments = yargs(process.argv.slice(2))
     l: {
       alias: 'loglevel',
       type: 'string',
-      default: 'node-dlc.conf',
+      default: 'debug',
+      choices: loglevels,
       global: true,
     },
     rpcuser: {
@@ -94,12 +102,12 @@ const argv: IArguments = yargs(process.argv.slice(2))
 
 const logger = new Logger('DLCd');
 logger.transports.push(new ConsoleTransport(console));
-logger.level = LogLevel.Debug;
+logger.level = confToLogLevel(argv.loglevel);
 
 const app: Application = express();
 const server: Server = new Server(app, argv, logger);
 
-logger.info('DLC Daemon version v0.1.0');
+logger.info(`DLC Daemon version v${version}`);
 logger.info(`Starting server on http://localhost:${argv.port}`);
 logger.info(`Default data directory ${defaultDatadir}`);
 logger.info(`Using data directory ${argv.datadir}/${argv.network}`);
@@ -110,17 +118,4 @@ for (const key of Object.keys(argv)) {
   }
 }
 
-async function setup() {
-  app.listen(argv.port, 'localhost', () => {
-    logger.info(`Server running on http://localhost:${argv.port}`);
-  });
-}
-
-setup()
-  .then(() => {
-    process.stdin.resume();
-  })
-  .catch((err) => {
-    logger.error(err);
-    process.exit(1);
-  });
+server.start();

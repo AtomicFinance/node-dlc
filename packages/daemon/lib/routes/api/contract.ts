@@ -12,8 +12,8 @@ export default class ContractRoutes extends BaseRoutes {
     super(argv, db, logger, client);
   }
 
-  public async postInfoDecode(req: Request, res: Response, next: NextFunction) {
-    const { contractinfo } = req.query;
+  public async postInfoDecode(req: Request, res: Response): Promise<Response> {
+    const { contractinfo } = req.body;
 
     if (!contractinfo)
       return routeErrorHandler(this, res, 401, 'No Contract Info Provided');

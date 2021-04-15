@@ -15,11 +15,11 @@ export const builder = {
 };
 
 export async function handler(argv: IArguments): Promise<void> {
-  const { host, port, apiKey, loglevel } = argv;
+  const { host, port, apiKey, loglevel, contractinfo } = argv;
   const logger: Logger = getLogger(loglevel);
   const client = new DlcdClient(host, port, logger, apiKey);
   const response = await client.post(`${Endpoint.ContractInfo}/decode`, {
-    contractinfo: argv.contractinfo,
+    contractinfo,
   });
   logger.log(JSON.stringify(response, null, 2));
 }

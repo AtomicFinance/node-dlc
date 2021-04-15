@@ -3,11 +3,6 @@ import cfdDlcJs from 'cfd-dlc-js';
 
 const FILE_PATH = '../lib/wrappers/cfdDlcJsWorker.js';
 
-const pool = new StaticPool({
-  size: 4,
-  task: FILE_PATH,
-});
-
 const METHODS_TO_PARALLELIZE = [
   'VerifyCetAdaptorSignatures',
   'CreateCetAdaptorSignatures',
@@ -15,7 +10,12 @@ const METHODS_TO_PARALLELIZE = [
 
 type CfdDlcJs = typeof cfdDlcJs;
 
-export function getWrappedCfdDlcJs(): CfdDlcJs {
+export function getWrappedCfdDlcJs(filePath = FILE_PATH): CfdDlcJs {
+  const pool = new StaticPool({
+    size: 4,
+    task: filePath,
+  });
+
   const wrappedCfdDlcJs = new Proxy(
     {},
     {

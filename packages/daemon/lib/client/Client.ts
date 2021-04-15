@@ -71,7 +71,11 @@ export class Client {
       }
     }
 
-    const cfdDlcJs = getWrappedCfdDlcJs();
+    const cfdDlcJs =
+      argv.test !== 'true'
+        ? getWrappedCfdDlcJs()
+        : getWrappedCfdDlcJs('./lib/wrappers/cfdDlcJsWorker.js');
+
     this.client.finance.addProvider(
       new BitcoinCfdProvider(this.network, cfdJs),
     );
@@ -137,6 +141,14 @@ export class Client {
     return this.client.finance
       .getMethod('setUnusedAddressesBlacklist')
       .bind(this.client.finance);
+  }
+
+  get blockHeight() {
+    return this.client.chain.getBlockHeight.bind(this.client.chain);
+  }
+
+  get blockByNumber() {
+    return this.client.chain.getBlockByNumber.bind(this.client.chain);
   }
 
   get getMethod() {
