@@ -1,5 +1,5 @@
 import { Logger } from '@node-lightning/logger';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { version } from '../../../package.json';
 import { IArguments, IDB } from '../../utils/config';
 import BaseRoutes from '../base';

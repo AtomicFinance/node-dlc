@@ -7,7 +7,7 @@ import bcrypto from 'bcrypto';
  * Recursively removes a directory and all files that
  * are contained within the directory.
  */
-export function rmdir(dir: string) {
+export const rmdir = (dir: string): void => {
   if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
   for (const file of files) {
@@ -16,7 +16,12 @@ export function rmdir(dir: string) {
     else fs.unlinkSync(filepath);
   }
   fs.rmdirSync(dir);
-}
+};
+
+export const enableLogger = false;
+
+export const apiPrefix = 'api';
+export const apiV0Prefix = 'api/v0';
 
 export const config = {
   bitcoin: {
@@ -38,6 +43,10 @@ export const network: Network = 'regtest';
 export const apikey = bcrypto.random.randomBytes(32).toString('hex');
 export const loglevel: ConfLogLevel = 'debug';
 export const port = 8475;
+export const chainHash = Buffer.from(
+  '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+  'hex',
+);
 
 export const argv: IArguments = {
   network,
@@ -58,4 +67,45 @@ export const argv: IArguments = {
   datadir: config.datadir,
   c: config.conf,
   conf: config.conf,
+};
+
+export type Route = 'info' | 'order' | 'dlc' | 'contract' | 'wallet' | 'oracle';
+
+/**
+ * Generates argument vector dependent on route to be tested
+ */
+export const getArgv = (route: Route): IArguments => {
+  const newArgv = { ...argv };
+  newArgv.datadir = `.testdb-${route}`;
+  newArgv.d = `.testdb-${route}`;
+
+  let newPort = port;
+
+  switch (route) {
+    case 'info':
+      newPort = 8476;
+      break;
+    case 'order':
+      newPort = 8477;
+      break;
+    case 'dlc':
+      newPort = 8478;
+      break;
+    case 'contract':
+      newPort = 8479;
+      break;
+    case 'wallet':
+      newPort = 8480;
+      break;
+    case 'oracle':
+      newPort = 8481;
+      break;
+    default:
+      newPort = port;
+  }
+
+  newArgv.port = newPort;
+  newArgv.p = newPort;
+
+  return newArgv;
 };

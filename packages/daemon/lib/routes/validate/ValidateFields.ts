@@ -5,14 +5,23 @@ import { diffError, longVal } from '../handler/ErrorHandler';
 import { DlcMessage } from '@node-dlc/messaging';
 import * as core from 'express-serve-static-core';
 
+export const validateExists = (
+  value: string | core.Query | string[] | core.Query[] | number,
+  fieldName: string,
+  route: BaseRoute,
+  res: Response,
+): void | Response => {
+  if (!value)
+    return routeErrorHandler(route, res, 400, `Missing ${fieldName} field`);
+};
+
 export const validateString = (
   value: string | core.Query | string[] | core.Query[],
   fieldName: string,
   route: BaseRoute,
   res: Response,
 ): void | Response => {
-  if (!value)
-    return routeErrorHandler(route, res, 401, `Missing ${fieldName} field`);
+  validateExists(value, fieldName, route, res);
 
   if (!(typeof value === 'string'))
     return routeErrorHandler(route, res, 400, `Invalid ${fieldName}`);
@@ -24,6 +33,8 @@ export const validateNumber = (
   route: BaseRoute,
   res: Response,
 ): void | Response => {
+  validateExists(value, fieldName, route, res);
+
   try {
     Number(value);
   } catch (e) {
@@ -42,6 +53,8 @@ export const validateBigInt = (
   route: BaseRoute,
   res: Response,
 ): void | Response => {
+  validateExists(value, fieldName, route, res);
+
   try {
     BigInt(value);
   } catch (e) {
@@ -60,6 +73,8 @@ export const validateBuffer = (
   route: BaseRoute,
   res: Response,
 ): void | Response => {
+  validateExists(value, fieldName, route, res);
+
   try {
     Buffer.from(value, 'hex');
   } catch (e) {
@@ -79,6 +94,8 @@ export const validateType = <T extends typeof DlcMessage>(
   route: BaseRoute,
   res: Response,
 ): void | Response => {
+  validateExists(value, className, route, res);
+
   let valueBuf: Buffer;
   try {
     valueBuf = Buffer.from(value as string, 'hex');

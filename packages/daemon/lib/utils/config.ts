@@ -1,4 +1,8 @@
-import { RocksdbDlcStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
+import {
+  RocksdbDlcStore,
+  RocksdbOrderStore,
+  RocksdbWalletStore,
+} from '@node-dlc/rocksdb';
 import { LogLevel } from '@node-lightning/logger';
 
 export interface IArguments {
@@ -27,6 +31,7 @@ export interface IArguments {
 export interface IDB {
   wallet: RocksdbWalletStore;
   dlc: RocksdbDlcStore;
+  order: RocksdbOrderStore;
 }
 
 export function parseConfig(configData: any): any {

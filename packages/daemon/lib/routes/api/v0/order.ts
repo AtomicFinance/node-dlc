@@ -17,10 +17,32 @@ import {
   OrderNegotiationFieldsV1,
 } from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
+import {
+  validateType,
+  validateBigInt,
+  validateNumber,
+  validateString,
+  validateBuffer,
+} from '../../validate/ValidateFields';
 
 export default class OrderRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
     super(argv, db, logger, client);
+  }
+
+  public async getOffer(req: Request, res: Response): Promise<Response> {
+    const { temporderid } = req.query;
+
+    validateString(temporderid, 'temporderid', this, res);
+    validateBuffer(temporderid as string, 'temporderid', this, res);
+    const tempOrderId = Buffer.from(temporderid as string, 'hex');
+
+    const orderOffer = await this.db.order.findOrderOffer(tempOrderId);
+
+    if (orderOffer === undefined)
+      return routeErrorHandler(this, res, 404, 'OrderOffer not found.');
+
+    return res.json({ hex: orderOffer.serialize().toString('hex') });
   }
 
   public async postOffer(req: Request, res: Response): Promise<Response> {
@@ -32,9 +54,19 @@ export default class OrderRoutes extends BaseRoutes {
       refundlocktime,
     } = req.body;
 
+    this.logger.info('Start Offer Order');
+
+    this.logger.info('Validate ContractInfo...');
+    validateType(contractinfo, 'Contract Info', ContractInfo, this, res);
     const contractInfo = ContractInfo.deserialize(
       Buffer.from(contractinfo as string, 'hex'),
     );
+
+    validateBigInt(collateral, 'collateral', this, res);
+    validateBigInt(feerate, 'feerate', this, res);
+    validateNumber(locktime, 'locktime', this, res);
+    validateNumber(refundlocktime, 'refundlocktime', this, res);
+    this.logger.info('ContractInfo Valid');
 
     const orderOffer = new OrderOfferV0();
     orderOffer.chainHash = this.client.financeNetwork.chainHash;
@@ -44,7 +76,24 @@ export default class OrderRoutes extends BaseRoutes {
     orderOffer.cetLocktime = Number(locktime);
     orderOffer.refundLocktime = Number(refundlocktime);
 
+    await this.db.order.saveOrderOffer(orderOffer);
+
     return res.json({ hex: orderOffer.serialize().toString('hex') });
+  }
+
+  public async getAccept(req: Request, res: Response): Promise<Response> {
+    const { temporderid } = req.query;
+
+    validateString(temporderid, 'temporderid', this, res);
+    validateBuffer(temporderid as string, 'temporderid', this, res);
+    const tempOrderId = Buffer.from(temporderid as string, 'hex');
+
+    const orderAccept = await this.db.order.findOrderAccept(tempOrderId);
+
+    if (orderAccept === undefined)
+      return routeErrorHandler(this, res, 404, 'OrderAccept not found.');
+
+    return res.json({ hex: orderAccept.serialize().toString('hex') });
   }
 
   public async postAccept(req: Request, res: Response): Promise<Response> {
@@ -57,9 +106,10 @@ export default class OrderRoutes extends BaseRoutes {
       refundlocktime,
     } = req.body;
 
-    const orderOffer = OrderOffer.deserialize(
+    validateType(orderoffer, 'Order Offer', OrderOfferV0, this, res);
+    const orderOffer = OrderOfferV0.deserialize(
       Buffer.from(orderoffer as string, 'hex'),
-    ) as OrderOfferV0;
+    );
 
     const orderAccept = new OrderAcceptV0();
 
@@ -77,6 +127,8 @@ export default class OrderRoutes extends BaseRoutes {
       orderAccept.negotiationFields = orderNegotiationFields;
     } else {
       const _orderOffer = new OrderOfferV0();
+
+      _orderOffer.chainHash = orderOffer.chainHash;
 
       _orderOffer.contractInfo = contractinfo
         ? ContractInfo.deserialize(Buffer.from(contractinfo as string, 'hex'))
@@ -103,6 +155,9 @@ export default class OrderRoutes extends BaseRoutes {
 
       orderAccept.negotiationFields = orderNegotiationFields;
     }
+
+    await this.db.order.saveOrderOffer(orderOffer);
+    await this.db.order.saveOrderAccept(orderAccept);
 
     return res.json({ hex: orderAccept.serialize().toString('hex') });
   }

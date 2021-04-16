@@ -56,7 +56,7 @@ export class Client {
 
     // If no API URL use JSON RPC
     // Else use Esplora
-    if (electrsapi === '') {
+    if (electrsapi === undefined || electrsapi === '') {
       this.client.addProvider(new BitcoinRpcProvider(rpcuri, rpcuser, rpcpass));
       this.rpc = true;
     } else {
