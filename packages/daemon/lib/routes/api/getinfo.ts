@@ -5,7 +5,7 @@ import { IArguments, IDB } from '../../utils/config';
 import BaseRoutes from '../base';
 import { Client } from '../../client';
 import { Block } from '@atomicfinance/bitcoin-dlc-provider';
-import { BitcoinNetwork } from '@atomicfinance/bitcoin-networks';
+import { BitcoinNetwork } from '@liquality/bitcoin-networks';
 
 export default class InfoRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
@@ -19,9 +19,9 @@ export default class InfoRoutes extends BaseRoutes {
 
     const blockHeight: number = await this.client.blockHeight();
     const block: Block = await this.client.blockByNumber(blockHeight);
-    const financeNetwork: BitcoinNetwork = await this.client.financeNetwork;
+    const bitcoinNetwork: BitcoinNetwork = await this.client.network;
 
-    const [chain, network] = financeNetwork.name.split('_');
+    const [chain, network] = bitcoinNetwork.name.split('_');
 
     return res.json({
       version,

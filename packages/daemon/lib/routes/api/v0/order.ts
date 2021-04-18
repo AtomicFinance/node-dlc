@@ -69,7 +69,10 @@ export default class OrderRoutes extends BaseRoutes {
     this.logger.info('ContractInfo Valid');
 
     const orderOffer = new OrderOfferV0();
-    orderOffer.chainHash = this.client.financeNetwork.chainHash;
+    orderOffer.chainHash = Buffer.from(
+      '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+      'hex',
+    );
     orderOffer.contractInfo = contractInfo;
     orderOffer.offerCollateralSatoshis = BigInt(collateral as string);
     orderOffer.feeRatePerVb = BigInt(feerate as string);

@@ -7,14 +7,12 @@ import BitcoinRpcProvider from '@liquality/bitcoin-rpc-provider';
 import BitcoinEsploraApiProvider from '@liquality/bitcoin-esplora-api-provider';
 import BitcoinEsploraBatchApiProvider from '@liquality/bitcoin-esplora-batch-api-provider';
 import BitcoinJsWalletProvider from '@liquality/bitcoin-js-wallet-provider';
-import BitcoinNetworks from '@liquality/bitcoin-networks';
+import BitcoinNetworks, { BitcoinNetwork } from '@liquality/bitcoin-networks';
 
 import FinanceClient from '@atomicfinance/client';
 import BitcoinCfdProvider from '@atomicfinance/bitcoin-cfd-provider';
 import BitcoinDlcProvider from '@atomicfinance/bitcoin-dlc-provider';
 import BitcoinWalletProvider from '@atomicfinance/bitcoin-wallet-provider';
-import { BitcoinNetwork } from '@atomicfinance/bitcoin-networks';
-import * as BitcoinFinanceNetworks from '@atomicfinance/bitcoin-networks';
 import * as cfdJs from 'cfd-js';
 import { getWrappedCfdDlcJs } from '../wrappers/WrappedCfdDlcJs';
 
@@ -28,8 +26,7 @@ export class Client {
   private argv: IArguments;
   private db: IDB;
   private logger: Logger;
-  public network;
-  public financeNetwork: BitcoinNetwork;
+  public network: BitcoinNetwork;
 
   constructor(argv: IArguments, db: IDB, logger: Logger) {
     this.argv = argv;
@@ -44,9 +41,8 @@ export class Client {
       rpcpass,
     } = argv;
 
-    const { network: _network, financeNetwork } = this.getNetwork();
+    const { network: _network } = this.getNetwork();
     this.network = _network;
-    this.financeNetwork = financeNetwork;
 
     const rpcuri = `http://${rpchost}:${rpcport}`;
 
@@ -80,11 +76,9 @@ export class Client {
       new BitcoinCfdProvider(this.network, cfdJs),
     );
     this.client.finance.addProvider(
-      new BitcoinDlcProvider(this.financeNetwork, cfdDlcJs),
+      new BitcoinDlcProvider(this.network, cfdDlcJs),
     );
-    this.client.finance.addProvider(
-      new BitcoinWalletProvider(this.financeNetwork),
-    );
+    this.client.finance.addProvider(new BitcoinWalletProvider(this.network));
   }
 
   get createDlcOffer() {
@@ -168,7 +162,7 @@ export class Client {
     const addressCache = await this.db.wallet.findAddressCache();
     if (addressCache) {
       await this.setUnusedAddressesBlacklist(
-        addressCache.toAddressCache(this.financeNetwork),
+        addressCache.toAddressCache(this.network),
       );
     }
   }
@@ -177,7 +171,7 @@ export class Client {
     const _addressCache = await this.unusedAddressesBlacklist();
     const addressCache = AddressCache.fromAddressCache(
       _addressCache,
-      this.financeNetwork,
+      this.network,
     );
     await this.db.wallet.saveAddressCache(addressCache);
   }
@@ -187,17 +181,14 @@ export class Client {
       case 'mainnet':
         return {
           network: BitcoinNetworks.bitcoin,
-          financeNetwork: BitcoinFinanceNetworks.default.bitcoin,
         };
       case 'testnet':
         return {
           network: BitcoinNetworks.bitcoin_testnet,
-          financeNetwork: BitcoinFinanceNetworks.default.bitcoin_testnet,
         };
       case 'regtest':
         return {
           network: BitcoinNetworks.bitcoin_regtest,
-          financeNetwork: BitcoinFinanceNetworks.default.bitcoin_regtest,
         };
       default:
         throw Error(
@@ -209,5 +200,4 @@ export class Client {
 
 interface INetwork {
   network: any;
-  financeNetwork: BitcoinNetwork;
 }
