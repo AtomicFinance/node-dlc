@@ -1,7 +1,8 @@
 import { Logger } from '@node-dlc/logger';
-import DlcdClient from '../client/DlcdClient';
-import { getLogger } from '../utils/config';
-import { IArguments } from '../arguments';
+import DlcdClient from '../../client/DlcdClient';
+import { getLogger } from '../../utils/config';
+import { IArguments } from '../../arguments';
+import { Endpoint } from '@node-dlc/daemon';
 
 export const command = 'getinfo';
 
@@ -17,6 +18,6 @@ export async function handler(argv: IArguments): Promise<void> {
   const { host, port, loglevel } = argv;
   const logger: Logger = getLogger(loglevel);
   const client = new DlcdClient(host, port, logger);
-  const response = await client.get('/getinfo');
+  const response = await client.get(Endpoint.GetInfo);
   logger.log(response);
 }

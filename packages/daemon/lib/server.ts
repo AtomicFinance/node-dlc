@@ -1,38 +1,104 @@
-import { RocksdbDlcStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
+import { RocksdbDlcStore, RocksdbOrderStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
 import { ConsoleTransport, Logger, LogLevel } from '@node-lightning/logger';
-import * as bodyParser from 'body-parser';
-import { Application } from 'express';
+import {
+  Application,
+  urlencoded,
+  json,
+  Request,
+  Response,
+  NextFunction,
+} from 'express';
 import * as fs from 'fs';
 import { WriteStream } from 'fs';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import * as path from 'path';
 import * as winston from 'winston';
-import { RoutesV1 } from './routes';
+import { RoutesAPI, RoutesV1, RoutesFallback } from './routes';
 import { IArguments, IDB } from './utils/config';
+import { Client } from './client';
+import * as http from 'http';
 
 export default class Server {
   public routesV1: RoutesV1;
+  public routesAPI: RoutesAPI;
+  public RoutesFallback: RoutesFallback;
+  public client: Client;
+  public app: Application;
+  public argv: IArguments;
+  public logger: Logger;
+  public db: IDB;
+  private server: http.Server;
+
   constructor(app: Application, argv: IArguments, logger: Logger) {
     const { datadir, network } = argv;
 
-    this.config(app, argv);
+    this.app = app;
+    this.argv = argv;
+    this.logger = logger;
+
+    this.config();
     const walletDb = new RocksdbWalletStore(`${datadir}/${network}/wallet`);
     const dlcDb = new RocksdbDlcStore(`${datadir}/${network}/dlc`);
-    const db: IDB = { wallet: walletDb, dlc: dlcDb };
-    this.routesV1 = new RoutesV1(app, argv, db, logger);
+    const orderDb = new RocksdbOrderStore(`${datadir}/${network}/order`);
+    const db: IDB = { wallet: walletDb, dlc: dlcDb, order: orderDb };
+    this.db = db;
+    this.client = new Client(argv, db, logger);
+    this.client.setAddressCache();
+    this.routesAPI = new RoutesAPI(app, argv, db, logger, this.client);
+    this.routesV1 = new RoutesV1(app, argv, db, logger, this.client);
+    this.RoutesFallback = new RoutesFallback(app, logger);
   }
 
-  public config(app: Application, argv: IArguments): void {
-    const { datadir, network } = argv;
-    const accessLogStream: WriteStream = fs.createWriteStream(
-      `${datadir}/${network}/access.log`,
-      { flags: 'a' },
+  public config(): void {
+    this.app.use(json({ limit: '50mb' }));
+    this.app.use(
+      urlencoded({
+        extended: false,
+        limit: '50mb',
+      }),
     );
-    app.use(morgan('combined', { stream: accessLogStream }));
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
-    app.use(helmet());
+    this.createAccessLogStream();
+    this.app.use(helmet());
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      const ip =
+        req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress;
+
+      this.logger.info(`${req.method} ${req.url} from ${ip}`);
+
+      res.setTimeout(480000, function () {
+        // 4 minute timeout adjust for larger dlc messages
+        this.logger.error('Request has timed out.');
+        res.send(408);
+      });
+
+      next();
+    });
+  }
+
+  public createAccessLogStream(): void {
+    const { datadir, network } = this.argv;
+    if (this.argv.test !== 'true') {
+      if (!fs.existsSync(datadir)) fs.mkdirSync(datadir);
+      if (!fs.existsSync(`${datadir}/${network}`))
+        fs.mkdirSync(`${datadir}/${network}`);
+      const accessLogStream: WriteStream = fs.createWriteStream(
+        `${datadir}/${network}/access.log`,
+        { flags: 'a' },
+      );
+      this.app.use(morgan('combined', { stream: accessLogStream }));
+    }
+  }
+
+  public start(): void {
+    this.server = this.app.listen(this.argv.port, 'localhost', () => {
+      this.logger.info(`Server running on http://localhost:${this.argv.port}`);
+    });
+  }
+
+  public stop(): void {
+    this.server.close();
   }
 }
 
