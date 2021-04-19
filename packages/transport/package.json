@@ -29,7 +29,7 @@
     "irc": "0.5.2"
   },
   "devDependencies": {
-    "@liquality/utils": "0.10.3"
+    "@liquality/utils": "1.0.0-beta.2"
   },
   "publishConfig": {
     "access": "public"
