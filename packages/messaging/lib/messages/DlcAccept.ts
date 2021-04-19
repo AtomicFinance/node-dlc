@@ -1,4 +1,7 @@
+import { BitcoinNetwork } from '@liquality/bitcoin-networks';
+import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { hash160 } from '@node-lightning/crypto';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {
@@ -13,6 +16,7 @@ import {
   INegotiationFieldsV2JSON,
   NegotiationFields,
 } from './NegotiationFields';
+import { address } from 'bitcoinjs-lib';
 
 export abstract class DlcAccept implements IDlcMessage {
   public static deserialize(buf: Buffer): DlcAcceptV0 {
@@ -29,6 +33,8 @@ export abstract class DlcAccept implements IDlcMessage {
   }
 
   public abstract type: number;
+
+  public abstract getAddresses(network: BitcoinNetwork): IDlcAcceptV0Addresses;
 
   public abstract toJSON(): IDlcAcceptV0JSON;
 
@@ -99,6 +105,26 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   public refundSignature: Buffer;
 
   public negotiationFields: NegotiationFields;
+
+  /**
+   * Get funding, change and payout address from DlcOffer
+   * @param network Bitcoin Network
+   * @returns {IDlcOfferV0Addresses}
+   */
+  public getAddresses(network: BitcoinNetwork): IDlcAcceptV0Addresses {
+    const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))
+      .serialize()
+      .slice(1);
+    const fundingAddress = address.fromOutputScript(fundingSPK, network);
+    const changeAddress = address.fromOutputScript(this.changeSPK, network);
+    const payoutAddress = address.fromOutputScript(this.payoutSPK, network);
+
+    return {
+      fundingAddress,
+      changeAddress,
+      payoutAddress,
+    };
+  }
 
   /**
    * Converts dlc_accept_v0 to JSON
@@ -193,4 +219,10 @@ export interface IDlcAcceptV0JSON {
     | INegotiationFieldsV0JSON
     | INegotiationFieldsV1JSON
     | INegotiationFieldsV2JSON;
+}
+
+export interface IDlcAcceptV0Addresses {
+  fundingAddress: string;
+  changeAddress: string;
+  payoutAddress: string;
 }
