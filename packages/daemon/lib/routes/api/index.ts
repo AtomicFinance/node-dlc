@@ -63,6 +63,30 @@ export class RoutesAPI {
       basicAuth(options),
       wrapAsync(this.wallet.getBalance.bind(this.wallet)),
     );
+    app.get(
+      this.getEndpoint(Endpoint.WalletUnspent),
+      basicAuth(options),
+      wrapAsync(this.wallet.getUnspent.bind(this.wallet)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.WalletSendCoins),
+      basicAuth(options),
+      wrapAsync(this.wallet.postSendCoins.bind(this.wallet)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.WalletSweepCoins),
+      basicAuth(options),
+      wrapAsync(this.wallet.postSweepCoins.bind(this.wallet)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.WalletSendMany),
+      basicAuth(options),
+      wrapAsync(this.wallet.postSendMany.bind(this.wallet)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.ContractInfo, 'decode'),
+      wrapAsync(this.contract.postInfoDecode.bind(this.contract)),
+    );
     app.post(
       this.getEndpoint(Endpoint.ContractInfo, 'decode'),
       wrapAsync(this.contract.postInfoDecode.bind(this.contract)),

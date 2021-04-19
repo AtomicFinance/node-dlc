@@ -1,4 +1,8 @@
-import { RocksdbDlcStore, RocksdbOrderStore, RocksdbWalletStore } from '@node-dlc/rocksdb';
+import {
+  RocksdbDlcStore,
+  RocksdbOrderStore,
+  RocksdbWalletStore,
+} from '@node-dlc/rocksdb';
 import { ConsoleTransport, Logger, LogLevel } from '@node-lightning/logger';
 import {
   Application,

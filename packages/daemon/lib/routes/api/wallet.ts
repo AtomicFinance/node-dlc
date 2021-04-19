@@ -6,6 +6,12 @@ import { routeErrorHandler } from '../handler/ErrorHandler';
 import BaseRoutes from '../base';
 import { Client } from '../../client';
 import { Address } from '@liquality/types';
+import BN from 'bignumber.js';
+import {
+  validateBigInt,
+  validateNumber,
+  validateString,
+} from '../validate/ValidateFields';
 
 export default class WalletRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
@@ -41,6 +47,16 @@ export default class WalletRoutes extends BaseRoutes {
     return res.json({ balance });
   }
 
+  public async getUnspent(req: Request, res: Response): Promise<Response> {
+    const addresses = await this.client.client.wallet.getUsedAddresses();
+
+    const utxos = await this.client.client.getMethod('getUnspentTransactions')(
+      addresses,
+    );
+
+    return res.json({ utxos });
+  }
+
   public async postCreate(req: Request, res: Response): Promise<Response> {
     let apikey: string;
     if (req.headers.authorization) {
@@ -73,4 +89,62 @@ export default class WalletRoutes extends BaseRoutes {
 
     res.json({ mnemonic });
   }
+
+  public async postSendCoins(req: Request, res: Response): Promise<Response> {
+    const { addr, amt, feerate } = req.body;
+
+    validateString(addr, 'Address', this, res);
+    validateBigInt(amt, 'Amount', this, res);
+    if (feerate) validateNumber(feerate, 'Feerate', this, res);
+
+    const to = addr;
+    const value = new BN(amt);
+    const fee = feerate ? Number(feerate) : feerate;
+
+    const tx = await this.client.client.chain.sendTransaction({
+      to,
+      value,
+      fee,
+    });
+
+    return res.json({ txid: tx.hash });
+  }
+
+  public async postSweepCoins(req: Request, res: Response): Promise<Response> {
+    const { addr, feerate } = req.body;
+
+    validateString(addr, 'Address', this, res);
+    if (feerate) validateNumber(feerate, 'Feerate', this, res);
+
+    const fee = feerate ? Number(feerate) : feerate;
+
+    const tx = await this.client.client.chain.sendSweepTransaction(addr, fee);
+
+    return res.json({ txid: tx.hash });
+  }
+
+  public async postSendMany(req: Request, res: Response): Promise<Response> {
+    const { outputs, feerate } = req.body;
+
+    if (feerate) validateNumber(feerate, 'Feerate', this, res);
+    // TODO: validate if outputs is proper object
+
+    const fee = Number(feerate);
+    const txs: SendOptions[] = [];
+    Object.keys(outputs).forEach((to, i) => {
+      const value = new BN(outputs[to]);
+      txs.push({ to, value, fee });
+    });
+
+    const tx = await this.client.client.chain.sendBatchTransaction(txs);
+
+    return res.json({ txid: tx.hash });
+  }
+}
+
+interface SendOptions {
+  to: Address | string;
+  value: BN;
+  data?: string;
+  fee?: number;
 }

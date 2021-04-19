@@ -44,6 +44,19 @@ export const getNewAddress = async (
   return res.body;
 };
 
+export const getBalance = async (server: Server): Promise<number> => {
+  const res: request.Response = await chai
+    .request(server.app)
+    .get(`/${apiPrefix}/${Endpoint.WalletBalance}`)
+    .auth('admin', util.apikey);
+
+  res.should.have.status(200);
+  res.body.should.be.a('object');
+  res.body.balance.should.be.a('string');
+
+  return Number(res.body.balance);
+};
+
 export const getInput = async (server: Server): Promise<Input> => {
   const { address: unusedAddress, derivationPath } = await getNewAddress(
     server,

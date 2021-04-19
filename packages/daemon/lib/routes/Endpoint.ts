@@ -10,6 +10,11 @@ export enum Endpoint {
   WalletUsedAddresses = 'wallet/usedaddresses',
   WalletBalance = 'wallet/balance',
 
+  WalletUnspent = 'wallet/unspent',
+  WalletSendCoins = 'wallet/sendcoins',
+  WalletSweepCoins = 'wallet/sweepcoins',
+  WalletSendMany = 'wallet/sendmany',
+
   OrderOffer = 'order/offer',
   OrderAccept = 'order/accept',
 
