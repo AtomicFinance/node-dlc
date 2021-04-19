@@ -2,12 +2,12 @@ import { Logger } from '@node-lightning/logger';
 import { Application } from 'express';
 import { IArguments, IDB } from '../utils/config';
 
-import WalletClient from '@liquality/client';
 import BitcoinRpcProvider from '@liquality/bitcoin-rpc-provider';
 import BitcoinEsploraApiProvider from '@liquality/bitcoin-esplora-api-provider';
 import BitcoinEsploraBatchApiProvider from '@liquality/bitcoin-esplora-batch-api-provider';
 import BitcoinJsWalletProvider from '@liquality/bitcoin-js-wallet-provider';
 import BitcoinNetworks, { BitcoinNetwork } from '@liquality/bitcoin-networks';
+import { bitcoin } from '@liquality/types';
 
 import FinanceClient from '@atomicfinance/client';
 import BitcoinCfdProvider from '@atomicfinance/bitcoin-cfd-provider';
@@ -20,7 +20,7 @@ import { Network } from '../utils/config';
 import { AddressCache } from '@node-dlc/messaging';
 
 export class Client {
-  private client;
+  public client: FinanceClient;
   public seedSet = false;
   public rpc = false;
   private argv: IArguments;
@@ -41,139 +41,100 @@ export class Client {
       rpcpass,
     } = argv;
 
-    const { network: _network } = this.getNetwork();
-    this.network = _network;
+    const { network } = this.getNetwork();
+    this.network = network;
 
     const rpcuri = `http://${rpchost}:${rpcport}`;
 
-    this.client = new WalletClient();
-    const financeClient: FinanceClient = new FinanceClient(this.client);
-    this.client.finance = financeClient;
+    this.client = new FinanceClient();
 
     // If no API URL use JSON RPC
     // Else use Esplora
     if (electrsapi === undefined || electrsapi === '') {
-      this.client.addProvider(new BitcoinRpcProvider(rpcuri, rpcuser, rpcpass));
+      this.client.addProvider(
+        new BitcoinRpcProvider({
+          uri: rpcuri,
+          username: rpcuser,
+          password: rpcpass,
+          network,
+        }),
+      );
       this.rpc = true;
     } else {
-      if (argv.electrsbatchapi === '') {
+      if (electrsbatchapi === undefined || electrsbatchapi === '') {
         this.client.addProvider(
-          new BitcoinEsploraApiProvider(electrsbatchapi, electrsapi, _network),
+          new BitcoinEsploraApiProvider({
+            url: electrsapi,
+            network,
+          }),
         );
       } else {
         this.client.addProvider(
-          new BitcoinEsploraBatchApiProvider(electrsapi, _network),
+          new BitcoinEsploraBatchApiProvider({
+            batchUrl: electrsbatchapi,
+            url: electrsapi,
+            network,
+          }),
         );
       }
     }
-
-    const cfdDlcJs =
-      argv.test !== 'true'
-        ? getWrappedCfdDlcJs()
-        : getWrappedCfdDlcJs('./lib/wrappers/cfdDlcJsWorker.js');
-
-    this.client.finance.addProvider(
-      new BitcoinCfdProvider(this.network, cfdJs),
-    );
-    this.client.finance.addProvider(
-      new BitcoinDlcProvider(this.network, cfdDlcJs),
-    );
-    this.client.finance.addProvider(new BitcoinWalletProvider(this.network));
-  }
-
-  get createDlcOffer() {
-    return this.client.finance.dlc.createDlcOffer.bind(this.client.finance.dlc);
-  }
-
-  get acceptDlcOffer() {
-    return this.client.finance.dlc.acceptDlcOffer.bind(this.client.finance.dlc);
-  }
-
-  get signDlcAccept() {
-    return this.client.finance.dlc.signDlcAccept.bind(this.client.finance.dlc);
-  }
-
-  get finalizeDlcSign() {
-    return this.client.finance.dlc.finalizeDlcSign.bind(
-      this.client.finance.dlc,
-    );
-  }
-
-  get execute() {
-    return this.client.finance.dlc.execute.bind(this.client.finance.dlc);
-  }
-
-  get refund() {
-    return this.client.finance.dlc.refund.bind(this.client.finance.dlc);
-  }
-
-  get isOfferer() {
-    return this.client.finance.dlc.isOfferer.bind(this.client.finance.dlc);
-  }
-
-  get newAddress() {
-    return this.client.finance.wallet.getUnusedAddress.bind(
-      this.client.finance.wallet,
-    );
-  }
-
-  get usedAddresses() {
-    return this.client.wallet.getUsedAddresses.bind(this.client.wallet);
-  }
-
-  get balance() {
-    return this.client.chain.getBalance.bind(this.client.chain);
-  }
-
-  get unusedAddressesBlacklist() {
-    return this.client.finance
-      .getMethod('getUnusedAddressesBlacklist')
-      .bind(this.client.finance);
-  }
-
-  get setUnusedAddressesBlacklist() {
-    return this.client.finance
-      .getMethod('setUnusedAddressesBlacklist')
-      .bind(this.client.finance);
-  }
-
-  get blockHeight() {
-    return this.client.chain.getBlockHeight.bind(this.client.chain);
-  }
-
-  get blockByNumber() {
-    return this.client.chain.getBlockByNumber.bind(this.client.chain);
-  }
-
-  get getMethod() {
-    return this.client.finance.getMethod.bind(this.client.finance);
   }
 
   setSeed(mnemonic: string): void {
     if (this.seedSet) throw Error('Seed Set');
 
     this.client.addProvider(
-      new BitcoinJsWalletProvider(this.network, mnemonic),
+      new BitcoinJsWalletProvider({
+        network: this.network,
+        mnemonic,
+        addressType: bitcoin.AddressType.BECH32,
+      }) as any,
     );
     this.seedSet = true;
+
+    /**
+     * Load CAL Finance providers last to ensure getMethod defaults
+     * to their implementations
+     */
+    const cfdDlcJs =
+      this.argv.test !== 'true'
+        ? getWrappedCfdDlcJs()
+        : getWrappedCfdDlcJs('./lib/wrappers/cfdDlcJsWorker.js');
+
+    this.client.addProvider(new BitcoinCfdProvider(cfdJs));
+    this.client.addProvider(new BitcoinDlcProvider(this.network, cfdDlcJs));
+    this.client.addProvider(new BitcoinWalletProvider(this.network));
   }
 
   async setAddressCache(): Promise<void> {
     const addressCache = await this.db.wallet.findAddressCache();
     if (addressCache) {
-      await this.setUnusedAddressesBlacklist(
+      await this.client.getMethod('setUnusedAddressesBlacklist')(
         addressCache.toAddressCache(this.network),
       );
     }
   }
 
   async saveAddressCache(): Promise<void> {
-    const _addressCache = await this.unusedAddressesBlacklist();
+    const _addressCache = await this.client.getMethod(
+      'getUnusedAddressesBlacklist',
+    )();
     const addressCache = AddressCache.fromAddressCache(
       _addressCache,
       this.network,
     );
     await this.db.wallet.saveAddressCache(addressCache);
+  }
+
+  async importAddressesToRpc(addresses: string[]): Promise<void> {
+    const importPromises = [];
+    addresses.forEach((address) => {
+      importPromises.push(
+        this.client.getMethod('jsonrpc')('importaddress', address, '', false),
+      );
+    });
+
+    await Promise.all(importPromises);
   }
 
   private getNetwork(): INetwork {

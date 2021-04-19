@@ -1,18 +1,10 @@
 import { Logger } from '@node-lightning/logger';
-import { generateMnemonic, validateMnemonic } from 'bip39';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { IArguments, IDB } from '../../utils/config';
-import { routeErrorHandler, longVal } from '../handler/ErrorHandler';
+import { longVal } from '../handler/ErrorHandler';
 import BaseRoutes from '../base';
 import { Client } from '../../client';
-import {
-  MessageType,
-  DlcOffer,
-  DlcOfferV0,
-  DlcAccept,
-  DlcAcceptV0,
-  DlcSignV0,
-} from '@node-dlc/messaging';
+import { DlcOfferV0, DlcAcceptV0, DlcSignV0 } from '@node-dlc/messaging';
 import { validateType } from '../validate/ValidateFields';
 
 export default class DlcRoutes extends BaseRoutes {

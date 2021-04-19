@@ -1,6 +1,5 @@
 import { Logger } from '@node-lightning/logger';
-import { generateMnemonic, validateMnemonic } from 'bip39';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { IArguments, IDB } from '../../../utils/config';
 import { routeErrorHandler } from '../../handler/ErrorHandler';
 import BaseRoutes from '../../base';
@@ -8,12 +7,10 @@ import { Client } from '../../../client';
 import {
   ContractInfo,
   DlcOffer,
-  DlcOfferV0,
   DlcAccept,
-  DlcTransactionsV0,
-  DlcAcceptV0,
   DlcSign,
   OracleAttestationV0,
+  FundingInputV0,
 } from '@node-dlc/messaging';
 import { Tx } from '@node-lightning/bitcoin';
 import {
@@ -22,6 +19,7 @@ import {
   validateString,
   validateBuffer,
   validateType,
+  validateArray,
 } from '../../validate/ValidateFields';
 import {
   AcceptDlcOfferResponse,
@@ -30,6 +28,7 @@ import {
 } from '@atomicfinance/bitcoin-dlc-provider';
 import { DlcTxBuilder } from '@node-dlc/core';
 import { sha256, xor } from '@node-lightning/crypto';
+import { Input } from '@atomicfinance/types';
 
 export default class DlcRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
@@ -45,6 +44,9 @@ export default class DlcRoutes extends BaseRoutes {
 
     const dlcOffer = await this.db.dlc.findDlcOffer(tempContractId);
 
+    if (dlcOffer === undefined)
+      return routeErrorHandler(this, res, 404, `DlcOffer not found.`);
+
     return res.json({ hex: dlcOffer.serialize().toString('hex') });
   }
 
@@ -55,6 +57,7 @@ export default class DlcRoutes extends BaseRoutes {
       feerate,
       locktime,
       refundlocktime,
+      fundinginputs,
     } = req.body;
 
     this.logger.info('Start Offer DLC');
@@ -71,13 +74,34 @@ export default class DlcRoutes extends BaseRoutes {
     validateNumber(refundlocktime, 'refundlocktime', this, res);
     this.logger.info('ContractInfo Valid');
 
+    let fixedInputs: Input[] = [];
+    if (fundinginputs !== null) {
+      validateArray(fundinginputs, 'funding inputs', this, res);
+      fundinginputs.forEach((fundinginput) =>
+        validateBuffer(fundinginput, 'Funding Input', this, res),
+      );
+
+      const fundingInputs: FundingInputV0[] = fundinginputs.map(
+        (fundinginput) =>
+          FundingInputV0.deserialize(Buffer.from(fundinginput, 'hex')),
+      );
+      fixedInputs = await Promise.all(
+        fundingInputs.map(async (fundingInput) => {
+          return this.client.client.getMethod('fundingInputToInput')(
+            fundingInput,
+          );
+        }),
+      );
+    }
+
     this.logger.info('Generating offer...');
-    const _dlcOffer: DlcOffer = await this.client.createDlcOffer(
+    const _dlcOffer: DlcOffer = await this.client.client.dlc.createDlcOffer(
       contractInfo,
       BigInt(collateral as string),
       BigInt(feerate as string),
       Number(locktime),
       Number(refundlocktime),
+      fixedInputs,
     );
     this.logger.info('Offer generated');
 
@@ -89,9 +113,23 @@ export default class DlcRoutes extends BaseRoutes {
 
     this.logger.info('End Offer DLC');
 
+    if (this.client.rpc) {
+      const {
+        fundingAddress,
+        changeAddress,
+        payoutAddress,
+      } = dlcOffer.getAddresses(this.client.network);
+
+      await this.client.importAddressesToRpc([
+        fundingAddress,
+        changeAddress,
+        payoutAddress,
+      ]);
+    }
+
     return res.json({
       hex: dlcOffer.serialize().toString('hex'),
-      tempContractId: sha256(dlcOffer.serialize()),
+      tempContractId: sha256(dlcOffer.serialize()).toString('hex'),
     });
   }
 
@@ -104,11 +142,14 @@ export default class DlcRoutes extends BaseRoutes {
 
     const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
 
+    if (dlcAccept === undefined)
+      return routeErrorHandler(this, res, 404, `DlcAccept not found.`);
+
     return res.json({ hex: dlcAccept.serialize().toString('hex') });
   }
 
   public async postAccept(req: Request, res: Response): Promise<Response> {
-    const { dlcoffer } = req.body;
+    const { dlcoffer, fundinginputs } = req.body;
 
     this.logger.info('Start Accept DLC');
     this.logger.info('Validate DlcOffer...');
@@ -118,11 +159,34 @@ export default class DlcRoutes extends BaseRoutes {
     );
     this.logger.info('DlcOffer Valid');
 
+    let fixedInputs: Input[] = [];
+    if (fundinginputs !== null) {
+      validateArray(fundinginputs, 'funding inputs', this, res);
+      fundinginputs.forEach((fundinginput) =>
+        validateBuffer(fundinginput, 'Funding Input', this, res),
+      );
+
+      const fundingInputs: FundingInputV0[] = fundinginputs.map(
+        (fundinginput) =>
+          FundingInputV0.deserialize(Buffer.from(fundinginput, 'hex')),
+      );
+      fixedInputs = await Promise.all(
+        fundingInputs.map(async (fundingInput) => {
+          return this.client.client.getMethod('fundingInputToInput')(
+            fundingInput,
+          );
+        }),
+      );
+    }
+
     this.logger.info('Generating sigs...');
     const {
       dlcAccept: _dlcAccept,
       dlcTransactions: _dlcTxs,
-    }: AcceptDlcOfferResponse = await this.client.acceptDlcOffer(_dlcOffer);
+    }: AcceptDlcOfferResponse = await this.client.client.dlc.acceptDlcOffer(
+      _dlcOffer,
+      fixedInputs,
+    );
     this.logger.info('Sigs generated');
 
     const { dlcOffer, dlcAccept, dlcTxs } = checkTypes({
@@ -149,6 +213,20 @@ export default class DlcRoutes extends BaseRoutes {
     this.logger.info('DLC messages saved');
 
     this.logger.info('End Accept DLC');
+
+    if (this.client.rpc) {
+      const {
+        fundingAddress,
+        changeAddress,
+        payoutAddress,
+      } = dlcAccept.getAddresses(this.client.network);
+
+      await this.client.importAddressesToRpc([
+        fundingAddress,
+        changeAddress,
+        payoutAddress,
+      ]);
+    }
 
     return res.json({
       hex: dlcAccept.serialize().toString('hex'),
@@ -196,7 +274,7 @@ export default class DlcRoutes extends BaseRoutes {
     const {
       dlcSign: _dlcSign,
       dlcTransactions: _dlcTxs,
-    }: SignDlcAcceptResponse = await this.client.signDlcAccept(
+    }: SignDlcAcceptResponse = await this.client.client.dlc.signDlcAccept(
       dlcOffer,
       dlcAccept,
     );
@@ -254,7 +332,7 @@ export default class DlcRoutes extends BaseRoutes {
     this.logger.info('Dlc Messages fetched');
 
     this.logger.info('Generating sigs...');
-    const fundTx: Tx = await this.client.finalizeDlcSign(
+    const fundTx: Tx = await this.client.client.dlc.finalizeDlcSign(
       dlcOffer,
       dlcAccept,
       dlcSign,
@@ -316,10 +394,13 @@ export default class DlcRoutes extends BaseRoutes {
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
     this.logger.info('Dlc Messages fetched');
 
-    const isOfferer = await this.client.isOfferer(dlcOffer, dlcAccept);
+    const isOfferer = await this.client.client.dlc.isOfferer(
+      dlcOffer,
+      dlcAccept,
+    );
 
     this.logger.info('Execute...');
-    const executeTx: Tx = await this.client.execute(
+    const executeTx: Tx = await this.client.client.dlc.execute(
       dlcOffer,
       dlcAccept,
       dlcSign,
@@ -354,7 +435,7 @@ export default class DlcRoutes extends BaseRoutes {
     this.logger.info('Dlc Messages fetched');
 
     this.logger.info('Refund...');
-    const refundTx: Tx = await this.client.refund(
+    const refundTx: Tx = await this.client.client.dlc.refund(
       dlcOffer,
       dlcAccept,
       dlcSign,

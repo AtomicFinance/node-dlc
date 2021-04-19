@@ -1,8 +1,6 @@
 import { Logger } from '@node-lightning/logger';
-import { generateMnemonic, validateMnemonic } from 'bip39';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { IArguments, IDB } from '../../utils/config';
-import { routeErrorHandler } from '../handler/ErrorHandler';
 import BaseRoutes from '../base';
 import { Client } from '../../client';
 import { OracleAnnouncementV0, OracleAttestationV0 } from '@node-dlc/messaging';

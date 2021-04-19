@@ -5,7 +5,7 @@ import { IArguments, IDB } from '../../utils/config';
 import { routeErrorHandler } from '../handler/ErrorHandler';
 import BaseRoutes from '../base';
 import { Client } from '../../client';
-import { Address } from '@atomicfinance/bitcoin-dlc-provider';
+import { Address } from '@liquality/types';
 
 export default class WalletRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
@@ -18,17 +18,13 @@ export default class WalletRoutes extends BaseRoutes {
     let _change = false;
     if (typeof change === 'string' && change === 'true') _change = true;
 
-    const address: Address = await this.client.newAddress(_change);
+    const address: Address = await this.client.client.financewallet.getUnusedAddress(
+      _change,
+    );
     await this.client.saveAddressCache();
 
-    if (this.client.rpc) {
-      await this.client.getMethod('jsonrpc')(
-        'importaddress',
-        address.address,
-        '',
-        false,
-      );
-    }
+    if (this.client.rpc)
+      await this.client.importAddressesToRpc([address.address]);
 
     return res.json({
       address: address.address,
@@ -38,9 +34,9 @@ export default class WalletRoutes extends BaseRoutes {
   }
 
   public async getBalance(req: Request, res: Response): Promise<Response> {
-    const addresses = await this.client.usedAddresses();
+    const addresses = await this.client.client.wallet.getUsedAddresses();
 
-    const balance = await this.client.balance(addresses);
+    const balance = await this.client.client.chain.getBalance(addresses);
 
     return res.json({ balance });
   }

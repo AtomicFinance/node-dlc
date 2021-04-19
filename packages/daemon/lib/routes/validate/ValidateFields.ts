@@ -67,6 +67,26 @@ export const validateBigInt = (
   }
 };
 
+export const validateArray = (
+  value: string[],
+  fieldName: string,
+  route: BaseRoute,
+  res: Response,
+): void | Response => {
+  validateExists(value, fieldName, route, res);
+
+  try {
+    value.forEach((val) => validateString(val, fieldName, route, res));
+  } catch (e) {
+    return routeErrorHandler(
+      route,
+      res,
+      400,
+      `Invalid array of strings for ${fieldName} provided.`,
+    );
+  }
+};
+
 export const validateBuffer = (
   value: string,
   fieldName: string,
