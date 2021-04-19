@@ -243,6 +243,9 @@ export default class DlcRoutes extends BaseRoutes {
 
     const dlcSign = await this.db.dlc.findDlcSign(contractId);
 
+    if (dlcSign === undefined)
+      return routeErrorHandler(this, res, 404, `DlcSign not found.`);
+
     return res.json({ hex: dlcSign.serialize().toString('hex') });
   }
 
@@ -343,6 +346,7 @@ export default class DlcRoutes extends BaseRoutes {
     dlcTxs.fundTx = fundTx;
     this.logger.info('Saving DLC Transactions to DB...');
     await this.db.dlc.saveDlcTransactions(dlcTxs);
+    await this.db.dlc.saveDlcSign(dlcSign);
     this.logger.info('DLC Transactions saved');
 
     this.logger.info('End Finalize DLC');
@@ -360,6 +364,9 @@ export default class DlcRoutes extends BaseRoutes {
     const contractId = Buffer.from(contractid as string, 'hex');
 
     const dlcTxs = await this.db.dlc.findDlcTransactions(contractId);
+
+    if (dlcTxs === undefined)
+      return routeErrorHandler(this, res, 404, `Contract not found.`);
 
     return res.json({
       fundTx: dlcTxs.fundTx.serialize().toString('hex'),
@@ -392,6 +399,16 @@ export default class DlcRoutes extends BaseRoutes {
     const dlcSign = await this.db.dlc.findDlcSign(contractId);
     const dlcAccept = await this.db.dlc.findDlcAccept(contractId);
     const dlcOffer = await this.db.dlc.findDlcOffer(dlcAccept.tempContractId);
+
+    if (dlcTxs === undefined)
+      return routeErrorHandler(this, res, 404, `DlcTxs not found.`);
+    if (dlcSign === undefined)
+      return routeErrorHandler(this, res, 404, `DlcSign not found.`);
+    if (dlcAccept === undefined)
+      return routeErrorHandler(this, res, 404, `DlcAccept not found.`);
+    if (dlcOffer === undefined)
+      return routeErrorHandler(this, res, 404, `DlcOffer not found.`);
+
     this.logger.info('Dlc Messages fetched');
 
     const isOfferer = await this.client.client.dlc.isOfferer(
