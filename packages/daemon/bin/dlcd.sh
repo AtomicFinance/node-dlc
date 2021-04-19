@@ -2,7 +2,7 @@
 
 rl=0
 daemon=0
-cmd='../dist/lib/index.js'
+cmd='../dist/lib/main.js'
 
 if ! type perl > /dev/null 2>& 1; then
   if uname | grep -i 'darwin' > /dev/null; then
