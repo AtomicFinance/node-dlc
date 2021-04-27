@@ -137,6 +137,22 @@ export class RocksdbDlcStore extends RocksdbBase {
     await this._db.del(key);
   }
 
+  public async findDlcTransactionsList(): Promise<DlcTransactionsV0[]> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      const results: DlcTransactionsV0[] = [];
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcAcceptV0) {
+          results.push(DlcTransactionsV0.deserialize(data.value));
+        }
+      });
+      stream.on('end', () => {
+        resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
   public async findDlcTransactions(
     contractId: Buffer,
   ): Promise<DlcTransactionsV0> {
