@@ -26,10 +26,21 @@
   "dependencies": {
     "@node-dlc/core": "^0.3.1",
     "@node-dlc/messaging": "^0.3.1",
-    "irc": "0.5.2"
+    "@node-dlc/rocksdb": "^0.3.1",
+    "@node-lightning/logger": "0.22.0",
+    "bcfg": "0.1.6",
+    "dotenv": "8.2.0",
+    "express": "4.17.1",
+    "helmet": "4.5.0",
+    "http": "0.0.1-security",
+    "irc": "0.5.2",
+    "morgan": "1.10.0",
+    "yargs": "16.2.0",
+    "winston": "3.3.3"
   },
   "devDependencies": {
-    "@liquality/utils": "1.0.0-beta.2"
+    "@liquality/utils": "1.0.0-beta.2",
+    "@types/yargs": "^16.0.0"
   },
   "publishConfig": {
     "access": "public"
