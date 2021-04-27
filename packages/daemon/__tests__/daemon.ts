@@ -18,7 +18,7 @@ export const rmdir = (dir: string): void => {
   fs.rmdirSync(dir);
 };
 
-export const enableLogger = false;
+export const enableLogger = true;
 
 export const apiPrefix = 'api';
 export const apiV0Prefix = 'api/v0';
