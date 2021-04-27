@@ -7,6 +7,7 @@ enum Prefix {
   Wallet = 30,
   ApiKey = 31,
   AddressCache = 32,
+  ChainCache = 33,
 }
 
 export class RocksdbWalletStore extends RocksdbBase {
@@ -97,4 +98,20 @@ export class RocksdbWalletStore extends RocksdbBase {
     const key = Buffer.from([Prefix.AddressCache]);
     await this._db.put(key, value);
   }
+
+  // public async findChainCache(chainHash: Buffer): Promise<ChainCache> {
+  //   const key = Buffer.concat([Buffer.from([Prefix.ChainCache]), chainHash]);
+  //   const raw = await this._safeGet<Buffer>(key);
+  //   if (!raw) return;
+  //   return ChainCache.deserialize(raw);
+  // }
+
+  // public async saveChainCache(chainCache: ChainCache): Promise<void> {
+  //   const value = chainCache.serialize();
+  //   const key = Buffer.concat([
+  //     Buffer.from([Prefix.ChainCache]),
+  //     chainCache.chainHash,
+  //   ]);
+  //   await this._db.put(key, value);
+  // }
 }
