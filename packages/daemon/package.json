@@ -58,7 +58,8 @@
     "os": "0.1.1",
     "path": "0.12.7",
     "winston": "3.3.3",
-    "yargs": "^16.2.0"
+    "yargs": "^16.2.0",
+    "zeromq": "5.2.8"
   },
   "publishConfig": {
     "access": "public"
@@ -67,6 +68,7 @@
     "@liquality/bitcoin-node-wallet-provider": "1.0.0-beta.2",
     "@types/express": "4.11.1",
     "@types/node": "^14.0.13",
-    "@types/yargs": "^16.0.0"
+    "@types/yargs": "^16.0.0",
+    "@types/zeromq": "4.6.1"
   }
 }
