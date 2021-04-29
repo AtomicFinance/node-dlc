@@ -1,3 +1,7 @@
+export * from './chain/ChainManager';
+export * from './chain/DlcStore';
+export * from './chain/IChainFilterChainClient';
+
 export * from './messages/AddressCache';
 export * from './messages/CetAdaptorSignaturesV0';
 export * from './messages/ContractDescriptor';
