@@ -48,7 +48,7 @@ export default class Server {
     this.db = db;
     this.client = new Client(argv, db, logger);
     this.client.setAddressCache();
-    this.client.chainUpdateAndStream();
+    // this.client.chainUpdateAndStream();
     this.routesAPI = new RoutesAPI(app, argv, db, logger, this.client);
     this.routesV0 = new RoutesV0(app, argv, db, logger, this.client);
     this.RoutesFallback = new RoutesFallback(app, logger);
