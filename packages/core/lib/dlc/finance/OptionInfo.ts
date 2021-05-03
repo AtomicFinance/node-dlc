@@ -5,15 +5,23 @@ import {
   PayoutFunctionV0,
   MessageType,
   HyperbolaPayoutCurvePiece,
+  DlcOffer,
+  DlcOfferV0,
 } from '@node-dlc/messaging';
 
-export type OptionInfo = {
+export interface OptionInfo {
   contractSize: bigint;
   strikePrice: bigint;
   expiry: Date;
-};
+}
 
-export function getOptionInfo(_contractInfo: ContractInfo): OptionInfo {
+export interface OptionInfoWithPremium extends OptionInfo {
+  premium: bigint;
+}
+
+export function getOptionInfoFromContractInfo(
+  _contractInfo: ContractInfo,
+): OptionInfo {
   if (_contractInfo.type !== MessageType.ContractInfoV0)
     throw Error('Only ContractDescriptorV0 currently supported');
 
@@ -47,4 +55,20 @@ export function getOptionInfo(_contractInfo: ContractInfo): OptionInfo {
   const expiry = new Date(eventMaturityEpoch * 1000);
 
   return { contractSize, strikePrice, expiry };
+}
+
+export function getOptionInfoFromDlcOffer(
+  _dlcOffer: DlcOffer,
+): OptionInfoWithPremium {
+  if (_dlcOffer.type !== MessageType.DlcOfferV0)
+    throw Error('Only DlcOfferV0 currently supported');
+
+  const dlcOffer = _dlcOffer as DlcOfferV0;
+  const premium =
+    dlcOffer.contractInfo.totalCollateral - dlcOffer.offerCollateralSatoshis;
+
+  return {
+    ...getOptionInfoFromContractInfo(dlcOffer.contractInfo),
+    premium,
+  };
 }

@@ -2,6 +2,7 @@ import {
   ContractDescriptorV1,
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
+  DlcOfferV0,
   HyperbolaPayoutCurvePiece,
   OracleAnnouncementV0,
   OracleEventV0,
@@ -10,13 +11,18 @@ import {
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
-import { getOptionInfo } from '../../../lib/dlc/finance/OptionInfo';
+import {
+  getOptionInfoFromContractInfo,
+  getOptionInfoFromDlcOffer,
+} from '../../../lib/dlc/finance/OptionInfo';
 
 describe('OptionInfo', () => {
-  describe('gets correct OptionInfo from ContractInfo', () => {
+  describe('OptionInfo from covered call messages', () => {
     const strikePrice = 50000n;
     const contractSize = 10n ** 8n;
+    const premium = 50000n;
     const expiry = new Date(1620014750000);
+
     const oracleBase = 2;
     const oracleDigits = 20;
 
@@ -140,13 +146,28 @@ describe('OptionInfo', () => {
     contractInfo.contractDescriptor = contractDescriptor;
     contractInfo.oracleInfo = oracleInfo;
 
-    it('OptionInfo should match covered call parameters', () => {
-      const optionInfo = getOptionInfo(contractInfo);
+    const dlcOffer = new DlcOfferV0();
+    dlcOffer.contractInfo = contractInfo;
+    dlcOffer.offerCollateralSatoshis = totalCollateral - premium;
+
+    it('should get correct OptionInfo from ContractInfo', () => {
+      const optionInfo = getOptionInfoFromContractInfo(contractInfo);
 
       expect(optionInfo).to.deep.equal({
         contractSize: contractSize,
         strikePrice,
         expiry: expiry,
+      });
+    });
+
+    it('should get correct OptionInfoWithPremium from DlcOffer', () => {
+      const optionInfo = getOptionInfoFromDlcOffer(dlcOffer);
+
+      expect(optionInfo).to.deep.equal({
+        contractSize: contractSize,
+        strikePrice,
+        expiry: expiry,
+        premium,
       });
     });
   });
