@@ -1,1 +1,2 @@
-export * from './transports';
+export * from './irc/IrcManager';
+export * from './irc/IrcOrderManager';
