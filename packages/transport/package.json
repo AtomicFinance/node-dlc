@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/transport",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "DLC Transport",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -24,21 +24,21 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/core": "^0.3.2",
-    "@node-dlc/messaging": "^0.3.2",
+    "@node-dlc/core": "^0.4.0",
+    "@node-dlc/messaging": "^0.4.0",
     "@node-lightning/bitcoin": "0.22.0",
     "@node-lightning/crypto": "0.22.0",
     "irc": "0.5.2"
   },
   "devDependencies": {
     "@liquality/utils": "1.0.0-beta.2",
-    "path": "0.12.7",
+    "@node-lightning/logger": "0.22.1",
     "fs": "0.0.1-security",
     "net": "1.0.2",
-    "tls": "0.0.1",
+    "path": "0.12.7",
     "sinon": "10.0.0",
     "sinon-chai": "3.6.0",
-    "@node-lightning/logger": "0.22.1"
+    "tls": "0.0.1"
   },
   "publishConfig": {
     "access": "public"
