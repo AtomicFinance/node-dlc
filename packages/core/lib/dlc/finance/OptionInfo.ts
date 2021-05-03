@@ -12,11 +12,8 @@ import {
 export interface OptionInfo {
   contractSize: bigint;
   strikePrice: bigint;
+  premium?: bigint;
   expiry: Date;
-}
-
-export interface OptionInfoWithPremium extends OptionInfo {
-  premium: bigint;
 }
 
 export function getOptionInfoFromContractInfo(
@@ -57,9 +54,7 @@ export function getOptionInfoFromContractInfo(
   return { contractSize, strikePrice, expiry };
 }
 
-export function getOptionInfoFromDlcOffer(
-  _dlcOffer: DlcOffer,
-): OptionInfoWithPremium {
+export function getOptionInfoFromDlcOffer(_dlcOffer: DlcOffer): OptionInfo {
   if (_dlcOffer.type !== MessageType.DlcOfferV0)
     throw Error('Only DlcOfferV0 currently supported');
 
