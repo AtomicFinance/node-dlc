@@ -24,7 +24,7 @@ describe('OptionInfo', () => {
     const expiry = new Date(1620014750000);
 
     const oracleBase = 2;
-    const oracleDigits = 20;
+    const oracleDigits = 17;
 
     const { totalCollateral, payoutFunction } = CoveredCall.buildPayoutFunction(
       strikePrice,
@@ -33,15 +33,12 @@ describe('OptionInfo', () => {
       oracleDigits,
     );
 
-    const eventDescriptorNumDigits = 17;
-    const contractDescriptorNumDigits = 18;
-
     const eventDescriptor = new DigitDecompositionEventDescriptorV0();
     eventDescriptor.base = 2;
     eventDescriptor.isSigned = false;
     eventDescriptor.unit = 'BTC-USD';
     eventDescriptor.precision = 0;
-    eventDescriptor.nbDigits = eventDescriptorNumDigits;
+    eventDescriptor.nbDigits = oracleDigits;
 
     const oracleEvent = new OracleEventV0();
     oracleEvent.oracleNonces = [
@@ -137,7 +134,7 @@ describe('OptionInfo', () => {
     roundingIntervals.intervals = intervals;
 
     const contractDescriptor = new ContractDescriptorV1();
-    contractDescriptor.numDigits = contractDescriptorNumDigits;
+    contractDescriptor.numDigits = oracleDigits;
     contractDescriptor.payoutFunction = payoutFunction;
     contractDescriptor.roundingIntervals = roundingIntervals;
 
@@ -154,9 +151,9 @@ describe('OptionInfo', () => {
       const optionInfo = getOptionInfoFromContractInfo(contractInfo);
 
       expect(optionInfo).to.deep.equal({
-        contractSize: contractSize,
+        contractSize,
         strikePrice,
-        expiry: expiry,
+        expiry,
       });
     });
 
@@ -164,9 +161,9 @@ describe('OptionInfo', () => {
       const optionInfo = getOptionInfoFromDlcOffer(dlcOffer);
 
       expect(optionInfo).to.deep.equal({
-        contractSize: contractSize,
+        contractSize,
         strikePrice,
-        expiry: expiry,
+        expiry,
         premium,
       });
     });
