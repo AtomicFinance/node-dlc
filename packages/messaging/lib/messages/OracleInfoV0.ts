@@ -38,6 +38,10 @@ export class OracleInfoV0 implements IDlcMessage {
 
   public announcement: OracleAnnouncementV0;
 
+  public validate(): void {
+    this.announcement.validate();
+  }
+
   /**
    * Converts oracle_info_v0 to JSON
    */

@@ -6,6 +6,7 @@ import {
   EventDescriptor,
   IEnumEventDescriptorV0JSON,
   IDigitDecompositionEventDescriptorV0JSON,
+  DigitDecompositionEventDescriptorV0,
 } from './EventDescriptor';
 
 /**
@@ -62,6 +63,20 @@ export class OracleEventV0 implements IDlcMessage {
   public eventDescriptor: EventDescriptor;
 
   public eventId: string;
+
+  public validate(): void {
+    if (
+      this.eventDescriptor.type === DigitDecompositionEventDescriptorV0.type
+    ) {
+      const eventDescriptor = this
+        .eventDescriptor as DigitDecompositionEventDescriptorV0;
+      if (eventDescriptor.nbDigits !== this.oracleNonces.length) {
+        throw Error(
+          'OracleEvent oracleNonces length must match DigitDecompositionEventDescriptor nbDigits',
+        );
+      }
+    }
+  }
 
   /**
    * Converts oracle_event to JSON
