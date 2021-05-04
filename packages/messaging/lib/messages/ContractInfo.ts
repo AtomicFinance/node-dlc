@@ -82,6 +82,7 @@ export class ContractInfoV0 implements IDlcMessage {
   public oracleInfo: OracleInfoV0;
 
   public validate(): void {
+    this.oracleInfo.validate();
     switch (this.contractDescriptor.type) {
       case MessageType.ContractDescriptorV1:
         // eslint-disable-next-line no-case-declarations
@@ -180,6 +181,7 @@ export class ContractInfoV1 implements IDlcMessage {
 
   public validate(): void {
     this.contractOraclePairs.forEach((oraclePair) => {
+      oraclePair.oracleInfo.validate();
       switch (oraclePair.contractDescriptor.type) {
         case MessageType.ContractDescriptorV1:
           // eslint-disable-next-line no-case-declarations

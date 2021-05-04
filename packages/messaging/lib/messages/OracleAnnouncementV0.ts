@@ -49,6 +49,10 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 
   public oracleEvent: OracleEventV0;
 
+  public validate(): void {
+    this.oracleEvent.validate();
+  }
+
   /**
    * Converts oracle_announcement_v0 to JSON
    */
