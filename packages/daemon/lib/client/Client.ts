@@ -1,4 +1,9 @@
 import { Logger } from '@node-lightning/logger';
+import {
+  BitcoindClient,
+  ConstantBackoff,
+  RetryPolicy,
+} from '@node-lightning/bitcoind';
 import { Application } from 'express';
 import { IArguments, IDB } from '../utils/config';
 
@@ -7,26 +12,34 @@ import BitcoinEsploraApiProvider from '@liquality/bitcoin-esplora-api-provider';
 import BitcoinEsploraBatchApiProvider from '@liquality/bitcoin-esplora-batch-api-provider';
 import BitcoinJsWalletProvider from '@liquality/bitcoin-js-wallet-provider';
 import BitcoinNetworks, { BitcoinNetwork } from '@liquality/bitcoin-networks';
-import { bitcoin } from '@liquality/types';
+import { bitcoin, Transaction } from '@liquality/types';
+import { Block } from 'bitcoinjs-lib';
 
 import FinanceClient from '@atomicfinance/client';
 import BitcoinCfdProvider from '@atomicfinance/bitcoin-cfd-provider';
 import BitcoinDlcProvider from '@atomicfinance/bitcoin-dlc-provider';
 import BitcoinWalletProvider from '@atomicfinance/bitcoin-wallet-provider';
+import { chainHashFromNetwork } from '@atomicfinance/bitcoin-networks';
 import * as cfdJs from 'cfd-js';
 import { getWrappedCfdDlcJs } from '../wrappers/WrappedCfdDlcJs';
 
 import { Network } from '../utils/config';
-import { AddressCache } from '@node-dlc/messaging';
+import { AddressCache, DlcTransactionsV0 } from '@node-dlc/messaging';
+import { TxWatcher, BlockWatcher } from '@node-dlc/chainmon';
+import { ChainSub } from '../chainsub/chainsub';
 
 export class Client {
   public client: FinanceClient;
+  public chainClient: BitcoindClient;
   public seedSet = false;
   public rpc = false;
   private argv: IArguments;
   private db: IDB;
   private logger: Logger;
   public network: BitcoinNetwork;
+  public chainsub: ChainSub;
+  public txWatcher: TxWatcher;
+  public blockWatcher: BlockWatcher;
 
   constructor(argv: IArguments, db: IDB, logger: Logger) {
     this.argv = argv;
@@ -39,6 +52,8 @@ export class Client {
       rpcport,
       rpcuser,
       rpcpass,
+      zmqpubrawtx,
+      zmqpubrawblock,
     } = argv;
 
     const { network } = this.getNetwork();
@@ -60,6 +75,16 @@ export class Client {
         }),
       );
       this.rpc = true;
+
+      this.chainClient = new BitcoindClient({
+        rpcuser: rpcuser,
+        rpcpassword: rpcpass,
+        host: rpchost,
+        port: Number(rpcport),
+        zmqpubrawtx,
+        zmqpubrawblock,
+        policyMaker: () => new RetryPolicy(5, new ConstantBackoff(5000)),
+      });
     } else {
       if (electrsbatchapi === undefined || electrsbatchapi === '') {
         this.client.addProvider(
@@ -77,6 +102,7 @@ export class Client {
           }),
         );
       }
+      // setup node cron job thing
     }
   }
 
@@ -125,6 +151,127 @@ export class Client {
     );
     await this.db.wallet.saveAddressCache(addressCache);
   }
+
+  async chainMon(): Promise<void> {
+    if (!this.rpc) {
+      this.logger.info(
+        'skipping state update since esplora is currently not supported',
+      );
+      return;
+    }
+  }
+
+  // async chainUpdateAndStream(): Promise<void> {
+  //   if (!this.rpc) {
+  //     this.logger.info(
+  //       'skipping state update since esplora is currently not supported',
+  //     );
+  //     return;
+  //   }
+
+  //   const blockchainInfo = await this.chainClient.getBlockchainInfo();
+
+  //   const bestBlock = await this.chainClient.getBlock(
+  //     blockchainInfo.bestblockhash,
+  //   );
+
+  //   this.txWatcher = new TxWatcher(this.chainClient);
+  //   this.blockWatcher = new BlockWatcher(this.chainClient);
+
+  //   this.txWatcher.start();
+  //   this.blockWatcher.start(bestBlock);
+  // }
+
+  // async processBlock(blockHash: string): Promise<void> {
+  //   if (this.rpc) {
+  //     this._nodeProcessBlock(blockHash);
+  //   } else {
+  //     this._apiProcessBlock(blockHash);
+  //   }
+  // }
+
+  // private async _nodeProcessBlock(blockHash: string): Promise<void> {
+  //   const verbosity = 0;
+  //   const blockHex: string = await this.client.getMethod('jsonrpc')(
+  //     'getblock',
+  //     blockHash,
+  //     verbosity,
+  //   );
+  //   const blockHeader = await this.client.getMethod('jsonrpc')(
+  //     'getblockheader',
+  //     blockHash,
+  //   );
+  //   const block = Block.fromHex(blockHex);
+
+  //   const dlcTxsToUpdate: DlcTransactionsV0[] = [];
+
+  //   const dlcTxsList = await this.db.dlc.findDlcTransactionsList();
+
+  //   block.transactions.forEach((transaction) => {
+  //     dlcTxsList.forEach((dlcTxs) => {
+  //       let dlcTxsNeedsUpdate = false;
+  //       if (transaction.getId() === dlcTxs.fundTx.txId.toString()) {
+  //         dlcTxs.fundEpoch.hash = Buffer.from(block.getId(), 'hex');
+  //         dlcTxs.fundEpoch.height = Number(blockHeader.height);
+  //         dlcTxsNeedsUpdate = true;
+  //       }
+
+  //       transaction.ins.forEach((input) => {
+  //         if (input.hash.toString('hex') === dlcTxs.fundTx.txId.toString()) {
+  //           const txid = transaction.getId();
+
+  //           dlcTxs.closeEpoch.hash = Buffer.from(block.getId(), 'hex');
+  //           dlcTxs.closeEpoch.height = Number(blockHeader.height);
+  //           dlcTxs.closeTxHash = Buffer.from(txid, 'hex');
+  //           dlcTxs.closeType = 3; // Default to cooperative close if txid not refund or cet txid
+
+  //           // figure out if it's execute, refund or mutual close
+  //           if (txid === dlcTxs.refundTx.txId.toString()) {
+  //             dlcTxs.closeType = 2;
+  //           } else {
+  //             const cetIndex = dlcTxs.cets.findIndex(
+  //               (cet) => txid === cet.txId.toString(),
+  //             );
+  //             if (cetIndex >= 0) dlcTxs.closeType = 1;
+  //           }
+  //           dlcTxsNeedsUpdate = true;
+  //         }
+  //       });
+
+  //       if (dlcTxsNeedsUpdate) dlcTxsToUpdate.push(dlcTxs);
+  //     });
+  //   });
+
+  //   const dlcTxsUpdatePromises = [];
+  //   dlcTxsToUpdate.forEach((dlcTxs) => {
+  //     dlcTxsUpdatePromises.push(this.db.dlc.saveDlcTransactions(dlcTxs));
+  //   });
+  //   await Promise.all(dlcTxsUpdatePromises);
+  // }
+
+  // private async _apiProcessBlock(blockHash: string): Promise<void> {
+  //   throw Error(
+  //     `State update from blockhash ${blockHash} for Esplora not yet implemented`,
+  //   );
+  // }
+
+  // async processTx(txId: string): Promise<void> {
+  //   if (this.rpc) {
+  //     this._nodeProcessTx(txId);
+  //   } else {
+  //     this._apiProcessTx(txId);
+  //   }
+  // }
+
+  // private async _nodeProcessTx(txId: string): Promise<void> {
+  //   throw Error(`State update from txid ${txId} for Json rpc`);
+  // }
+
+  // private async _apiProcessTx(txId: string): Promise<void> {
+  //   throw Error(
+  //     `State update from txid ${txId} for Esplora not yet implemented`,
+  //   );
+  // }
 
   async importAddressesToRpc(addresses: string[]): Promise<void> {
     const importPromises = [];

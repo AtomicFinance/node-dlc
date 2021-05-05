@@ -599,13 +599,14 @@ describe('Dlc Routes', () => {
       });
     });
 
-    describe('DlcFinalize and Execute', () => {
+    describe.only('DlcFinalize and Execute', () => {
       let validDlcSign: DlcSignV0;
       let res: request.Response;
 
       before(async () => {
         await importAndFundClient();
 
+        console.log('test1');
         const { dlcSign: _dlcSign } = await client.dlc.signDlcAccept(
           validDlcOffer,
           dlcAccept,
@@ -613,6 +614,7 @@ describe('Dlc Routes', () => {
         const { dlcSign } = checkTypes({ _dlcSign });
         validDlcSign = dlcSign;
 
+        console.log('test2');
         res = await chai
           .request(server.app)
           .post(`/${apiV0Prefix}/${Endpoint.DlcFinalize}`)
@@ -621,6 +623,7 @@ describe('Dlc Routes', () => {
             dlcsign: validDlcSign.serialize().toString('hex'),
           });
 
+        console.log('test3');
         res.should.have.status(200);
         res.body.should.be.a('object');
         res.body.contractid.should.be.a('string');
