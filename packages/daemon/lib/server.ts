@@ -21,6 +21,7 @@ import { RoutesAPI, RoutesV0, RoutesFallback } from './routes';
 import { IArguments, IDB } from './utils/config';
 import { Client } from './client';
 import * as http from 'http';
+import * as WebSocket from 'ws';
 
 export default class Server {
   public routesV0: RoutesV0;
@@ -32,6 +33,7 @@ export default class Server {
   public logger: Logger;
   public db: IDB;
   private server: http.Server;
+  private wss: WebSocket;
 
   constructor(app: Application, argv: IArguments, logger: Logger) {
     const { datadir, network } = argv;
@@ -97,7 +99,11 @@ export default class Server {
   }
 
   public start(): void {
-    this.server = this.app.listen(this.argv.port, 'localhost', () => {
+    this.server = http.createServer(this.app);
+
+    this.wss = new WebSocket.Server({ server: this.server });
+
+    this.server.listen(this.argv.port, 'localhost', () => {
       this.logger.info(`Server running on http://localhost:${this.argv.port}`);
     });
   }

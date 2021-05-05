@@ -152,6 +152,15 @@ export class Client {
     await this.db.wallet.saveAddressCache(addressCache);
   }
 
+  async chainMon(): Promise<void> {
+    if (!this.rpc) {
+      this.logger.info(
+        'skipping state update since esplora is currently not supported',
+      );
+      return;
+    }
+  }
+
   // async chainUpdateAndStream(): Promise<void> {
   //   if (!this.rpc) {
   //     this.logger.info(
