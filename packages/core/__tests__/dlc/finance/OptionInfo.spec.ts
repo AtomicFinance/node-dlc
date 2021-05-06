@@ -13,7 +13,7 @@ import { expect } from 'chai';
 import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
 import {
   getOptionInfoFromContractInfo,
-  getOptionInfoFromDlcOffer,
+  getOptionInfoFromOffer,
 } from '../../../lib/dlc/finance/OptionInfo';
 
 describe('OptionInfo', () => {
@@ -66,7 +66,7 @@ describe('OptionInfo', () => {
     });
 
     it('should get correct OptionInfoWithPremium from DlcOffer', () => {
-      const optionInfo = getOptionInfoFromDlcOffer(dlcOffer);
+      const optionInfo = getOptionInfoFromOffer(dlcOffer);
 
       expect(optionInfo).to.deep.equal({
         contractSize,
