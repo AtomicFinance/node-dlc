@@ -5,12 +5,14 @@ import {
   DlcAcceptV0,
   DlcSignV0,
   FundingInputV0,
+  DlcTransactionsV0,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
 import * as util from './rocksdb';
 import { xor, sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
+import { OutPoint } from '@node-lightning/bitcoin';
 
 describe('RocksdbDlcStore', () => {
   let sut: RocksdbDlcStore;
@@ -160,6 +162,13 @@ describe('RocksdbDlcStore', () => {
 
   const dlcSign = DlcSignV0.deserialize(dlcSignHex);
 
+  const dlcTxsHex = Buffer.from(
+    'ef2e5beedf007afc0528fadd297df3ad2568ab23b777cc1f1cbc36ee42aad5fdc83b00c502000000027d271264eaa899ce808a151b67a05a5e138bc59bff4a81acc606bbcc2054c33a0000000000ffffffff49956aee0f04ebeed5935729a2d6d5dc6abb5342acaa0248090c78b049e4d4e30000000000ffffffff0355a8980400000000220020543ff4768635379e2d3101d97f5a2a5e15d2acba04a6bd1322970241de8c593ce11f530700000000160014dddb7840134737de920ac4337cfd700a94d40ee6f2b1eb0b000000001600141b77056446c159cd6228632173c6117d67ed7df200000000000000005293da71b1c64a177c6d9cef747ba44c7e05b476663ba1c2af423ee15077287a0b46000000710200000001b2beedb20c5df1ab779b521a3a8fdb217784b76c76de505db3686b3b788f9d080000000000feffffff02e1999804000000001600144b71dd93c0727574dfd8403ed5f375922c6e3813d007000000000000160014cc6f10246659b11e40bc8c7d346f43aae79cf2d78c1064600100710200000001b2beedb20c5df1ab779b521a3a8fdb217784b76c76de505db3686b3b788f9d080000000000ffffffff02e0739804000000001600144b71dd93c0727574dfd8403ed5f375922c6e3813d12d000000000000160014cc6f10246659b11e40bc8c7d346f43aae79cf2d700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+    'hex',
+  );
+
+  const dlcTxs = DlcTransactionsV0.deserialize(dlcTxsHex);
+
   before(async () => {
     util.rmdir('.testdb');
     sut = new RocksdbDlcStore('./.testdb/nested/dir');
@@ -248,6 +257,55 @@ describe('RocksdbDlcStore', () => {
       await sut.deleteDlcSign(dlcSign.contractId);
 
       const actual = await sut.findDlcSign(dlcSign.contractId);
+      expect(actual).to.be.undefined;
+    });
+  });
+
+  describe('save dlc_transactions', () => {
+    it('should save dlc_transactions', async () => {
+      await sut.saveDlcTransactions(dlcTxs);
+    });
+  });
+
+  describe('find dlc_transactions by contractId', () => {
+    it('should return the dlc_txs object', async () => {
+      const actual = await sut.findDlcTransactions(dlcTxs.contractId);
+      expect(actual.fundTx.serialize()).to.deep.equal(
+        dlcTxs.fundTx.serialize(),
+      );
+    });
+  });
+
+  describe('find dlc_transactions by outpoint', () => {
+    it('should return dlc_txs object', async () => {
+      const outpoint = OutPoint.fromString(
+        `${dlcTxs.fundTx.txId.toString()}:${dlcTxs.fundTxVout}`,
+      );
+
+      const actual = await sut.findDlcTransactionsByOutpoint(outpoint);
+      expect(actual.fundTx.serialize()).to.deep.equal(
+        dlcTxs.fundTx.serialize(),
+      );
+    });
+  });
+
+  describe('find dlc_transactions by scriptpubkey', () => {
+    it('should return dlc_txs object', async () => {
+      const scriptPubKey =
+        dlcTxs.fundTx.outputs[dlcTxs.fundTxVout].scriptPubKey;
+
+      const actual = await sut.findDlcTransactionsByScriptPubKey(scriptPubKey);
+      expect(actual.fundTx.serialize()).to.deep.equal(
+        dlcTxs.fundTx.serialize(),
+      );
+    });
+  });
+
+  describe('delete dlc_transactions', () => {
+    it('should', async () => {
+      await sut.deleteDlcTransactions(dlcTxs.contractId);
+
+      const actual = await sut.findDlcTransactions(dlcTxs.contractId);
       expect(actual).to.be.undefined;
     });
   });
