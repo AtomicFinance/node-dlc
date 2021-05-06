@@ -8,12 +8,15 @@ import {
 } from '@node-dlc/messaging';
 import { xor } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
+import { OutPoint, Script } from '@node-lightning/bitcoin';
 
 enum Prefix {
   DlcOfferV0 = 50,
   DlcAcceptV0 = 51,
   DlcSignV0 = 52,
   DlcTransactionsV0 = 53,
+  Outpoint = 54,
+  ScriptPubKey = 55,
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
@@ -165,6 +168,28 @@ export class RocksdbDlcStore extends RocksdbBase {
     return DlcTransactionsV0.deserialize(raw);
   }
 
+  public async findDlcTransactionsByOutpoint(
+    outpoint: OutPoint,
+  ): Promise<DlcTransactionsV0> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.Outpoint]),
+      Buffer.from(outpoint.toString()),
+    ]);
+    const contractId = await this._safeGet<Buffer>(key);
+    return this.findDlcTransactions(contractId);
+  }
+
+  public async findDlcTransactionsByScriptPubKey(
+    scriptPubKey: Script,
+  ): Promise<DlcTransactionsV0> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.ScriptPubKey]),
+      scriptPubKey.serialize(),
+    ]);
+    const contractId = await this._safeGet<Buffer>(key);
+    return this.findDlcTransactions(contractId);
+  }
+
   public async saveDlcTransactions(
     dlcTransactions: DlcTransactionsV0,
   ): Promise<void> {
@@ -174,6 +199,28 @@ export class RocksdbDlcStore extends RocksdbBase {
       dlcTransactions.contractId,
     ]);
     await this._db.put(key, value);
+
+    // store outpoint reference
+    const key2 = Buffer.concat([
+      Buffer.from([Prefix.Outpoint]),
+      Buffer.from(
+        OutPoint.fromString(
+          `${dlcTransactions.fundTx.txId.toString()}:${
+            dlcTransactions.fundTxVout
+          }`,
+        ).toString(),
+      ),
+    ]);
+    await this._db.put(key2, dlcTransactions.contractId);
+
+    // store scriptpubkey reference
+    const key3 = Buffer.concat([
+      Buffer.from([Prefix.ScriptPubKey]),
+      dlcTransactions.fundTx.outputs[
+        dlcTransactions.fundTxVout
+      ].scriptPubKey.serialize(),
+    ]);
+    await this._db.put(key3, dlcTransactions.contractId);
   }
 
   public async deleteDlcTransactions(contractId: Buffer): Promise<void> {

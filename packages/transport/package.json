@@ -27,6 +27,7 @@
     "@node-dlc/core": "^0.4.1",
     "@node-dlc/messaging": "^0.4.1",
     "@node-lightning/bitcoin": "0.22.0",
+    "@node-lightning/bufio": "0.22.0",
     "@node-lightning/crypto": "0.22.0",
     "irc": "0.5.2"
   },

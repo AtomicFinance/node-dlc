@@ -91,6 +91,16 @@ export const argv: IArguments = yargs(process.argv.slice(2))
       default: '',
       global: true,
     },
+    zmqpubrawtx: {
+      type: 'string',
+      default: 'tcp://127.0.0.1:28332',
+      global: true,
+    },
+    zmqpubrawblock: {
+      type: 'string',
+      default: 'tcp://127.0.0.1:28332',
+      global: true,
+    },
   })
   .check((_argv, _) => {
     const { p } = _argv;
