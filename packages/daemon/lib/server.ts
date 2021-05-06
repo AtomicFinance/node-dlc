@@ -17,7 +17,7 @@ import { WriteStream } from 'fs';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import * as winston from 'winston';
-import { RoutesAPI, RoutesV0, RoutesFallback } from './routes';
+import { RoutesAPI, RoutesV0, RoutesFinance, RoutesFallback } from './routes';
 import { IArguments, IDB } from './utils/config';
 import { Client } from './client';
 import * as http from 'http';
@@ -25,6 +25,7 @@ import * as http from 'http';
 export default class Server {
   public routesV0: RoutesV0;
   public routesAPI: RoutesAPI;
+  public routesFinance: RoutesFinance;
   public RoutesFallback: RoutesFallback;
   public client: Client;
   public app: Application;
@@ -50,6 +51,7 @@ export default class Server {
     this.client.setAddressCache();
     this.routesAPI = new RoutesAPI(app, argv, db, logger, this.client);
     this.routesV0 = new RoutesV0(app, argv, db, logger, this.client);
+    this.routesFinance = new RoutesFinance(app, argv, db, logger, this.client);
     this.RoutesFallback = new RoutesFallback(app, logger);
   }
 
