@@ -41,7 +41,7 @@ export const config = {
 
 export const network: Network = 'regtest';
 export const apikey = bcrypto.random.randomBytes(32).toString('hex');
-export const loglevel: ConfLogLevel = 'debug';
+export const loglevel: ConfLogLevel = 'trace';
 export const port = 8475;
 export const chainHash = Buffer.from(
   '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
@@ -69,7 +69,14 @@ export const argv: IArguments = {
   conf: config.conf,
 };
 
-export type Route = 'info' | 'order' | 'dlc' | 'contract' | 'wallet' | 'oracle';
+export type Route =
+  | 'info'
+  | 'order'
+  | 'dlc'
+  | 'contract'
+  | 'wallet'
+  | 'oracle'
+  | 'finance';
 
 /**
  * Generates argument vector dependent on route to be tested
@@ -99,6 +106,9 @@ export const getArgv = (route: Route): IArguments => {
       break;
     case 'oracle':
       newPort = 8481;
+      break;
+    case 'finance':
+      newPort = 8482;
       break;
     default:
       newPort = port;

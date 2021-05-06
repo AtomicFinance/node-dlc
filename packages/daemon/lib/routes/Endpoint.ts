@@ -29,5 +29,8 @@ export enum Endpoint {
   OracleAnnouncement = 'oracle/announcement',
   OracleAttestation = 'oracle/attestation',
 
+  OptionContractInfo = 'option/contractinfo',
+  OptionOffer = 'option/offer',
+
   ContractInfo = 'contract/info',
 }
