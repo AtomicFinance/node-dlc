@@ -1,2 +1,1 @@
-export * from './irc/IrcManager';
-export * from './irc/IrcOrderManager';
+export * from './irc';
