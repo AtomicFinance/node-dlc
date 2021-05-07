@@ -38,10 +38,12 @@
     "@liquality/bitcoin-rpc-provider": "1.0.0-beta.4",
     "@liquality/client": "1.0.0-beta.4",
     "@liquality/types": "1.0.0-beta.4",
+    "@node-dlc/chainmon": "^0.4.2",
     "@node-dlc/core": "^0.4.2",
     "@node-dlc/messaging": "^0.4.2",
     "@node-dlc/rocksdb": "^0.4.2",
     "@node-lightning/bitcoin": "^0.22.0",
+    "@node-lightning/bitcoind": "^0.22.0",
     "@node-lightning/bufio": "^0.22.0",
     "@node-lightning/crypto": "^0.22.0",
     "@node-lightning/logger": "^0.22.0",
@@ -58,6 +60,7 @@
     "os": "0.1.1",
     "path": "0.12.7",
     "winston": "3.3.3",
+    "ws": "7.4.5",
     "yargs": "^16.2.0"
   },
   "publishConfig": {
