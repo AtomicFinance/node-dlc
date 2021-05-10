@@ -6,6 +6,7 @@ import * as dotenv from 'dotenv';
 import yargs from 'yargs/yargs';
 dotenv.config();
 import { ConsoleTransport, Logger } from '@node-lightning/logger';
+import { IrcServers } from '@node-dlc/transport';
 import Config from 'bcfg';
 import express from 'express';
 import { Application } from 'express';
@@ -99,6 +100,36 @@ export const argv: IArguments = yargs(process.argv.slice(2))
     zmqpubrawblock: {
       type: 'string',
       default: 'tcp://127.0.0.1:28332',
+      global: true,
+    },
+    ircenabled: {
+      type: 'string',
+      default: 'true',
+      global: true,
+    },
+    ircserverprimary: {
+      type: 'string',
+      default: IrcServers.primary_server.host,
+      global: true,
+    },
+    ircserversecondary: {
+      type: 'string',
+      default: IrcServers.secondary_server.host,
+      global: true,
+    },
+    ircservertertiary: {
+      type: 'string',
+      default: IrcServers.tertiary_server.host,
+      global: true,
+    },
+    ircdebug: {
+      type: 'string',
+      default: 'false',
+      global: true,
+    },
+    ircport: {
+      type: 'string',
+      default: '6697',
       global: true,
     },
   })

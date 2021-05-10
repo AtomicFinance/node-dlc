@@ -81,7 +81,8 @@ export type Route =
   | 'wallet'
   | 'oracle'
   | 'finance'
-  | 'chainmon';
+  | 'chainmon'
+  | 'irc';
 
 /**
  * Generates argument vector dependent on route to be tested
@@ -117,6 +118,9 @@ export const getArgv = (route: Route): IArguments => {
       break;
     case 'chainmon':
       newPort = 8483;
+      break;
+    case 'irc':
+      newPort = 8484;
       break;
     default:
       newPort = port;

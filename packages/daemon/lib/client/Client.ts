@@ -13,7 +13,7 @@ import BitcoinEsploraApiProvider from '@liquality/bitcoin-esplora-api-provider';
 import BitcoinEsploraBatchApiProvider from '@liquality/bitcoin-esplora-batch-api-provider';
 import BitcoinJsWalletProvider from '@liquality/bitcoin-js-wallet-provider';
 import BitcoinNetworks, { BitcoinNetwork } from '@liquality/bitcoin-networks';
-import { bitcoin, Transaction } from '@liquality/types';
+import { bitcoin, Transaction, Address } from '@liquality/types';
 import { Block } from 'bitcoinjs-lib';
 
 import FinanceClient from '@atomicfinance/client';
@@ -29,10 +29,13 @@ import {
   AddressCache,
   ChainManager,
   DlcTransactionsV0,
+  MessageType,
+  OrderOfferV0,
 } from '@node-dlc/messaging';
 import { TxWatcher, BlockWatcher } from '@node-dlc/chainmon';
 import { OutPoint, Value, Script, Tx } from '@node-lightning/bitcoin';
 import { address } from 'bitcoinjs-lib';
+import { ChannelType, IrcManager, IrcOrderManager } from '@node-dlc/transport';
 
 export class Client {
   public client: FinanceClient;
@@ -40,6 +43,7 @@ export class Client {
   public seedSet = false;
   public rpc = false;
   public zmq = false;
+  public irc = false;
   private argv: IArguments;
   public db: IDB;
   private logger: Logger;
@@ -47,6 +51,7 @@ export class Client {
   public txWatcher: TxWatcher;
   public blockWatcher: BlockWatcher;
   public chainManager: ChainManager;
+  public ircManager: IrcOrderManager;
 
   constructor(argv: IArguments, db: IDB, logger: Logger) {
     this.argv = argv;
@@ -61,6 +66,12 @@ export class Client {
       rpcpass,
       zmqpubrawtx,
       zmqpubrawblock,
+      ircenabled,
+      ircserverprimary,
+      ircserversecondary,
+      ircservertertiary,
+      ircdebug,
+      ircport,
     } = argv;
 
     const { network } = this.getNetwork();
@@ -124,6 +135,10 @@ export class Client {
         );
       }
       // setup node cron job thing
+    }
+
+    if (ircenabled === 'true') {
+      this.irc = true;
     }
   }
 
@@ -310,17 +325,6 @@ export class Client {
     );
   }
 
-  async importAddressesToRpc(addresses: string[]): Promise<void> {
-    const importPromises = [];
-    addresses.forEach((address) => {
-      importPromises.push(
-        this.client.getMethod('jsonrpc')('importaddress', address, '', false),
-      );
-    });
-
-    await Promise.all(importPromises);
-  }
-
   public watchDlcTransactions(dlcTxs: DlcTransactionsV0): void {
     if (!this.zmq) {
       this.logger.info('skipping broadcast sub since zmq address not set');
@@ -348,6 +352,44 @@ export class Client {
     );
   }
 
+  async importAddressesToRpc(addresses: string[]): Promise<void> {
+    const importPromises = [];
+    addresses.forEach((address) => {
+      importPromises.push(
+        this.client.getMethod('jsonrpc')('importaddress', address, '', false),
+      );
+    });
+
+    await Promise.all(importPromises);
+  }
+
+  public async setIrcManager(): Promise<void> {
+    const derivationPath = `${MessageType.DlcOfferV0}'/${this.network.coinType}'/0'/0/0`;
+    const addressObject: Address = await this.client.getMethod(
+      'getDerivationPathAddress',
+    )(derivationPath);
+    const pubkey = Buffer.from(addressObject.publicKey, 'hex');
+
+    this.ircManager = new IrcOrderManager(
+      this.logger,
+      pubkey,
+      [
+        this.argv.ircserverprimary,
+        this.argv.ircserversecondary,
+        this.argv.ircservertertiary,
+      ],
+      this.argv.ircdebug === 'true',
+      this.getIrcChannel(),
+      Number(this.argv.ircport),
+    );
+
+    this.ircManager.on('orderoffermessage', (from, to, msg) => {
+      const orderOffer = OrderOfferV0.deserialize(Buffer.from(msg, 'hex'));
+    });
+
+    await this.ircManager.start();
+  }
+
   private getNetwork(): INetwork {
     switch (this.argv.network) {
       case 'mainnet':
@@ -366,6 +408,25 @@ export class Client {
         throw Error(
           'Incorrect network provided. Must be mainnet, testnet, regtest',
         );
+    }
+  }
+
+  private getIrcChannel(): ChannelType {
+    if (this.argv.test === 'true') {
+      return ChannelType.TestMarketPit;
+    } else {
+      switch (this.argv.network) {
+        case 'mainnet':
+          return ChannelType.AtomicMarketPit;
+        case 'testnet':
+          return ChannelType.TestnetMarketPit;
+        case 'regtest':
+          return ChannelType.RegtestMarketPit;
+        default:
+          throw Error(
+            'Incorrect network provided for irc channel. Must be mainnet, testnet, regtest',
+          );
+      }
     }
   }
 }

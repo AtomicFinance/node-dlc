@@ -29,6 +29,13 @@ export interface IArguments {
   zmqpubhashblock?: string;
   zmqpubrawtx?: string;
   zmqpubhashtx?: string;
+  ircenabled?: string;
+  ircserverprimary?: string;
+  ircserversecondary?: string;
+  ircservertertiary?: string;
+  ircdebug?: string;
+  ircchannel?: string;
+  ircport?: string;
   test?: string;
 }
 
