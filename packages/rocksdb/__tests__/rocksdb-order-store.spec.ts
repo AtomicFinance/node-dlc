@@ -186,6 +186,12 @@ describe('RocksdbOrderStore', () => {
     });
   });
 
+  describe('save order_accept by nick', () => {
+    it('should', async () => {
+      expect(1).to.equal(1);
+    });
+  });
+
   describe('find order_accept by tempOrderId', () => {
     it('should return the order_accept object', async () => {
       const actual = await sut.findOrderAccept(tempOrderId);
