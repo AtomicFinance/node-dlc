@@ -308,6 +308,8 @@ export default class DlcRoutes extends BaseRoutes {
 
     this.logger.info('End Sign DLC');
 
+    await this.client.watchDlcTransactions(dlcTxs);
+
     return res.json({
       hex: dlcSign.serialize().toString('hex'),
       txs: dlcTxs.serialize().toString('hex'),
@@ -350,6 +352,8 @@ export default class DlcRoutes extends BaseRoutes {
     this.logger.info('DLC Transactions saved');
 
     this.logger.info('End Finalize DLC');
+
+    await this.client.watchDlcTransactions(dlcTxs);
 
     return res.json({
       contractid: dlcSign.contractId.toString('hex'),

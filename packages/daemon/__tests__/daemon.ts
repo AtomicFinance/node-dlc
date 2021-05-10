@@ -32,6 +32,8 @@ export const config = {
       password: 'local321',
     },
   },
+  zmqpubrawtx: 'tcp://127.0.0.1:29000',
+  zmqpubrawblock: 'tcp://127.0.0.1:29000',
   host: '127.0.0.1',
   datadir: '.testdb',
   conf: 'node-dlc.conf',
@@ -59,6 +61,8 @@ export const argv: IArguments = {
   rpcport: config.bitcoin.rpc.port,
   rpcuser: config.bitcoin.rpc.username,
   rpcpass: config.bitcoin.rpc.password,
+  zmqpubrawtx: config.zmqpubrawtx,
+  zmqpubrawblock: config.zmqpubrawblock,
   p: config.port,
   port: config.port,
   h: config.host,
@@ -76,7 +80,8 @@ export type Route =
   | 'contract'
   | 'wallet'
   | 'oracle'
-  | 'finance';
+  | 'finance'
+  | 'chainmon';
 
 /**
  * Generates argument vector dependent on route to be tested
@@ -109,6 +114,9 @@ export const getArgv = (route: Route): IArguments => {
       break;
     case 'finance':
       newPort = 8482;
+      break;
+    case 'chainmon':
+      newPort = 8483;
       break;
     default:
       newPort = port;

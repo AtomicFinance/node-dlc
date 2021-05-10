@@ -25,6 +25,10 @@ export interface IArguments {
   rpcport?: string;
   electrsapi?: string;
   electrsbatchapi?: string;
+  zmqpubrawblock?: string;
+  zmqpubhashblock?: string;
+  zmqpubrawtx?: string;
+  zmqpubhashtx?: string;
   test?: string;
 }
 

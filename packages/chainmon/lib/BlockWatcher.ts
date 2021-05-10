@@ -104,10 +104,11 @@ export class BlockWatcher extends EventEmitter {
       if (!txs) txs = [tx.txId.toString()];
     }
 
+    const blockHash = block.getId();
     const previousblockhash = block.prevHash.reverse().toString('hex');
 
     const blockSummary: BlockSummary = {
-      hash: block.getHash().toString('hex'),
+      hash: blockHash,
       confirmations: 1,
       size: buf.length,
       weight: block.weight(),
@@ -127,13 +128,13 @@ export class BlockWatcher extends EventEmitter {
       nextblockhash: '',
     };
 
+    this.receivedBlocks.set(blockSummary.hash, blockSummary);
+
     for (const transaction of block.transactions) {
       const tx = Tx.fromBuffer(transaction.toBuffer());
       this._checkOutpoints(blockSummary, tx);
       this._checkScriptPubkeys(blockSummary, tx);
     }
-
-    this.receivedBlocks.set(blockSummary.hash, blockSummary);
 
     const existingBlockWithPrevHash = this.previousHashToHash.get(
       blockSummary.previousblockhash,
