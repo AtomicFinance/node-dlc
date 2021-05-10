@@ -18,7 +18,6 @@ export async function handler(argv: IArguments): Promise<void> {
   const { host, port, apikey, loglevel, contractid, oracleattestation } = argv;
   const logger: Logger = getLogger(loglevel);
   const client = new DlcdClient(host, port, logger, apikey, 'api/v0');
-  console.log('oracleattestation', oracleattestation);
   const response = await client.post(Endpoint.DlcExecute, {
     contractid,
     oracleattestation,
