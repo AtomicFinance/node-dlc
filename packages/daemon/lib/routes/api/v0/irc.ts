@@ -10,6 +10,8 @@ import {
   ContractInfo,
   OrderNegotiationFieldsV0,
   OrderNegotiationFieldsV1,
+  DlcOfferV0,
+  DlcOffer,
 } from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
 import {
@@ -21,9 +23,25 @@ import {
 } from '../../validate/ValidateFields';
 import { chainHashFromNetwork } from '@atomicfinance/bitcoin-networks';
 
-export default class OrderRoutes extends BaseRoutes {
+export default class IrcRoutes extends BaseRoutes {
   constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
     super(argv, db, logger, client);
+  }
+
+  public async postOffers(req: Request, res: Response): Promise<Response> {
+    const { ircNickname } = req.params;
+    const { dlcoffer } = req.body;
+
+    validateType(dlcoffer, 'Dlc Offer', DlcOfferV0, this, res);
+    const dlcOffer = DlcOffer.deserialize(
+      Buffer.from(dlcoffer as string, 'hex'),
+    );
+
+    await this.db.dlc.saveDlcOffer(dlcOffer);
+
+    // TODO: create websockets message
+
+    return res.json({ msg: 'success' });
   }
 
   public async getOffer(req: Request, res: Response): Promise<Response> {
@@ -73,8 +91,6 @@ export default class OrderRoutes extends BaseRoutes {
     orderOffer.refundLocktime = Number(refundlocktime);
 
     await this.db.order.saveOrderOffer(orderOffer);
-
-    if (this.client.irc) this.client.ircManager.send(orderOffer);
 
     return res.json({ hex: orderOffer.serialize().toString('hex') });
   }
@@ -156,8 +172,6 @@ export default class OrderRoutes extends BaseRoutes {
 
     await this.db.order.saveOrderOffer(orderOffer);
     await this.db.order.saveOrderAccept(orderAccept);
-
-    if (this.client.irc) this.client.ircManager.send(orderAccept);
 
     return res.json({ hex: orderAccept.serialize().toString('hex') });
   }

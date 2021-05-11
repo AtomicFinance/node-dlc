@@ -52,6 +52,7 @@ export default class Server {
     this.client = new Client(argv, db, logger);
     this.client.setAddressCache();
     this.client.chainMon();
+    this.client.setIrcManager();
     this.routesAPI = new RoutesAPI(app, argv, db, logger, this.client);
     this.routesV0 = new RoutesV0(app, argv, db, logger, this.client);
     this.routesFinance = new RoutesFinance(app, argv, db, logger, this.client);

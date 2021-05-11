@@ -42,6 +42,7 @@
     "@node-dlc/core": "^0.4.4",
     "@node-dlc/messaging": "^0.4.4",
     "@node-dlc/rocksdb": "^0.4.4",
+    "@node-dlc/transport": "^0.4.4",
     "@node-lightning/bitcoin": "^0.22.0",
     "@node-lightning/bitcoind": "^0.22.0",
     "@node-lightning/bufio": "^0.22.0",
