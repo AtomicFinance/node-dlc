@@ -47,6 +47,7 @@ export enum MessageType {
    * Dlc Storage Types
    */
   DlcTransactionsV0 = 61230,
+  DlcIdsV0 = 61232,
 
   /**
    * Order Message Types
