@@ -27,7 +27,7 @@
   "dependencies": {
     "@node-dlc/daemon": "^0.4.4",
     "@node-dlc/logger": "^0.4.4",
-    "@node-lightning/bufio": "^0.21.1",
+    "@node-lightning/bufio": "0.22.1",
     "axios": "0.21.1",
     "bcfg": "0.1.6",
     "bcrypto": "5.4.0",
