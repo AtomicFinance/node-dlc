@@ -26,9 +26,9 @@
   "dependencies": {
     "@node-dlc/core": "^0.4.4",
     "@node-dlc/messaging": "^0.4.4",
-    "@node-lightning/bitcoin": "0.22.0",
-    "@node-lightning/bufio": "0.22.0",
-    "@node-lightning/crypto": "0.22.0",
+    "@node-lightning/bitcoin": "0.22.1",
+    "@node-lightning/bufio": "0.22.1",
+    "@node-lightning/crypto": "0.22.1",
     "irc": "0.5.2"
   },
   "devDependencies": {
