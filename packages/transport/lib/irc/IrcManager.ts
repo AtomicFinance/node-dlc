@@ -102,7 +102,7 @@ export class IrcManager extends EventEmitter {
     this.logger = logger.sub('ircmgr');
     this.pubKey = pubKey;
     this.servers = servers;
-    this.nick = this.generateNick();
+    this.nick = this.generateNick(this.pubKey);
     this.channel = channel;
     this.opts = {
       port,
@@ -116,11 +116,11 @@ export class IrcManager extends EventEmitter {
     this.lengthNickMsgs = new Map<string, bigint>();
   }
 
-  public generateNick(): string {
+  public generateNick(pubKey: Buffer): string {
     const { type, version } = IrcManager;
     const prefix = `${type}${version}`;
     const suffix = Base58.encode(
-      sha256(this.pubKey).slice(0, IrcManager.nickHashLen),
+      sha256(pubKey).slice(0, IrcManager.nickHashLen),
     );
     return `${prefix}${suffix}`;
   }

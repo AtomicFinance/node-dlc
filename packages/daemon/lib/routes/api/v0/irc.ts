@@ -12,6 +12,7 @@ import {
   OrderNegotiationFieldsV1,
   DlcOfferV0,
   DlcOffer,
+  DlcSignV0,
 } from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
 import {
@@ -22,13 +23,26 @@ import {
   validateBuffer,
 } from '../../validate/ValidateFields';
 import { chainHashFromNetwork } from '@atomicfinance/bitcoin-networks';
+import * as zmq from 'zeromq';
+import { verifyToken } from '../../../utils/crypto';
 
 export default class IrcRoutes extends BaseRoutes {
-  constructor(argv: IArguments, db: IDB, logger: Logger, client: Client) {
+  public sock: zmq.socket;
+
+  constructor(
+    argv: IArguments,
+    db: IDB,
+    logger: Logger,
+    client: Client,
+    sock: zmq.socket,
+  ) {
     super(argv, db, logger, client);
+    this.sock = sock;
   }
 
   public async postOffers(req: Request, res: Response): Promise<Response> {
+    this.ircAuth(req, res);
+
     const { ircNickname } = req.params;
     const { dlcoffer } = req.body;
 
@@ -38,141 +52,81 @@ export default class IrcRoutes extends BaseRoutes {
     );
 
     await this.db.dlc.saveDlcOffer(dlcOffer);
+    await this.db.irc.saveTempContractIdByNick(
+      sha256(dlcOffer.serialize()),
+      ircNickname,
+    );
 
-    // TODO: create websockets message
+    await this.sock.send(['dlcoffer', dlcOffer.serialize().toString('hex')]);
 
     return res.json({ msg: 'success' });
   }
 
-  public async getOffer(req: Request, res: Response): Promise<Response> {
-    const { temporderid } = req.params;
-
-    validateString(temporderid, 'temporderid', this, res);
-    validateBuffer(temporderid as string, 'temporderid', this, res);
-    const tempOrderId = Buffer.from(temporderid as string, 'hex');
-
-    const orderOffer = await this.db.order.findOrderOffer(tempOrderId);
-
-    if (orderOffer === undefined)
-      return routeErrorHandler(this, res, 404, 'OrderOffer not found.');
-
-    return res.json({ hex: orderOffer.serialize().toString('hex') });
-  }
-
-  public async postOffer(req: Request, res: Response): Promise<Response> {
-    const {
-      contractinfo,
-      collateral,
-      feerate,
-      locktime,
-      refundlocktime,
-    } = req.body;
-
-    this.logger.info('Start Offer Order');
-
-    this.logger.info('Validate ContractInfo...');
-    validateType(contractinfo, 'Contract Info', ContractInfo, this, res);
-    const contractInfo = ContractInfo.deserialize(
-      Buffer.from(contractinfo as string, 'hex'),
-    );
-
-    validateBigInt(collateral, 'collateral', this, res);
-    validateBigInt(feerate, 'feerate', this, res);
-    validateNumber(locktime, 'locktime', this, res);
-    validateNumber(refundlocktime, 'refundlocktime', this, res);
-    this.logger.info('ContractInfo Valid');
-
-    const orderOffer = new OrderOfferV0();
-    orderOffer.chainHash = chainHashFromNetwork(this.client.network);
-    orderOffer.contractInfo = contractInfo;
-    orderOffer.offerCollateralSatoshis = BigInt(collateral as string);
-    orderOffer.feeRatePerVb = BigInt(feerate as string);
-    orderOffer.cetLocktime = Number(locktime);
-    orderOffer.refundLocktime = Number(refundlocktime);
-
-    await this.db.order.saveOrderOffer(orderOffer);
-
-    return res.json({ hex: orderOffer.serialize().toString('hex') });
-  }
-
   public async getAccept(req: Request, res: Response): Promise<Response> {
-    const { temporderid } = req.params;
+    this.ircAuth(req, res);
 
-    validateString(temporderid, 'temporderid', this, res);
-    validateBuffer(temporderid as string, 'temporderid', this, res);
-    const tempOrderId = Buffer.from(temporderid as string, 'hex');
+    const { ircNickname, tempContractId } = req.params;
 
-    const orderAccept = await this.db.order.findOrderAccept(tempOrderId);
+    validateBuffer(tempContractId as string, 'TempContractId', this, res);
 
-    if (orderAccept === undefined)
-      return routeErrorHandler(this, res, 404, 'OrderAccept not found.');
+    const tempContractIds = await this.db.irc.findTempContractIdsByNick(
+      ircNickname,
+    );
+    const tempContractIndex = tempContractIds.ids.findIndex(
+      (id) => id.toString('hex') === tempContractId,
+    );
+    if (tempContractIndex === -1)
+      return routeErrorHandler(
+        this,
+        res,
+        404,
+        'TempContractId for DlcAccept not found',
+      );
 
-    return res.json({ hex: orderAccept.serialize().toString('hex') });
+    const dlcAccepts = await this.db.dlc.findDlcAccepts();
+    const dlcAcceptIndex = dlcAccepts.findIndex(
+      (dlcAccept) =>
+        dlcAccept.tempContractId.toString('hex') === tempContractId,
+    );
+    if (dlcAcceptIndex === -1)
+      return routeErrorHandler(this, res, 404, 'DlcAccept not found');
+
+    const dlcAccept = dlcAccepts[dlcAcceptIndex];
+
+    return res.json({ hex: dlcAccept.serialize().toString('hex') });
   }
 
-  public async postAccept(req: Request, res: Response): Promise<Response> {
-    const {
-      orderoffer,
-      contractinfo,
-      collateral,
-      feerate,
-      locktime,
-      refundlocktime,
-    } = req.body;
+  public async postSigns(req: Request, res: Response): Promise<Response> {
+    this.ircAuth(req, res);
 
-    validateType(orderoffer, 'Order Offer', OrderOfferV0, this, res);
-    const orderOffer = OrderOfferV0.deserialize(
-      Buffer.from(orderoffer as string, 'hex'),
+    const { ircNickname } = req.params;
+    const { dlcsign } = req.body;
+
+    validateType(dlcsign, 'Dlc Sign', DlcSignV0, this, res);
+    const dlcSign = DlcSignV0.deserialize(
+      Buffer.from(dlcsign as string, 'hex'),
     );
 
-    const orderAccept = new OrderAcceptV0();
+    await this.db.dlc.saveDlcSign(dlcSign);
+    await this.db.irc.saveContractIdByNick(dlcSign.contractId, ircNickname);
 
-    orderAccept.tempOrderId = sha256(orderOffer.serialize());
+    await this.sock.send(['dlcsign', dlcSign.serialize().toString('hex')]);
 
-    if (
-      !contractinfo &&
-      !collateral &&
-      !feerate &&
-      !locktime &&
-      !refundlocktime
-    ) {
-      const orderNegotiationFields = new OrderNegotiationFieldsV0();
-
-      orderAccept.negotiationFields = orderNegotiationFields;
-    } else {
-      const _orderOffer = new OrderOfferV0();
-
-      _orderOffer.chainHash = orderOffer.chainHash;
-
-      _orderOffer.contractInfo = contractinfo
-        ? ContractInfo.deserialize(Buffer.from(contractinfo as string, 'hex'))
-        : orderOffer.contractInfo;
-
-      _orderOffer.offerCollateralSatoshis = collateral
-        ? BigInt(collateral)
-        : orderOffer.offerCollateralSatoshis;
-
-      _orderOffer.feeRatePerVb = feerate
-        ? BigInt(feerate)
-        : orderOffer.feeRatePerVb;
-
-      _orderOffer.cetLocktime = locktime
-        ? Number(locktime)
-        : orderOffer.cetLocktime;
-
-      _orderOffer.refundLocktime = refundlocktime
-        ? Number(refundlocktime)
-        : orderOffer.refundLocktime;
-
-      const orderNegotiationFields = new OrderNegotiationFieldsV1();
-      orderNegotiationFields.orderOffer = _orderOffer;
-
-      orderAccept.negotiationFields = orderNegotiationFields;
-    }
-
-    await this.db.order.saveOrderOffer(orderOffer);
-    await this.db.order.saveOrderAccept(orderAccept);
-
-    return res.json({ hex: orderAccept.serialize().toString('hex') });
+    return res.json({ msg: 'success' });
   }
+
+  private ircAuth = (req: Request, res: Response): void => {
+    const signature = req.header('X-SIGNATURE');
+    const timestamp = parseInt(req.header('X-TIMESTAMP')!);
+    const pubkey = req.header('X-PUBKEY');
+    const { ircNickname } = req.params;
+
+    validateBuffer(pubkey as string, 'Pubkey', this, res);
+    const pubKey = Buffer.from(pubkey, 'hex');
+    const expectedNick = this.client.ircManager.generateNick(pubKey);
+
+    if (ircNickname !== expectedNick) throw Error('Incorrect pubkey for nick');
+    if (isNaN(timestamp)) throw new Error('Invalid timestamp value');
+    verifyToken(Buffer.from(signature, 'hex'), timestamp, pubKey);
+  };
 }

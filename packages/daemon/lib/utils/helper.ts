@@ -4,6 +4,10 @@ export const validApiKey = (str: string): boolean => {
   return str.match(/^[a-f0-9]{64}/i) !== null;
 };
 
+export const validPubKey = (str: string): boolean => {
+  return str.match(/^[a-f0-9]{66}/i) !== null;
+};
+
 export const wrapAsync = (
   fn: (req: Request, res: Response, next?: NextFunction) => Promise<Response>,
 ) => {

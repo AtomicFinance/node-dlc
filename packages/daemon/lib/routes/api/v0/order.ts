@@ -158,6 +158,7 @@ export default class OrderRoutes extends BaseRoutes {
     await this.db.order.saveOrderAccept(orderAccept);
 
     if (this.client.irc) this.client.ircManager.send(orderAccept);
+    // TODO: send dlc node connection info
 
     return res.json({ hex: orderAccept.serialize().toString('hex') });
   }

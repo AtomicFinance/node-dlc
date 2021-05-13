@@ -1,19 +1,23 @@
 import { Logger } from '@node-lightning/logger';
-import { Application, Request } from 'express';
+import { Application, NextFunction, Request, RequestHandler } from 'express';
 import basicAuth, { IAsyncAuthorizerOptions } from 'express-basic-auth';
 import { sha256 } from '@node-lightning/crypto';
 import { IArguments, IDB } from '../../../utils/config';
-import { wrapAsync, validApiKey } from '../../../utils/helper';
+import { wrapAsync, validApiKey, validPubKey } from '../../../utils/helper';
 import OrderRoutes from './order';
 import DlcRoutes from './dlc';
 import { Endpoint } from '../../Endpoint';
 import { Client } from '../../../client';
 import ContractInfoRoutes from './contract';
+import * as zmq from 'zeromq';
+import IrcRoutes from './irc';
+import { verifyToken } from '../../../utils/crypto';
 
 export class RoutesV0 {
   public contractInfo: ContractInfoRoutes;
   public order: OrderRoutes;
   public dlc: DlcRoutes;
+  public irc: IrcRoutes;
   public db: IDB;
   public client: Client;
   public prefix = 'api/v0';
@@ -24,12 +28,14 @@ export class RoutesV0 {
     db: IDB,
     logger: Logger,
     client: Client,
+    sock: zmq.socket,
   ) {
     this.db = db;
     this.client = client;
     this.contractInfo = new ContractInfoRoutes(argv, db, logger, client);
     this.order = new OrderRoutes(argv, db, logger, client);
     this.dlc = new DlcRoutes(argv, db, logger, client);
+    this.irc = new IrcRoutes(argv, db, logger, client, sock);
 
     const options: IAsyncAuthorizerOptions = {
       authorizeAsync: true,
@@ -113,6 +119,10 @@ export class RoutesV0 {
       this.getEndpoint(Endpoint.DlcRefund),
       basicAuth(options),
       wrapAsync(this.dlc.postRefund.bind(this.dlc)),
+    );
+    app.post(
+      this.getEndpoint(Endpoint.IrcOffer, ':ircNickname'),
+      wrapAsync(this.irc.postOffers.bind(this.irc)),
     );
   }
 

@@ -2,6 +2,7 @@ import {
   RocksdbDlcStore,
   RocksdbOrderStore,
   RocksdbWalletStore,
+  RocksdbIrcStore,
 } from '@node-dlc/rocksdb';
 import { ConsoleTransport, Logger, LogLevel } from '@node-lightning/logger';
 import {
@@ -21,7 +22,8 @@ import { RoutesAPI, RoutesV0, RoutesFinance, RoutesFallback } from './routes';
 import { IArguments, IDB } from './utils/config';
 import { Client } from './client';
 import * as http from 'http';
-import * as WebSocket from 'ws';
+// import * as WebSocket from 'ws';
+import * as zmq from 'zeromq';
 
 export default class Server {
   public routesV0: RoutesV0;
@@ -34,7 +36,8 @@ export default class Server {
   public logger: Logger;
   public db: IDB;
   private server: http.Server;
-  private wss: WebSocket;
+  // private wss: WebSocket;
+  private sock: zmq.socket;
 
   constructor(app: Application, argv: IArguments, logger: Logger) {
     const { datadir, network } = argv;
@@ -47,14 +50,20 @@ export default class Server {
     const walletDb = new RocksdbWalletStore(`${datadir}/${network}/wallet`);
     const dlcDb = new RocksdbDlcStore(`${datadir}/${network}/dlc`);
     const orderDb = new RocksdbOrderStore(`${datadir}/${network}/order`);
-    const db: IDB = { wallet: walletDb, dlc: dlcDb, order: orderDb };
+    const ircDb = new RocksdbIrcStore(`${datadir}/${network}/irc`);
+    const db: IDB = {
+      wallet: walletDb,
+      dlc: dlcDb,
+      order: orderDb,
+      irc: ircDb,
+    };
     this.db = db;
     this.client = new Client(argv, db, logger);
     this.client.setAddressCache();
     this.client.chainMon();
     this.client.setIrcManager();
     this.routesAPI = new RoutesAPI(app, argv, db, logger, this.client);
-    this.routesV0 = new RoutesV0(app, argv, db, logger, this.client);
+    this.routesV0 = new RoutesV0(app, argv, db, logger, this.client, this.sock);
     this.routesFinance = new RoutesFinance(app, argv, db, logger, this.client);
     this.RoutesFallback = new RoutesFallback(app, logger);
   }
@@ -104,11 +113,12 @@ export default class Server {
   public start(): void {
     this.server = http.createServer(this.app);
 
-    this.wss = new WebSocket.Server({ server: this.server });
-
     this.server.listen(this.argv.port, 'localhost', () => {
       this.logger.info(`Server running on http://localhost:${this.argv.port}`);
     });
+
+    this.sock = zmq.socket('push');
+    this.sock.bindSync(this.argv.zmqsub);
   }
 
   public stop(): void {

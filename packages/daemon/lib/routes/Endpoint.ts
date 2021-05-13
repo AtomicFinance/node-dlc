@@ -32,5 +32,9 @@ export enum Endpoint {
   OptionContractInfo = 'option/contractinfo',
   OptionOffer = 'option/offer',
 
+  IrcOffer = 'irc/offer',
+  IrcAccept = 'irc/accept',
+  IrcSign = 'irc/sign',
+
   ContractInfo = 'contract/info',
 }

@@ -102,6 +102,11 @@ export const argv: IArguments = yargs(process.argv.slice(2))
       default: 'tcp://127.0.0.1:28332',
       global: true,
     },
+    zmqsub: {
+      type: 'string',
+      default: 'tcp://127.0.0.1:28575',
+      global: true,
+    },
     ircenabled: {
       type: 'string',
       default: 'true',

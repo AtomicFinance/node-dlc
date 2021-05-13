@@ -36,7 +36,7 @@ import {
 import { TxWatcher, BlockWatcher } from '@node-dlc/chainmon';
 import { OutPoint, Value, Script, Tx } from '@node-lightning/bitcoin';
 import { address } from 'bitcoinjs-lib';
-import { ChannelType, IrcManager, IrcOrderManager } from '@node-dlc/transport';
+import { ChannelType, IrcOrderManager } from '@node-dlc/transport';
 
 export class Client {
   public client: FinanceClient;

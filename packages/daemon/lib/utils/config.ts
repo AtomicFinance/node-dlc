@@ -1,5 +1,6 @@
 import {
   RocksdbDlcStore,
+  RocksdbIrcStore,
   RocksdbOrderStore,
   RocksdbWalletStore,
 } from '@node-dlc/rocksdb';
@@ -29,6 +30,7 @@ export interface IArguments {
   zmqpubhashblock?: string;
   zmqpubrawtx?: string;
   zmqpubhashtx?: string;
+  zmqsub?: string;
   ircenabled?: string;
   ircserverprimary?: string;
   ircserversecondary?: string;
@@ -43,6 +45,7 @@ export interface IDB {
   wallet: RocksdbWalletStore;
   dlc: RocksdbDlcStore;
   order: RocksdbOrderStore;
+  irc: RocksdbIrcStore;
 }
 
 export function parseConfig(configData: any): any {
