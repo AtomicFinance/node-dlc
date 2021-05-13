@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/daemon",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "DLC Daemon",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -38,10 +38,10 @@
     "@liquality/bitcoin-rpc-provider": "1.0.0-beta.4",
     "@liquality/client": "1.0.0-beta.4",
     "@liquality/types": "1.0.0-beta.4",
-    "@node-dlc/chainmon": "^0.4.4",
-    "@node-dlc/core": "^0.4.4",
-    "@node-dlc/messaging": "^0.4.4",
-    "@node-dlc/rocksdb": "^0.4.4",
+    "@node-dlc/chainmon": "^0.4.5",
+    "@node-dlc/core": "^0.4.5",
+    "@node-dlc/messaging": "^0.4.5",
+    "@node-dlc/rocksdb": "^0.4.5",
     "@node-lightning/bitcoin": "0.22.1",
     "@node-lightning/bitcoind": "0.22.1",
     "@node-lightning/bufio": "0.22.1",
