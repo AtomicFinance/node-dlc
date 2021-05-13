@@ -1,4 +1,4 @@
-import { sha256 } from '@liquality/crypto';
+import { sha256 } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 import { AddressCache } from '@node-dlc/messaging';
 import Cryptr from 'cryptr';
@@ -33,10 +33,7 @@ export class RocksdbWalletStore extends RocksdbBase {
   }
 
   public async findSeed(apiKey: Buffer): Promise<string> {
-    const key = Buffer.concat([
-      Buffer.from([Prefix.Wallet]),
-      Buffer.from(sha256(apiKey), 'hex'),
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.Wallet]), sha256(apiKey)]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw)
       throw new Error('Wallet has not been created or incorrect api key');
@@ -51,19 +48,13 @@ export class RocksdbWalletStore extends RocksdbBase {
     const cryptr = new Cryptr(apiKey.toString('hex'));
     const encryptedMnemonic = cryptr.encrypt(mnemonic);
     const value = Buffer.from(encryptedMnemonic, 'hex');
-    const key = Buffer.concat([
-      Buffer.from([Prefix.Wallet]),
-      Buffer.from(sha256(apiKey), 'hex'),
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.Wallet]), sha256(apiKey)]);
     await this._db.put(key, value);
     await this.saveApiKeyHash(apiKey);
   }
 
   public async deleteSeed(apiKey: Buffer): Promise<void> {
-    const key = Buffer.concat([
-      Buffer.from([Prefix.Wallet]),
-      Buffer.from(sha256(apiKey), 'hex'),
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.Wallet]), sha256(apiKey)]);
     await this._db.del(key);
   }
 
@@ -75,7 +66,7 @@ export class RocksdbWalletStore extends RocksdbBase {
   }
 
   public async saveApiKeyHash(apiKey: Buffer): Promise<void> {
-    const value = Buffer.from(sha256(apiKey), 'hex');
+    const value = sha256(apiKey);
     const key = Buffer.from([Prefix.ApiKey]);
     await this._db.put(key, value);
   }
