@@ -3,6 +3,7 @@ import { ILogger } from './ILogger';
 import { IrcManager } from './IrcManager';
 import { WhitelistHandler } from './WhitelistHandler';
 import { OrderOfferV0, OrderAcceptV0, DlcMessage } from '@node-dlc/messaging';
+import { NodeAnnouncementMessage, MessageType } from '@node-lightning/wire';
 import { sha256 } from '@node-lightning/crypto';
 
 export class IrcOrderManager extends IrcManager {
@@ -32,7 +33,10 @@ export class IrcOrderManager extends IrcManager {
     this.receivedOrders = new Map<string, string>();
   }
 
-  public send(msg: OrderOfferV0 | OrderAcceptV0): void {
+  public send(
+    msg: OrderOfferV0 | OrderAcceptV0 | NodeAnnouncementMessage,
+    tempOrderId?: Buffer,
+  ): void {
     switch (msg.type) {
       case OrderOfferV0.type:
         this.say(msg.serialize());
@@ -45,8 +49,14 @@ export class IrcOrderManager extends IrcManager {
           ),
         );
         break;
+      case MessageType.NodeAnnouncement:
+        this.say(
+          msg.serialize(),
+          this.receivedOrders.get(tempOrderId.toString('hex')),
+        );
+        break;
       default:
-        throw Error('Msg must be OrderOffer or OrderAccept');
+        throw Error('Msg must be OrderOffer, OrderAccept or NodeAnnouncement');
     }
   }
 
@@ -63,6 +73,9 @@ export class IrcOrderManager extends IrcManager {
           break;
         case OrderAcceptV0.type:
           this.emit('orderacceptmessage', from, to, msg);
+          break;
+        case MessageType.NodeAnnouncement:
+          this.emit('nodeannouncementmessage', from, to, msg);
           break;
         default:
           throw Error('DlcMessage type not supported');
