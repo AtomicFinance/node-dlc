@@ -1,12 +1,10 @@
 import {
+  ContractDescriptorV1,
   ContractInfo,
   ContractInfoV0,
-  ContractDescriptorV1,
-  PayoutFunctionV0,
-  MessageType,
   HyperbolaPayoutCurvePiece,
-  DlcOffer,
-  DlcOfferV0,
+  MessageType,
+  PayoutFunctionV0,
 } from '@node-dlc/messaging';
 
 export interface OptionInfo {
@@ -32,7 +30,7 @@ export function getOptionInfoFromContractInfo(
   _contractInfo: ContractInfo,
 ): OptionInfo {
   if (_contractInfo.type !== MessageType.ContractInfoV0)
-    throw Error('Only ContractDescriptorV0 currently supported');
+    throw Error('Only ContractInfoV0 currently supported');
 
   const contractInfo = _contractInfo as ContractInfoV0;
   if (contractInfo.contractDescriptor.type !== MessageType.ContractDescriptorV1)
@@ -40,6 +38,12 @@ export function getOptionInfoFromContractInfo(
 
   const oracleInfo = contractInfo.oracleInfo;
   const { eventMaturityEpoch } = oracleInfo.announcement.oracleEvent;
+
+  if (
+    oracleInfo.announcement.oracleEvent.eventDescriptor.type !==
+    MessageType.DigitDecompositionEventDescriptorV0
+  )
+    throw Error('Only DigitDecompositionEventDescriptorV0 currently supported');
 
   const contractDescriptor = contractInfo.contractDescriptor as ContractDescriptorV1;
   if (contractDescriptor.payoutFunction.type !== MessageType.PayoutFunctionV0)
