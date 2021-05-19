@@ -108,7 +108,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       const stream = this._db.createReadStream();
       const results: DlcSignV0[] = [];
       stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcAcceptV0) {
+        if (data.key[0] === Prefix.DlcSignV0) {
           results.push(DlcSignV0.deserialize(data.value));
         }
       });
@@ -145,7 +145,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       const stream = this._db.createReadStream();
       const results: DlcTransactionsV0[] = [];
       stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcAcceptV0) {
+        if (data.key[0] === Prefix.DlcTransactionsV0) {
           results.push(DlcTransactionsV0.deserialize(data.value));
         }
       });
