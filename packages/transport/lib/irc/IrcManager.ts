@@ -214,7 +214,10 @@ export class IrcManager extends EventEmitter {
     if (!length) length = BigInt(0);
 
     if (msgs.length === Number(length)) {
-      const msgBuf = Buffer.from(msg, 'hex');
+      const msgBuf = Buffer.from(
+        msg.length % 2 === 1 ? msg.slice(0, -1) : msg,
+        'hex',
+      );
       const reader = new BufferReader(msgBuf);
       length = reader.readBigSize();
       msgs = '';
