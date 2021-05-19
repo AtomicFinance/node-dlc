@@ -3,4 +3,8 @@ export enum ChannelType {
   TestnetMarketPit = '#testnetmarket-pit',
   RegtestMarketPit = '#regtestmarket-pit',
   TestMarketPit = '#testmarket-pit',
+  AtomicAltMarketPit = '#atomicaltmarket-pit',
+  TestnetAltMarketPit = '#testnetaltmarket-pit',
+  RegtestAltMarketPit = '#regtestaltmarket-pit',
+  TestAltMarketPit = '#testaltmarket-pit',
 }
