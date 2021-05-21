@@ -31,6 +31,8 @@ export abstract class DlcOffer {
 
   public abstract getAddresses(network: BitcoinNetwork): IDlcOfferV0Addresses;
 
+  public abstract validate(): void;
+
   public abstract toJSON(): IDlcOfferV0JSON;
 
   public abstract serialize(): Buffer;
@@ -129,6 +131,13 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       changeAddress,
       payoutAddress,
     };
+  }
+
+  public validate(): void {
+    this.contractInfo.validate();
+    if (this.contractInfo.totalCollateral <= this.offerCollateralSatoshis) {
+      throw new Error('Total collateral less than offer collateral');
+    }
   }
 
   /**
