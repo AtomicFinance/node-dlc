@@ -60,29 +60,32 @@ export class RocksdbOracleStore extends RocksdbBase {
     await this._db.del(key);
   }
 
-  public async findNonces(eventId: string): Promise<DlcIdsV0> {
+  public async findNonces(announcementId: Buffer): Promise<DlcIdsV0> {
     const key = Buffer.concat([
       Buffer.from([Prefix.OracleNoncesV0]),
-      Buffer.from(eventId),
+      announcementId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcIdsV0.deserialize(raw);
   }
 
-  public async saveNonces(nonces: DlcIdsV0, eventId: string): Promise<void> {
+  public async saveNonces(
+    nonces: DlcIdsV0,
+    announcementId: Buffer,
+  ): Promise<void> {
     const value = nonces.serialize();
     const key = Buffer.concat([
       Buffer.from([Prefix.OracleNoncesV0]),
-      Buffer.from(eventId),
+      announcementId,
     ]);
     await this._db.put(key, value);
   }
 
-  public async deleteNonces(eventId: string): Promise<void> {
+  public async deleteNonces(announcementId: Buffer): Promise<void> {
     const key = Buffer.concat([
       Buffer.from([Prefix.OracleNoncesV0]),
-      Buffer.from(eventId),
+      announcementId,
     ]);
     await this._db.del(key);
   }

@@ -137,7 +137,10 @@ describe('RocksdbOracleStore', () => {
   const oracleNonces = new DlcIdsV0();
   oracleNonces.ids = nonces;
 
-  const eventId = 'Deribit-BTC-21MAY21';
+  const announcementId = Buffer.from(
+    '00b42522474be83e9863fc6fe287d3e9598260aef0f8b8c65b30a93cfd5f2602',
+    'hex',
+  );
 
   before(async () => {
     util.rmdir('.testdb');
@@ -184,13 +187,13 @@ describe('RocksdbOracleStore', () => {
 
   describe('save nonces', () => {
     it('should save nonces', async () => {
-      await sut.saveNonces(oracleNonces, eventId);
+      await sut.saveNonces(oracleNonces, announcementId);
     });
   });
 
   describe('find nonces', () => {
     it('should return the nonces object', async () => {
-      const actual = await sut.findNonces(eventId);
+      const actual = await sut.findNonces(announcementId);
 
       expect(actual.serialize()).to.deep.equal(oracleNonces.serialize());
     });
@@ -198,9 +201,9 @@ describe('RocksdbOracleStore', () => {
 
   describe('delete nonces', () => {
     it('should delete nonces', async () => {
-      await sut.deleteNonces(eventId);
+      await sut.deleteNonces(announcementId);
 
-      const actual = await sut.findNonces(eventId);
+      const actual = await sut.findNonces(announcementId);
       expect(actual).to.be.undefined;
     });
   });
