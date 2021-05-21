@@ -1,6 +1,6 @@
 // tslint:disable: no-unused-expression
 
-import { OracleEventContainerV0 } from '@node-dlc/messaging';
+import { DlcIdsV0, OracleEventContainerV0 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { RocksdbOracleStore } from '../lib/rocksdb-oracle-store';
 import * as util from './rocksdb';
@@ -51,6 +51,94 @@ describe('RocksdbOracleStore', () => {
     oracleEventContainerHex,
   );
 
+  const nonces = [
+    Buffer.from(
+      '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b',
+      'hex',
+    ),
+    Buffer.from(
+      'd4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35',
+      'hex',
+    ),
+    Buffer.from(
+      '4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce',
+      'hex',
+    ),
+    Buffer.from(
+      '4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a',
+      'hex',
+    ),
+    Buffer.from(
+      'ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d',
+      'hex',
+    ),
+    Buffer.from(
+      'e7f6c011776e8db7cd330b54174fd76f7d0216b612387a5ffcfb81e6f0919683',
+      'hex',
+    ),
+    Buffer.from(
+      '7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451',
+      'hex',
+    ),
+    Buffer.from(
+      '2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3',
+      'hex',
+    ),
+    Buffer.from(
+      '19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7',
+      'hex',
+    ),
+    Buffer.from(
+      'c555eab45d08845ae9f10d452a99bfcb06f74a50b988fe7e48dd323789b88ee3',
+      'hex',
+    ),
+    Buffer.from(
+      '4a64a107f0cb32536e5bce6c98c393db21cca7f4ea187ba8c4dca8b51d4ea80a',
+      'hex',
+    ),
+    Buffer.from(
+      'f299791cddd3d6664f6670842812ef6053eb6501bd6282a476bbbf3ee91e750c',
+      'hex',
+    ),
+    Buffer.from(
+      'ab897fbdedfa502b2d839b6a56100887dccdc507555c282e59589e06300a62e2',
+      'hex',
+    ),
+    Buffer.from(
+      '83891d7fe85c33e52c8b4e5814c92fb6a3b9467299200538a6babaa8b452d879',
+      'hex',
+    ),
+    Buffer.from(
+      '2f0fd1e89b8de1d57292742ec380ea47066e307ad645f5bc3adad8a06ff58608',
+      'hex',
+    ),
+    Buffer.from(
+      '7cb7c4547cf2653590d7a9ace60cc623d25148adfbc88a89aeb0ef88da7839ba',
+      'hex',
+    ),
+    Buffer.from(
+      '8f11b05da785e43e713d03774c6bd3405d99cd3024af334ffd68db663aa37034',
+      'hex',
+    ),
+    Buffer.from(
+      '452ba1ddef80246c48be7690193c76c1d61185906be9401014fe14f1be64b74f',
+      'hex',
+    ),
+    Buffer.from(
+      '68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4',
+      'hex',
+    ),
+    Buffer.from(
+      '36a9e7f1c95b82ffb99743e0c5c4ce95d83c9a430aac59f84ef3cbfab6145068',
+      'hex',
+    ),
+  ];
+
+  const oracleNonces = new DlcIdsV0();
+  oracleNonces.ids = nonces;
+
+  const eventId = 'Deribit-BTC-21MAY21';
+
   before(async () => {
     util.rmdir('.testdb');
     sut = new RocksdbOracleStore('./.testdb/nested/dir');
@@ -90,6 +178,29 @@ describe('RocksdbOracleStore', () => {
       await sut.deleteOracleEventContainer(announcementId);
 
       const actual = await sut.findOracleEventContainer(announcementId);
+      expect(actual).to.be.undefined;
+    });
+  });
+
+  describe('save nonces', () => {
+    it('should save nonces', async () => {
+      await sut.saveNonces(oracleNonces, eventId);
+    });
+  });
+
+  describe('find nonces', () => {
+    it('should return the nonces object', async () => {
+      const actual = await sut.findNonces(eventId);
+
+      expect(actual.serialize()).to.deep.equal(oracleNonces.serialize());
+    });
+  });
+
+  describe('delete nonces', () => {
+    it('should delete nonces', async () => {
+      await sut.deleteNonces(eventId);
+
+      const actual = await sut.findNonces(eventId);
       expect(actual).to.be.undefined;
     });
   });

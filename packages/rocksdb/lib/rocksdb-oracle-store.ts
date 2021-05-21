@@ -1,9 +1,10 @@
 import { sha256 } from '@node-lightning/crypto';
-import { OracleEventContainerV0 } from '@node-dlc/messaging';
+import { DlcIdsV0, OracleEventContainerV0 } from '@node-dlc/messaging';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
 enum Prefix {
   OracleEventContainerV0 = 80,
+  OracleNoncesV0 = 81,
 }
 
 export class RocksdbOracleStore extends RocksdbBase {
@@ -55,6 +56,33 @@ export class RocksdbOracleStore extends RocksdbBase {
     const key = Buffer.concat([
       Buffer.from([Prefix.OracleEventContainerV0]),
       announcementId,
+    ]);
+    await this._db.del(key);
+  }
+
+  public async findNonces(eventId: string): Promise<DlcIdsV0> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.OracleNoncesV0]),
+      Buffer.from(eventId),
+    ]);
+    const raw = await this._safeGet<Buffer>(key);
+    if (!raw) return;
+    return DlcIdsV0.deserialize(raw);
+  }
+
+  public async saveNonces(nonces: DlcIdsV0, eventId: string): Promise<void> {
+    const value = nonces.serialize();
+    const key = Buffer.concat([
+      Buffer.from([Prefix.OracleNoncesV0]),
+      Buffer.from(eventId),
+    ]);
+    await this._db.put(key, value);
+  }
+
+  public async deleteNonces(eventId: string): Promise<void> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.OracleNoncesV0]),
+      Buffer.from(eventId),
     ]);
     await this._db.del(key);
   }
