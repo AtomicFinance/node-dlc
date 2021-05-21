@@ -85,7 +85,7 @@ describe('ChainManager', () => {
     sut = new ChainManager(createFakeLogger(), chainClient, dlcStore);
   });
 
-  describe.only('.start()', () => {
+  describe('.start()', () => {
     describe('no history', () => {
       it('should restore block height to 0', async () => {
         await sut.start();
