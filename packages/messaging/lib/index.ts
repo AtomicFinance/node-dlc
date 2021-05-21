@@ -23,6 +23,7 @@ export * from './messages/OracleAnnouncementV0';
 export * from './messages/OracleAttestationV0';
 export * from './messages/OracleEventV0';
 export * from './messages/OracleInfoV0';
+export * from './messages/OracleEventContainerV0';
 export * from './messages/PayoutFunction';
 export * from './messages/RoundingIntervalsV0';
 export * from './messages/ScriptWitnessV0';
