@@ -178,7 +178,7 @@ export class ChainManager extends EventEmitter {
       (acc, msg) => acc + (msg instanceof DlcTransactionsV0 ? 1 : 0),
       0,
     );
-    this.logger.info('validating %d utxos', dlcTxsCount);
+    this.logger.info('validating %d funding utxos', dlcTxsCount);
 
     if (!dlcTxsCount) return;
 
@@ -189,7 +189,7 @@ export class ChainManager extends EventEmitter {
       const dlcTxs = dlcTxsList[i];
       if ((i + 1) % oct === 0) {
         this.logger.info(
-          'validating utxos %s% complete',
+          'validating funding utxos %s% complete',
           (((i + 1) / dlcTxsCount) * 100).toFixed(2),
         );
       }
@@ -224,6 +224,7 @@ export class ChainManager extends EventEmitter {
         }
       }
     }
+    this.logger.info('validating funding utxos 100% complete');
 
     if (dlcTxsToVerify.length === 0) return;
 
