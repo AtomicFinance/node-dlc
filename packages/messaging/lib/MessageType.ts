@@ -19,6 +19,8 @@ export enum MessageType {
   OracleAttestationV0 = 55400,
   OracleEventV0 = 55330,
 
+  OracleEventContainerV0 = 61632,
+
   EnumEventDescriptorV0 = 55302,
   DigitDecompositionEventDescriptorV0 = 55306,
 
