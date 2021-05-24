@@ -1,14 +1,14 @@
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
-import { BigIntMath } from '../../lib/utils/BigIntUtils';
 import {
   decompose,
   groupByIgnoringDigits,
   RoundingInterval,
-  splitIntoRanges,
   roundPayout,
+  splitIntoRanges,
 } from '../../lib/dlc/CETCalculator';
 import { HyperbolaPayoutCurve } from '../../lib/dlc/HyperbolaPayoutCurve';
+import { BigIntMath } from '../../lib/utils/BigIntUtils';
 
 const decompositionTestCases: {
   decomposed: number[];
@@ -56,15 +56,15 @@ const groupingTestCases: {
   expected: number[][];
 }[] = [
   {
-    startIndex: 123n,
-    endIndex: 123n,
+    startIndex: BigInt(123),
+    endIndex: BigInt(123),
     base: 10,
     nbDigits: 3,
     expected: [[1, 2, 3]],
   },
   {
-    startIndex: 171n,
-    endIndex: 210n,
+    startIndex: BigInt(171),
+    endIndex: BigInt(210),
     base: 16,
     nbDigits: 2,
     expected: [
@@ -81,8 +81,8 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 73899n,
-    endIndex: 73938n,
+    startIndex: BigInt(73899),
+    endIndex: BigInt(73938),
     base: 16,
     nbDigits: 6,
     expected: [
@@ -99,8 +99,8 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 1234n,
-    endIndex: 4321n,
+    startIndex: BigInt(1234),
+    endIndex: BigInt(4321),
     base: 10,
     nbDigits: 4,
     expected: [
@@ -135,8 +135,8 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 1201234n,
-    endIndex: 1204321n,
+    startIndex: BigInt(1201234),
+    endIndex: BigInt(1204321),
     base: 10,
     nbDigits: 8,
     expected: [
@@ -171,8 +171,8 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 2200n,
-    endIndex: 4999n,
+    startIndex: BigInt(2200),
+    endIndex: BigInt(4999),
     base: 10,
     nbDigits: 4,
     expected: [
@@ -189,29 +189,29 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 0n,
-    endIndex: 99n,
+    startIndex: BigInt(0),
+    endIndex: BigInt(99),
     base: 10,
     nbDigits: 2,
     expected: [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]],
   },
   {
-    startIndex: 100n,
-    endIndex: 199n,
+    startIndex: BigInt(100),
+    endIndex: BigInt(199),
     base: 10,
     nbDigits: 3,
     expected: [[1]],
   },
   {
-    startIndex: 100n,
-    endIndex: 200n,
+    startIndex: BigInt(100),
+    endIndex: BigInt(200),
     base: 10,
     nbDigits: 3,
     expected: [[1], [2, 0, 0]],
   },
   {
-    startIndex: 11n,
-    endIndex: 18n,
+    startIndex: BigInt(11),
+    endIndex: BigInt(18),
     base: 10,
     nbDigits: 2,
     expected: [
@@ -226,8 +226,8 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 11n,
-    endIndex: 23n,
+    startIndex: BigInt(11),
+    endIndex: BigInt(23),
     base: 2,
     nbDigits: 5,
     expected: [
@@ -237,8 +237,8 @@ const groupingTestCases: {
     ],
   },
   {
-    startIndex: 5677n,
-    endIndex: 8621n,
+    startIndex: BigInt(5677),
+    endIndex: BigInt(8621),
     base: 2,
     nbDigits: 14,
     expected: [
@@ -299,16 +299,16 @@ describe('CETCalculator', () => {
     it('should properly split and round with one interval', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 10n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(10),
         },
       ];
 
-      const totalCollateral = 100n;
-      const from = 0n;
-      const to = 999999n;
+      const totalCollateral = BigInt(100);
+      const from = BigInt(0);
+      const to = BigInt(999999);
       const fromPayout = totalCollateral;
-      const toPayout = 0n;
+      const toPayout = BigInt(0);
 
       const ranges = splitIntoRanges(
         from,
@@ -323,17 +323,37 @@ describe('CETCalculator', () => {
       const reversedIntervals = [...roundingIntervals].reverse();
 
       expect(ranges).deep.equal([
-        { payout: 100n, indexFrom: 0n, indexTo: 5263n },
-        { payout: 90n, indexFrom: 5264n, indexTo: 5882n },
-        { payout: 80n, indexFrom: 5883n, indexTo: 6666n },
-        { payout: 70n, indexFrom: 6667n, indexTo: 7692n },
-        { payout: 60n, indexFrom: 7693n, indexTo: 9090n },
-        { payout: 50n, indexFrom: 9091n, indexTo: 11111n },
-        { payout: 40n, indexFrom: 11112n, indexTo: 14285n },
-        { payout: 30n, indexFrom: 14286n, indexTo: 20000n },
-        { payout: 20n, indexFrom: 20001n, indexTo: 33333n },
-        { payout: 10n, indexFrom: 33334n, indexTo: 100000n },
-        { payout: 0n, indexFrom: 100001n, indexTo: 999999n },
+        { payout: BigInt(100), indexFrom: BigInt(0), indexTo: BigInt(5263) },
+        { payout: BigInt(90), indexFrom: BigInt(5264), indexTo: BigInt(5882) },
+        { payout: BigInt(80), indexFrom: BigInt(5883), indexTo: BigInt(6666) },
+        { payout: BigInt(70), indexFrom: BigInt(6667), indexTo: BigInt(7692) },
+        { payout: BigInt(60), indexFrom: BigInt(7693), indexTo: BigInt(9090) },
+        { payout: BigInt(50), indexFrom: BigInt(9091), indexTo: BigInt(11111) },
+        {
+          payout: BigInt(40),
+          indexFrom: BigInt(11112),
+          indexTo: BigInt(14285),
+        },
+        {
+          payout: BigInt(30),
+          indexFrom: BigInt(14286),
+          indexTo: BigInt(20000),
+        },
+        {
+          payout: BigInt(20),
+          indexFrom: BigInt(20001),
+          indexTo: BigInt(33333),
+        },
+        {
+          payout: BigInt(10),
+          indexFrom: BigInt(33334),
+          indexTo: BigInt(100000),
+        },
+        {
+          payout: BigInt(0),
+          indexFrom: BigInt(100001),
+          indexTo: BigInt(999999),
+        },
       ]);
       // for each rounded payout at indexTo, expect to be equal to range payout
       ranges.forEach((range) => {
@@ -352,10 +372,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -379,10 +399,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -393,18 +413,18 @@ describe('CETCalculator', () => {
     it('should properly split and round with non-even rounding mod', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 15n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(15),
         },
       ];
 
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 100n;
-      const from = 0n;
-      const to = 999999n;
+      const totalCollateral = BigInt(100);
+      const from = BigInt(0);
+      const to = BigInt(999999);
       const fromPayout = totalCollateral;
-      const toPayout = 0n;
+      const toPayout = BigInt(0);
 
       const ranges = splitIntoRanges(
         from,
@@ -417,14 +437,26 @@ describe('CETCalculator', () => {
       );
 
       expect(ranges).to.deep.equal([
-        { payout: 100n, indexFrom: 0n, indexTo: 5128n },
-        { payout: 90n, indexFrom: 5129n, indexTo: 6060n },
-        { payout: 75n, indexFrom: 6061n, indexTo: 7407n },
-        { payout: 60n, indexFrom: 7408n, indexTo: 9523n },
-        { payout: 45n, indexFrom: 9524n, indexTo: 13333n },
-        { payout: 30n, indexFrom: 13334n, indexTo: 22222n },
-        { payout: 15n, indexFrom: 22223n, indexTo: 66666n },
-        { payout: 0n, indexFrom: 66667n, indexTo: 999999n },
+        { payout: BigInt(100), indexFrom: BigInt(0), indexTo: BigInt(5128) },
+        { payout: BigInt(90), indexFrom: BigInt(5129), indexTo: BigInt(6060) },
+        { payout: BigInt(75), indexFrom: BigInt(6061), indexTo: BigInt(7407) },
+        { payout: BigInt(60), indexFrom: BigInt(7408), indexTo: BigInt(9523) },
+        { payout: BigInt(45), indexFrom: BigInt(9524), indexTo: BigInt(13333) },
+        {
+          payout: BigInt(30),
+          indexFrom: BigInt(13334),
+          indexTo: BigInt(22222),
+        },
+        {
+          payout: BigInt(15),
+          indexFrom: BigInt(22223),
+          indexTo: BigInt(66666),
+        },
+        {
+          payout: BigInt(0),
+          indexFrom: BigInt(66667),
+          indexTo: BigInt(999999),
+        },
       ]);
       // for each rounded payout at indexTo, expect to be equal to range payout
       ranges.forEach((range) => {
@@ -443,10 +475,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -470,10 +502,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -496,16 +528,16 @@ describe('CETCalculator', () => {
     it('should properly split and round with one interval', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 10n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(10),
         },
       ];
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 100n;
-      const from = 0n;
-      const to = 999999n;
-      const fromPayout = 0n;
+      const totalCollateral = BigInt(100);
+      const from = BigInt(0);
+      const to = BigInt(999999);
+      const fromPayout = BigInt(0);
       const toPayout = totalCollateral;
 
       const ranges = splitIntoRanges(
@@ -519,17 +551,37 @@ describe('CETCalculator', () => {
       );
 
       expect(ranges).to.deep.equal([
-        { payout: 0n, indexFrom: 0n, indexTo: 5263n },
-        { payout: 10n, indexFrom: 5264n, indexTo: 5882n },
-        { payout: 20n, indexFrom: 5883n, indexTo: 6666n },
-        { payout: 30n, indexFrom: 6667n, indexTo: 7692n },
-        { payout: 40n, indexFrom: 7693n, indexTo: 9090n },
-        { payout: 50n, indexFrom: 9091n, indexTo: 11111n },
-        { payout: 60n, indexFrom: 11112n, indexTo: 14285n },
-        { payout: 70n, indexFrom: 14286n, indexTo: 19999n },
-        { payout: 80n, indexFrom: 20000n, indexTo: 33333n },
-        { payout: 90n, indexFrom: 33334n, indexTo: 99999n },
-        { payout: 100n, indexFrom: 100000n, indexTo: 999999n },
+        { payout: BigInt(0), indexFrom: BigInt(0), indexTo: BigInt(5263) },
+        { payout: BigInt(10), indexFrom: BigInt(5264), indexTo: BigInt(5882) },
+        { payout: BigInt(20), indexFrom: BigInt(5883), indexTo: BigInt(6666) },
+        { payout: BigInt(30), indexFrom: BigInt(6667), indexTo: BigInt(7692) },
+        { payout: BigInt(40), indexFrom: BigInt(7693), indexTo: BigInt(9090) },
+        { payout: BigInt(50), indexFrom: BigInt(9091), indexTo: BigInt(11111) },
+        {
+          payout: BigInt(60),
+          indexFrom: BigInt(11112),
+          indexTo: BigInt(14285),
+        },
+        {
+          payout: BigInt(70),
+          indexFrom: BigInt(14286),
+          indexTo: BigInt(19999),
+        },
+        {
+          payout: BigInt(80),
+          indexFrom: BigInt(20000),
+          indexTo: BigInt(33333),
+        },
+        {
+          payout: BigInt(90),
+          indexFrom: BigInt(33334),
+          indexTo: BigInt(99999),
+        },
+        {
+          payout: BigInt(100),
+          indexFrom: BigInt(100000),
+          indexTo: BigInt(999999),
+        },
       ]);
       // for each rounded payout at indexTo, expect to be equal to range payout
       ranges.forEach((range) => {
@@ -548,10 +600,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -575,10 +627,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -589,18 +641,18 @@ describe('CETCalculator', () => {
     it('should properly split and round with multiple rounding intervals', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 7n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(7),
         },
-        { beginInterval: 5432n, roundingMod: 12n },
-        { beginInterval: 6432n, roundingMod: 25n },
+        { beginInterval: BigInt(5432), roundingMod: BigInt(12) },
+        { beginInterval: BigInt(6432), roundingMod: BigInt(25) },
       ];
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 100n;
-      const from = 0n;
-      const to = 999999n;
-      const fromPayout = 0n;
+      const totalCollateral = BigInt(100);
+      const from = BigInt(0);
+      const to = BigInt(999999);
+      const fromPayout = BigInt(0);
       const toPayout = totalCollateral;
 
       const ranges = splitIntoRanges(
@@ -614,14 +666,22 @@ describe('CETCalculator', () => {
       );
 
       expect(ranges).to.deep.equal([
-        { payout: 0n, indexFrom: 0n, indexTo: 5181n },
-        { payout: 7n, indexFrom: 5182n, indexTo: 5431n },
-        { payout: 12n, indexFrom: 5432n, indexTo: 6097n },
-        { payout: 24n, indexFrom: 6098n, indexTo: 6431n },
-        { payout: 25n, indexFrom: 6432n, indexTo: 7999n },
-        { payout: 50n, indexFrom: 8000n, indexTo: 13333n },
-        { payout: 75n, indexFrom: 13334n, indexTo: 39999n },
-        { payout: 100n, indexFrom: 40000n, indexTo: 999999n },
+        { payout: BigInt(0), indexFrom: BigInt(0), indexTo: BigInt(5181) },
+        { payout: BigInt(7), indexFrom: BigInt(5182), indexTo: BigInt(5431) },
+        { payout: BigInt(12), indexFrom: BigInt(5432), indexTo: BigInt(6097) },
+        { payout: BigInt(24), indexFrom: BigInt(6098), indexTo: BigInt(6431) },
+        { payout: BigInt(25), indexFrom: BigInt(6432), indexTo: BigInt(7999) },
+        { payout: BigInt(50), indexFrom: BigInt(8000), indexTo: BigInt(13333) },
+        {
+          payout: BigInt(75),
+          indexFrom: BigInt(13334),
+          indexTo: BigInt(39999),
+        },
+        {
+          payout: BigInt(100),
+          indexFrom: BigInt(40000),
+          indexTo: BigInt(999999),
+        },
       ]);
       // for each rounded payout at indexTo, expect to be equal to range payout
       ranges.forEach((range) => {
@@ -640,10 +700,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -667,10 +727,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -681,16 +741,16 @@ describe('CETCalculator', () => {
     it('should properly split and round with non-even rounding mod', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 15n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(15),
         },
       ];
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 100n;
-      const from = 0n;
-      const to = 999999n;
-      const fromPayout = 0n;
+      const totalCollateral = BigInt(100);
+      const from = BigInt(0);
+      const to = BigInt(999999);
+      const fromPayout = BigInt(0);
       const toPayout = totalCollateral;
 
       const ranges = splitIntoRanges(
@@ -704,14 +764,30 @@ describe('CETCalculator', () => {
       );
 
       expect(ranges).to.deep.equal([
-        { payout: 0n, indexFrom: 0n, indexTo: 5405n },
-        { payout: 15n, indexFrom: 5406n, indexTo: 6451n },
-        { payout: 30n, indexFrom: 6452n, indexTo: 7999n },
-        { payout: 45n, indexFrom: 8000n, indexTo: 10526n },
-        { payout: 60n, indexFrom: 10527n, indexTo: 15384n },
-        { payout: 75n, indexFrom: 15385n, indexTo: 28571n },
-        { payout: 90n, indexFrom: 28572n, indexTo: 199999n },
-        { payout: 100n, indexFrom: 200000n, indexTo: 999999n },
+        { payout: BigInt(0), indexFrom: BigInt(0), indexTo: BigInt(5405) },
+        { payout: BigInt(15), indexFrom: BigInt(5406), indexTo: BigInt(6451) },
+        { payout: BigInt(30), indexFrom: BigInt(6452), indexTo: BigInt(7999) },
+        { payout: BigInt(45), indexFrom: BigInt(8000), indexTo: BigInt(10526) },
+        {
+          payout: BigInt(60),
+          indexFrom: BigInt(10527),
+          indexTo: BigInt(15384),
+        },
+        {
+          payout: BigInt(75),
+          indexFrom: BigInt(15385),
+          indexTo: BigInt(28571),
+        },
+        {
+          payout: BigInt(90),
+          indexFrom: BigInt(28572),
+          indexTo: BigInt(199999),
+        },
+        {
+          payout: BigInt(100),
+          indexFrom: BigInt(200000),
+          indexTo: BigInt(999999),
+        },
       ]);
 
       // for each rounded payout at indexTo, expect to be equal to range payout
@@ -731,10 +807,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -758,10 +834,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -784,17 +860,17 @@ describe('CETCalculator', () => {
     it('should properly split and round with one interval', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 100000n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(100000),
         },
       ];
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 100000000n;
-      const from = 0n;
-      const to = 999999n;
+      const totalCollateral = BigInt(100000000);
+      const from = BigInt(0);
+      const to = BigInt(999999);
       const fromPayout = totalCollateral;
-      const toPayout = 0n;
+      const toPayout = BigInt(0);
 
       const ranges = splitIntoRanges(
         from,
@@ -823,10 +899,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -850,10 +926,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -865,17 +941,17 @@ describe('CETCalculator', () => {
     it('should properly split and round with non-even rounding mod', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 150000n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(150000),
         },
       ];
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 100000000n;
-      const from = 0n;
-      const to = 999999n;
+      const totalCollateral = BigInt(100000000);
+      const from = BigInt(0);
+      const to = BigInt(999999);
       const fromPayout = totalCollateral;
-      const toPayout = 0n;
+      const toPayout = BigInt(0);
 
       const ranges = splitIntoRanges(
         from,
@@ -904,10 +980,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -931,10 +1007,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -957,17 +1033,17 @@ describe('CETCalculator', () => {
     it('should properly split and round with one interval', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
-          beginInterval: 0n,
-          roundingMod: 250000n,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(250000),
         },
       ];
       const reversedIntervals = [...roundingIntervals].reverse();
 
-      const totalCollateral = 92499992n;
-      const from = 0n;
-      const to = 999999n;
+      const totalCollateral = BigInt(92499992);
+      const from = BigInt(0);
+      const to = BigInt(999999);
       const fromPayout = totalCollateral;
-      const toPayout = 0n;
+      const toPayout = BigInt(0);
 
       const ranges = splitIntoRanges(
         from,
@@ -996,10 +1072,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );
@@ -1023,10 +1099,10 @@ describe('CETCalculator', () => {
         const rounding =
           roundingIndex !== -1
             ? reversedIntervals[roundingIndex].roundingMod
-            : 1n;
+            : BigInt(1);
 
         const roundedPayout = BigIntMath.clamp(
-          0n,
+          BigInt(0),
           roundPayout(payout, rounding),
           totalCollateral,
         );

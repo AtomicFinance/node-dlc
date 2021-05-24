@@ -5,8 +5,8 @@ import { HyperbolaPayoutCurve } from '../../../lib/dlc/HyperbolaPayoutCurve';
 
 describe('CoveredCall', () => {
   describe('1BTC-50k-base2-20digit curve', () => {
-    const strikePrice = 50000n;
-    const contractSize = 10n ** 8n;
+    const strikePrice = BigInt(50000);
+    const contractSize = BigInt(10) ** BigInt(8);
     const oracleBase = 2;
     const oracleDigits = 20;
 
@@ -18,9 +18,9 @@ describe('CoveredCall', () => {
     );
 
     it('should be a negative payout past max outcome', () => {
-      expect(payoutCurve.getPayout(maxOutcome + 1n).toNumber()).to.be.lessThan(
-        0,
-      );
+      expect(
+        payoutCurve.getPayout(maxOutcome + BigInt(1)).toNumber(),
+      ).to.be.lessThan(0);
     });
 
     it('should be equal to totalCollateral at strike price', () => {

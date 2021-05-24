@@ -74,7 +74,7 @@ export class HyperbolaPayoutCurve {
         .integerValue();
 
       if (outcome.isFinite()) return BigInt(outcome.toString());
-      return -1n;
+      return BigInt(-1);
     } else {
       // y=\left((\sqrt{((adf_{2}-adx+bcf_{2}-bcx-2c\cdot d\cdot f_{1})^{2}-4cd(a^{2}d^{2}-2abcd+abf_{2}^{2}-2abf_{2}x+abx^{2}-adf_{1}f_{2}+adf_{1}x+b^{2}c^{2}-bcf_{1}f_{2}+bcf_{1}x+c\cdot d\cdot f_{1}^{2}))}-adf_{2}+adx-bcf_{2}+bcx+2c\cdot d\cdot f_{1})\right)/(2cd)
       throw new Error('Not supported');

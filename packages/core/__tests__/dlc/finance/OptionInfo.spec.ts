@@ -3,11 +3,9 @@ import {
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   DlcOfferV0,
-  HyperbolaPayoutCurvePiece,
   OracleAnnouncementV0,
   OracleEventV0,
   OracleInfoV0,
-  RoundingIntervalsV0,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
@@ -18,9 +16,9 @@ import {
 
 describe('OptionInfo', () => {
   describe('OptionInfo from covered call messages', () => {
-    const strikePrice = 50000n;
-    const contractSize = 10n ** 8n;
-    const premium = 50000n;
+    const strikePrice = BigInt(50000);
+    const contractSize = BigInt(10) ** BigInt(8);
+    const premium = BigInt(50000);
     const expiry = new Date(1620014750000);
 
     const oracleBase = 2;
@@ -33,8 +31,16 @@ describe('OptionInfo', () => {
       oracleDigits,
     );
 
+    const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+    eventDescriptor.base = 2;
+    eventDescriptor.isSigned = false;
+    eventDescriptor.unit = 'BTC-USD';
+    eventDescriptor.precision = 0;
+    eventDescriptor.nbDigits = oracleDigits;
+
     const oracleEvent = new OracleEventV0();
     oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
+    oracleEvent.eventDescriptor = eventDescriptor;
 
     const oracleAnnouncement = new OracleAnnouncementV0();
     oracleAnnouncement.oracleEvent = oracleEvent;

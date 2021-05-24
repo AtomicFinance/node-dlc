@@ -38,17 +38,17 @@ export class BigIntMath {
   }
 
   static sign(value: bigint): bigint {
-    if (value > 0n) {
-      return 1n;
+    if (value > BigInt(0)) {
+      return BigInt(1);
     }
-    if (value < 0n) {
-      return -1n;
+    if (value < BigInt(0)) {
+      return BigInt(-1);
     }
-    return 0n;
+    return BigInt(0);
   }
 
   static abs(value: bigint): bigint {
-    if (this.sign(value) === -1n) {
+    if (this.sign(value) === BigInt(-1)) {
       return -value;
     }
     return value;

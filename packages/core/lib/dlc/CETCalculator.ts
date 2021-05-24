@@ -1,6 +1,6 @@
-import { HyperbolaPayoutCurve } from './HyperbolaPayoutCurve';
 import BigNumber from 'bignumber.js';
 import { BigIntMath, toBigInt } from '../utils/BigIntUtils';
+import { HyperbolaPayoutCurve } from './HyperbolaPayoutCurve';
 
 export function zipWithIndex<T>(arr: T[]): [T, number][] {
   return arr.map((a, i) => [a, i]);
@@ -217,12 +217,15 @@ export function splitIntoRanges(
     );
 
     return [
-      roundingIndex !== -1 ? reversedIntervals[roundingIndex].roundingMod : 1n,
+      roundingIndex !== -1
+        ? reversedIntervals[roundingIndex].roundingMod
+        : BigInt(1),
       roundingIndex,
     ];
   };
 
-  const clamp = (val: bigint) => BigIntMath.clamp(0n, val, totalCollateral);
+  const clamp = (val: bigint) =>
+    BigIntMath.clamp(BigInt(0), val, totalCollateral);
 
   const totalCollateralBN = new BigNumber(totalCollateral.toString());
   const clampBN = (val: BigNumber) =>
@@ -237,7 +240,7 @@ export function splitIntoRanges(
     indexTo: from,
   });
 
-  let currentOutcome = from + 1n;
+  let currentOutcome = from + BigInt(1);
 
   while (currentOutcome < to) {
     const [rounding, roundingIndex] = getRoundingForOutcome(currentOutcome);
@@ -279,7 +282,7 @@ export function splitIntoRanges(
         (isAscending &&
           curve.getPayout(nextMidRoundedOutcome).gte(nextMidRoundedPayout))
       ) {
-        nextMidRoundedOutcome = nextMidRoundedOutcome - 1n;
+        nextMidRoundedOutcome = nextMidRoundedOutcome - BigInt(1);
       }
 
       const nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
@@ -305,8 +308,8 @@ export function splitIntoRanges(
             },
             {
               payout: clamp(nextRoundedPayoutBigInt),
-              indexFrom: nextMidRoundedOutcome + 1n,
-              indexTo: to - 1n,
+              indexFrom: nextMidRoundedOutcome + BigInt(1),
+              indexTo: to - BigInt(1),
             },
           );
         }
@@ -319,7 +322,7 @@ export function splitIntoRanges(
         result.push({
           payout: clamp(toBigInt(currentPayout)),
           indexFrom: currentMidRoundedOutcome,
-          indexTo: nextFirstRoundingOutcome - 1n,
+          indexTo: nextFirstRoundingOutcome - BigInt(1),
         });
 
         currentOutcome = nextFirstRoundingOutcome;
@@ -332,10 +335,10 @@ export function splitIntoRanges(
         indexTo: nextMidRoundedOutcome,
       });
 
-      currentOutcome = nextOutcome + 1n;
+      currentOutcome = nextOutcome + BigInt(1);
       currentPayout = nextRoundedPayout;
 
-      currentMidRoundedOutcome = nextMidRoundedOutcome + 1n;
+      currentMidRoundedOutcome = nextMidRoundedOutcome + BigInt(1);
     }
   }
 
@@ -352,7 +355,7 @@ export function splitIntoRanges(
     if (prev) {
       if (
         (prev.indexTo === range.indexFrom ||
-          prev.indexTo + 1n === range.indexFrom) &&
+          prev.indexTo + BigInt(1) === range.indexFrom) &&
         prev.payout === range.payout
       ) {
         prev.indexTo = range.indexTo;
