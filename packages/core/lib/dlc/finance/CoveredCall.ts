@@ -1,8 +1,8 @@
 import {
-  PayoutFunctionV0,
-  RoundingIntervalsV0,
   HyperbolaPayoutCurvePiece,
   MessageType,
+  PayoutFunctionV0,
+  RoundingIntervalsV0,
 } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
 import { toBigInt } from '../../utils/BigIntUtils';
@@ -71,14 +71,14 @@ const buildPayoutFunction = (
   );
 
   const payoutFunction = new PayoutFunctionV0();
-  payoutFunction.endpoint0 = 0n;
+  payoutFunction.endpoint0 = BigInt(0);
   payoutFunction.endpointPayout0 = totalCollateral;
   payoutFunction.extraPrecision0 = 0;
 
   payoutFunction.pieces.push({
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
     endpoint: maxOutcome,
-    endpointPayout: 0n,
+    endpointPayout: BigInt(0),
     extraPrecision: 0,
   });
 
