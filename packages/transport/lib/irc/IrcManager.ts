@@ -28,6 +28,7 @@ export class IrcManager extends EventEmitter {
   public static type = MarketType.AtomicOptions;
   public static version = MarketVersion.Version0;
   public static nickHashLen = 10;
+  public static nickMaxEncoded = 14;
 
   public static nickDecode(
     nick: string,
@@ -51,7 +52,7 @@ export class IrcManager extends EventEmitter {
 
   public static nickValid(nick: string): boolean {
     const { type, version, nickLen, nickSuffixLen } = IrcManager;
-    const base58Regex = /[1-9A-HJ-NP-Za-km-z]{14}/g;
+    const base58Regex = /[0-9A-HJ-NP-Za-km-z]{14}/g;
     let i = 0;
 
     if (nick.length !== nickLen()) return false;
@@ -119,9 +120,8 @@ export class IrcManager extends EventEmitter {
   public generateNick(pubKey: Buffer): string {
     const { type, version } = IrcManager;
     const prefix = `${type}${version}`;
-    const suffix = Base58.encode(
-      sha256(pubKey).slice(0, IrcManager.nickHashLen),
-    );
+    let suffix = Base58.encode(sha256(pubKey).slice(0, IrcManager.nickHashLen));
+    suffix += '0'.repeat(IrcManager.nickMaxEncoded - suffix.length);
     return `${prefix}${suffix}`;
   }
 
