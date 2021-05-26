@@ -56,13 +56,13 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     instance.fundTxVout = reader.readUInt32BE();
 
     const fundHash = reader.readBytes(32);
-    const fundHeight = reader.readUInt16BE();
+    const fundHeight = reader.readUInt32BE();
     instance.fundEpoch = {
       hash: fundHash,
       height: fundHeight,
     };
 
-    instance.fundBroadcastHeight = reader.readUInt16BE();
+    instance.fundBroadcastHeight = reader.readUInt32BE();
 
     const refundTxLen = reader.readUInt16BE();
     instance.refundTx = Tx.decode(
@@ -78,7 +78,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     }
 
     const closeHash = reader.readBytes(32);
-    const closeHeight = reader.readUInt16BE();
+    const closeHeight = reader.readUInt32BE();
     instance.closeEpoch = {
       hash: closeHash,
       height: closeHeight,
@@ -88,7 +88,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
     instance.closeType = reader.readUInt8();
 
-    instance.closeBroadcastHeight = reader.readUInt16BE();
+    instance.closeBroadcastHeight = reader.readUInt32BE();
 
     return instance;
   }
@@ -151,8 +151,8 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     writer.writeBytes(this.fundTx.serialize());
     writer.writeUInt32BE(this.fundTxVout);
     writer.writeBytes(this.fundEpoch.hash);
-    writer.writeUInt16BE(this.fundEpoch.height);
-    writer.writeUInt16BE(this.fundBroadcastHeight);
+    writer.writeUInt32BE(this.fundEpoch.height);
+    writer.writeUInt32BE(this.fundBroadcastHeight);
     writer.writeUInt16BE(this.refundTx.serialize().length);
     writer.writeBytes(this.refundTx.serialize());
 
@@ -163,10 +163,10 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     }
 
     writer.writeBytes(this.closeEpoch.hash);
-    writer.writeUInt16BE(this.closeEpoch.height);
+    writer.writeUInt32BE(this.closeEpoch.height);
     writer.writeBytes(this.closeTxHash);
     writer.writeUInt8(this.closeType);
-    writer.writeUInt16BE(this.closeBroadcastHeight);
+    writer.writeUInt32BE(this.closeBroadcastHeight);
 
     return writer.toBuffer();
   }
