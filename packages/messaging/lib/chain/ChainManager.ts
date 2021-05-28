@@ -247,8 +247,15 @@ export class ChainManager extends EventEmitter {
 
       const block = Block.fromBuffer(blockBuf);
       for (const transaction of block.transactions) {
-        const tx = Tx.fromBuffer(transaction.toBuffer());
-        await this._checkOutpoints(dlcTxsList, tx, block.getId());
+        try {
+          const tx = Tx.fromBuffer(transaction.toBuffer());
+          await this._checkOutpoints(dlcTxsList, tx, block.getId());
+        } catch (e) {
+          this.logger.error(
+            'Invalid tx for validating closing utxo: %s',
+            transaction.toHex(),
+          );
+        }
       }
 
       if (info.blocks === this.blockHeight) {
