@@ -5,6 +5,7 @@ import {
   DlcOfferV0,
   DlcSignV0,
   DlcTransactionsV0,
+  FundingInputV0,
 } from '@node-dlc/messaging';
 import { xor } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
@@ -87,6 +88,17 @@ export class RocksdbDlcStore extends RocksdbBase {
     return DlcAcceptV0.deserialize(raw);
   }
 
+  public async findDlcAcceptByOutpoint(
+    outpoint: OutPoint,
+  ): Promise<DlcAcceptV0> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.Outpoint]),
+      Buffer.from(outpoint.toString()),
+    ]);
+    const contractId = await this._safeGet<Buffer>(key);
+    return this.findDlcAccept(contractId);
+  }
+
   public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {
     const dlcOffer = await this.findDlcOffer(dlcAccept.tempContractId);
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
@@ -96,6 +108,21 @@ export class RocksdbDlcStore extends RocksdbBase {
     const value = dlcAccept.serialize();
     const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     await this._db.put(key, value);
+
+    // store funding input outpoint reference
+    for (let i = 0; i < dlcAccept.fundingInputs.length; i++) {
+      const fundingInput = dlcAccept.fundingInputs[i] as FundingInputV0;
+
+      const outpoint = OutPoint.fromString(
+        `${fundingInput.prevTx.txId.toString()}:${fundingInput.prevTxVout}`,
+      );
+
+      const key2 = Buffer.concat([
+        Buffer.from([Prefix.Outpoint]),
+        Buffer.from(outpoint.toString()),
+      ]);
+      await this._db.put(key2, contractId);
+    }
   }
 
   public async deleteDlcAccept(contractId: Buffer): Promise<void> {
