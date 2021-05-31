@@ -104,15 +104,34 @@ export class BlockWatcher extends EventEmitter {
       if (!txs) txs = [tx.txId.toString()];
     }
 
+    const previousblockhash = Buffer.from(block.prevHash)
+      .reverse()
+      .toString('hex');
+
+    const previousBlock = this.receivedBlocks.get(previousblockhash);
+    const blockSize = buf.length;
+
+    if (previousBlock) {
+      this._processBlock(block, blockSize, txs, previousBlock);
+    } else {
+      this._findPreviousBlockAndProcess(buf, previousblockhash);
+    }
+  }
+
+  private _processBlock(
+    block: Block,
+    blockSize: number,
+    txs: [string],
+    previousBlock: BlockSummary,
+  ) {
     const blockHash = block.getId();
-    const previousblockhash = block.prevHash.reverse().toString('hex');
 
     const blockSummary: BlockSummary = {
       hash: blockHash,
       confirmations: 1,
-      size: buf.length,
+      size: blockSize,
       weight: block.weight(),
-      height: this.receivedBlocks.get(previousblockhash).height + 1,
+      height: previousBlock.height + 1,
       version: block.version,
       versionHex: '',
       merkleroot: block.merkleRoot.toString('hex'),
@@ -124,7 +143,7 @@ export class BlockWatcher extends EventEmitter {
       difficulty: '',
       chainwork: '',
       nTx: block.transactions.length,
-      previousblockhash,
+      previousblockhash: previousBlock.hash,
       nextblockhash: '',
     };
 
@@ -147,5 +166,15 @@ export class BlockWatcher extends EventEmitter {
         blockSummary.hash,
       );
     }
+  }
+
+  private async _findPreviousBlockAndProcess(
+    currentBlockBuf: Buffer,
+    previousblockhash: string,
+  ) {
+    const previousBuf = await this._client.getRawBlock(previousblockhash);
+
+    this._onRawBlock(previousBuf);
+    this._onRawBlock(currentBlockBuf);
   }
 }
