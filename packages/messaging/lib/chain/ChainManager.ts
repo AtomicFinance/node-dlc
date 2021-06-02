@@ -255,6 +255,7 @@ export class ChainManager extends EventEmitter {
             'Invalid tx for validating closing utxo: %s',
             transaction.toHex(),
           );
+          this.logger.error('Error: ', e);
         }
       }
 
