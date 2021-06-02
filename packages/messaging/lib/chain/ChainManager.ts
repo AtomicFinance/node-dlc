@@ -8,6 +8,7 @@ import {
   HasHeight,
   IChainFilterChainClient,
 } from './IChainFilterChainClient';
+import { sleep } from '@liquality/utils';
 
 export enum SyncState {
   Unsynced,
@@ -240,6 +241,8 @@ export class ChainManager extends EventEmitter {
     }
 
     while (info.blocks > this.blockHeight) {
+      await sleep(100);
+
       this.blockHeight += 1;
 
       const blockHash = await this.chainClient.getBlockHash(this.blockHeight);
