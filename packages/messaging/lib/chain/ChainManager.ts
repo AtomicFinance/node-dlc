@@ -1,5 +1,5 @@
 import { Tx } from '@node-lightning/bitcoin';
-import { Block } from 'bitcoinjs-lib';
+import { Block, Transaction } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
 import { DlcTransactionsV0 } from '../messages/DlcTransactions';
 import { IDlcStore } from './DlcStore';
@@ -261,8 +261,12 @@ export class ChainManager extends EventEmitter {
       const block = Block.fromBuffer(blockBuf);
       for (const transaction of block.transactions) {
         try {
-          const tx = Tx.fromBuffer(transaction.toBuffer());
-          await this._checkOutpoints(dlcTxsList, tx, block.getId());
+          const bjsTx = Transaction.fromBuffer(transaction.toBuffer());
+          if (!bjsTx.isCoinbase()) {
+            // ignore coinbase txs for outpoint check
+            const tx = Tx.fromBuffer(transaction.toBuffer());
+            await this._checkOutpoints(dlcTxsList, tx, block.getId());
+          }
         } catch (e) {
           this.logger.error(
             'Invalid tx for validating closing utxo: %s',
