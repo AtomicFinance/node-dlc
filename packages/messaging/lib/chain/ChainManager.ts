@@ -240,8 +240,18 @@ export class ChainManager extends EventEmitter {
       return;
     }
 
+    const numBlocksToSync = Math.max(info.blocks - this.blockHeight, 0);
+    const oct = Math.trunc(numBlocksToSync / 8);
+    let i = 0;
     while (info.blocks > this.blockHeight) {
-      await sleep(100);
+      await sleep(500);
+
+      if ((i + 1) % oct === 0) {
+        this.logger.info(
+          'validating closing utxos %s% complete',
+          (((i + 1) / numBlocksToSync) * 100).toFixed(2),
+        );
+      }
 
       this.blockHeight += 1;
 
@@ -267,6 +277,8 @@ export class ChainManager extends EventEmitter {
         if (info.blocks === this.blockHeight) break;
       }
     }
+
+    i++;
   }
 
   private async _checkOutpoints(
