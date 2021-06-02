@@ -244,7 +244,7 @@ export class ChainManager extends EventEmitter {
     const oct = Math.trunc(numBlocksToSync / 8);
     let i = 0;
     while (info.blocks > this.blockHeight) {
-      await sleep(500);
+      await sleep(50);
 
       if ((i + 1) % oct === 0) {
         this.logger.info(
