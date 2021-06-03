@@ -227,7 +227,10 @@ export class ChainManager extends EventEmitter {
     }
     this.logger.info('validating funding utxos 100% complete');
 
-    if (dlcTxsToVerify.length === 0) return;
+    if (dlcTxsToVerify.length === 0) {
+      this.logger.info('no closing utxos to validate');
+      return;
+    }
 
     await this._validateClosingUtxos(dlcTxsToVerify);
   }
@@ -240,7 +243,8 @@ export class ChainManager extends EventEmitter {
       return;
     }
 
-    const numBlocksToSync = Math.max(info.blocks - this.blockHeight, 0);
+    let numBlocksToSync = Math.max(info.blocks - this.blockHeight, 0);
+    this.logger.info('validating %d blocks for closing utxos', numBlocksToSync);
     const oct = Math.trunc(numBlocksToSync / 8);
     let i = 0;
     while (info.blocks > this.blockHeight) {
@@ -248,7 +252,8 @@ export class ChainManager extends EventEmitter {
 
       if ((i + 1) % oct === 0) {
         this.logger.info(
-          'validating closing utxos %s% complete',
+          'validating block %s, closing utxos %s% complete',
+          this.blockHeight,
           (((i + 1) / numBlocksToSync) * 100).toFixed(2),
         );
       }
@@ -279,10 +284,13 @@ export class ChainManager extends EventEmitter {
       if (info.blocks === this.blockHeight) {
         info = await this.chainClient.getBlockchainInfo();
         if (info.blocks === this.blockHeight) break;
+        numBlocksToSync += info.blocks - this.blockHeight;
       }
+
+      i++;
     }
 
-    i++;
+    this.logger.info('validating closing utxos 100% complete');
   }
 
   private async _checkOutpoints(
