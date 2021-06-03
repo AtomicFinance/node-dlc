@@ -100,8 +100,7 @@ export class BlockWatcher extends EventEmitter {
     const block = Block.fromBuffer(buf);
     let txs: [string];
     for (const transaction of block.transactions) {
-      const tx = Tx.fromBuffer(transaction.toBuffer());
-      if (!txs) txs = [tx.txId.toString()];
+      if (!txs) txs = [transaction.getId()];
     }
 
     const previousblockhash = Buffer.from(block.prevHash)
