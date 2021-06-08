@@ -135,8 +135,20 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
       contractId: this.contractId.toString('hex'),
       fundTx: this.fundTx.serialize().toString('hex'),
       fundTxVout: this.fundTxVout,
+      fundEpoch: {
+        hash: this.fundEpoch.hash.toString('hex'),
+        height: this.fundEpoch.height,
+      },
+      fundBroadcastHeight: this.fundBroadcastHeight,
       refundTx: this.refundTx.serialize().toString('hex'),
       cets: this.cets.map((cet) => cet.serialize().toString('hex')),
+      closeEpoch: {
+        hash: this.closeEpoch.hash.toString('hex'),
+        height: this.closeEpoch.height,
+      },
+      closeTxHash: this.closeTxHash.toString('hex'),
+      closeType: closeTypeToStr(this.closeType),
+      closeBroadcastHeight: this.closeBroadcastHeight,
     };
   }
 
@@ -172,13 +184,37 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   }
 }
 
+const closeTypeToStr = (closeType: CloseType): string => {
+  switch (closeType) {
+    case CloseType.ExecuteClose:
+      return 'ExecuteClose';
+    case CloseType.RefundClose:
+      return 'RefundClose';
+    case CloseType.CooperativeClose:
+      return 'CooperativeClose';
+    default:
+      return 'NotClosed';
+  }
+};
+
 export interface IDlcTransactionsV0JSON {
   type: number;
   contractId: string;
   fundTx: string;
   fundTxVout: number;
+  fundEpoch: IBlockEpochJSON;
+  fundBroadcastHeight: number;
   refundTx: string;
   cets: string[];
+  closeEpoch: IBlockEpochJSON;
+  closeTxHash: string;
+  closeType: string;
+  closeBroadcastHeight: number;
+}
+
+export interface IBlockEpochJSON {
+  hash: string;
+  height: number;
 }
 
 export interface BlockEpoch {
