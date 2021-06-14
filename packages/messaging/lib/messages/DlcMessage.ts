@@ -1,8 +1,4 @@
 import { BufferReader } from '@node-lightning/bufio';
-import {
-  NodeAnnouncementMessage,
-  MessageType as NodeLnMessageType,
-} from '@node-lightning/wire';
 import { MessageType } from '../MessageType';
 import {
   ContractDescriptorV0,
@@ -16,6 +12,7 @@ import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
 import { OracleAttestationV0 } from './OracleAttestationV0';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
+import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
 
 export interface IDlcMessage {
   type: MessageType;
@@ -65,7 +62,7 @@ export abstract class DlcMessage {
         return OracleAttestationV0.deserialize(buf);
       case MessageType.OracleAnnouncementV0:
         return OracleAnnouncementV0.deserialize(buf);
-      case NodeLnMessageType.NodeAnnouncement:
+      case MessageType.NodeAnnouncement:
         return NodeAnnouncementMessage.deserialize(buf);
       default:
         throw new Error(`Dlc Message type invalid`);
