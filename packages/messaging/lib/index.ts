@@ -18,6 +18,7 @@ export * from './messages/EventDescriptor';
 export * from './messages/FundingInput';
 export * from './messages/FundingSignaturesV0';
 export * from './messages/NegotiationFields';
+export * from './messages/NodeAnnouncementMessage';
 export * from './messages/OrderOffer';
 export * from './messages/OrderAccept';
 export * from './messages/OrderNegotiationFields';
