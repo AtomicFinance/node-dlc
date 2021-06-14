@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { crc32c } from '@node-lightning/checksum';
 import { MessageType } from '../MessageType';
 
-const MAX_DATA_LEN = 200;
+const MAX_DATA_LEN = 190;
 
 export abstract class IrcMessage {
   public static deserialize(buf: Buffer): IrcMessageV0 {
