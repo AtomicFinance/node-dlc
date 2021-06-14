@@ -63,4 +63,7 @@ export enum MessageType {
   AddressCache = 65132,
 
   IrcMessageV0 = 59314,
+
+  NodeAnnouncement = 51394,
+  NodeAnnouncementAddress = 51396,
 }
