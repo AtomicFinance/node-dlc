@@ -13,6 +13,8 @@ import { IWireMessage } from './IWireMessage';
  * nodes not associated with an already known channel are ignored.
  */
 export class NodeAnnouncementMessage implements IWireMessage {
+  public static type = MessageType.NodeAnnouncement;
+
   public static deserialize(payload: Buffer) {
     const instance = new NodeAnnouncementMessage();
     const reader = new BufferReader(payload);

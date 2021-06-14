@@ -2,8 +2,12 @@ import { ChannelType } from './ChannelType';
 import { ILogger } from './ILogger';
 import { IrcManager } from './IrcManager';
 import { WhitelistHandler } from './WhitelistHandler';
-import { OrderOfferV0, OrderAcceptV0, DlcMessage } from '@node-dlc/messaging';
-import { NodeAnnouncementMessage, MessageType } from '@node-lightning/wire';
+import {
+  OrderOfferV0,
+  OrderAcceptV0,
+  DlcMessage,
+  NodeAnnouncementMessage,
+} from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
 
 export class IrcOrderManager extends IrcManager {
@@ -49,7 +53,7 @@ export class IrcOrderManager extends IrcManager {
           ),
         );
         break;
-      case MessageType.NodeAnnouncement:
+      case NodeAnnouncementMessage.type:
         this.say(
           msg.serialize(),
           this.receivedOrders.get(tempOrderId.toString('hex')),
@@ -74,7 +78,7 @@ export class IrcOrderManager extends IrcManager {
         case OrderAcceptV0.type:
           this.emit('orderacceptmessage', from, to, msg);
           break;
-        case MessageType.NodeAnnouncement:
+        case NodeAnnouncementMessage.type:
           this.emit('nodeannouncementmessage', from, to, msg);
           break;
         default:
