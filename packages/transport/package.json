@@ -30,7 +30,9 @@
     "@node-lightning/bufio": "0.22.1",
     "@node-lightning/crypto": "0.22.1",
     "@node-lightning/wire": "0.22.1",
-    "irc": "0.5.2"
+    "bitcoinjs-lib": "5.2.0",
+    "irc": "0.5.2",
+    "secp256k1": "4.0.2"
   },
   "devDependencies": {
     "@liquality/utils": "1.0.0-beta.2",

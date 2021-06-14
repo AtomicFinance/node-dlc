@@ -61,4 +61,6 @@ export enum MessageType {
   OrderNegotiationFieldsV1 = 65336,
 
   AddressCache = 65132,
+
+  IrcMessageV0 = 59314,
 }

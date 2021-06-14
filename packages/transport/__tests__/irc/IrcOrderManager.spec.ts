@@ -5,8 +5,8 @@ import { IrcOrderManager } from '../../lib/irc/IrcOrderManager';
 import { createFakeLogger } from './helpers';
 import { sleep } from '@liquality/utils';
 import { ChannelType } from '../../lib/irc/ChannelType';
-import { sha256 } from '@node-lightning/crypto';
 import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
+import { ECPair } from 'bitcoinjs-lib';
 
 chai.should();
 chai.use(sinonChai);
@@ -31,25 +31,19 @@ describe('IrcOrderManager', () => {
   );
 
   beforeEach(async () => {
-    const pubKey1 = Buffer.concat([
-      Buffer.from('03', 'hex'),
-      sha256(Buffer.from(Math.random().toString())),
-    ]);
-    const pubKey2 = Buffer.concat([
-      Buffer.from('03', 'hex'),
-      sha256(Buffer.from(Math.random().toString())),
-    ]);
+    const keyPair1 = ECPair.makeRandom();
+    const keyPair2 = ECPair.makeRandom();
 
     sut = new IrcOrderManager(
       createFakeLogger(),
-      pubKey1,
+      keyPair1.privateKey,
       ['irc.darkscience.net'],
       false,
       ChannelType.TestMarketPit,
     );
     bob = new IrcOrderManager(
       createFakeLogger(),
-      pubKey2,
+      keyPair2.privateKey,
       ['irc.darkscience.net'],
       false,
       ChannelType.TestMarketPit,

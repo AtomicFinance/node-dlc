@@ -5,7 +5,7 @@ import { IrcManager } from '../../lib/irc/IrcManager';
 import { createFakeLogger } from './helpers';
 import { sleep } from '@liquality/utils';
 import { ChannelType } from '../../lib/irc/ChannelType';
-import { sha256 } from '@node-lightning/crypto';
+import { ECPair } from 'bitcoinjs-lib';
 
 chai.should();
 chai.use(sinonChai);
@@ -15,25 +15,19 @@ describe('IrcManager', () => {
   let sut: IrcManager;
   let bob: IrcManager;
   beforeEach(async () => {
-    const pubKey1 = Buffer.concat([
-      Buffer.from('03', 'hex'),
-      sha256(Buffer.from(Math.random().toString())),
-    ]);
-    const pubKey2 = Buffer.concat([
-      Buffer.from('03', 'hex'),
-      sha256(Buffer.from(Math.random().toString())),
-    ]);
+    const keyPair1 = ECPair.makeRandom();
+    const keyPair2 = ECPair.makeRandom();
 
     sut = new IrcManager(
       createFakeLogger(),
-      pubKey1,
+      keyPair1.privateKey,
       ['irc.darkscience.net'],
       false,
       ChannelType.TestMarketPit,
     );
     bob = new IrcManager(
       createFakeLogger(),
-      pubKey2,
+      keyPair2.privateKey,
       ['irc.darkscience.net'],
       false,
       ChannelType.TestMarketPit,
