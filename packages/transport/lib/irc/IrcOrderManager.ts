@@ -11,7 +11,7 @@ export class IrcOrderManager extends IrcManager {
 
   constructor(
     logger: ILogger,
-    pubKey: Buffer,
+    privKey: Buffer,
     servers = ['irc.darkscience.net'],
     debug = false,
     channel = ChannelType.AtomicMarketPit,
@@ -21,7 +21,7 @@ export class IrcOrderManager extends IrcManager {
   ) {
     super(
       logger,
-      pubKey,
+      privKey,
       servers,
       debug,
       channel,
