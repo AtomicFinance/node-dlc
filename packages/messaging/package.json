@@ -26,6 +26,7 @@
     "@liquality/utils": "1.0.0-beta.2",
     "@node-lightning/bitcoin": "0.22.1",
     "@node-lightning/bufio": "0.22.1",
+    "@node-lightning/checksum": "0.22.1",
     "@node-lightning/wire": "0.22.1",
     "bitcoinjs-lib": "5.2.0"
   },

@@ -1,11 +1,14 @@
 import { EventEmitter } from 'events';
 import irc from 'irc';
+import { ECPair } from 'bitcoinjs-lib';
+import secp256k1 from 'secp256k1';
 import { Base58 } from '@node-lightning/bitcoin';
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { sha256 } from '@node-lightning/crypto';
 import { ILogger } from './ILogger';
 import { WhitelistHandler } from './WhitelistHandler';
 import { ChannelType } from './ChannelType';
+import { IrcMessageV0 } from '@node-dlc/messaging';
+import { verifySignature } from './crypto';
 
 export enum ConnectState {
   Unconnected,
@@ -77,7 +80,9 @@ export class IrcManager extends EventEmitter {
   public connectState: ConnectState;
   public useWhitelist: boolean;
   public whitelistHandler: WhitelistHandler;
+  public privKey: Buffer; // 32 Bytes
   public pubKey: Buffer; // 33 Bytes
+  public keyPair;
   public serverIndex = 0;
   public servers: string[];
   public logger: ILogger;
@@ -86,12 +91,11 @@ export class IrcManager extends EventEmitter {
   public opts: irc.ClientOptions;
   public channel: ChannelType;
 
-  public receivedNickMsgs: Map<string, string>;
-  public lengthNickMsgs: Map<string, bigint>;
+  public receivedIrcMsgs: Map<number, Buffer[]>;
 
   constructor(
     logger: ILogger,
-    pubKey: Buffer,
+    privKey: Buffer,
     servers = ['irc.darkscience.net'],
     debug = false,
     channel = ChannelType.AtomicMarketPit,
@@ -100,8 +104,10 @@ export class IrcManager extends EventEmitter {
     whitelistHandler: WhitelistHandler = undefined,
   ) {
     super();
+    this.keyPair = ECPair.fromPrivateKey(privKey);
+    this.privKey = privKey;
+    this.pubKey = this.keyPair.publicKey;
     this.logger = logger.sub('ircmgr');
-    this.pubKey = pubKey;
     this.servers = servers;
     this.nick = this.generateNick(this.pubKey);
     this.channel = channel;
@@ -113,8 +119,7 @@ export class IrcManager extends EventEmitter {
     };
     this.useWhitelist = useWhitelist;
     this.whitelistHandler = whitelistHandler;
-    this.receivedNickMsgs = new Map<string, string>();
-    this.lengthNickMsgs = new Map<string, bigint>();
+    this.receivedIrcMsgs = new Map<number, Buffer[]>();
   }
 
   public generateNick(pubKey: Buffer): string {
@@ -146,13 +151,22 @@ export class IrcManager extends EventEmitter {
   }
 
   public say(msg: Buffer, to?: string): void {
-    const newMsg = msg.toString('hex');
+    const ircMessages = IrcMessageV0.fromBuffer(msg, this.pubKey);
 
-    const writer = new BufferWriter();
-    writer.writeBigSize(newMsg.length);
-    writer.writeBytes(msg);
+    for (let i = 0; i < ircMessages.length; i++) {
+      const ircMsgWithoutSig = ircMessages[i].serializeWithoutSig();
+      const msg = sha256(ircMsgWithoutSig);
+      const sig = secp256k1.ecdsaSign(msg, this.privKey);
+      ircMessages[i].signature = Buffer.from(sig.signature);
 
-    this.client.say(to ? to : this.channel, writer.toBuffer().toString('hex'));
+      verifySignature(ircMessages[i]);
+
+      this.client.say(
+        to ? to : this.channel,
+        ircMessages[i].serialize().toString('base64'),
+      );
+    }
+
     this.logger.debug('You msged: %s', msg);
   }
 
@@ -207,34 +221,31 @@ export class IrcManager extends EventEmitter {
   private _processMsg(from: string, to: string, msg: string) {
     this.logger.debug('raw-message', msg);
 
-    let msgs = this.receivedNickMsgs.get(`${from}:${to}`);
-    let length = this.lengthNickMsgs.get(`${from}:${to}`);
+    try {
+      const ircMessage = IrcMessageV0.deserialize(Buffer.from(msg, 'base64'));
 
-    if (!msgs) msgs = '';
-    if (!length) length = BigInt(0);
+      verifySignature(ircMessage);
 
-    if (msgs.length === Number(length)) {
-      const msgBuf = Buffer.from(
-        msg.length % 2 === 1 ? msg.slice(0, -1) : msg,
-        'hex',
-      );
-      const reader = new BufferReader(msgBuf);
-      length = reader.readBigSize();
-      msgs = '';
+      if (this.generateNick(ircMessage.pubkey) !== from)
+        throw Error('Incorrect nick');
 
-      const writer = new BufferWriter();
-      writer.writeBigSize(length);
-      const lengthStr = writer.toBuffer().toString('hex');
-      msgs = msg.substring(lengthStr.length, msg.length);
+      let receivedMsgs = this.receivedIrcMsgs.get(ircMessage.checksum);
+      if (!receivedMsgs)
+        receivedMsgs = new Array(Number(ircMessage.sequenceLength));
 
-      this.lengthNickMsgs.set(`${from}:${to}`, length);
-    } else {
-      msgs += msg;
-    }
-    this.receivedNickMsgs.set(`${from}:${to}`, msgs);
+      receivedMsgs[Number(ircMessage.sequenceNumber)] = ircMessage.data;
 
-    if (msgs.length === Number(length)) {
-      this._emitMsg(from, to, msgs);
+      if (receivedMsgs.includes(undefined)) {
+        this.receivedIrcMsgs.set(ircMessage.checksum, receivedMsgs);
+      } else {
+        const msg = Buffer.concat(receivedMsgs);
+
+        this.receivedIrcMsgs.set(ircMessage.checksum, undefined);
+
+        this._emitMsg(from, to, msg.toString('hex'));
+      }
+    } catch (e) {
+      this.logger.error('Invalid Irc Message: %s', e);
     }
   }
 
