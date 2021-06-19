@@ -1,4 +1,4 @@
-name: node-dlc Continuous Integration
+name: node-dlc workflows
 
 on:
   push:
@@ -15,8 +15,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 16.x
-      - name: Install dependencies
-        run: sudo apt-get install libzmq3-dev
+      - run: sudo apt-get install libzmq3-dev
       - run: yarn
       - run: yarn bootstrap
       - run: yarn test
