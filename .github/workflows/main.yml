@@ -1,4 +1,4 @@
-name: node-dlc CI
+name: node-dlc Continuous Integration
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 16.x
+      - run: apt-get install libzmq3-dev
       - run: yarn
       - run: yarn bootstrap
       - run: yarn test
