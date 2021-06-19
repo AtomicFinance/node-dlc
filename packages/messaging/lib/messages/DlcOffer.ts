@@ -18,7 +18,7 @@ import {
   IFundingInputV0JSON,
 } from './FundingInput';
 
-const LOCKTIME_THRESHOLD = 500000000;
+export const LOCKTIME_THRESHOLD = 500000000;
 export abstract class DlcOffer {
   public static deserialize(buf: Buffer): DlcOfferV0 {
     const reader = new BufferReader(buf);
@@ -29,7 +29,7 @@ export abstract class DlcOffer {
       case MessageType.DlcOfferV0:
         return DlcOfferV0.deserialize(buf);
       default:
-        throw new Error(`DLC Offer message type must be DlcOfferV0`);
+        throw new Error(`DLC Offer message type must be DlcOfferV0`); // This is a temporary measure while protocol is being developed
     }
   }
 
@@ -166,7 +166,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
         throw new Error('fundingPubKey must be in compressed format');
       }
     } else {
-      throw new Error('fundingPubKey is invalid');
+      throw new Error('fundingPubKey is not a valid secp256k1 key');
     }
 
     // 6. offer_collateral_satoshis must be greater than or equal to 1000
@@ -221,7 +221,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
     // totalCollaterial should be > offerCollaterial (logical validation)
     if (this.contractInfo.totalCollateral <= this.offerCollateralSatoshis) {
-      throw new Error('Total collateral less than offer collateral');
+      throw new Error('totalCollateral should be greater than offerCollateral');
     }
   }
 
