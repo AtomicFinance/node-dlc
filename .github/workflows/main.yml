@@ -15,7 +15,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 16.x
-      - run: apt-get install libzmq3-dev
+      - name: Install dependencies
+        run: sudo apt-get install libzmq3-dev
       - run: yarn
       - run: yarn bootstrap
       - run: yarn test
