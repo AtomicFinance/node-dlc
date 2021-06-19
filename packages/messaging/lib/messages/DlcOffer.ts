@@ -139,7 +139,11 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     };
   }
 
-  // https://github.com/discreetlogcontracts/dlcspecs/blob/master/Protocol.md#the-offer_dlc-message
+  /**
+   * Validates correctness of all fields in DlcOffer
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Protocol.md#the-offer_dlc-message
+   * @throws Will throw an error if validation fails
+   */
   public validate(): void {
     // 1. Type is set automatically in class
     // 2. contract_flags field is ignored
