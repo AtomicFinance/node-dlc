@@ -90,9 +90,13 @@ export class TxWatcher extends EventEmitter {
   }
 
   private _onRawTx(buf: Buffer) {
-    const tx = Tx.fromBuffer(buf);
-    this.emit('tx', tx);
-    this._checkOutpoints(tx);
-    this._checkScriptPubkeys(tx);
+    try {
+      const tx = Tx.fromBuffer(buf);
+      this.emit('tx', tx);
+      this._checkOutpoints(tx);
+      this._checkScriptPubkeys(tx);
+    } catch (e) {
+      console.log('Failed to deserialize tx', buf.toString('hex'));
+    }
   }
 }
