@@ -1,6 +1,9 @@
+import { BitcoinNetwork } from '@liquality/bitcoin-networks';
 import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160 } from '@node-lightning/crypto';
+import { address } from 'bitcoinjs-lib';
+import secp256k1 from 'secp256k1';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {
@@ -9,10 +12,13 @@ import {
   IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInput, IFundingInputV0JSON } from './FundingInput';
-import { address } from 'bitcoinjs-lib';
-import { BitcoinNetwork } from '@liquality/bitcoin-networks';
+import {
+  FundingInput,
+  FundingInputV0,
+  IFundingInputV0JSON,
+} from './FundingInput';
 
+export const LOCKTIME_THRESHOLD = 500000000;
 export abstract class DlcOffer {
   public static deserialize(buf: Buffer): DlcOfferV0 {
     const reader = new BufferReader(buf);
@@ -23,7 +29,7 @@ export abstract class DlcOffer {
       case MessageType.DlcOfferV0:
         return DlcOfferV0.deserialize(buf);
       default:
-        throw new Error(`DLC Offer message type must be DlcOfferV0`);
+        throw new Error(`DLC Offer message type must be DlcOfferV0`); // This is a temporary measure while protocol is being developed
     }
   }
 
@@ -133,10 +139,93 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     };
   }
 
+  /**
+   * Validates correctness of all fields in DlcOffer
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Protocol.md#the-offer_dlc-message
+   * @throws Will throw an error if validation fails
+   */
   public validate(): void {
+    // 1. Type is set automatically in class
+    // 2. contract_flags field is ignored
+    // 3. chain_hash must be validated as input by end user
+    // 4. payout_spk and change_spk must be standard script pubkeys
+
+    try {
+      address.fromOutputScript(this.payoutSPK);
+    } catch (e) {
+      throw new Error('DlcOffer payoutSPK is invalid');
+    }
+
+    try {
+      address.fromOutputScript(this.changeSPK);
+    } catch (e) {
+      throw new Error('DlcOffer changeSPK is invalid');
+    }
+
+    // 5. funding_pubkey must be a valid secp256k1 pubkey in compressed format
+    // https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki#background-on-ecdsa-signatures
+
+    if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubKey))) {
+      if (this.fundingPubKey[0] != 0x02 && this.fundingPubKey[0] != 0x03) {
+        throw new Error('fundingPubKey must be in compressed format');
+      }
+    } else {
+      throw new Error('fundingPubKey is not a valid secp256k1 key');
+    }
+
+    // 6. offer_collateral_satoshis must be greater than or equal to 1000
+
+    if (this.offerCollateralSatoshis < 1000) {
+      throw new Error(
+        'offer_collateral_satoshis must be greater than or equal to 1000',
+      );
+    }
+
+    // 7. cet_locktime and refund_locktime must either both be unix timestamps, or both be block heights.
+    // https://en.bitcoin.it/wiki/NLockTime
+    // https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki#detailed-specification
+    // https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L39
+
+    if (
+      !(
+        (this.cetLocktime < LOCKTIME_THRESHOLD &&
+          this.refundLocktime < LOCKTIME_THRESHOLD) ||
+        (this.cetLocktime >= LOCKTIME_THRESHOLD &&
+          this.refundLocktime >= LOCKTIME_THRESHOLD)
+      )
+    ) {
+      throw new Error('cetLocktime and refundLocktime must be in same units');
+    }
+
+    // 8. cetLocktime must be less than refundLocktime
+    if (this.cetLocktime >= this.refundLocktime) {
+      throw new Error('cetLocktime must be less than refundLocktime');
+    }
+
+    // 9. inputSerialId must be unique for each input
+
+    const inputSerialIds = this.fundingInputs.map(
+      (input: FundingInputV0) => input.inputSerialId,
+    );
+
+    if (new Set(inputSerialIds).size !== inputSerialIds.length) {
+      throw new Error('inputSerialIds must be unique');
+    }
+
+    // 10. changeSerialId and fundOutputSerialID must be different
+
+    if (this.changeSerialId === this.fundOutputSerialId) {
+      throw new Error(
+        'changeSerialId and fundOutputSerialId must be different',
+      );
+    }
+
+    // validate contractInfo
     this.contractInfo.validate();
+
+    // totalCollaterial should be > offerCollaterial (logical validation)
     if (this.contractInfo.totalCollateral <= this.offerCollateralSatoshis) {
-      throw new Error('Total collateral less than offer collateral');
+      throw new Error('totalCollateral should be greater than offerCollateral');
     }
   }
 
