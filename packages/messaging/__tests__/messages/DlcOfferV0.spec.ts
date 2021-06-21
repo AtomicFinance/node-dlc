@@ -96,28 +96,26 @@ describe('DlcOffer', () => {
   const cetLocktime = Buffer.from('00000064', 'hex');
   const refundLocktime = Buffer.from('000000c8', 'hex');
 
-  const dlcOfferHex = Buffer.from(
-    Buffer.concat([
-      type,
-      contractFlags,
-      chainHash,
-      contractInfo,
-      fundingPubKey,
-      payoutSPKLen,
-      payoutSPK,
-      payoutSerialID,
-      offerCollateralSatoshis,
-      fundingInputsLen,
-      fundingInputV0,
-      changeSPKLen,
-      changeSPK,
-      changeSerialID,
-      fundOutputSerialID,
-      feeRatePerVb,
-      cetLocktime,
-      refundLocktime,
-    ]),
-  );
+  const dlcOfferHex = Buffer.concat([
+    type,
+    contractFlags,
+    chainHash,
+    contractInfo,
+    fundingPubKey,
+    payoutSPKLen,
+    payoutSPK,
+    payoutSerialID,
+    offerCollateralSatoshis,
+    fundingInputsLen,
+    fundingInputV0,
+    changeSPKLen,
+    changeSPK,
+    changeSerialID,
+    fundOutputSerialID,
+    feeRatePerVb,
+    cetLocktime,
+    refundLocktime,
+  ]);
 
   beforeEach(() => {
     instance = new DlcOfferV0();
@@ -138,7 +136,7 @@ describe('DlcOffer', () => {
   });
 
   describe('deserialize', () => {
-    it('deserializes', () => {
+    it('should throw if incorrect type', () => {
       instance.type = 0x123;
       expect(function () {
         DlcOffer.deserialize(instance.serialize());
