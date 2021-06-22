@@ -1,29 +1,69 @@
+import BitcoinNetworks from '@liquality/bitcoin-networks';
 import { expect } from 'chai';
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
-import { DlcAccept, DlcAcceptV0 } from '../../lib/messages/DlcAccept';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
+import { DlcAccept, DlcAcceptV0 } from '../../lib/messages/DlcAccept';
+import { FundingInputV0 } from '../../lib/messages/FundingInput';
 import { NegotiationFields } from '../../lib/messages/NegotiationFields';
 import { MessageType } from '../../lib/MessageType';
-import BitcoinNetworks from '@liquality/bitcoin-networks';
 
-describe('DlcAcceptV0', () => {
+describe('DlcAccept', () => {
+  const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;
+  let instance: DlcAcceptV0;
+
+  const type = Buffer.from('a71c', 'hex');
+
   const tempContractId = Buffer.from(
     '960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a',
     'hex',
   );
+
+  const acceptCollateralSatoshis = Buffer.from('0000000005f5e100', 'hex');
 
   const fundingPubKey = Buffer.from(
     '026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9',
     'hex',
   );
 
+  const payoutSPKLen = Buffer.from('0016', 'hex');
   const payoutSPK = Buffer.from(
     '001436054fa379f7564b5e458371db643666365c8fb3',
     'hex',
   );
 
+  const payoutSerialID = Buffer.from('000000000018534a', 'hex');
+
+  const fundingInputsLen = Buffer.from('0001', 'hex');
+  const fundingInputV0 = Buffer.from(
+    'fda714' + // type funding_input_v0
+      '3f' + // length
+      '000000000000dae8' + // input_serial_id
+      '0029' + // prevtx_len
+      '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevtx
+      '00000000' + // prevtx_vout
+      'ffffffff' + // sequence
+      '006b' + // max_witness_len
+      '0000', // redeem_script_len
+    'hex',
+  );
+
+  const changeSPKLen = Buffer.from('0016', 'hex');
   const changeSPK = Buffer.from(
     '0014074c82dbe058212905bacc61814456b7415012ed',
+    'hex',
+  );
+
+  const changeSerialID = Buffer.from('00000000000d8117', 'hex');
+
+  const cetAdaptorSignaturesV0 = Buffer.from(
+    'fda716' + // type cet_adaptor_signatures_v0
+      'fd01e7' + // length
+      '03' + // nb_signatures
+      '016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8' + // ecdsa_adaptor_signature_1
+      '01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292' + // dleq_proof_1
+      '00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab' + // ecdsa_adaptor_signature_2
+      '01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce' + // dleq_proof_2
+      '006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4' + // ecdsa_adaptor_signature_3
+      '01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f',
     'hex',
   );
 
@@ -32,131 +72,72 @@ describe('DlcAcceptV0', () => {
     'hex',
   );
 
-  const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;
+  const negotiationFields = Buffer.from('fdd82600', 'hex');
 
-  const dlcAcceptHex = Buffer.from(
-    "a71c" + // type accept_dlc_v0
-    "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_contract_id
-    "0000000005f5e100" + // total_collateral_satoshis
-    "026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9" + // funding_pubkey
-    "0016" + // payout_spk_len
-    "001436054fa379f7564b5e458371db643666365c8fb3" + // payout_spk
-    "000000000018534a" + // payout_serial_id
-    "0001" + // funding_inputs_len
-    "fda714" + // type funding_input_v0
-    "3f" + // length
-    "000000000000dae8" + // input_serial_id
-    "0029" + // prevtx_len
-    "02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000" + // prevtx
-    "00000000" + // prevtx_vout
-    "ffffffff" + // sequence
-    "006b" + // max_witness_len
-    "0000" + // redeem_script_len
-    "0016" + // change_spk_len
-    "0014074c82dbe058212905bacc61814456b7415012ed" + // change_spk
-    "00000000000d8117" + // change_serial_id
-    "fda716" + // type cet_adaptor_signatures_v0
-    "fd01e7" + // length
-    "03" + // nb_signatures
-    "016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8" + // ecdsa_adaptor_signature_1
-    "01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292" + // dleq_proof_1
-    "00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab" + // ecdsa_adaptor_signature_2
-    "01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce" + // dleq_proof_2
-    "006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4" + // ecdsa_adaptor_signature_3
-    "01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f" +
-    "7c8ad6de287b62a1ed1d74ed9116a5158abc7f97376d201caa88e0f9daad68fcda4c271cc003512e768f403a57e5242bd1f6aa1750d7f3597598094a43b1c7bb" + // refund_signature
-    "fdd82600" // negotiation_fields
-    , "hex"
-  ); // prettier-ignore
+  const dlcAcceptHex = Buffer.concat([
+    type,
+    tempContractId,
+    acceptCollateralSatoshis,
+    fundingPubKey,
+    payoutSPKLen,
+    payoutSPK,
+    payoutSerialID,
+    fundingInputsLen,
+    fundingInputV0,
+    changeSPKLen,
+    changeSPK,
+    changeSerialID,
+    cetAdaptorSignaturesV0,
+    refundSignature,
+    negotiationFields,
+  ]);
 
-  describe('serialize', () => {
-    it('serializes', () => {
-      const instance = new DlcAcceptV0();
-
-      instance.tempContractId = tempContractId;
-      instance.acceptCollateralSatoshis = BigInt(100000000);
-      instance.fundingPubKey = fundingPubKey;
-      instance.payoutSPK = payoutSPK;
-      instance.payoutSerialId = BigInt(1594186);
-      instance.fundingInputs = [
-        FundingInputV0.deserialize(
-          Buffer.from(
-            'fda714' + // type funding_input_v0
-              '3f' + // length
-              '000000000000dae8' + // input_serial_id
-              '0029' + // prevtx_len
-              '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevtx
-              '00000000' + // prevtx_vout
-              'ffffffff' + // sequence
-              '006b' + // max_witness_len
-              '0000', // redeem_script_len
-            'hex',
-          ),
-        ),
-      ];
-      instance.changeSPK = changeSPK;
-      instance.changeSerialId = BigInt(885015);
-      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
-        Buffer.from(
-          'fda716' + // type cet_adaptor_signatures_v0
-            'fd01e7' + // length
-            '03' + // nb_signatures
-            '016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8' + // ecdsa_adaptor_signature_1
-            '01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292' + // dleq_proof_1
-            '00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab' + // ecdsa_adaptor_signature_2
-            '01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce' + // dleq_proof_2
-            '006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4' + // ecdsa_adaptor_signature_3
-            '01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f', // dleq_proof_3
-          'hex',
-        ),
-      );
-      instance.refundSignature = refundSignature;
-      instance.negotiationFields = NegotiationFields.deserialize(
-        Buffer.from('fdd82600', 'hex'),
-      );
-
-      expect(instance.serialize().toString("hex")).to.equal(
-        "a71c" + // type accept_dlc_v0
-        "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_contract_id
-        "0000000005f5e100" + // total_collateral_satoshis
-        "026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9" + // funding_pubkey
-        "0016" + // payout_spk_len
-        "001436054fa379f7564b5e458371db643666365c8fb3" + // payout_spk
-        "000000000018534a" + // payout_serial_id
-        "0001" + // funding_inputs_len
-        "fda714" + // type funding_input_v0
-        "3f" + // length
-        "000000000000dae8" + // input_serial_id
-        "0029" + // prevtx_len
-        "02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000" + // prevtx
-        "00000000" + // prevtx_vout
-        "ffffffff" + // sequence
-        "006b" + // max_witness_len
-        "0000" + // redeem_script_len
-        "0016" + // change_spk_len
-        "0014074c82dbe058212905bacc61814456b7415012ed" + // change_spk
-        "00000000000d8117" + // change_serial_id
-        "fda716" + // type cet_adaptor_signatures_v0
-        "fd01e7" + // length
-        "03" + // nb_signatures
-        "016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8" + // ecdsa_adaptor_signature_1
-        "01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292" + // dleq_proof_1
-        "00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab" + // ecdsa_adaptor_signature_2
-        "01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce" + // dleq_proof_2
-        "006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4" + // ecdsa_adaptor_signature_3
-        "01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f" +
-        "7c8ad6de287b62a1ed1d74ed9116a5158abc7f97376d201caa88e0f9daad68fcda4c271cc003512e768f403a57e5242bd1f6aa1750d7f3597598094a43b1c7bb" + // refund_signature
-        "fdd82600" // negotiation_fields
-      ); // prettier-ignore
-    });
+  beforeEach(() => {
+    instance = new DlcAcceptV0();
+    instance.tempContractId = tempContractId;
+    instance.acceptCollateralSatoshis = BigInt(100000000);
+    instance.fundingPubKey = fundingPubKey;
+    instance.payoutSPK = payoutSPK;
+    instance.payoutSerialId = BigInt(1594186);
+    instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+    instance.changeSPK = changeSPK;
+    instance.changeSerialId = BigInt(885015);
+    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+      cetAdaptorSignaturesV0,
+    );
+    instance.refundSignature = refundSignature;
+    instance.negotiationFields = NegotiationFields.deserialize(
+      negotiationFields,
+    );
   });
 
   describe('deserialize', () => {
-    it('deserializes', () => {
-      const unknownInstance = DlcAccept.deserialize(dlcAcceptHex);
+    it('should throw if incorrect type', () => {
+      instance.type = 0x123;
+      expect(function () {
+        DlcAccept.deserialize(instance.serialize());
+      }).to.throw(Error);
+    });
 
-      if (unknownInstance.type === MessageType.DlcAcceptV0) {
-        const instance = unknownInstance as DlcAcceptV0;
+    it('has correct type', () => {
+      expect(DlcAccept.deserialize(instance.serialize()).type).to.equal(
+        instance.type,
+      );
+    });
+  });
+
+  describe('DlcAcceptV0', () => {
+    describe('serialize', () => {
+      it('serializes', () => {
+        expect(instance.serialize().toString('hex')).to.equal(
+          dlcAcceptHex.toString('hex'),
+        );
+      });
+    });
+
+    describe('deserialize', () => {
+      it('deserializes', () => {
+        const instance = DlcAcceptV0.deserialize(dlcAcceptHex);
 
         expect(instance.tempContractId).to.deep.equal(tempContractId);
         expect(Number(instance.acceptCollateralSatoshis)).to.equal(100000000);
@@ -164,130 +145,180 @@ describe('DlcAcceptV0', () => {
         expect(instance.payoutSPK).to.deep.equal(payoutSPK);
         expect(Number(instance.payoutSerialId)).to.equal(1594186);
         expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
-          'fda714' + // type funding_input_v0
-            '3f' + // length
-            '000000000000dae8' + // input_serial_id
-            '0029' + // prevtx_len
-            '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevtx
-            '00000000' + // prevtx_vout
-            'ffffffff' + // sequence
-            '006b' + // max_witness_len
-            '0000', // redeem_script_len
+          fundingInputV0.toString('hex'),
         );
         expect(instance.changeSPK).to.deep.equal(changeSPK);
         expect(Number(instance.changeSerialId)).to.equal(885015);
         expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
-          'fda716' + // type cet_adaptor_signatures_v0
-            'fd01e7' + // length
-            '03' + // nb_signatures
-            '016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8' + // ecdsa_adaptor_signature_1
-            '01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292' + // dleq_proof_1
-            '00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab' + // ecdsa_adaptor_signature_2
-            '01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce' + // dleq_proof_2
-            '006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4' + // ecdsa_adaptor_signature_3
-            '01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f', // dleq_proof_3
+          cetAdaptorSignaturesV0.toString('hex'),
         );
         expect(instance.refundSignature).to.deep.equal(refundSignature);
         expect(instance.negotiationFields.serialize().toString('hex')).to.equal(
-          'fdd82600',
+          negotiationFields.toString('hex'),
         );
-      } else {
-        throw Error('DlcAccept Incorrect type');
-      }
+      });
+
+      it('has correct type', () => {
+        expect(DlcAcceptV0.deserialize(dlcAcceptHex).type).to.equal(
+          MessageType.DlcAcceptV0,
+        );
+      });
     });
-  });
 
-  describe('toJSON', () => {
-    it('convert to JSON', async () => {
-      const instance = new DlcAcceptV0();
-
-      instance.tempContractId = tempContractId;
-      instance.acceptCollateralSatoshis = BigInt(100000000);
-      instance.fundingPubKey = fundingPubKey;
-      instance.payoutSPK = payoutSPK;
-      instance.payoutSerialId = BigInt(1594186);
-      instance.fundingInputs = [
-        FundingInputV0.deserialize(
-          Buffer.from(
-            'fda714' + // type funding_input_v0
-              '3f' + // length
-              '000000000000dae8' + // input_serial_id
-              '0029' + // prevtx_len
-              '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevtx
-              '00000000' + // prevtx_vout
-              'ffffffff' + // sequence
-              '006b' + // max_witness_len
-              '0000', // redeem_script_len
-            'hex',
-          ),
-        ),
-      ];
-      instance.changeSPK = changeSPK;
-      instance.changeSerialId = BigInt(885015);
-      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
-        Buffer.from(
-          'fda716' + // type cet_adaptor_signatures_v0
-            'fd01e7' + // length
-            '03' + // nb_signatures
-            '016292f1b5c67b675aea69c95ec81e8462ab5bb9b7a01f810f6d1a7d1d886893b3605fe7fcb75a14b1b1de917917d37e9efac6437d7a080da53fb6dbbcfbfbe7a8' + // ecdsa_adaptor_signature_1
-            '01efbecb2bce89556e1fb4d31622628830e02a6d04c487f67aca20e9f60fb127f985293541cd14e2bf04e4777d50953531e169dd37c65eb3cc17d6b5e4dbe58487f9fae1f68f603fe014a699a346b14a63048c26c9b31236d83a7e369a2b29a292' + // dleq_proof_1
-            '00e52fe05d832bcce4538d9c27f3537a0f2086b265b6498f30cf667f77ff2fa87606574bc9a915ef57f7546ebb6852a490ad0547bdc52b19791d2d0f0cc0acabab' + // ecdsa_adaptor_signature_2
-            '01f32459001a28850fa8ee4278111deb0494a8175f02e31a1c18b39bd82ec64026a6f341bcd5ba169d67b855030e36bdc65feecc0397a07d3bc514da69811ec5485f5553aebda782bc5ac9b47e8e11d701a38ef2c2b7d8af3906dd8dfc759754ce' + // dleq_proof_2
-            '006f769592c744141a5ddface6e98f756a9df1bb75ad41508ea013bdfee133b396d85be51f870bf2e0ae836bfa984109dab96cc6f4ab2a7f118bc6b0b25a4c70d4' + // ecdsa_adaptor_signature_3
-            '01c768c1d677c6ff0b7ea69fdf29aff1000794227db368dff16e838d1f44c4afe9e952ee63d603f7b14de13c1d73b363cc2b1740d0b688e73d8e71cddf40f8e7e912df413903779c4e5d6644c504c8609baec8fdcb90d6d341cf316748f5d7945f', // dleq_proof_3
-          'hex',
-        ),
-      );
-      instance.refundSignature = refundSignature;
-      instance.negotiationFields = NegotiationFields.deserialize(
-        Buffer.from('fdd82600', 'hex'),
-      );
-
-      const jsonInstance = instance.toJSON();
-
-      expect(jsonInstance.tempContractId).to.equal(
-        tempContractId.toString('hex'),
-      );
-      expect(jsonInstance.fundingPubKey).to.equal(
-        fundingPubKey.toString('hex'),
-      );
-      expect(jsonInstance.payoutSPK).to.equal(payoutSPK.toString('hex'));
-      expect(jsonInstance.fundingInputs[0].prevTx).to.equal(
-        instance.fundingInputs[0].prevTx.serialize().toString('hex'),
-      );
-      expect(jsonInstance.changeSPK).to.equal(changeSPK.toString('hex'));
-      expect(jsonInstance.refundSignature).to.equal(
-        refundSignature.toString('hex'),
-      );
+    describe('toJSON', () => {
+      it('convert to JSON', async () => {
+        const json = instance.toJSON();
+        expect(json.tempContractId).to.equal(tempContractId.toString('hex'));
+        expect(json.fundingPubKey).to.equal(fundingPubKey.toString('hex'));
+        expect(json.payoutSPK).to.equal(payoutSPK.toString('hex'));
+        expect(json.fundingInputs[0].prevTx).to.equal(
+          instance.fundingInputs[0].prevTx.serialize().toString('hex'),
+        );
+        expect(json.changeSPK).to.equal(changeSPK.toString('hex'));
+        expect(json.refundSignature).to.equal(refundSignature.toString('hex'));
+      });
     });
-  });
 
-  describe('getAddresses', () => {
-    it('should get addresses', async () => {
-      const expectedFundingAddress =
-        'bcrt1qrhzxd53jmv7znf0ywvcvpm06ndhgp5fcxjy57k';
-      const expectedChangeAddress =
-        'bcrt1qqaxg9klqtqsjjpd6e3scz3zkkaq4qyhd7rg6dd';
-      const expectedPayoutAddress =
-        'bcrt1qxcz5lgme7atykhj9sdcakepkvcm9eran32jk9c';
+    describe('withoutSigs', () => {
+      it('does not contain sigs', () => {
+        const instance = DlcAcceptV0.deserialize(dlcAcceptHex).withoutSigs();
+        expect(instance['cetSignatures']).to.not.exist;
+      });
+    });
 
-      const unknownInstance = DlcAccept.deserialize(dlcAcceptHex);
+    describe('getAddresses', () => {
+      it('should get addresses', async () => {
+        const expectedFundingAddress =
+          'bcrt1qrhzxd53jmv7znf0ywvcvpm06ndhgp5fcxjy57k';
+        const expectedChangeAddress =
+          'bcrt1qqaxg9klqtqsjjpd6e3scz3zkkaq4qyhd7rg6dd';
+        const expectedPayoutAddress =
+          'bcrt1qxcz5lgme7atykhj9sdcakepkvcm9eran32jk9c';
 
-      if (unknownInstance.type === MessageType.DlcAcceptV0) {
-        const instance = unknownInstance as DlcAcceptV0;
+        const instance = DlcAcceptV0.deserialize(dlcAcceptHex);
 
         const {
           fundingAddress,
           changeAddress,
           payoutAddress,
-        } = await instance.getAddresses(bitcoinNetwork);
+        } = instance.getAddresses(bitcoinNetwork);
 
         expect(fundingAddress).to.equal(expectedFundingAddress);
         expect(changeAddress).to.equal(expectedChangeAddress);
         expect(payoutAddress).to.equal(expectedPayoutAddress);
-      } else {
-        throw Error('DlcAccept Incorrect type');
-      }
+      });
+    });
+
+    describe('validate', () => {
+      it('should throw if payout_spk is invalid', () => {
+        instance.payoutSPK = Buffer.from('fff', 'hex');
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
+      it('should throw if change_spk is invalid', () => {
+        instance.changeSPK = Buffer.from('fff', 'hex');
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
+      it('should throw if fundingpubkey is not a valid pubkey', () => {
+        instance.fundingPubKey = Buffer.from(
+          '00f003aa11f2a97b6be755a86b9fd798a7451c670196a5245b7bae971306b7c87e',
+          'hex',
+        );
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
+      it('should throw if fundingpubkey is not in compressed secp256k1 format', () => {
+        instance.fundingPubKey = Buffer.from(
+          '045162991c7299223973cabc99ef5087d7bab2dafe61f78e5388b2f9492f7978123f51fd05ef0693790c0b2d4f30848363a3f3fbcf2bd53a05ba0fd5bb708c3184',
+          'hex',
+        );
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
+      // it('should throw if offerCollateralSatoshis is less than 1000', () => {
+      //   instance.offerCollateralSatoshis = BigInt(999);
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+
+      //   // boundary check
+      //   instance.offerCollateralSatoshis = BigInt(1000);
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.not.throw(Error);
+      // });
+
+      // it('should throw if cet_locktime and refund_locktime are not in same units', () => {
+      //   instance.cetLocktime = 100;
+      //   instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+      // });
+
+      // it('should not throw if cet_locktime and refund_locktime are in same units', () => {
+      //   instance.cetLocktime = 100;
+      //   instance.refundLocktime = 200;
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.not.throw(Error);
+
+      //   instance.cetLocktime = LOCKTIME_THRESHOLD + 100;
+      //   instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.not.throw(Error);
+      // });
+
+      // it('should throw if cet_locktime >= refund_locktime', () => {
+      //   instance.cetLocktime = 200;
+      //   instance.refundLocktime = 100;
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+
+      //   instance.cetLocktime = 100;
+      //   instance.refundLocktime = 100;
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+      // });
+
+      it('should throw if inputSerialIds arent unique', () => {
+        instance.fundingInputs = [
+          FundingInputV0.deserialize(fundingInputV0),
+          FundingInputV0.deserialize(fundingInputV0),
+        ];
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
+
+      // it('should throw if changeSerialId  == fundOutputSerialId', () => {
+      //   instance.changeSerialId = instance.fundOutputSerialId;
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+      // });
+
+      // it('should throw if totalCollateral <= offerCollateral', () => {
+      //   instance.contractInfo.totalCollateral = BigInt(200000000);
+      //   instance.offerCollateralSatoshis = BigInt(200000000);
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+
+      //   instance.contractInfo.totalCollateral = BigInt(200000000);
+      //   instance.offerCollateralSatoshis = BigInt(200000001);
+      //   expect(function () {
+      //     instance.validate();
+      //   }).to.throw(Error);
+      // });
     });
   });
 });
