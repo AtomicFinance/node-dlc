@@ -240,55 +240,6 @@ describe('DlcAccept', () => {
           instance.validate();
         }).to.throw(Error);
       });
-      // it('should throw if offerCollateralSatoshis is less than 1000', () => {
-      //   instance.offerCollateralSatoshis = BigInt(999);
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-
-      //   // boundary check
-      //   instance.offerCollateralSatoshis = BigInt(1000);
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.not.throw(Error);
-      // });
-
-      // it('should throw if cet_locktime and refund_locktime are not in same units', () => {
-      //   instance.cetLocktime = 100;
-      //   instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-      // });
-
-      // it('should not throw if cet_locktime and refund_locktime are in same units', () => {
-      //   instance.cetLocktime = 100;
-      //   instance.refundLocktime = 200;
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.not.throw(Error);
-
-      //   instance.cetLocktime = LOCKTIME_THRESHOLD + 100;
-      //   instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.not.throw(Error);
-      // });
-
-      // it('should throw if cet_locktime >= refund_locktime', () => {
-      //   instance.cetLocktime = 200;
-      //   instance.refundLocktime = 100;
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-
-      //   instance.cetLocktime = 100;
-      //   instance.refundLocktime = 100;
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-      // });
-
       it('should throw if inputSerialIds arent unique', () => {
         instance.fundingInputs = [
           FundingInputV0.deserialize(fundingInputV0),
@@ -298,27 +249,6 @@ describe('DlcAccept', () => {
           instance.validate();
         }).to.throw(Error);
       });
-
-      // it('should throw if changeSerialId  == fundOutputSerialId', () => {
-      //   instance.changeSerialId = instance.fundOutputSerialId;
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-      // });
-
-      // it('should throw if totalCollateral <= offerCollateral', () => {
-      //   instance.contractInfo.totalCollateral = BigInt(200000000);
-      //   instance.offerCollateralSatoshis = BigInt(200000000);
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-
-      //   instance.contractInfo.totalCollateral = BigInt(200000000);
-      //   instance.offerCollateralSatoshis = BigInt(200000001);
-      //   expect(function () {
-      //     instance.validate();
-      //   }).to.throw(Error);
-      // });
     });
   });
 });
