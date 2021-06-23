@@ -249,6 +249,12 @@ describe('DlcAccept', () => {
           instance.validate();
         }).to.throw(Error);
       });
+      it('should ensure funding inputs are segwit', () => {
+        instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
     });
   });
 });

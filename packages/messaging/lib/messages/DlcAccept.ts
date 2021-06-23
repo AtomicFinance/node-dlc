@@ -135,8 +135,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   public validate(): void {
     // 1. Type is set automatically in class
     // 2. contract_flags field is ignored
-    // 3. chain_hash must be validated as input by end user
-    // 4. payout_spk and change_spk must be standard script pubkeys
+    // 3. payout_spk and change_spk must be standard script pubkeys
 
     try {
       address.fromOutputScript(this.payoutSPK);
@@ -150,7 +149,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       throw new Error('DlcOffer changeSPK is invalid');
     }
 
-    // 5. funding_pubkey must be a valid secp256k1 pubkey in compressed format
+    // 4. funding_pubkey must be a valid secp256k1 pubkey in compressed format
     // https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki#background-on-ecdsa-signatures
 
     if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubKey))) {
@@ -161,7 +160,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       throw new Error('fundingPubKey is not a valid secp256k1 key');
     }
 
-    // 6. inputSerialId must be unique for each input
+    // 5. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
       (input: FundingInputV0) => input.inputSerialId,
@@ -170,6 +169,12 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
       throw new Error('inputSerialIds must be unique');
     }
+
+    // 6. Ensure funding inputs are segwit
+    this.fundingInputs.forEach((input: FundingInputV0) => {
+      if (!input.prevTx.isSegWit)
+        throw new Error('fundingInputs must be segwit');
+    });
   }
 
   /**
