@@ -170,9 +170,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     }
 
     // 5. Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0) => {
-      input.validate();
-    });
+    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
   }
 
   /**
