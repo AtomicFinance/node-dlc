@@ -2,6 +2,8 @@ import { BitcoinNetwork } from '@liquality/bitcoin-networks';
 import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160 } from '@node-lightning/crypto';
+import { address } from 'bitcoinjs-lib';
+import secp256k1 from 'secp256k1';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {
@@ -16,7 +18,6 @@ import {
   INegotiationFieldsV2JSON,
   NegotiationFields,
 } from './NegotiationFields';
-import { address } from 'bitcoinjs-lib';
 
 export abstract class DlcAccept implements IDlcMessage {
   public static deserialize(buf: Buffer): DlcAcceptV0 {
@@ -124,6 +125,52 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       changeAddress,
       payoutAddress,
     };
+  }
+
+  /**
+   * Validates correctness of all fields
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Protocol.md#the-accept_dlc-message
+   * @throws Will throw an error if validation fails
+   */
+  public validate(): void {
+    // 1. Type is set automatically in class
+    // 2. payout_spk and change_spk must be standard script pubkeys
+
+    try {
+      address.fromOutputScript(this.payoutSPK);
+    } catch (e) {
+      throw new Error('payoutSPK is invalid');
+    }
+
+    try {
+      address.fromOutputScript(this.changeSPK);
+    } catch (e) {
+      throw new Error('changeSPK is invalid');
+    }
+
+    // 3. funding_pubkey must be a valid secp256k1 pubkey in compressed format
+    // https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki#background-on-ecdsa-signatures
+
+    if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubKey))) {
+      if (this.fundingPubKey[0] != 0x02 && this.fundingPubKey[0] != 0x03) {
+        throw new Error('fundingPubKey must be in compressed format');
+      }
+    } else {
+      throw new Error('fundingPubKey is not a valid secp256k1 key');
+    }
+
+    // 4. inputSerialId must be unique for each input
+
+    const inputSerialIds = this.fundingInputs.map(
+      (input: FundingInputV0) => input.inputSerialId,
+    );
+
+    if (new Set(inputSerialIds).size !== inputSerialIds.length) {
+      throw new Error('inputSerialIds must be unique');
+    }
+
+    // 5. Ensure funding inputs are segwit
+    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
   }
 
   /**
