@@ -1,9 +1,9 @@
+import { Sequence, Tx } from '@node-lightning/bitcoin';
 import {
   BufferReader,
   BufferWriter,
   StreamReader,
 } from '@node-lightning/bufio';
-import { Tx, Sequence } from '@node-lightning/bitcoin';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
@@ -88,6 +88,16 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
     } else {
       return 0;
     }
+  }
+
+  /**
+   * Validates correctness of all fields
+   * @throws Will throw an error if validation fails
+   */
+  public validate(): void {
+    // 1. Type is set automatically in class
+    // 2. Ensure inputs are segwit
+    if (!this.prevTx.isSegWit) throw new Error('fundingInput must be segwit');
   }
 
   /**

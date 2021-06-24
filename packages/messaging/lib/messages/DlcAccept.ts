@@ -128,28 +128,27 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   }
 
   /**
-   * Validates correctness of all fields in DlcOffer
-   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Protocol.md#the-offer_dlc-message
+   * Validates correctness of all fields
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Protocol.md#the-accept_dlc-message
    * @throws Will throw an error if validation fails
    */
   public validate(): void {
     // 1. Type is set automatically in class
-    // 2. contract_flags field is ignored
-    // 3. payout_spk and change_spk must be standard script pubkeys
+    // 2. payout_spk and change_spk must be standard script pubkeys
 
     try {
       address.fromOutputScript(this.payoutSPK);
     } catch (e) {
-      throw new Error('DlcOffer payoutSPK is invalid');
+      throw new Error('payoutSPK is invalid');
     }
 
     try {
       address.fromOutputScript(this.changeSPK);
     } catch (e) {
-      throw new Error('DlcOffer changeSPK is invalid');
+      throw new Error('changeSPK is invalid');
     }
 
-    // 4. funding_pubkey must be a valid secp256k1 pubkey in compressed format
+    // 3. funding_pubkey must be a valid secp256k1 pubkey in compressed format
     // https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki#background-on-ecdsa-signatures
 
     if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubKey))) {
@@ -160,7 +159,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       throw new Error('fundingPubKey is not a valid secp256k1 key');
     }
 
-    // 5. inputSerialId must be unique for each input
+    // 4. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
       (input: FundingInputV0) => input.inputSerialId,
@@ -170,10 +169,9 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       throw new Error('inputSerialIds must be unique');
     }
 
-    // 6. Ensure funding inputs are segwit
+    // 5. Ensure funding inputs are segwit
     this.fundingInputs.forEach((input: FundingInputV0) => {
-      if (!input.prevTx.isSegWit)
-        throw new Error('fundingInputs must be segwit');
+      input.validate();
     });
   }
 
