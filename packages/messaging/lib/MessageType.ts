@@ -45,6 +45,8 @@ export enum MessageType {
   DlcAcceptV0 = 42780,
   DlcSignV0 = 42782,
 
+  DlcCancelV0 = 52172,
+
   /**
    * Dlc Storage Types
    */
