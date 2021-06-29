@@ -6,6 +6,7 @@ import {
   DlcSignV0,
   FundingInputV0,
   DlcTransactionsV0,
+  DlcCancelV0,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
@@ -169,6 +170,15 @@ describe('RocksdbDlcStore', () => {
 
   const dlcTxs = DlcTransactionsV0.deserialize(dlcTxsHex);
 
+  const dlcCancelHex = Buffer.from(
+    'cbcc' +
+      'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269' +
+      '00',
+    'hex',
+  );
+
+  const dlcCancel = DlcCancelV0.deserialize(dlcCancelHex);
+
   before(async () => {
     util.rmdir('.testdb');
     sut = new RocksdbDlcStore('./.testdb/nested/dir');
@@ -272,6 +282,28 @@ describe('RocksdbDlcStore', () => {
       await sut.deleteDlcSign(dlcSign.contractId);
 
       const actual = await sut.findDlcSign(dlcSign.contractId);
+      expect(actual).to.be.undefined;
+    });
+  });
+
+  describe('save dlc_cancel', () => {
+    it('should save dlc_cancel', async () => {
+      await sut.saveDlcCancel(dlcCancel);
+    });
+  });
+
+  describe('find dlc_cancel by contractId', () => {
+    it('should return the dlc_cancel object', async () => {
+      const actual = await sut.findDlcCancel(dlcCancel.contractId);
+      expect(actual).to.deep.equal(dlcCancel);
+    });
+  });
+
+  describe('delete dlc_cancel', () => {
+    it('should delete dlc_cancel', async () => {
+      await sut.deleteDlcCancel(dlcCancel.contractId);
+
+      const actual = await sut.findDlcSign(dlcCancel.contractId);
       expect(actual).to.be.undefined;
     });
   });

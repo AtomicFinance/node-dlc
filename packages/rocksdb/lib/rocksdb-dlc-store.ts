@@ -2,6 +2,7 @@ import { sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
   DlcAcceptV0,
+  DlcCancelV0,
   DlcOfferV0,
   DlcSignV0,
   DlcTransactionsV0,
@@ -18,6 +19,7 @@ enum Prefix {
   DlcTransactionsV0 = 53,
   Outpoint = 54,
   ScriptPubKey = 55,
+  DlcCancelV0 = 56,
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
@@ -164,6 +166,43 @@ export class RocksdbDlcStore extends RocksdbBase {
 
   public async deleteDlcSign(contractId: Buffer): Promise<void> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcSignV0]), contractId]);
+    await this._db.del(key);
+  }
+
+  public async findDlcCancels(): Promise<DlcCancelV0[]> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      const results: DlcCancelV0[] = [];
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcCancelV0) {
+          results.push(DlcCancelV0.deserialize(data.value));
+        }
+      });
+      stream.on('end', () => {
+        resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
+  public async findDlcCancel(contractId: Buffer): Promise<DlcCancelV0> {
+    const key = Buffer.concat([Buffer.from([Prefix.DlcCancelV0]), contractId]);
+    const raw = await this._safeGet<Buffer>(key);
+    if (!raw) return;
+    return DlcCancelV0.deserialize(raw);
+  }
+
+  public async saveDlcCancel(dlcCancel: DlcCancelV0): Promise<void> {
+    const value = dlcCancel.serialize();
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcCancelV0]),
+      dlcCancel.contractId,
+    ]);
+    await this._db.put(key, value);
+  }
+
+  public async deleteDlcCancel(contractId: Buffer): Promise<void> {
+    const key = Buffer.concat([Buffer.from([Prefix.DlcCancelV0]), contractId]);
     await this._db.del(key);
   }
 
