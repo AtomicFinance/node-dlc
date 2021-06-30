@@ -227,6 +227,17 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     if (this.contractInfo.totalCollateral <= this.offerCollateralSatoshis) {
       throw new Error('totalCollateral should be greater than offerCollateral');
     }
+
+    // validate funding amount
+    const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
+      const input = fundingInput as FundingInputV0;
+      return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
+    }, BigInt(0));
+    if (this.offerCollateralSatoshis >= fundingAmount) {
+      throw new Error(
+        'fundingAmount must be greater than offerCollateralSatoshis',
+      );
+    }
   }
 
   /**
