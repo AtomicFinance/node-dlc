@@ -255,6 +255,13 @@ describe('DlcAccept', () => {
           instance.validate();
         }).to.throw(Error);
       });
+
+      it('should throw if funding amount less than accept collateral satoshis', () => {
+        instance.acceptCollateralSatoshis = BigInt(3e8);
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
     });
   });
 });

@@ -171,6 +171,17 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
     // 5. Ensure funding inputs are segwit
     this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
+
+    // validate funding amount
+    const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
+      const input = fundingInput as FundingInputV0;
+      return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
+    }, BigInt(0));
+    if (this.acceptCollateralSatoshis >= fundingAmount) {
+      throw new Error(
+        'fundingAmount must be greater than acceptCollateralSatoshis',
+      );
+    }
   }
 
   /**
