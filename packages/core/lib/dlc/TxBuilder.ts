@@ -1,18 +1,18 @@
 import {
   DlcAcceptWithoutSigs,
-  FundingInputV0,
   DlcOfferV0,
+  FundingInputV0,
   MessageType,
 } from '@node-dlc/messaging';
 import {
-  Tx,
-  TxBuilder,
   LockTime,
   OutPoint,
   Script,
+  Tx,
+  TxBuilder,
   Value,
 } from '@node-lightning/bitcoin';
-import { StreamReader } from '@node-lightning/bufio';
+
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
 export class DlcTxBuilder {

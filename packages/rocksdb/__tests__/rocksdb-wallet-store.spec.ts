@@ -1,12 +1,13 @@
 // tslint:disable: no-unused-expression
 
+import { AddressCache } from '@node-dlc/messaging';
+import * as bcrypto from 'bcrypto';
+import { generateMnemonic } from 'bip39';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+
 import { RocksdbWalletStore } from '../lib/rocksdb-wallet-store';
-import { generateMnemonic } from 'bip39';
-import * as bcrypto from 'bcrypto';
 import * as util from './rocksdb';
-import { AddressCache } from '@node-dlc/messaging';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { IrcMessageV0 } from '../../lib/irc/IrcMessage';
 
 describe('IrcMessageV0', () => {

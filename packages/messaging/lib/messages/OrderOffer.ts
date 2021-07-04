@@ -1,9 +1,10 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {
-  validateBuffer,
   validateBigInt,
+  validateBuffer,
   validateNumber,
 } from '../validation/validate';
 import {

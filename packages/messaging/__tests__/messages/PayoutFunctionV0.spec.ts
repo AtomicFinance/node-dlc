@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunctionV0 } from '../../lib/messages/PayoutFunction';
 

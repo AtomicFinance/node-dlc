@@ -1,14 +1,15 @@
-import { EventEmitter } from 'events';
-import irc from 'irc';
-import { ECPair } from 'bitcoinjs-lib';
-import secp256k1 from 'secp256k1';
+import { IrcMessageV0 } from '@node-dlc/messaging';
 import { Base58 } from '@node-lightning/bitcoin';
 import { sha256 } from '@node-lightning/crypto';
+import { ECPair } from 'bitcoinjs-lib';
+import { EventEmitter } from 'events';
+import irc from 'irc';
+import secp256k1 from 'secp256k1';
+
+import { ChannelType } from './ChannelType';
+import { verifySignature } from './crypto';
 import { ILogger } from './ILogger';
 import { WhitelistHandler } from './WhitelistHandler';
-import { ChannelType } from './ChannelType';
-import { IrcMessageV0 } from '@node-dlc/messaging';
-import { verifySignature } from './crypto';
 
 export enum ConnectState {
   Unconnected,

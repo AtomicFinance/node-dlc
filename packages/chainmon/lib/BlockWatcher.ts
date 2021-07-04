@@ -1,4 +1,4 @@
-import { OutPoint, Tx, Script, Value } from '@node-lightning/bitcoin';
+import { OutPoint, Script, Tx, Value } from '@node-lightning/bitcoin';
 import { BitcoindClient, BlockSummary } from '@node-lightning/bitcoind';
 import { Block } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';

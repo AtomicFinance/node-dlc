@@ -1,6 +1,7 @@
+import { BitcoinNetwork } from '@liquality/bitcoin-networks';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { address } from 'bitcoinjs-lib';
-import { BitcoinNetwork } from '@liquality/bitcoin-networks';
+
 import { MessageType } from '../MessageType';
 
 export class AddressCache {

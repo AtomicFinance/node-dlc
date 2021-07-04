@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
+
 import {
   decompose,
   groupByIgnoringDigits,

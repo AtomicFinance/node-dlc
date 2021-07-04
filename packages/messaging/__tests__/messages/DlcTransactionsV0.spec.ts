@@ -1,11 +1,12 @@
+import { Tx } from '@node-lightning/bitcoin';
+import { StreamReader } from '@node-lightning/bufio';
 import { expect } from 'chai';
-import { MessageType } from '../../lib/MessageType';
+
 import {
   DlcTransactions,
   DlcTransactionsV0,
 } from '../../lib/messages/DlcTransactions';
-import { Tx } from '@node-lightning/bitcoin';
-import { StreamReader } from '@node-lightning/bufio';
+import { MessageType } from '../../lib/MessageType';
 
 describe('DlcTransactionsV0', () => {
   const contractId = Buffer.from(

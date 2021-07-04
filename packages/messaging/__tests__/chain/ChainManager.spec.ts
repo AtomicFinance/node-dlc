@@ -1,14 +1,15 @@
 // tslint:disable: no-unused-expression
 import { expect } from 'chai';
 import sinon from 'sinon';
+
 import { ChainManager } from '../../lib/chain/ChainManager';
-import { IChainFilterChainClient } from '../../lib/chain/IChainFilterChainClient';
 import { ChainMemoryStore } from '../../lib/chain/ChainMemoryStore';
-import { createFakeLogger } from '../_test-utils';
+import { IChainFilterChainClient } from '../../lib/chain/IChainFilterChainClient';
 import {
   CloseType,
   DlcTransactionsV0,
 } from '../../lib/messages/DlcTransactions';
+import { createFakeLogger } from '../_test-utils';
 
 const fundBlock = {
   hash: '61a8eb0296d80f9f173d397b551ceb14aaaacfb91570c0ec6ee96593a5f92847',

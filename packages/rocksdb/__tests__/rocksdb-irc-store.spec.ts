@@ -1,6 +1,7 @@
 // tslint:disable: no-unused-expression
 
 import { expect } from 'chai';
+
 import { RocksdbIrcStore } from '../lib/rocksdb-irc-store';
 import * as util from './rocksdb';
 

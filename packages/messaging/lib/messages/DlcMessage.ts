@@ -1,4 +1,5 @@
 import { BufferReader } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import {
   ContractDescriptorV0,
@@ -8,11 +9,11 @@ import { ContractInfoV0, ContractInfoV1 } from './ContractInfo';
 import { DlcAcceptV0 } from './DlcAccept';
 import { DlcOfferV0 } from './DlcOffer';
 import { DlcSignV0 } from './DlcSign';
+import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
 import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
 import { OracleAttestationV0 } from './OracleAttestationV0';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
-import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
 
 export interface IDlcMessage {
   type: MessageType;

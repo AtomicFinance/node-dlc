@@ -1,11 +1,12 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
-  PolynomialPayoutCurvePieceJSON,
   HyperbolaPayoutCurvePieceJSON,
   PayoutCurvePiece,
+  PolynomialPayoutCurvePieceJSON,
 } from './PayoutCurvePiece';
 
 export abstract class PayoutFunction {

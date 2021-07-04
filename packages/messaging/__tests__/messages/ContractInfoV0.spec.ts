@@ -1,18 +1,19 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { ContractInfo, ContractInfoV0 } from '../../lib/messages/ContractInfo';
-import { OracleInfoV0 } from '../../lib/messages/OracleInfoV0';
+
 import {
   ContractDescriptor,
   ContractDescriptorV1,
 } from '../../lib/messages/ContractDescriptor';
-import { MessageType } from '../../lib/MessageType';
+import { ContractInfo, ContractInfoV0 } from '../../lib/messages/ContractInfo';
 import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
-import { RoundingIntervalsV0 } from '../../lib/messages/RoundingIntervalsV0';
+import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { OracleInfoV0 } from '../../lib/messages/OracleInfoV0';
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunctionV0 } from '../../lib/messages/PayoutFunction';
+import { RoundingIntervalsV0 } from '../../lib/messages/RoundingIntervalsV0';
+import { MessageType } from '../../lib/MessageType';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

@@ -4,6 +4,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160 } from '@node-lightning/crypto';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {

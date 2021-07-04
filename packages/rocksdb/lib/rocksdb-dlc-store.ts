@@ -1,4 +1,3 @@
-import { sha256 } from '@node-lightning/crypto';
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
   DlcAcceptV0,
@@ -8,9 +7,9 @@ import {
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
-import { xor } from '@node-lightning/crypto';
-import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 import { OutPoint, Script } from '@node-lightning/bitcoin';
+import { sha256, xor } from '@node-lightning/crypto';
+import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
 enum Prefix {
   DlcOfferV0 = 50,

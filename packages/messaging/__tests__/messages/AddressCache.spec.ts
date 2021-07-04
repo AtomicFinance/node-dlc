@@ -1,6 +1,7 @@
-import { expect } from 'chai';
-import { AddressCache, IAddressCache } from '../../lib/messages/AddressCache';
 import BitcoinNetworks from '@liquality/bitcoin-networks';
+import { expect } from 'chai';
+
+import { AddressCache, IAddressCache } from '../../lib/messages/AddressCache';
 
 describe('AddressCache', () => {
   const network = BitcoinNetworks.bitcoin_regtest;

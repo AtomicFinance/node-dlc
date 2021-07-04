@@ -1,6 +1,7 @@
 import { Sequence, Tx } from '@node-lightning/bitcoin';
 import { StreamReader } from '@node-lightning/bufio';
 import { expect } from 'chai';
+
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
 
 describe('FundingInputV0', () => {

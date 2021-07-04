@@ -1,14 +1,15 @@
+import {
+  DlcMessage,
+  NodeAnnouncementMessage,
+  OrderAcceptV0,
+  OrderOfferV0,
+} from '@node-dlc/messaging';
+import { sha256 } from '@node-lightning/crypto';
+
 import { ChannelType } from './ChannelType';
 import { ILogger } from './ILogger';
 import { IrcManager } from './IrcManager';
 import { WhitelistHandler } from './WhitelistHandler';
-import {
-  OrderOfferV0,
-  OrderAcceptV0,
-  DlcMessage,
-  NodeAnnouncementMessage,
-} from '@node-dlc/messaging';
-import { sha256 } from '@node-lightning/crypto';
 
 export class IrcOrderManager extends IrcManager {
   public receivedOrders: Map<string, string>; // tempOrderId to nick

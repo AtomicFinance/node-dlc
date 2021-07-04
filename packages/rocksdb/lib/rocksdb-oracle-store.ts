@@ -1,5 +1,5 @@
-import { sha256 } from '@node-lightning/crypto';
 import { DlcIdsV0, OracleEventContainerV0 } from '@node-dlc/messaging';
+import { sha256 } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
 enum Prefix {

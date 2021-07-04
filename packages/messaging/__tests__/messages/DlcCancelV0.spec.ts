@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { DlcCancelV0 } from '../../lib/messages/DlcCancel';
 
 describe('DlcCancelV0', () => {

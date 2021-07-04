@@ -1,19 +1,20 @@
 // tslint:disable: no-unused-expression
 
+import { DlcTxBuilder } from '@node-dlc/core';
 import {
-  DlcOfferV0,
   DlcAcceptV0,
-  DlcSignV0,
-  FundingInputV0,
-  DlcTransactionsV0,
   DlcCancelV0,
+  DlcOfferV0,
+  DlcSignV0,
+  DlcTransactionsV0,
+  FundingInputV0,
 } from '@node-dlc/messaging';
+import { OutPoint } from '@node-lightning/bitcoin';
+import { sha256, xor } from '@node-lightning/crypto';
 import { expect } from 'chai';
+
 import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
 import * as util from './rocksdb';
-import { xor, sha256 } from '@node-lightning/crypto';
-import { DlcTxBuilder } from '@node-dlc/core';
-import { OutPoint } from '@node-lightning/bitcoin';
 
 describe('RocksdbDlcStore', () => {
   let sut: RocksdbDlcStore;

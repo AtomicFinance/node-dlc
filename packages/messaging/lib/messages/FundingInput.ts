@@ -4,6 +4,7 @@ import {
   BufferWriter,
   StreamReader,
 } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 

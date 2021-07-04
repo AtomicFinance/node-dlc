@@ -1,11 +1,12 @@
+import { Tx } from '@node-lightning/bitcoin';
 import {
   BufferReader,
   BufferWriter,
   StreamReader,
 } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { Tx } from '@node-lightning/bitcoin';
 
 export abstract class DlcTransactions {
   public static deserialize(buf: Buffer): DlcTransactionsV0 {
