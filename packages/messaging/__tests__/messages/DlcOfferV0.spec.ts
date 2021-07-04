@@ -362,6 +362,13 @@ describe('DlcOffer', () => {
           instance.validate();
         }).to.throw(Error);
       });
+
+      it('should throw if funding amount less than offer collateral satoshis', () => {
+        instance.offerCollateralSatoshis = BigInt(3e8);
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
     });
   });
 });
