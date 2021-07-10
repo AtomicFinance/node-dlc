@@ -1,5 +1,6 @@
 import { ConsoleTransport } from '@node-lightning/logger';
 import util from 'util';
+
 import { LogLevel } from './log-level';
 import { ITransport } from './transport';
 import { shouldLog } from './util';

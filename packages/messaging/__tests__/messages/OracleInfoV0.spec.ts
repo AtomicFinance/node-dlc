@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { OracleInfoV0 } from '../../lib/messages/OracleInfoV0';
+
 import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
+import { OracleInfoV0 } from '../../lib/messages/OracleInfoV0';
 
 describe('OracleInfoV0', () => {
   describe('serialize', () => {

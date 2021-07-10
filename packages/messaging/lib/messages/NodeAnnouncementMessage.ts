@@ -1,8 +1,9 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { BitField } from '@node-lightning/core';
 import * as crypto from '@node-lightning/crypto';
-import { Address } from '../domain/Address';
 import { NodeFeatureFlags } from '@node-lightning/wire';
+
+import { Address } from '../domain/Address';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IWireMessage } from './IWireMessage';

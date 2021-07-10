@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 
 describe('DigitDecompositionEventDescriptorV0', () => {

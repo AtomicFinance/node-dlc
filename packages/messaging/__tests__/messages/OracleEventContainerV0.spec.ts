@@ -1,7 +1,8 @@
 import { expect } from 'chai';
-import { OracleEventContainerV0 } from '../../lib/messages/OracleEventContainerV0';
+
 import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
 import { OracleAttestationV0 } from '../../lib/messages/OracleAttestationV0';
+import { OracleEventContainerV0 } from '../../lib/messages/OracleEventContainerV0';
 
 describe('OracleEventContainerV0', () => {
   describe('serialize', () => {

@@ -1,7 +1,8 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { OrderOffer, IOrderOfferJSON } from './OrderOffer';
+import { IOrderOfferJSON, OrderOffer } from './OrderOffer';
 
 export abstract class OrderNegotiationFields {
   public static deserialize(

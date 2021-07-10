@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
 
 describe('CetAdaptorSignaturesV0', () => {

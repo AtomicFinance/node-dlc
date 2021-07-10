@@ -1,6 +1,8 @@
+import { sleep } from '@liquality/utils';
 import { Tx } from '@node-lightning/bitcoin';
 import { Block, Transaction } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
+
 import { DlcTransactionsV0 } from '../messages/DlcTransactions';
 import { IDlcStore } from './DlcStore';
 import {
@@ -8,7 +10,6 @@ import {
   HasHeight,
   IChainFilterChainClient,
 } from './IChainFilterChainClient';
-import { sleep } from '@liquality/utils';
 
 export enum SyncState {
   Unsynced,

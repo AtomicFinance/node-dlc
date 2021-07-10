@@ -1,14 +1,15 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {
   ContractDescriptor,
   ContractDescriptorV0JSON,
-  ContractDescriptorV1JSON,
   ContractDescriptorV1,
+  ContractDescriptorV1JSON,
 } from './ContractDescriptor';
-import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
 import { DlcMessage, IDlcMessage } from './DlcMessage';
+import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
 import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
 
 export abstract class ContractInfo extends DlcMessage {

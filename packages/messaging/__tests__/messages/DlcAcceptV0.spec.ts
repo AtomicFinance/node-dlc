@@ -1,5 +1,6 @@
 import BitcoinNetworks from '@liquality/bitcoin-networks';
 import { expect } from 'chai';
+
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
 import { DlcAccept, DlcAcceptV0 } from '../../lib/messages/DlcAccept';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';

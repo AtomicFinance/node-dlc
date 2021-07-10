@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 
 describe('OracleEventV0', () => {
   const oracleNonce = Buffer.from(

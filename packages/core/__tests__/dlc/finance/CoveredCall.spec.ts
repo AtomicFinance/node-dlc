@@ -1,5 +1,6 @@
 import { HyperbolaPayoutCurvePiece } from '@node-dlc/messaging';
 import { expect } from 'chai';
+
 import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
 import { HyperbolaPayoutCurve } from '../../../lib/dlc/HyperbolaPayoutCurve';
 

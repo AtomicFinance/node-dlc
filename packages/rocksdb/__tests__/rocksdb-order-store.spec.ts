@@ -1,10 +1,11 @@
 // tslint:disable: no-unused-expression
 
-import { OrderOfferV0, OrderAcceptV0 } from '@node-dlc/messaging';
+import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
+import { sha256 } from '@node-lightning/crypto';
 import { expect } from 'chai';
+
 import { RocksdbOrderStore } from '../lib/rocksdb-order-store';
 import * as util from './rocksdb';
-import { sha256 } from '@node-lightning/crypto';
 
 describe('RocksdbOrderStore', () => {
   let sut: RocksdbOrderStore;

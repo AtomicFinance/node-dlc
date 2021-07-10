@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 
 describe('EnumEventDescriptorV0', () => {

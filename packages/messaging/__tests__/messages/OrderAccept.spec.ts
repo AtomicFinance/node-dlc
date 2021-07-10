@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { OrderAcceptV0 } from '../../lib/messages/OrderAccept';
 import { OrderNegotiationFieldsV0 } from '../../lib/messages/OrderNegotiationFields';
 

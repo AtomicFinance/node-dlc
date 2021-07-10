@@ -1,7 +1,8 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { ScriptWitnessV0, IScriptWitnessV0JSON } from './ScriptWitnessV0';
+import { IScriptWitnessV0JSON, ScriptWitnessV0 } from './ScriptWitnessV0';
 
 /**
  * FundingSignatures V0 contains signatures of the funding transaction

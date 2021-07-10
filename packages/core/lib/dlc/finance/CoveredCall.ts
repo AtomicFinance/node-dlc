@@ -5,6 +5,7 @@ import {
   RoundingIntervalsV0,
 } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
+
 import { toBigInt } from '../../utils/BigIntUtils';
 import { CETPayout, splitIntoRanges } from '../CETCalculator';
 import { HyperbolaPayoutCurve } from '../HyperbolaPayoutCurve';

@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+
 import { BigIntMath, toBigInt } from '../utils/BigIntUtils';
 import { HyperbolaPayoutCurve } from './HyperbolaPayoutCurve';
 

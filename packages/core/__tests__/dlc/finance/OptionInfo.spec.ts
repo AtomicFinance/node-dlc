@@ -8,6 +8,7 @@ import {
   OracleInfoV0,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
+
 import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
 import {
   getOptionInfoFromContractInfo,

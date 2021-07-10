@@ -1,8 +1,9 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OracleEventV0, IOracleEventV0JSON } from './OracleEventV0';
+import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
 
 /**
  * In order to make it possible to hold oracles accountable in cases where

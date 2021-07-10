@@ -1,10 +1,10 @@
+import { ILogger, Logger } from '@node-lightning/logger';
 import { EventEmitter } from 'events';
-import path from 'path';
 import fs from 'fs';
 import net from 'net';
-import tls from 'tls';
-import { ILogger, Logger } from '@node-lightning/logger';
+import path from 'path';
 import sinon from 'sinon';
+import tls from 'tls';
 
 export enum IrcPort {
   Secure = 6697,

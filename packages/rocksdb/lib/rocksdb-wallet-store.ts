@@ -1,6 +1,6 @@
+import { AddressCache } from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
-import { AddressCache } from '@node-dlc/messaging';
 import Cryptr from 'cryptr';
 
 enum Prefix {

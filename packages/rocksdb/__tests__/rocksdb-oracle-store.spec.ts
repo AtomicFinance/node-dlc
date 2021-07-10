@@ -1,10 +1,11 @@
 // tslint:disable: no-unused-expression
 
 import { DlcIdsV0, OracleEventContainerV0 } from '@node-dlc/messaging';
+import { sha256 } from '@node-lightning/crypto';
 import { expect } from 'chai';
+
 import { RocksdbOracleStore } from '../lib/rocksdb-oracle-store';
 import * as util from './rocksdb';
-import { sha256 } from '@node-lightning/crypto';
 
 describe('RocksdbOracleStore', () => {
   let sut: RocksdbOracleStore;

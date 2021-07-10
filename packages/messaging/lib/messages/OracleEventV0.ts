@@ -1,12 +1,13 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
-  EventDescriptor,
-  IEnumEventDescriptorV0JSON,
-  IDigitDecompositionEventDescriptorV0JSON,
   DigitDecompositionEventDescriptorV0,
+  EventDescriptor,
+  IDigitDecompositionEventDescriptorV0JSON,
+  IEnumEventDescriptorV0JSON,
 } from './EventDescriptor';
 
 /**

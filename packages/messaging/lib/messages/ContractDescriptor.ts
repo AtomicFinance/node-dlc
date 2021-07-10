@@ -1,11 +1,12 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
 import {
-  RoundingIntervalsV0,
   IRoundingIntervalsV0JSON,
+  RoundingIntervalsV0,
 } from './RoundingIntervalsV0';
 
 export abstract class ContractDescriptor {

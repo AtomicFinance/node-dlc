@@ -1,5 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { crc32c } from '@node-lightning/checksum';
+
 import { MessageType } from '../MessageType';
 
 const MAX_DATA_LEN = 190;

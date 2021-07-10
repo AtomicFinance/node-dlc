@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
-import { IDlcStore } from './DlcStore';
 import { DlcTransactionsV0 } from '../messages/DlcTransactions';
+import { IDlcStore } from './DlcStore';
 
 /**
  * In-memory implementation of the IDlcStore.
