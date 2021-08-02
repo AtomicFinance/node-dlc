@@ -1,6 +1,10 @@
 // tslint:disable: no-unused-expression
 
-import { DlcIdsV0, OracleEventContainerV0 } from '@node-dlc/messaging';
+import {
+  DlcIdsV0,
+  OracleEventContainerV0,
+  OracleIdentifierV0,
+} from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
@@ -143,6 +147,17 @@ describe('RocksdbOracleStore', () => {
     'hex',
   );
 
+  const oraclePubkey = Buffer.from(
+    '5d1bcfab252c6dd9edd7aea4c5eeeef138f7ff7346061ea40143a9f5ae80baa9',
+    'hex',
+  );
+
+  const oracleName = 'atomic';
+
+  const oracleIdentifier = new OracleIdentifierV0();
+  oracleIdentifier.oracleName = oracleName;
+  oracleIdentifier.oraclePubkey = oraclePubkey;
+
   before(async () => {
     util.rmdir('.testdb');
     sut = new RocksdbOracleStore('./.testdb/nested/dir');
@@ -205,6 +220,29 @@ describe('RocksdbOracleStore', () => {
       await sut.deleteNonces(announcementId);
 
       const actual = await sut.findNonces(announcementId);
+      expect(actual).to.be.undefined;
+    });
+  });
+
+  describe('save oracle identifier', () => {
+    it('should save oracle identifier', async () => {
+      await sut.saveOracleIdentifier(oracleIdentifier);
+    });
+  });
+
+  describe('find oracle identifier', () => {
+    it('should return the oracle identifier object', async () => {
+      const actual = await sut.findOracleIdentifier(oraclePubkey);
+
+      expect(actual.serialize()).to.deep.equal(oracleIdentifier.serialize());
+    });
+  });
+
+  describe('delete oracle identifier', () => {
+    it('should delete oracle identifier', async () => {
+      await sut.deleteOracleIdentifier(oraclePubkey);
+
+      const actual = await sut.findOracleIdentifier(oraclePubkey);
       expect(actual).to.be.undefined;
     });
   });

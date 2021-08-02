@@ -28,6 +28,7 @@ export * from './messages/OrderNegotiationFields';
 export * from './messages/OracleAnnouncementV0';
 export * from './messages/OracleAttestationV0';
 export * from './messages/OracleEventV0';
+export * from './messages/OracleIdentifierV0';
 export * from './messages/OracleInfoV0';
 export * from './messages/OracleEventContainerV0';
 export * from './messages/PayoutFunction';
