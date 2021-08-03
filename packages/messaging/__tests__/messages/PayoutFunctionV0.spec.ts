@@ -35,7 +35,7 @@ describe('PayoutFunctionV0', () => {
         'fdc350' + // endpoint_0
         'fe000186a0' + // endpoint_payout_0        
         '0000' + // extra_precision
-        'fda72c23010100000000fd1388000001010000010000000100000001ff000000012a05f2000000' + // payout_curve_piece
+        'fda72a23010100000000fd1388000001010000010000000100000001ff000000012a05f2000000' + // payout_curve_piece
         'fe000f423f' + // endpoint_1
         '00' + // endpoint_payout_1
         '0000' // extra_precision_1
@@ -68,7 +68,7 @@ describe('PayoutFunctionV0', () => {
       expect(
         instance.pieces[0].payoutCurvePiece.serialize().toString('hex'),
       ).to.equal(
-        'fda72c23010100000000fd1388000001010000010000000100000001ff000000012a05f2000000',
+        'fda72a23010100000000fd1388000001010000010000000100000001ff000000012a05f2000000',
       );
       expect(instance.pieces[0].endpoint).to.equal(BigInt(999999));
       expect(instance.pieces[0].endpointPayout).to.equal(BigInt(0));

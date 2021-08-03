@@ -102,7 +102,10 @@ const computePayouts = (
     payoutCurvePiece,
   } = payoutFunction.pieces[0];
 
-  if (payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece)
+  if (
+    payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
+    payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
+  )
     throw new Error('Payout curve piece must be a hyperbola');
 
   const _payoutCurvePiece = payoutCurvePiece as HyperbolaPayoutCurvePiece;

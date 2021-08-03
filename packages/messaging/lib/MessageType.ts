@@ -36,8 +36,9 @@ export enum MessageType {
 
   PayoutFunctionV0 = 42790,
 
-  PolynomialPayoutCurvePiece = 42794, // TODO: Temporary type
-  HyperbolaPayoutCurvePiece = 42796, // TODO: Temporary type
+  PolynomialPayoutCurvePiece = 42792, // TODO: Temporary type
+  HyperbolaPayoutCurvePiece = 42794, // TODO: Temporary type
+  OldHyperbolaPayoutCurvePiece = 42796, // TODO: Remove once all existing contracts have passed
 
   RoundingIntervalsV0 = 42788,
 
