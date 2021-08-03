@@ -97,16 +97,35 @@ export class DlcTxBuilder {
     const acceptChangeValue =
       acceptTotalFunding - acceptInput - finalizer.acceptFees;
 
-    tx.addOutput(Value.fromSats(Number(fundingValue)), witScript);
-    tx.addOutput(
-      Value.fromSats(Number(offerChangeValue)),
-      Script.p2wpkhLock(this.dlcOffer.changeSPK.slice(2)),
-    );
-    tx.addOutput(
-      Value.fromSats(Number(acceptChangeValue)),
-      Script.p2wpkhLock(this.dlcAccept.changeSPK.slice(2)),
-    );
+    const outputs: Output[] = [];
+    outputs.push({
+      value: Value.fromSats(Number(fundingValue)),
+      script: witScript,
+      serialId: this.dlcOffer.fundOutputSerialId,
+    });
+    outputs.push({
+      value: Value.fromSats(Number(offerChangeValue)),
+      script: Script.p2wpkhLock(this.dlcOffer.changeSPK.slice(2)),
+      serialId: this.dlcOffer.changeSerialId,
+    });
+    outputs.push({
+      value: Value.fromSats(Number(acceptChangeValue)),
+      script: Script.p2wpkhLock(this.dlcAccept.changeSPK.slice(2)),
+      serialId: this.dlcAccept.changeSerialId,
+    });
+
+    outputs.sort((a, b) => Number(a.serialId) - Number(b.serialId));
+
+    outputs.forEach((output) => {
+      tx.addOutput(output.value, output.script);
+    });
 
     return tx.toTx();
   }
+}
+
+interface Output {
+  value: Value;
+  script: Script;
+  serialId: bigint;
 }
