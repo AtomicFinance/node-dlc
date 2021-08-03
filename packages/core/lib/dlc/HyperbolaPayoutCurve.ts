@@ -1,5 +1,13 @@
-import { HyperbolaPayoutCurvePiece } from '@node-dlc/messaging';
+import {
+  HyperbolaPayoutCurvePiece,
+  MessageType,
+  PayoutFunctionV0,
+  RoundingIntervalsV0,
+} from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
+
+import { CETPayout } from '..';
+import { splitIntoRanges } from './CETCalculator';
 
 const getPrecision = (num: BigNumber): number =>
   num.decimalPlaces(16).abs().modulo(1).shiftedBy(16).toNumber();
@@ -149,6 +157,40 @@ export class HyperbolaPayoutCurve {
       translateOutcome,
       translatePayout,
       piece.usePositivePiece,
+    );
+  }
+
+  static computePayouts(
+    payoutFunction: PayoutFunctionV0,
+    totalCollateral: bigint,
+    roundingIntervals: RoundingIntervalsV0,
+  ): CETPayout[] {
+    if (payoutFunction.pieces.length !== 1)
+      throw new Error('Must have at least one piece');
+    const {
+      endpoint,
+      endpointPayout,
+      payoutCurvePiece,
+    } = payoutFunction.pieces[0];
+
+    if (
+      payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
+      payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
+    )
+      throw new Error('Payout curve piece must be a hyperbola');
+
+    const _payoutCurvePiece = payoutCurvePiece as HyperbolaPayoutCurvePiece;
+
+    const curve = this.fromPayoutCurvePiece(_payoutCurvePiece);
+
+    return splitIntoRanges(
+      payoutFunction.endpoint0,
+      endpoint,
+      payoutFunction.endpointPayout0,
+      endpointPayout,
+      totalCollateral,
+      curve,
+      roundingIntervals.intervals,
     );
   }
 }
