@@ -8,6 +8,7 @@ import {
   roundPayout,
   splitIntoRanges,
 } from '../../lib/dlc/CETCalculator';
+import { CoveredCall } from '../../lib/dlc/finance/CoveredCall';
 import { HyperbolaPayoutCurve } from '../../lib/dlc/HyperbolaPayoutCurve';
 import { BigIntMath } from '../../lib/utils/BigIntUtils';
 
@@ -1107,6 +1108,94 @@ describe('CETCalculator', () => {
           roundPayout(payout, rounding),
           totalCollateral,
         );
+        expect(roundedPayout).to.eq(range.payout);
+      });
+    });
+  });
+
+  describe.only('descending hyperbola (31520 1BTC covered call)', () => {
+    const {
+      payoutCurve: hyperbola,
+      totalCollateral,
+      maxOutcome,
+    } = CoveredCall.buildCurve(BigInt(31520), BigInt(1e8), 2, 17);
+
+    it('should properly split and round with one interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(100000),
+        },
+      ];
+      const reversedIntervals = [...roundingIntervals].reverse();
+
+      const from = BigInt(0);
+      const to = maxOutcome;
+      const fromPayout = totalCollateral;
+      const toPayout = BigInt(0);
+
+      const ranges = splitIntoRanges(
+        from,
+        to,
+        fromPayout,
+        toPayout,
+        totalCollateral,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      // for each rounded payout at indexTo, expect to be equal to range payout
+      ranges.forEach((range) => {
+        if (range.indexFrom === from || range.indexTo === from)
+          return expect(range.payout).to.be.eq(fromPayout);
+
+        if (range.indexFrom === to || range.indexTo === to)
+          return expect(range.payout).to.be.eq(toPayout);
+
+        const payout = hyperbola.getPayout(range.indexTo);
+
+        const roundingIndex = reversedIntervals.findIndex(
+          (interval) => interval.beginInterval <= range.indexTo,
+        );
+
+        const rounding =
+          roundingIndex !== -1
+            ? reversedIntervals[roundingIndex].roundingMod
+            : BigInt(1);
+
+        const roundedPayout = BigIntMath.clamp(
+          BigInt(0),
+          roundPayout(payout, rounding),
+          totalCollateral,
+        );
+        expect(roundedPayout).to.eq(range.payout);
+      });
+
+      // for each rounded payout at indexFrom, expect to be equal to range payout
+      ranges.forEach((range) => {
+        if (range.indexFrom === from || range.indexTo === from)
+          return expect(range.payout).to.be.eq(fromPayout);
+
+        if (range.indexFrom === to || range.indexTo === to)
+          return expect(range.payout).to.be.eq(toPayout);
+
+        const payout = hyperbola.getPayout(range.indexFrom);
+
+        const roundingIndex = reversedIntervals.findIndex(
+          (interval) => interval.beginInterval <= range.indexTo,
+        );
+
+        const rounding =
+          roundingIndex !== -1
+            ? reversedIntervals[roundingIndex].roundingMod
+            : BigInt(1);
+
+        const roundedPayout = BigIntMath.clamp(
+          BigInt(0),
+          roundPayout(payout, rounding),
+          totalCollateral,
+        );
+
         expect(roundedPayout).to.eq(range.payout);
       });
     });
