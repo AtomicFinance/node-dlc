@@ -91,7 +91,7 @@ export class HyperbolaPayoutCurve {
     piece.translateOutcome = BigInt(translateOutcome.abs().toString());
     piece.translateOutcomeExtraPrecision = getPrecision(translateOutcome);
 
-    piece.translatePayoutSign = false;
+    piece.translatePayoutSign = translatePayout.isPositive();
     piece.translatePayout = BigInt(translatePayout.abs().toString());
     piece.translatePayoutExtraPrecision = getPrecision(translatePayout);
 
@@ -99,7 +99,7 @@ export class HyperbolaPayoutCurve {
     piece.a = BigInt(a.abs().toString());
     piece.aExtraPrecision = getPrecision(a);
 
-    piece.bSign = a.isPositive();
+    piece.bSign = b.isPositive();
     piece.b = BigInt(b.abs().toString());
     piece.bExtraPrecision = getPrecision(b);
 
