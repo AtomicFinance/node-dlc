@@ -16,6 +16,8 @@ export abstract class PayoutCurvePiece {
         return PolynomialPayoutCurvePiece.deserialize(buf);
       case MessageType.HyperbolaPayoutCurvePiece:
         return HyperbolaPayoutCurvePiece.deserialize(buf);
+      case MessageType.OldHyperbolaPayoutCurvePiece:
+        return HyperbolaPayoutCurvePiece.deserialize(buf);
       default:
         throw new Error(
           `Payout function TLV type must be PolynomialPayoutCurvePiece or HyperbolaPayoutCurvePiece`,

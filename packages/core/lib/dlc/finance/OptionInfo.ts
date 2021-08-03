@@ -57,7 +57,10 @@ export function getOptionInfoFromContractInfo(
 
   const payoutCurvePiece = payoutFunction.pieces[0]
     .payoutCurvePiece as HyperbolaPayoutCurvePiece;
-  if (payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece)
+  if (
+    payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
+    payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
+  )
     throw Error('Must be HyperbolaPayoutCurvePiece');
   if (payoutCurvePiece.b !== BigInt(0) || payoutCurvePiece.c !== BigInt(0))
     throw Error('b and c HyperbolaPayoutCurvePiece values must be 0');
