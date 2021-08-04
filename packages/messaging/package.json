@@ -28,7 +28,8 @@
     "@node-lightning/bufio": "0.22.1",
     "@node-lightning/checksum": "0.22.1",
     "@node-lightning/wire": "0.22.1",
-    "bitcoinjs-lib": "5.2.0"
+    "bitcoinjs-lib": "5.2.0",
+    "bip-schnorr": "0.6.3"
   },
   "devDependencies": {
     "@node-lightning/logger": "0.22.1",
