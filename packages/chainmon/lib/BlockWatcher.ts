@@ -149,9 +149,16 @@ export class BlockWatcher extends EventEmitter {
     this.receivedBlocks.set(blockSummary.hash, blockSummary);
 
     for (const transaction of block.transactions) {
-      const tx = Tx.fromBuffer(transaction.toBuffer());
-      this._checkOutpoints(blockSummary, tx);
-      this._checkScriptPubkeys(blockSummary, tx);
+      try {
+        const tx = Tx.fromBuffer(transaction.toBuffer());
+        this._checkOutpoints(blockSummary, tx);
+        this._checkScriptPubkeys(blockSummary, tx);
+      } catch (e) {
+        console.log(
+          'Failed to deserialize tx',
+          transaction.toBuffer().toString('hex'),
+        );
+      }
     }
 
     const existingBlockWithPrevHash = this.previousHashToHash.get(
