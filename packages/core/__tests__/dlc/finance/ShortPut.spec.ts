@@ -1,28 +1,40 @@
 import { HyperbolaPayoutCurvePiece } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
-import { CoveredCall } from '../../../lib/dlc/finance/CoveredCall';
+import { ShortPut } from '../../../lib/dlc/finance/ShortPut';
 import { HyperbolaPayoutCurve } from '../../../lib/dlc/HyperbolaPayoutCurve';
 
-describe('CoveredCall', () => {
+describe('ShortPut', () => {
   describe('1BTC-50k-base2-20digit curve', () => {
     const strikePrice = BigInt(50000);
     const contractSize = BigInt(10) ** BigInt(8);
     const oracleBase = 2;
     const oracleDigits = 20;
 
-    const { maxOutcome, totalCollateral, payoutCurve } = CoveredCall.buildCurve(
+    const { totalCollateral, payoutCurve } = ShortPut.buildCurve(
       strikePrice,
       contractSize,
       oracleBase,
       oracleDigits,
     );
 
-    describe('payout', () => {
-      it('should be a negative past max outcome', () => {
+    describe.only('payout', () => {
+      it('should be zero at half of strike price', () => {
         expect(
-          payoutCurve.getPayout(maxOutcome + BigInt(1)).toNumber(),
-        ).to.be.lessThan(0);
+          payoutCurve.getPayout(strikePrice / BigInt(2)).toNumber(),
+        ).to.be.equal(0);
+      });
+
+      it('should be correct at $30,000 settlement price', () => {
+        const settlementPrice = BigInt(30000);
+
+        expect(payoutCurve.getPayout(settlementPrice).toFixed(3)).to.be.eq(
+          (
+            2 * Number(contractSize) -
+            (Number(contractSize) * Number(strikePrice)) /
+              Number(settlementPrice)
+          ).toFixed(3),
+        );
       });
 
       it('should be equal to totalCollateral at strike price', () => {
