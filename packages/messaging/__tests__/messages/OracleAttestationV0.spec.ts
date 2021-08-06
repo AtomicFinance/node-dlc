@@ -14,6 +14,11 @@ describe('OracleAttestationV0', () => {
     'hex',
   );
 
+  const invalidOraclePubkey = Buffer.from(
+    '5d1bcfab252c6dd9edd7aea4c5eeeef138f7ff7346061ea40143a9f5ae80baa9',
+    'hex',
+  );
+
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new OracleAttestationV0();
@@ -62,6 +67,36 @@ describe('OracleAttestationV0', () => {
       expect(instance.oraclePubkey).to.deep.equal(oraclePubkey);
       expect(instance.signatures[0]).to.deep.equal(attestationSig);
       expect(instance.outcomes[0]).to.equal('NO');
+    });
+  });
+
+  describe('validate', () => {
+    it('should validate when correct outcome signatures', () => {
+      const instance = new OracleAttestationV0();
+
+      instance.length = BigInt(127);
+      instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
+      instance.oraclePubkey = oraclePubkey;
+      instance.signatures.push(attestationSig);
+      instance.outcomes.push('NO');
+
+      expect(function () {
+        instance.validate();
+      }).to.not.throw(Error);
+    });
+
+    it('should invalidate when incorrect outcome signatures', () => {
+      const instance = new OracleAttestationV0();
+
+      instance.length = BigInt(127);
+      instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
+      instance.oraclePubkey = invalidOraclePubkey;
+      instance.signatures.push(attestationSig);
+      instance.outcomes.push('NO');
+
+      expect(function () {
+        instance.validate();
+      }).to.throw(Error);
     });
   });
 });

@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -65,6 +66,21 @@ export class OracleAttestationV0 implements IDlcMessage {
   public signatures: Buffer[] = [];
 
   public outcomes: string[] = [];
+
+  public validate(): void {
+    if (this.signatures.length !== this.outcomes.length) {
+      throw Error('signature and outcome length must be the same');
+    }
+
+    // Verify attestation outcome signatures
+    for (let i = 0; i < this.signatures.length; i++) {
+      const msg = math.taggedHash(
+        'DLC/oracle/attestation/v0',
+        this.outcomes[i],
+      );
+      verify(this.oraclePubkey, msg, this.signatures[i]);
+    }
+  }
 
   /**
    * Converts oracle_attestation_v0 to JSON

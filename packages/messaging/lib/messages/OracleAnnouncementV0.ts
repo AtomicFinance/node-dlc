@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
@@ -52,6 +53,13 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 
   public validate(): void {
     this.oracleEvent.validate();
+
+    // Verify announcement sig
+    const msg = math.taggedHash(
+      'DLC/oracle/announcement/v0',
+      this.oracleEvent.serialize(),
+    );
+    verify(this.oraclePubkey, msg, this.announcementSig);
   }
 
   /**
