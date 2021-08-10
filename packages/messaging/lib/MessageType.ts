@@ -48,6 +48,8 @@ export enum MessageType {
 
   DlcCancelV0 = 52172,
 
+  DlcCloseV0 = 11111, // TODO
+
   /**
    * Dlc Storage Types
    */
