@@ -1,12 +1,25 @@
 import { expect } from 'chai';
 import { DlcCloseV0 } from '../../lib/messages/DlcClose';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { MessageType } from '../../lib/MessageType';
 
 describe('DlcCloseV0', () => {
+  let instance: DlcCloseV0;
+
+  const type = Buffer.from('2B67', 'hex');
+
   const contractId = Buffer.from(
     'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269',
     'hex',
   );
+
+  const closeSignature = Buffer.from(
+    '7c8ad6de287b62a1ed1d74ed9116a5158abc7f97376d201caa88e0f9daad68fcda4c271cc003512e768f403a57e5242bd1f6aa1750d7f3597598094a43b1c7bb',
+    'hex',
+  );
+
+  const offerPayoutSatoshis = Buffer.from('0000000005f5e100', 'hex');
+  const acceptPayoutSatoshis = Buffer.from('0000000005f5e100', 'hex');
 
   const fundingInputsLen = Buffer.from('0001', 'hex');
   const fundingInputV0 = Buffer.from(
@@ -21,6 +34,16 @@ describe('DlcCloseV0', () => {
       '0000', // redeem_script_len
     'hex',
   );
+
+  const dlcCloseHex = Buffer.concat([
+    type,
+    contractId,
+    closeSignature,
+    offerPayoutSatoshis,
+    acceptPayoutSatoshis,
+    fundingInputsLen,
+    fundingInputV0,
+  ]);
 
   describe('serialize', () => {
     it('serializes', () => {
@@ -61,9 +84,9 @@ describe('DlcCloseV0', () => {
     });
 
     it('has correct type', () => {
-      // expect(DlcCloseV0.deserialize(dlcCloseHex).type).to.equal(
-      //   MessageType.DlcCloseV0,
-      // );
+      expect(DlcCloseV0.deserialize(dlcCloseHex).type).to.equal(
+        MessageType.DlcCloseV0,
+      );
     });
   });
 });
