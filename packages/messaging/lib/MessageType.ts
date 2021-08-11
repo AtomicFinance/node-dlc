@@ -46,9 +46,8 @@ export enum MessageType {
   DlcAcceptV0 = 42780,
   DlcSignV0 = 42782,
 
+  DlcCloseV0 = 52170, // TODO: Temporary type
   DlcCancelV0 = 52172,
-
-  DlcCloseV0 = 11111, // TODO
 
   /**
    * Dlc Storage Types

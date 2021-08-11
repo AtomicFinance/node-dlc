@@ -1,12 +1,13 @@
 import { expect } from 'chai';
-import { DlcCloseV0 } from '../../lib/messages/DlcClose';
+
+import { DlcClose, DlcCloseV0 } from '../../lib/messages/DlcClose';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
 import { MessageType } from '../../lib/MessageType';
 
-describe('DlcCloseV0', () => {
+describe('DlcClose', () => {
   let instance: DlcCloseV0;
 
-  const type = Buffer.from('2B67', 'hex');
+  const type = Buffer.from('cbca', 'hex');
 
   const contractId = Buffer.from(
     'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269',
@@ -45,48 +46,85 @@ describe('DlcCloseV0', () => {
     fundingInputV0,
   ]);
 
-  describe('serialize', () => {
-    it('serializes', () => {
-      const instance = new DlcCloseV0();
-
-      instance.contractId = contractId;
-      // instance.closeSignature = closeSignature;
-      // instance.offerPayoutSatoshis = offerPayoutSatoshis;
-      // instance.acceptPayoutSatoshis = acceptPayoutSatoshis;
-      instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
-
-      expect(instance.serialize().toString("hex")).to.equal(
-        "cbcc" +
-        "c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269"
-        // "00" 
-      ); // prettier-ignore
-    });
+  beforeEach(() => {
+    instance = new DlcCloseV0();
+    instance.contractId = contractId;
+    instance.closeSignature = closeSignature;
+    instance.offerPayoutSatoshis = BigInt(100000000);
+    instance.acceptPayoutSatoshis = BigInt(100000000);
+    instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
   });
 
   describe('deserialize', () => {
-    it('deserializes', () => {
-      const buf = Buffer.from(
-        "cbcc" +
-        "c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269"
-        // "00" // cancel type
-        , "hex"
-      ); // prettier-ignore
-
-      const instance = DlcCloseV0.deserialize(buf);
-
-      expect(instance.contractId).to.deep.equal(contractId);
-      // expect(instance.closeSignature).to.deep.equal(closeSignature);
-      // expect(instance.offerPayoutSatoshis).to.deep.equal(offerPayoutSatoshis);
-      // expect(instance.acceptPayoutSatoshis).to.deep.equal(acceptPayoutSatoshis);
-      expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
-        fundingInputV0.toString('hex'),
-      );
+    it('should throw if incorrect type', () => {
+      instance.type = 0x123;
+      expect(function () {
+        DlcClose.deserialize(instance.serialize());
+      }).to.throw(Error);
     });
 
     it('has correct type', () => {
-      expect(DlcCloseV0.deserialize(dlcCloseHex).type).to.equal(
-        MessageType.DlcCloseV0,
+      expect(DlcClose.deserialize(instance.serialize()).type).to.equal(
+        instance.type,
       );
+    });
+  });
+
+  describe('DlcCloseV0', () => {
+    describe('serialize', () => {
+      it('serializes', () => {
+        expect(instance.serialize().toString('hex')).to.equal(
+          dlcCloseHex.toString('hex'),
+        );
+      });
+    });
+
+    describe('deserialize', () => {
+      it('deserializes', () => {
+        const instance = DlcCloseV0.deserialize(dlcCloseHex);
+        expect(instance.contractId).to.deep.equal(contractId);
+        expect(instance.closeSignature).to.deep.equal(closeSignature);
+        expect(Number(instance.offerPayoutSatoshis)).to.equal(100000000);
+        expect(Number(instance.acceptPayoutSatoshis)).to.equal(100000000);
+        expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
+          fundingInputV0.toString('hex'),
+        );
+      });
+
+      it('has correct type', () => {
+        expect(DlcCloseV0.deserialize(dlcCloseHex).type).to.equal(
+          MessageType.DlcCloseV0,
+        );
+      });
+    });
+
+    describe('toJSON', () => {
+      it('convert to JSON', async () => {
+        const json = instance.toJSON();
+        expect(json.contractId).to.equal(contractId.toString('hex'));
+        expect(json.closeSignature).to.equal(closeSignature.toString('hex'));
+        expect(json.fundingInputs[0].prevTx).to.equal(
+          instance.fundingInputs[0].prevTx.serialize().toString('hex'),
+        );
+      });
+    });
+
+    describe('validate', () => {
+      it('should throw if inputSerialIds arent unique', () => {
+        instance.fundingInputs = [
+          FundingInputV0.deserialize(fundingInputV0),
+          FundingInputV0.deserialize(fundingInputV0),
+        ];
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
+      it('should ensure funding inputs are segwit', () => {
+        instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+        expect(function () {
+          instance.validate();
+        }).to.throw(Error);
+      });
     });
   });
 });
