@@ -9,8 +9,6 @@ export abstract class DlcClose {
   public static deserialize(buf: Buffer): DlcCloseV0 {
     const reader = new BufferReader(buf);
 
-    // console.log('OK', Number(reader.readUInt16BE()));
-
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
