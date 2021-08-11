@@ -29,15 +29,14 @@ export abstract class DlcClose {
 }
 
 /**
- * DlcOffer message contains information about a node and indicates its
- * desire to enter into a new contract. This is the first step toward
- * creating the funding transaction and CETs.
+ * DlcClose message contains information about a node and indicates its
+ * desire to close an existing contract.
  */
 export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   public static type = MessageType.DlcCloseV0;
 
   /**
-   * Deserializes an offer_dlc_v0 message
+   * Deserializes an close_dlc_v0 message
    * @param buf
    */
   public static deserialize(buf: Buffer): DlcCloseV0 {
