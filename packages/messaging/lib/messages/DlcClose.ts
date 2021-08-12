@@ -46,6 +46,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     instance.closeSignature = reader.readBytes(64);
     instance.offerPayoutSatoshis = reader.readUInt64BE();
     instance.acceptPayoutSatoshis = reader.readUInt64BE();
+    instance.fundInputSerialId = reader.readUInt64BE();
     const fundingInputsLen = reader.readUInt16BE();
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
@@ -67,6 +68,8 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   public acceptPayoutSatoshis: bigint;
 
+  public fundInputSerialId: bigint;
+
   public fundingInputs: FundingInputV0[] = [];
 
   /**
@@ -79,6 +82,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     writer.writeBytes(this.closeSignature);
     writer.writeUInt64BE(this.offerPayoutSatoshis);
     writer.writeUInt64BE(this.acceptPayoutSatoshis);
+    writer.writeUInt64BE(this.fundInputSerialId);
     writer.writeUInt16BE(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {
@@ -118,6 +122,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
       closeSignature: this.closeSignature.toString('hex'),
       offerPayoutSatoshis: Number(this.offerPayoutSatoshis),
       acceptPayoutSatoshis: Number(this.acceptPayoutSatoshis),
+      fundInputSerialId: Number(this.fundInputSerialId),
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
     };
   }
@@ -129,5 +134,6 @@ export interface IDlcCloseV0JSON {
   closeSignature: string;
   offerPayoutSatoshis: number;
   acceptPayoutSatoshis: number;
+  fundInputSerialId: number;
   fundingInputs: IFundingInputV0JSON[];
 }

@@ -21,6 +21,7 @@ describe('DlcClose', () => {
 
   const offerPayoutSatoshis = Buffer.from('0000000005f5e100', 'hex');
   const acceptPayoutSatoshis = Buffer.from('0000000005f5e100', 'hex');
+  const fundInputSerialId = Buffer.from('00000000075bcd15', 'hex');
 
   const fundingInputsLen = Buffer.from('0001', 'hex');
   const fundingInputV0 = Buffer.from(
@@ -42,6 +43,7 @@ describe('DlcClose', () => {
     closeSignature,
     offerPayoutSatoshis,
     acceptPayoutSatoshis,
+    fundInputSerialId,
     fundingInputsLen,
     fundingInputV0,
   ]);
@@ -52,6 +54,7 @@ describe('DlcClose', () => {
     instance.closeSignature = closeSignature;
     instance.offerPayoutSatoshis = BigInt(100000000);
     instance.acceptPayoutSatoshis = BigInt(100000000);
+    instance.fundInputSerialId = BigInt(123456789);
     instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
   });
 
@@ -86,6 +89,7 @@ describe('DlcClose', () => {
         expect(instance.closeSignature).to.deep.equal(closeSignature);
         expect(Number(instance.offerPayoutSatoshis)).to.equal(100000000);
         expect(Number(instance.acceptPayoutSatoshis)).to.equal(100000000);
+        expect(Number(instance.fundInputSerialId)).to.equal(123456789);
         expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
           fundingInputV0.toString('hex'),
         );
@@ -103,6 +107,9 @@ describe('DlcClose', () => {
         const json = instance.toJSON();
         expect(json.contractId).to.equal(contractId.toString('hex'));
         expect(json.closeSignature).to.equal(closeSignature.toString('hex'));
+        expect(json.fundInputSerialId).to.equal(
+          Number(fundInputSerialId.readBigInt64BE()),
+        );
         expect(json.fundingInputs[0].prevTx).to.equal(
           instance.fundingInputs[0].prevTx.serialize().toString('hex'),
         );
