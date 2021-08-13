@@ -4,6 +4,10 @@ import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import {
+  FundingSignaturesV0,
+  IFundingSignaturesV0JSON,
+} from './FundingSignaturesV0';
 
 export abstract class DlcClose {
   public static deserialize(buf: Buffer): DlcCloseV0 {
@@ -51,6 +55,9 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
     }
+    instance.fundingSignatures = FundingSignaturesV0.deserialize(
+      getTlv(reader),
+    );
 
     return instance;
   }
@@ -72,6 +79,8 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   public fundingInputs: FundingInputV0[] = [];
 
+  public fundingSignatures: FundingSignaturesV0;
+
   /**
    * Serializes the close_dlc_v0 message into a Buffer
    */
@@ -88,6 +97,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     for (const fundingInput of this.fundingInputs) {
       writer.writeBytes(fundingInput.serialize());
     }
+    writer.writeBytes(this.fundingSignatures.serialize());
 
     return writer.toBuffer();
   }
@@ -124,6 +134,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
       acceptPayoutSatoshis: Number(this.acceptPayoutSatoshis),
       fundInputSerialId: Number(this.fundInputSerialId),
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
+      fundingSignatures: this.fundingSignatures.toJSON(),
     };
   }
 }
@@ -136,4 +147,5 @@ export interface IDlcCloseV0JSON {
   acceptPayoutSatoshis: number;
   fundInputSerialId: number;
   fundingInputs: IFundingInputV0JSON[];
+  fundingSignatures: IFundingSignaturesV0JSON;
 }
