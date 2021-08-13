@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { DlcClose, DlcCloseV0 } from '../../lib/messages/DlcClose';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { FundingSignaturesV0 } from '../../lib/messages/FundingSignaturesV0';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcClose', () => {
@@ -37,6 +38,18 @@ describe('DlcClose', () => {
     'hex',
   );
 
+  const fundingSignaturesV0 = Buffer.from(
+    'fda718' + // type funding_signatures_v0
+      '70' + // length
+      '0001' + // num_witnesses
+      '0002' + // stack_len
+      '0047' + // stack_element_len
+      '304402203812d7d194d44ec68f244cc3fd68507c563ec8c729fdfa3f4a79395b98abe84f0220704ab3f3ffd9c50c2488e59f90a90465fccc2d924d67a1e98a133676bf52f37201' + // stack_element
+      '0021' + // stack_element_len
+      '02dde41aa1f21671a2e28ad92155d2d66e0b5428de15d18db4cbcf216bf00de919', // stack_element
+    'hex',
+  );
+
   const dlcCloseHex = Buffer.concat([
     type,
     contractId,
@@ -46,6 +59,7 @@ describe('DlcClose', () => {
     fundInputSerialId,
     fundingInputsLen,
     fundingInputV0,
+    fundingSignaturesV0,
   ]);
 
   beforeEach(() => {
@@ -56,6 +70,9 @@ describe('DlcClose', () => {
     instance.acceptPayoutSatoshis = BigInt(100000000);
     instance.fundInputSerialId = BigInt(123456789);
     instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+    instance.fundingSignatures = FundingSignaturesV0.deserialize(
+      fundingSignaturesV0,
+    );
   });
 
   describe('deserialize', () => {
@@ -92,6 +109,9 @@ describe('DlcClose', () => {
         expect(Number(instance.fundInputSerialId)).to.equal(123456789);
         expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
           fundingInputV0.toString('hex'),
+        );
+        expect(instance.fundingSignatures.serialize().toString('hex')).to.equal(
+          fundingSignaturesV0.toString('hex'),
         );
       });
 
