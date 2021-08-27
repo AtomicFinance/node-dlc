@@ -7,6 +7,7 @@ import {
 } from './ContractDescriptor';
 import { ContractInfoV0, ContractInfoV1 } from './ContractInfo';
 import { DlcAcceptV0 } from './DlcAccept';
+import { DlcCloseV0 } from './DlcClose';
 import { DlcOfferV0 } from './DlcOffer';
 import { DlcSignV0 } from './DlcSign';
 import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
@@ -33,6 +34,7 @@ export abstract class DlcMessage {
     | DlcOfferV0
     | DlcAcceptV0
     | DlcSignV0
+    | DlcCloseV0
     | OracleAttestationV0
     | OracleAnnouncementV0
     | NodeAnnouncementMessage {
@@ -59,6 +61,8 @@ export abstract class DlcMessage {
         return DlcAcceptV0.deserialize(buf);
       case MessageType.DlcSignV0:
         return DlcSignV0.deserialize(buf);
+      case MessageType.DlcCloseV0:
+        return DlcCloseV0.deserialize(buf);
       case MessageType.OracleAttestationV0:
         return OracleAttestationV0.deserialize(buf);
       case MessageType.OracleAnnouncementV0:
