@@ -75,7 +75,7 @@ describe('DlcClose', () => {
     );
   });
 
-  describe('deserialize', () => {
+  describe.only('deserialize', () => {
     it('should throw if incorrect type', () => {
       instance.type = 0x123;
       expect(function () {
