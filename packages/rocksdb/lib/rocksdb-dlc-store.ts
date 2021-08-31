@@ -2,6 +2,7 @@ import { DlcTxBuilder } from '@node-dlc/core';
 import {
   DlcAcceptV0,
   DlcCancelV0,
+  DlcCloseV0,
   DlcOfferV0,
   DlcSignV0,
   DlcTransactionsV0,
@@ -19,6 +20,7 @@ enum Prefix {
   Outpoint = 54,
   ScriptPubKey = 55,
   DlcCancelV0 = 56,
+  DlcCloseV0 = 57,
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
@@ -202,6 +204,43 @@ export class RocksdbDlcStore extends RocksdbBase {
 
   public async deleteDlcCancel(contractId: Buffer): Promise<void> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcCancelV0]), contractId]);
+    await this._db.del(key);
+  }
+
+  public async findDlcCloses(): Promise<DlcCloseV0[]> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      const results: DlcCloseV0[] = [];
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcCloseV0) {
+          results.push(DlcCloseV0.deserialize(data.value));
+        }
+      });
+      stream.on('end', () => {
+        resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
+  public async findDlcClose(contractId: Buffer): Promise<DlcCloseV0> {
+    const key = Buffer.concat([Buffer.from([Prefix.DlcCloseV0]), contractId]);
+    const raw = await this._safeGet<Buffer>(key);
+    if (!raw) return;
+    return DlcCloseV0.deserialize(raw);
+  }
+
+  public async saveDlcClose(dlcClose: DlcCloseV0): Promise<void> {
+    const value = dlcClose.serialize();
+    const key = Buffer.concat([
+      Buffer.from([Prefix.DlcCloseV0]),
+      dlcClose.contractId,
+    ]);
+    await this._db.put(key, value);
+  }
+
+  public async deleteDlcClose(contractId: Buffer): Promise<void> {
+    const key = Buffer.concat([Buffer.from([Prefix.DlcCloseV0]), contractId]);
     await this._db.del(key);
   }
 
