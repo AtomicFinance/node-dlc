@@ -10,6 +10,7 @@ export * from './messages/ContractInfo';
 export * from './messages/DlcAccept';
 export * from './messages/DlcCancel';
 export * from './messages/DlcClose';
+export * from './messages/DlcCloseMetadata';
 export * from './messages/DlcIds';
 export * from './messages/DlcMessage';
 export * from './messages/DlcOffer';
