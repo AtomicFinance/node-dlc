@@ -40,7 +40,8 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
     const instance = new OrderMetadataV0();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
     const offerIdLength = reader.readBigSize();
     const offerIdBuf = reader.readBytes(Number(offerIdLength));
     instance.offerId = offerIdBuf.toString();
@@ -52,6 +53,8 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
    * The type for order_metadata_v0 message. order_metadata_v0 = 62774
    */
   public type = OrderMetadataV0.type;
+
+  public length: bigint;
 
   /**
    * offerId is a unique identifier for an offer

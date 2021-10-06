@@ -136,6 +136,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     writer.writeUInt32BE(this.cetLocktime);
     writer.writeUInt32BE(this.refundLocktime);
 
+    if (this.metadata) {
+      writer.writeBytes(this.metadata.serialize());
+    }
+
     return writer.toBuffer();
   }
 }
