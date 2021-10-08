@@ -1,6 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
+import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import {
   validateBigInt,
@@ -13,6 +14,7 @@ import {
   IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
+import { OrderMetadata, OrderMetadataV0 } from './OrderMetadata';
 
 export abstract class OrderOffer {
   public static deserialize(buf: Buffer): OrderOffer {
@@ -61,6 +63,17 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     instance.cetLocktime = reader.readUInt32BE();
     instance.refundLocktime = reader.readUInt32BE();
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type } = deserializeTlv(tlvReader);
+
+      switch (Number(type)) {
+        case MessageType.OrderMetadataV0:
+          instance.metadata = OrderMetadataV0.deserialize(buf);
+      }
+    }
+
     return instance;
   }
 
@@ -80,6 +93,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public cetLocktime: number;
 
   public refundLocktime: number;
+
+  public metadata: OrderMetadata;
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
@@ -120,6 +135,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     writer.writeUInt64BE(this.feeRatePerVb);
     writer.writeUInt32BE(this.cetLocktime);
     writer.writeUInt32BE(this.refundLocktime);
+
+    if (this.metadata) {
+      writer.writeBytes(this.metadata.serialize());
+    }
 
     return writer.toBuffer();
   }
