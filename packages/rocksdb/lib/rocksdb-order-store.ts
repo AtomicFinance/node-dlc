@@ -7,6 +7,8 @@ enum Prefix {
   OrderAcceptV0 = 41,
   OrderOfferV0Nick = 42,
   OrderAcceptV0Nick = 43,
+  OrderMetadataV0 = 44,
+  OrderMetadataV0Nick = 45,
 }
 
 export class RocksdbOrderStore extends RocksdbBase {
@@ -58,8 +60,62 @@ export class RocksdbOrderStore extends RocksdbBase {
     });
   }
 
+  public async findOrderOfferTempOrderIdsByNickAndMetadata(
+    nick: string,
+    orderMetadataId: Buffer,
+  ): Promise<Buffer[]> {
+    const nickBuf = Buffer.from(nick);
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      const results: Buffer[] = [];
+      stream.on('data', (data) => {
+        if (
+          data.key[0] === Prefix.OrderMetadataV0Nick &&
+          this.keyBufCompare(data.key.slice(1, 33), orderMetadataId) &&
+          this.keyBufCompare(data.key.slice(33), nickBuf)
+        ) {
+          results.push(data.value);
+        }
+      });
+      stream.on('end', () => {
+        resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
   public async findOrderOffersByNick(nick: string): Promise<OrderOfferV0[]> {
     const tempOrderIds = await this.findOrderOfferTempOrderIdsByNick(nick);
+
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      const results: OrderOfferV0[] = [];
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.OrderOfferV0) {
+          results.push(OrderOfferV0.deserialize(data.value));
+        }
+      });
+      stream.on('end', () => {
+        resolve(
+          results.filter((orderOffer) => {
+            return tempOrderIds
+              .map((orderId) => orderId.toString('hex'))
+              .includes(sha256(orderOffer.serialize()).toString('hex'));
+          }),
+        );
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
+  public async findOrderOffersByNickAndMetadata(
+    nick: string,
+    orderMetadataId: Buffer,
+  ): Promise<OrderOfferV0[]> {
+    const tempOrderIds = await this.findOrderOfferTempOrderIdsByNickAndMetadata(
+      nick,
+      orderMetadataId,
+    );
 
     return new Promise((resolve, reject) => {
       const stream = this._db.createReadStream();
@@ -110,6 +166,27 @@ export class RocksdbOrderStore extends RocksdbBase {
       tempOrderId,
     ]);
     await this._db.put(key2, tempOrderId);
+
+    await this.saveOrderOfferByMetadataAndNick(orderOffer, nick);
+  }
+
+  public async saveOrderOfferByMetadataAndNick(
+    orderOffer: OrderOfferV0,
+    nick: string,
+  ): Promise<void> {
+    if (orderOffer.metadata) {
+      const value = orderOffer.serialize();
+      const tempOrderId = sha256(value);
+
+      const orderMetadata = orderOffer.metadata;
+      const orderMetadataId = sha256(orderMetadata.serialize());
+      const key = Buffer.concat([
+        Buffer.from([Prefix.OrderMetadataV0Nick]),
+        orderMetadataId,
+        Buffer.from(nick),
+      ]);
+      await this._db.put(key, tempOrderId);
+    }
   }
 
   public async deleteOrderOffer(tempOrderId: Buffer): Promise<void> {
