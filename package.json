@@ -1,6 +1,5 @@
 {
   "name": "@node-dlc/main",
-  "version": "0.10.5",
   "description": "Toolkit for Bitcoin DLCs",
   "scripts": {
     "start": "cd packages/daemon; npm run start",
