@@ -1,5 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
+import { IOrderMetadataJSON } from '..';
 import { MessageType } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
@@ -120,6 +121,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
       feeRatePerVb: Number(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
+      tlvs: [this.metadata.toJSON()],
     };
   }
 
@@ -151,4 +153,5 @@ export interface IOrderOfferJSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
+  tlvs: IOrderMetadataJSON[];
 }
