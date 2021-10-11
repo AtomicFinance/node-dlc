@@ -1,5 +1,9 @@
 # Node-DLC
 
+![Build Status](https://github.com/AtomicFinance/node-dlc/actions/workflows/main.yml/badge.svg)
+[![Standard Code Style](https://img.shields.io/badge/codestyle-standard-brightgreen.svg)](https://github.com/standard/standard)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
 ## Description
 
 Node-DLC is a an implementation of Bitcoin DLC Protocol in the Node.js runtime, with CET signature generation achieved with [cfd-dlc](https://github.com/cryptogarageinc/cfd-dlc-js) wrapper (written in C++).
