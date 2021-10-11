@@ -30,6 +30,7 @@ export * from './messages/OracleInfoV0';
 export * from './messages/OrderAccept';
 export * from './messages/OrderNegotiationFields';
 export * from './messages/OrderOffer';
+export * from './messages/OrderMetadata';
 export * from './messages/PayoutCurvePiece';
 export * from './messages/PayoutFunction';
 export * from './messages/RoundingIntervalsV0';
