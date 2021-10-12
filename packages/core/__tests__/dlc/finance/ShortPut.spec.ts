@@ -8,17 +8,19 @@ describe('ShortPut', () => {
   describe('1BTC-50k-base2-20digit curve', () => {
     const strikePrice = BigInt(50000);
     const contractSize = BigInt(10) ** BigInt(8);
+    const totalCollateral = contractSize;
     const oracleBase = 2;
     const oracleDigits = 20;
 
-    const { totalCollateral, payoutCurve } = ShortPut.buildCurve(
+    const { payoutCurve } = ShortPut.buildCurve(
       strikePrice,
       contractSize,
+      totalCollateral,
       oracleBase,
       oracleDigits,
     );
 
-    describe.only('payout', () => {
+    describe('payout', () => {
       it('should be zero at half of strike price', () => {
         expect(
           payoutCurve.getPayout(strikePrice / BigInt(2)).toNumber(),

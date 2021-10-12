@@ -6,6 +6,7 @@ import { HyperbolaPayoutCurve } from '../HyperbolaPayoutCurve';
 const buildCurve = (
   strikePrice: bigint,
   contractSize: bigint,
+  totalCollateral: bigint,
   oracleBase: number,
   oracleDigits: number,
 ): {
@@ -19,7 +20,7 @@ const buildCurve = (
   const d = new BN((strikePrice * contractSize).toString());
 
   const f_1 = new BN(0);
-  const f_2 = new BN((BigInt(2) * contractSize).toString());
+  const f_2 = new BN(Number(contractSize)).plus(Number(totalCollateral));
 
   const payoutCurve = new HyperbolaPayoutCurve(a, b, c, d, f_1, f_2);
 
@@ -29,7 +30,7 @@ const buildCurve = (
 
   return {
     maxOutcome,
-    totalCollateral: contractSize,
+    totalCollateral,
     payoutCurve,
   };
 };
@@ -37,12 +38,14 @@ const buildCurve = (
 const buildPayoutFunction = (
   strikePrice: bigint,
   contractSize: bigint,
+  totalCollateral: bigint,
   oracleBase: number,
   oracleDigits: number,
-): { payoutFunction: PayoutFunctionV0; totalCollateral: bigint } => {
-  const { maxOutcome, totalCollateral, payoutCurve } = buildCurve(
+): { payoutFunction: PayoutFunctionV0 } => {
+  const { maxOutcome, payoutCurve } = buildCurve(
     strikePrice,
     contractSize,
+    totalCollateral,
     oracleBase,
     oracleDigits,
   );
@@ -61,7 +64,6 @@ const buildPayoutFunction = (
 
   return {
     payoutFunction,
-    totalCollateral,
   };
 };
 
