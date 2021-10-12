@@ -115,13 +115,14 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
    */
   public toJSON(): IOrderOfferJSON {
     return {
+      type: this.type,
       chainHash: this.chainHash.toString('hex'),
       contractInfo: this.contractInfo.toJSON(),
       offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
       feeRatePerVb: Number(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
-      tlvs: [this.metadata.toJSON()],
+      tlvs: this.metadata ? [this.metadata.toJSON()] : [],
     };
   }
 
@@ -147,6 +148,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 }
 
 export interface IOrderOfferJSON {
+  type: number;
   chainHash: string;
   contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
   offerCollateralSatoshis: number;
