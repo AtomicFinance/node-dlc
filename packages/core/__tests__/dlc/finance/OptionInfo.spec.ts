@@ -3,9 +3,11 @@ import {
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   DlcOfferV0,
+  HyperbolaPayoutCurvePiece,
   OracleAnnouncementV0,
   OracleEventV0,
   OracleInfoV0,
+  PayoutFunctionV0,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
@@ -33,35 +35,15 @@ describe('OptionInfo', () => {
       oracleDigits,
     );
 
-    const eventDescriptor = new DigitDecompositionEventDescriptorV0();
-    eventDescriptor.base = 2;
-    eventDescriptor.isSigned = false;
-    eventDescriptor.unit = 'BTC-USD';
-    eventDescriptor.precision = 0;
-    eventDescriptor.nbDigits = oracleDigits;
+    const dlcOffer = buildDlcOfferFixture(
+      oracleDigits,
+      expiry,
+      payoutFunction,
+      totalCollateral,
+      premium,
+    );
 
-    const oracleEvent = new OracleEventV0();
-    oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
-    oracleEvent.eventDescriptor = eventDescriptor;
-
-    const oracleAnnouncement = new OracleAnnouncementV0();
-    oracleAnnouncement.oracleEvent = oracleEvent;
-
-    const oracleInfo = new OracleInfoV0();
-    oracleInfo.announcement = oracleAnnouncement;
-
-    const contractDescriptor = new ContractDescriptorV1();
-    contractDescriptor.numDigits = oracleDigits;
-    contractDescriptor.payoutFunction = payoutFunction;
-
-    const contractInfo = new ContractInfoV0();
-    contractInfo.totalCollateral = totalCollateral;
-    contractInfo.contractDescriptor = contractDescriptor;
-    contractInfo.oracleInfo = oracleInfo;
-
-    const dlcOffer = new DlcOfferV0();
-    dlcOffer.contractInfo = contractInfo;
-    dlcOffer.offerCollateralSatoshis = totalCollateral - premium;
+    const contractInfo = dlcOffer.contractInfo;
 
     it('should get correct OptionInfo from ContractInfo', () => {
       const optionInfo = getOptionInfoFromContractInfo(contractInfo);
@@ -82,6 +64,37 @@ describe('OptionInfo', () => {
         expiry,
         premium,
       });
+    });
+
+    it('should throw on an invalid curve', () => {
+      const {
+        totalCollateral,
+        payoutFunction,
+      } = CoveredCall.buildPayoutFunction(
+        strikePrice,
+        contractSize,
+        oracleBase,
+        oracleDigits,
+      );
+
+      const invalidDlcOffer = buildDlcOfferFixture(
+        oracleDigits,
+        expiry,
+        payoutFunction,
+        totalCollateral,
+        premium,
+      );
+
+      ((((invalidDlcOffer.contractInfo as ContractInfoV0)
+        .contractDescriptor as ContractDescriptorV1)
+        .payoutFunction as PayoutFunctionV0).pieces[0]
+        .payoutCurvePiece as HyperbolaPayoutCurvePiece).translateOutcome = BigInt(
+        4,
+      );
+
+      expect(() => {
+        getOptionInfoFromOffer(invalidDlcOffer);
+      }).to.throw();
     });
   });
 
@@ -104,35 +117,15 @@ describe('OptionInfo', () => {
       oracleDigits,
     );
 
-    const eventDescriptor = new DigitDecompositionEventDescriptorV0();
-    eventDescriptor.base = 2;
-    eventDescriptor.isSigned = false;
-    eventDescriptor.unit = 'BTC-USD';
-    eventDescriptor.precision = 0;
-    eventDescriptor.nbDigits = oracleDigits;
+    const dlcOffer = buildDlcOfferFixture(
+      oracleDigits,
+      expiry,
+      payoutFunction,
+      totalCollateral,
+      premium,
+    );
 
-    const oracleEvent = new OracleEventV0();
-    oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
-    oracleEvent.eventDescriptor = eventDescriptor;
-
-    const oracleAnnouncement = new OracleAnnouncementV0();
-    oracleAnnouncement.oracleEvent = oracleEvent;
-
-    const oracleInfo = new OracleInfoV0();
-    oracleInfo.announcement = oracleAnnouncement;
-
-    const contractDescriptor = new ContractDescriptorV1();
-    contractDescriptor.numDigits = oracleDigits;
-    contractDescriptor.payoutFunction = payoutFunction;
-
-    const contractInfo = new ContractInfoV0();
-    contractInfo.totalCollateral = totalCollateral;
-    contractInfo.contractDescriptor = contractDescriptor;
-    contractInfo.oracleInfo = oracleInfo;
-
-    const dlcOffer = new DlcOfferV0();
-    dlcOffer.contractInfo = contractInfo;
-    dlcOffer.offerCollateralSatoshis = totalCollateral - premium;
+    const contractInfo = dlcOffer.contractInfo;
 
     it('should get correct OptionInfo from ContractInfo', () => {
       const optionInfo = getOptionInfoFromContractInfo(contractInfo);
@@ -154,5 +147,73 @@ describe('OptionInfo', () => {
         premium,
       });
     });
+
+    it('should throw on an invalid curve', () => {
+      const { payoutFunction } = ShortPut.buildPayoutFunction(
+        strikePrice,
+        contractSize,
+        totalCollateral,
+        oracleBase,
+        oracleDigits,
+      );
+
+      const invalidDlcOffer = buildDlcOfferFixture(
+        oracleDigits,
+        expiry,
+        payoutFunction,
+        totalCollateral,
+        premium,
+      );
+
+      ((((invalidDlcOffer.contractInfo as ContractInfoV0)
+        .contractDescriptor as ContractDescriptorV1)
+        .payoutFunction as PayoutFunctionV0).pieces[0]
+        .payoutCurvePiece as HyperbolaPayoutCurvePiece).translateOutcome = BigInt(
+        4,
+      );
+
+      expect(() => {
+        getOptionInfoFromOffer(invalidDlcOffer);
+      }).to.throw();
+    });
   });
 });
+
+function buildDlcOfferFixture(
+  oracleDigits: number,
+  expiry: Date,
+  payoutFunction: PayoutFunctionV0,
+  totalCollateral: bigint,
+  premium: bigint,
+) {
+  const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+  eventDescriptor.base = 2;
+  eventDescriptor.isSigned = false;
+  eventDescriptor.unit = 'BTC-USD';
+  eventDescriptor.precision = 0;
+  eventDescriptor.nbDigits = oracleDigits;
+
+  const oracleEvent = new OracleEventV0();
+  oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
+  oracleEvent.eventDescriptor = eventDescriptor;
+
+  const oracleAnnouncement = new OracleAnnouncementV0();
+  oracleAnnouncement.oracleEvent = oracleEvent;
+
+  const oracleInfo = new OracleInfoV0();
+  oracleInfo.announcement = oracleAnnouncement;
+
+  const contractDescriptor = new ContractDescriptorV1();
+  contractDescriptor.numDigits = oracleDigits;
+  contractDescriptor.payoutFunction = payoutFunction;
+
+  const contractInfo = new ContractInfoV0();
+  contractInfo.totalCollateral = totalCollateral;
+  contractInfo.contractDescriptor = contractDescriptor;
+  contractInfo.oracleInfo = oracleInfo;
+
+  const dlcOffer = new DlcOfferV0();
+  dlcOffer.contractInfo = contractInfo;
+  dlcOffer.offerCollateralSatoshis = totalCollateral - premium;
+  return dlcOffer;
+}
