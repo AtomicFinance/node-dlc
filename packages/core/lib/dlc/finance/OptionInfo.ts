@@ -2,10 +2,16 @@ import {
   ContractDescriptorV1,
   ContractInfo,
   ContractInfoV0,
+  DigitDecompositionEventDescriptorV0,
   HyperbolaPayoutCurvePiece,
   MessageType,
   PayoutFunctionV0,
 } from '@node-dlc/messaging';
+import BN from 'bignumber.js';
+
+import { HyperbolaPayoutCurve } from '../HyperbolaPayoutCurve';
+import { CoveredCall } from './CoveredCall';
+import { ShortPut } from './ShortPut';
 
 export interface OptionInfo {
   contractSize: bigint;
@@ -39,6 +45,9 @@ export function getOptionInfoFromContractInfo(
   const oracleInfo = contractInfo.oracleInfo;
   const { eventMaturityEpoch } = oracleInfo.announcement.oracleEvent;
 
+  const eventDescriptor = oracleInfo.announcement.oracleEvent
+    .eventDescriptor as DigitDecompositionEventDescriptorV0;
+  const { base: oracleBase, nbDigits: oracleDigits } = eventDescriptor;
   if (
     oracleInfo.announcement.oracleEvent.eventDescriptor.type !==
     MessageType.DigitDecompositionEventDescriptorV0
@@ -65,10 +74,44 @@ export function getOptionInfoFromContractInfo(
   if (payoutCurvePiece.b !== BigInt(0) || payoutCurvePiece.c !== BigInt(0))
     throw Error('b and c HyperbolaPayoutCurvePiece values must be 0');
 
-  const totalCollateral = contractInfo.totalCollateral;
-  const contractSize = totalCollateral + payoutCurvePiece.translatePayout;
-  const strikePrice = payoutCurvePiece.d / contractSize;
+  const curve = HyperbolaPayoutCurve.fromPayoutCurvePiece(payoutCurvePiece);
+  const maxOutcome = BigInt(
+    new BN(oracleBase).pow(oracleDigits).minus(1).toString(10),
+  );
+  const isAscending = curve
+    .getPayout(maxOutcome)
+    .gt(Number(payoutFunction.endpointPayout0));
+
   const expiry = new Date(eventMaturityEpoch * 1000);
+  const totalCollateral = contractInfo.totalCollateral;
+
+  // if curve is ascending, assume it is a put.
+  const contractSize = isAscending
+    ? payoutCurvePiece.translatePayout - totalCollateral
+    : totalCollateral + payoutCurvePiece.translatePayout;
+
+  const strikePrice = payoutCurvePiece.d / contractSize;
+
+  // rebuild payout curve from option info and perform a sanity check
+  const { payoutCurve: sanityCurve } = isAscending
+    ? ShortPut.buildCurve(
+        strikePrice,
+        contractSize,
+        totalCollateral,
+        oracleBase,
+        oracleDigits,
+      )
+    : CoveredCall.buildCurve(
+        strikePrice,
+        contractSize,
+        oracleBase,
+        oracleDigits,
+      );
+
+  if (!curve.equals(sanityCurve))
+    throw new Error(
+      'Payout curve built from extracted OptionInfo does not match original payout curve',
+    );
 
   return { contractSize, strikePrice, expiry };
 }

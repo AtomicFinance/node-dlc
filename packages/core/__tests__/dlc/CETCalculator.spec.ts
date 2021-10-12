@@ -819,11 +819,14 @@ describe('CETCalculator', () => {
   });
 
   describe('ascending hyperbola (31520 1BTC short put)', () => {
-    const {
-      payoutCurve: hyperbola,
+    const totalCollateral = BigInt(1e8);
+    const { payoutCurve: hyperbola, maxOutcome } = ShortPut.buildCurve(
+      BigInt(31520),
+      BigInt(1e8),
       totalCollateral,
-      maxOutcome,
-    } = ShortPut.buildCurve(BigInt(31520), BigInt(1e8), 2, 17);
+      2,
+      17,
+    );
 
     it('should properly split and round with one interval', () => {
       const roundingIntervals: RoundingInterval[] = [

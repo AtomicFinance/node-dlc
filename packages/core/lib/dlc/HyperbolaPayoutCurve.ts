@@ -122,6 +122,18 @@ export class HyperbolaPayoutCurve {
     return piece;
   }
 
+  equals(curve: HyperbolaPayoutCurve): boolean {
+    return (
+      this.a.eq(curve.a) &&
+      this.b.eq(curve.b) &&
+      this.c.eq(curve.c) &&
+      this.d.eq(curve.d) &&
+      this.translateOutcome.eq(curve.translateOutcome) &&
+      this.translatePayout.eq(curve.translatePayout) &&
+      this.positive === curve.positive
+    );
+  }
+
   static fromPayoutCurvePiece(
     piece: HyperbolaPayoutCurvePiece,
   ): HyperbolaPayoutCurve {
