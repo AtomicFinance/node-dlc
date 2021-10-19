@@ -152,6 +152,7 @@ export class ChainManager extends EventEmitter {
     this.blockHeight = 0;
     this.syncState = SyncState.Syncing;
     const dlcTxsList = await this.dlcStore.findDlcTransactionsList();
+    this.logger.info('found %d dlcs', dlcTxsList.length);
 
     // find best block height
     for (const dlcTxs of dlcTxsList) {
