@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/messaging",
-  "version": "0.10.9",
+  "version": "0.10.10",
   "description": "DLC Messaging Protocol",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
