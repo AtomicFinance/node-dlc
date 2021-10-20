@@ -126,11 +126,13 @@ export class ChainManager extends EventEmitter {
     dlcTxs.closeTxHash = Buffer.from(tx.txId.toString(), 'hex');
     dlcTxs.closeType = 3; // Default to cooperative close if txid not refund or cet txid
 
+    const _dlcTxs = await this.dlcStore.findDlcTransactions(dlcTxs.contractId);
+
     // figure out if it's execute, refund or mutual close
     if (tx.txId.toString() === dlcTxs.refundTx.txId.toString()) {
       dlcTxs.closeType = 2;
     } else {
-      const cetIndex = dlcTxs.cets.findIndex(
+      const cetIndex = _dlcTxs.cets.findIndex(
         (cet) => tx.txId.toString() === cet.txId.toString(),
       );
       if (cetIndex >= 0) dlcTxs.closeType = 1;
