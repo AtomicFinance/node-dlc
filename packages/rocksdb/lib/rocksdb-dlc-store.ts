@@ -250,7 +250,9 @@ export class RocksdbDlcStore extends RocksdbBase {
       const results: DlcTransactionsV0[] = [];
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.DlcTransactionsV0) {
-          results.push(DlcTransactionsV0.deserialize(data.value));
+          // Don't parse cets to avoid java heap out of memory
+          const dlcTxs = DlcTransactionsV0.deserialize(data.value, false);
+          results.push(dlcTxs);
         }
       });
       stream.on('end', () => {
