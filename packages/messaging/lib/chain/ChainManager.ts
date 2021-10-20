@@ -40,6 +40,7 @@ export class ChainManager extends EventEmitter {
   public chainClient: IChainFilterChainClient;
   public logger: ILogger;
   public dlcStore: IDlcStore;
+  public dlcTxsList: DlcTransactionsV0[];
 
   constructor(
     logger: ILogger,
@@ -126,11 +127,13 @@ export class ChainManager extends EventEmitter {
     dlcTxs.closeTxHash = Buffer.from(tx.txId.toString(), 'hex');
     dlcTxs.closeType = 3; // Default to cooperative close if txid not refund or cet txid
 
+    const _dlcTxs = await this.dlcStore.findDlcTransactions(dlcTxs.contractId);
+
     // figure out if it's execute, refund or mutual close
     if (tx.txId.toString() === dlcTxs.refundTx.txId.toString()) {
       dlcTxs.closeType = 2;
     } else {
-      const cetIndex = dlcTxs.cets.findIndex(
+      const cetIndex = _dlcTxs.cets.findIndex(
         (cet) => tx.txId.toString() === cet.txId.toString(),
       );
       if (cetIndex >= 0) dlcTxs.closeType = 1;
@@ -151,20 +154,20 @@ export class ChainManager extends EventEmitter {
     this.logger.info('retrieving dlc state from store');
     this.blockHeight = 0;
     this.syncState = SyncState.Syncing;
-    const dlcTxsList = await this.dlcStore.findDlcTransactionsList();
-    this.logger.info('found %d dlcs', dlcTxsList.length);
+    this.dlcTxsList = await this.dlcStore.findDlcTransactionsList();
+    this.logger.info('found %d dlcs', this.dlcTxsList.length);
 
     // find best block height
-    for (const dlcTxs of dlcTxsList) {
+    for (const dlcTxs of this.dlcTxsList) {
       this.blockHeight = Math.max(
         Math.max(this.blockHeight, dlcTxs.fundEpoch.height),
         dlcTxs.closeEpoch.height,
       );
     }
-    this.logger.info("highest block %d found from %d dlcs", this.blockHeight, dlcTxsList.length); // prettier-ignore
+    this.logger.info("highest block %d found from %d dlcs", this.blockHeight, this.dlcTxsList.length); // prettier-ignore
 
     // validate all utxos
-    await this._validateUtxos(dlcTxsList);
+    await this._validateUtxos(this.dlcTxsList);
   }
 
   private async _validateUtxos(_dlcTxsList: DlcTransactionsV0[]) {

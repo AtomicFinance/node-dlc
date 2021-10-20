@@ -9,14 +9,14 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class DlcTransactions {
-  public static deserialize(buf: Buffer): DlcTransactionsV0 {
+  public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcTransactionsV0:
-        return DlcTransactionsV0.deserialize(buf);
+        return DlcTransactionsV0.deserialize(buf, parseCets);
       default:
         throw new Error(`Dlc Transactions type must be DlcTransactionsV0`);
     }
@@ -41,7 +41,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcTransactionsV0 {
+  public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {
     const instance = new DlcTransactionsV0();
     const reader = new BufferReader(buf);
 
@@ -73,9 +73,13 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     const numCets = reader.readBigSize(); // num_cets
     for (let i = 0; i < numCets; i++) {
       const cetLen = reader.readUInt16BE();
-      instance.cets.push(
-        Tx.decode(StreamReader.fromBuffer(reader.readBytes(cetLen))),
-      );
+      if (parseCets) {
+        instance.cets.push(
+          Tx.decode(StreamReader.fromBuffer(reader.readBytes(cetLen))),
+        );
+      } else {
+        reader.readBytes(cetLen);
+      }
     }
 
     const closeHash = reader.readBytes(32);
