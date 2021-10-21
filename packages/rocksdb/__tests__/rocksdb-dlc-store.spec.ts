@@ -243,6 +243,13 @@ describe('RocksdbDlcStore', () => {
     });
   });
 
+  describe('find num_dlc_offer', () => {
+    it('should return the num_dlc_offer', async () => {
+      const numDlcOffers = await sut.findNumDlcOffers();
+      expect(numDlcOffers).to.equal(1);
+    });
+  });
+
   describe('delete dlc_offer', () => {
     it('should delete dlc_offer', async () => {
       const tempContractId = sha256(dlcOfferHex);
@@ -287,6 +294,13 @@ describe('RocksdbDlcStore', () => {
     });
   });
 
+  describe('find num_dlc_accept', () => {
+    it('should return the num_dlc_accept', async () => {
+      const numDlcAccepts = await sut.findNumDlcAccepts();
+      expect(numDlcAccepts).to.equal(1);
+    });
+  });
+
   describe('delete dlc_offer', () => {
     it('should delete dlc_offer', async () => {
       await sut.deleteDlcOffer(contractId);
@@ -306,6 +320,13 @@ describe('RocksdbDlcStore', () => {
     it('should return the dlc_sign object', async () => {
       const actual = await sut.findDlcSign(dlcSign.contractId);
       expect(actual).to.deep.equal(dlcSign);
+    });
+  });
+
+  describe('find num_dlc_sign', () => {
+    it('should return the num_dlc_sign', async () => {
+      const numDlcSigns = await sut.findNumDlcSigns();
+      expect(numDlcSigns).to.equal(1);
     });
   });
 
@@ -398,6 +419,13 @@ describe('RocksdbDlcStore', () => {
       expect(actual.fundTx.serialize()).to.deep.equal(
         dlcTxs.fundTx.serialize(),
       );
+    });
+  });
+
+  describe('find num_dlc_transactions', () => {
+    it('should return the num_dlc_transactions', async () => {
+      const numDlcTxs = await sut.findNumDlcTransactionsList();
+      expect(numDlcTxs).to.equal(1);
     });
   });
 

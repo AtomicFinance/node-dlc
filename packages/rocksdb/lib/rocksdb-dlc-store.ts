@@ -40,6 +40,20 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
+  public async findNumDlcOffers(): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      let num = 0;
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcOfferV0) num++;
+      });
+      stream.on('end', () => {
+        resolve(num);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
   public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcOfferV0]),
@@ -79,6 +93,20 @@ export class RocksdbDlcStore extends RocksdbBase {
       });
       stream.on('end', () => {
         resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
+  public async findNumDlcAccepts(): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      let num = 0;
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcAcceptV0) num++;
+      });
+      stream.on('end', () => {
+        resolve(num);
       });
       stream.on('error', (err) => reject(err));
     });
@@ -144,6 +172,20 @@ export class RocksdbDlcStore extends RocksdbBase {
       });
       stream.on('end', () => {
         resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
+  public async findNumDlcSigns(): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      let num = 0;
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcSignV0) num++;
+      });
+      stream.on('end', () => {
+        resolve(num);
       });
       stream.on('error', (err) => reject(err));
     });
@@ -257,6 +299,20 @@ export class RocksdbDlcStore extends RocksdbBase {
       });
       stream.on('end', () => {
         resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
+  public async findNumDlcTransactionsList(): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      let num = 0;
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcTransactionsV0) num++;
+      });
+      stream.on('end', () => {
+        resolve(num);
       });
       stream.on('error', (err) => reject(err));
     });

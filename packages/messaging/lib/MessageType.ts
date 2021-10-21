@@ -54,6 +54,7 @@ export enum MessageType {
    */
   DlcTransactionsV0 = 61230,
   DlcIdsV0 = 61232,
+  DlcInfoV0 = 61234,
 
   /**
    * Oracle Identifier
