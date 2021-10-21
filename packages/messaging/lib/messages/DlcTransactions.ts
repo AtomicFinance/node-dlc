@@ -30,9 +30,8 @@ export abstract class DlcTransactions {
 }
 
 /**
- * DlcOffer message contains information about a node and indicates its
- * desire to enter into a new contract. This is the first step toward
- * creating the funding transaction and CETs.
+ * DlcTransactions message contains information about state of DLC
+ * contract such as fundtx and closetx
  */
 export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   public static type = MessageType.DlcTransactionsV0;
