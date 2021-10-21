@@ -17,6 +17,7 @@ export interface OptionInfo {
   contractSize: bigint;
   strikePrice: bigint;
   premium?: bigint;
+  type?: OptionType;
   expiry: Date;
 }
 
@@ -31,6 +32,8 @@ export type HasContractInfo = {
 export type HasType = {
   type: MessageType;
 };
+
+export type OptionType = 'put' | 'call';
 
 export function getOptionInfoFromContractInfo(
   _contractInfo: ContractInfo,
@@ -107,13 +110,14 @@ export function getOptionInfoFromContractInfo(
         oracleBase,
         oracleDigits,
       );
+  const type = isAscending ? 'put' : 'call';
 
   if (!curve.equals(sanityCurve))
     throw new Error(
       'Payout curve built from extracted OptionInfo does not match original payout curve',
     );
 
-  return { contractSize, strikePrice, expiry };
+  return { contractSize, strikePrice, expiry, type };
 }
 
 export function getOptionInfoFromOffer(
