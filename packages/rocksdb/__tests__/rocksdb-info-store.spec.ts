@@ -46,6 +46,14 @@ describe('RocksdbDlcStore', () => {
     });
   });
 
+  describe('increment dlc_info value', () => {
+    it('should increments offers', async () => {
+      await sut.incrementDlcInfoValues(['offer']);
+      const actual = await sut.findDlcInfo();
+      expect(actual.numDlcOffers).to.equal(11);
+    });
+  });
+
   describe('delete dlc_info', () => {
     it('should delete dlc_info', async () => {
       await sut.deleteDlcInfo();
