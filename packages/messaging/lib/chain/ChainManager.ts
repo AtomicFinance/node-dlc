@@ -34,7 +34,7 @@ export interface ILogger {
  */
 export class ChainManager extends EventEmitter {
   public blockHeight: number;
-  public started: boolean;
+  public started = false;
   public syncState: SyncState;
   public isSynchronizing: boolean;
   public chainClient: IChainFilterChainClient;
@@ -282,7 +282,7 @@ export class ChainManager extends EventEmitter {
             'Invalid tx for validating closing utxo: %s',
             transaction.toHex(),
           );
-          this.logger.error('Error: ', e);
+          this.logger.trace('Error: ', e);
         }
       }
 

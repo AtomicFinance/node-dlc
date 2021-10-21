@@ -52,6 +52,7 @@ describe('OptionInfo', () => {
         contractSize,
         strikePrice,
         expiry,
+        type: 'call',
       });
     });
 
@@ -63,6 +64,7 @@ describe('OptionInfo', () => {
         strikePrice,
         expiry,
         premium,
+        type: 'call',
       });
     });
 
@@ -134,6 +136,7 @@ describe('OptionInfo', () => {
         contractSize,
         strikePrice,
         expiry,
+        type: 'put',
       });
     });
 
@@ -145,6 +148,7 @@ describe('OptionInfo', () => {
         strikePrice,
         expiry,
         premium,
+        type: 'put',
       });
     });
 
