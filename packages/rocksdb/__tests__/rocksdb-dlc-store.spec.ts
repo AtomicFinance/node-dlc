@@ -294,6 +294,31 @@ describe('RocksdbDlcStore', () => {
     });
   });
 
+  describe('find dlc_accept by temp_contract_id', () => {
+    it('should return dlc accept object', async () => {
+      const actualContractId = await sut.findContractIdFromTemp(
+        dlcAccept.tempContractId,
+      );
+      const actual = await sut.findDlcAccept(actualContractId);
+
+      expect(
+        actual.fundingInputs[0].prevTx.serialize().toString('hex'),
+      ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
+      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
+    });
+  });
+
+  describe('find first dlc_accept', () => {
+    it('should return dlc accept object', async () => {
+      const actual = await sut.findFirstDlcAccept();
+
+      expect(
+        actual.fundingInputs[0].prevTx.serialize().toString('hex'),
+      ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
+      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
+    });
+  });
+
   describe('find num_dlc_accept', () => {
     it('should return the num_dlc_accept', async () => {
       const numDlcAccepts = await sut.findNumDlcAccepts();
