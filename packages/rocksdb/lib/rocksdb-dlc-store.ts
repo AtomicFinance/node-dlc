@@ -21,6 +21,7 @@ enum Prefix {
   ScriptPubKey = 55,
   DlcCancelV0 = 56,
   DlcCloseV0 = 57,
+  TempContractId = 58,
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
@@ -98,6 +99,22 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
+  public async findFirstDlcAccept(): Promise<DlcAcceptV0> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      let result: DlcAcceptV0;
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcAcceptV0 && !result) {
+          result = DlcAcceptV0.deserialize(data.value);
+        }
+      });
+      stream.on('end', () => {
+        resolve(result);
+      });
+      stream.on('error', (err) => reject(err));
+    });
+  }
+
   public async findNumDlcAccepts(): Promise<number> {
     return new Promise((resolve, reject) => {
       const stream = this._db.createReadStream();
@@ -130,6 +147,15 @@ export class RocksdbDlcStore extends RocksdbBase {
     return this.findDlcAccept(contractId);
   }
 
+  public async findContractIdFromTemp(tempContractId: Buffer): Promise<Buffer> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.TempContractId]),
+      tempContractId,
+    ]);
+    const contractId = await this._safeGet<Buffer>(key);
+    return contractId;
+  }
+
   public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {
     const dlcOffer = await this.findDlcOffer(dlcAccept.tempContractId);
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
@@ -154,6 +180,12 @@ export class RocksdbDlcStore extends RocksdbBase {
       ]);
       await this._db.put(key2, contractId);
     }
+
+    const key3 = Buffer.concat([
+      Buffer.from([Prefix.TempContractId]),
+      dlcAccept.tempContractId,
+    ]);
+    await this._db.put(key3, contractId);
   }
 
   public async deleteDlcAccept(contractId: Buffer): Promise<void> {

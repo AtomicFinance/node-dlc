@@ -129,7 +129,7 @@ describe('DlcTransactionsV0', () => {
         expect(instance.refundTx.serialize()).to.deep.equal(
           refundTx.serialize(),
         );
-        expect(instance.cets.length).to.equal(0);
+        expect(instance.cets.length).to.equal(1);
       } else {
         throw Error('DlcTransactions Incorrect type');
       }

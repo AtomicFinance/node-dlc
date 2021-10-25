@@ -72,7 +72,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     const numCets = reader.readBigSize(); // num_cets
     for (let i = 0; i < numCets; i++) {
       const cetLen = reader.readUInt16BE();
-      if (parseCets) {
+      if (parseCets || i === 0) {
         instance.cets.push(
           Tx.decode(StreamReader.fromBuffer(reader.readBytes(cetLen))),
         );
