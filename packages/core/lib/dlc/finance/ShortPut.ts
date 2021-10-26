@@ -58,7 +58,7 @@ const buildPayoutFunction = (
   payoutFunction.pieces.push({
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
     endpoint: maxOutcome,
-    endpointPayout: contractSize,
+    endpointPayout: totalCollateral,
     extraPrecision: 0,
   });
 
