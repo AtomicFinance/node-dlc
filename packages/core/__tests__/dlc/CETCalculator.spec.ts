@@ -819,10 +819,12 @@ describe('CETCalculator', () => {
   });
 
   describe('ascending hyperbola (31520 1BTC short put)', () => {
-    const totalCollateral = BigInt(1e8);
+    const contractSize = BigInt(1e8);
+    const totalCollateral = contractSize - BigInt(23213);
+
     const { payoutCurve: hyperbola, maxOutcome } = ShortPut.buildCurve(
       BigInt(31520),
-      BigInt(1e8),
+      contractSize,
       totalCollateral,
       2,
       17,
