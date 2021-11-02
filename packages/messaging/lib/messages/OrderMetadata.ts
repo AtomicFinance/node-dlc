@@ -46,6 +46,11 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
     const offerIdBuf = reader.readBytes(Number(offerIdLength));
     instance.offerId = offerIdBuf.toString();
 
+    if (!reader.eof) {
+      instance.createdAt = reader.readUInt32BE();
+      instance.goodTill = reader.readUInt32BE();
+    }
+
     return instance;
   }
 
@@ -63,6 +68,16 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
    * which a market maker is providing liquidity for
    */
   public offerId: string;
+
+  /**
+   * Timestamp for order creation
+   */
+  public createdAt = 0;
+
+  /**
+   * Amount of time order is good untill
+   */
+  public goodTill = 0;
 
   /**
    * Converts order_metadata_v0 to JSON
@@ -83,6 +98,8 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
     const dataWriter = new BufferWriter();
     dataWriter.writeBigSize(this.offerId.length);
     dataWriter.writeBytes(Buffer.from(this.offerId));
+    dataWriter.writeUInt32BE(this.createdAt);
+    dataWriter.writeUInt32BE(this.goodTill);
 
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
