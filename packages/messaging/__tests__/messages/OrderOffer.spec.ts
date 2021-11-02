@@ -149,6 +149,8 @@ describe('OrderOffer', () => {
     it('serializes with metadata', () => {
       const metadata = new OrderMetadataV0();
       metadata.offerId = 'strategy-88';
+      metadata.createdAt = 1635868041;
+      metadata.goodTill = 1635868041;
 
       instance.metadata = metadata;
 
@@ -192,7 +194,7 @@ describe('OrderOffer', () => {
         "0000000000000001" + // fee_rate_per_vb
         "00000064" + // cet_locktime
         "000000c8" + // refund_locktime
-        "fdf5360c0b73747261746567792d3838" // order_metadata_v0 tlv
+        "fdf536140b73747261746567792d383861815d8961815d89" // order_metadata_v0 tlv
       ); // prettier-ignore
     });
   });
