@@ -85,6 +85,8 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
   public toJSON(): IOrderMetadataJSON {
     return {
       offerId: this.offerId,
+      createdAt: this.createdAt,
+      goodTill: this.goodTill,
     };
   }
 
@@ -110,4 +112,6 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
 
 export interface IOrderMetadataJSON {
   offerId: string;
+  createdAt: number;
+  goodTill: number;
 }
