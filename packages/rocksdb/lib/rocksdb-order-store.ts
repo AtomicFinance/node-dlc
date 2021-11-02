@@ -1,4 +1,8 @@
-import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
+import {
+  OrderAcceptV0,
+  OrderMetadataV0,
+  OrderOfferV0,
+} from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
@@ -179,7 +183,9 @@ export class RocksdbOrderStore extends RocksdbBase {
       const tempOrderId = sha256(value);
 
       const orderMetadata = orderOffer.metadata;
-      const orderMetadataId = sha256(orderMetadata.serialize());
+      const orderMetadataForId = new OrderMetadataV0();
+      orderMetadataForId.offerId = (orderMetadata as OrderMetadataV0).offerId;
+      const orderMetadataId = sha256(orderMetadataForId.serialize());
       const key = Buffer.concat([
         Buffer.from([Prefix.OrderMetadataV0Nick]),
         orderMetadataId,
