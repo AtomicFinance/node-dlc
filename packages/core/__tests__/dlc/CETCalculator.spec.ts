@@ -324,8 +324,6 @@ describe('CETCalculator', () => {
         roundingIntervals,
       );
 
-      const reversedIntervals = [...roundingIntervals].reverse();
-
       expect(ranges).deep.equal([
         { payout: BigInt(100), indexFrom: BigInt(0), indexTo: BigInt(5263) },
         { payout: BigInt(90), indexFrom: BigInt(5264), indexTo: BigInt(5882) },
@@ -367,7 +365,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -379,8 +377,6 @@ describe('CETCalculator', () => {
           roundingMod: BigInt(15),
         },
       ];
-
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(100);
       const from = BigInt(0);
@@ -428,7 +424,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -452,7 +448,6 @@ describe('CETCalculator', () => {
           roundingMod: BigInt(10),
         },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(100);
       const from = BigInt(0);
@@ -511,7 +506,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -525,7 +520,6 @@ describe('CETCalculator', () => {
         { beginInterval: BigInt(5432), roundingMod: BigInt(12) },
         { beginInterval: BigInt(6432), roundingMod: BigInt(25) },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(100);
       const from = BigInt(0);
@@ -569,7 +563,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -581,7 +575,6 @@ describe('CETCalculator', () => {
           roundingMod: BigInt(15),
         },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(100);
       const from = BigInt(0);
@@ -633,7 +626,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -657,7 +650,6 @@ describe('CETCalculator', () => {
           roundingMod: BigInt(100000),
         },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(100000000);
       const from = BigInt(0);
@@ -682,7 +674,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -694,7 +686,6 @@ describe('CETCalculator', () => {
           roundingMod: BigInt(150000),
         },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(100000000);
       const from = BigInt(0);
@@ -719,7 +710,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -743,7 +734,6 @@ describe('CETCalculator', () => {
           roundingMod: BigInt(250000),
         },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const totalCollateral = BigInt(92499992);
       const from = BigInt(0);
@@ -768,7 +758,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -781,14 +771,17 @@ describe('CETCalculator', () => {
       maxOutcome,
     } = CoveredCall.buildCurve(BigInt(31520), BigInt(1e8), 2, 17);
 
-    it('should properly split and round with one interval', () => {
+    it('should properly split and round with two intervals', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
           beginInterval: BigInt(0),
+          roundingMod: BigInt(1),
+        },
+        {
+          beginInterval: BigInt(31520),
           roundingMod: BigInt(100000),
         },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const from = BigInt(0);
       const to = maxOutcome;
@@ -812,7 +805,7 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -830,14 +823,17 @@ describe('CETCalculator', () => {
       17,
     );
 
-    it('should properly split and round with one interval', () => {
+    it('should properly split and round with two intervals', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
           beginInterval: BigInt(0),
           roundingMod: BigInt(100000),
         },
+        {
+          beginInterval: BigInt(31520),
+          roundingMod: BigInt(1),
+        },
       ];
-      const reversedIntervals = [...roundingIntervals].reverse();
 
       const from = BigInt(0);
       const to = maxOutcome;
@@ -861,7 +857,110 @@ describe('CETCalculator', () => {
         to,
         toPayout,
         hyperbola,
-        reversedIntervals,
+        roundingIntervals,
+        totalCollateral,
+      );
+    });
+  });
+
+  describe('ascending hyperbola (62000 0.01 BTC short put)', () => {
+    const contractSize = BigInt(1011502);
+    const totalCollateral = BigInt(960926);
+
+    const { payoutCurve: hyperbola, maxOutcome } = ShortPut.buildCurve(
+      BigInt(62000),
+      contractSize,
+      totalCollateral,
+      2,
+      18,
+    );
+
+    it('should properly split and round with two intervals', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(1011),
+        },
+        {
+          beginInterval: BigInt(62000),
+          roundingMod: BigInt(1),
+        },
+      ];
+
+      const from = BigInt(0);
+      const to = maxOutcome;
+      const fromPayout = BigInt(0);
+      const toPayout = totalCollateral;
+
+      const ranges = splitIntoRanges(
+        from,
+        to,
+        fromPayout,
+        toPayout,
+        totalCollateral,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      validateRanges(
+        ranges,
+        from,
+        fromPayout,
+        to,
+        toPayout,
+        hyperbola,
+        roundingIntervals,
+        totalCollateral,
+      );
+    });
+
+    it('should properly split and round with many interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(1011),
+        },
+        {
+          beginInterval: BigInt(32000),
+          roundingMod: BigInt(4302),
+        },
+        {
+          beginInterval: BigInt(32001),
+          roundingMod: BigInt(1011),
+        },
+        {
+          beginInterval: BigInt(34001),
+          roundingMod: BigInt(7011),
+        },
+        {
+          beginInterval: BigInt(62000),
+          roundingMod: BigInt(1),
+        },
+      ];
+
+      const from = BigInt(0);
+      const to = maxOutcome;
+      const fromPayout = BigInt(0);
+      const toPayout = totalCollateral;
+
+      const ranges = splitIntoRanges(
+        from,
+        to,
+        fromPayout,
+        toPayout,
+        totalCollateral,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      validateRanges(
+        ranges,
+        from,
+        fromPayout,
+        to,
+        toPayout,
+        hyperbola,
+        roundingIntervals,
         totalCollateral,
       );
     });
@@ -875,9 +974,11 @@ function validateRanges(
   to: bigint,
   toPayout: bigint,
   hyperbola: HyperbolaPayoutCurve,
-  reversedIntervals: RoundingInterval[],
+  roundingIntervals: RoundingInterval[],
   totalCollateral: bigint,
 ) {
+  const reversedIntervals = [...roundingIntervals].reverse();
+
   // for each rounded payout at indexTo, expect to be equal to range payout
   ranges.forEach((range) => {
     if (range.indexFrom === from || range.indexTo === from)
@@ -899,7 +1000,7 @@ function validateRanges(
       totalCollateral,
     );
 
-    expect(roundedPayout).to.eq(range.payout);
+    expect(range.payout).to.eq(roundedPayout);
   });
 
   // for each rounded payout at indexFrom, expect to be equal to range payout
