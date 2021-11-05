@@ -288,6 +288,17 @@ export function splitIntoRanges(
 
       const nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
 
+      if (nextMidRoundedOutcome >= nextFirstRoundingOutcome) {
+        result.push({
+          payout: clamp(toBigInt(currentPayout)),
+          indexFrom: currentMidRoundedOutcome,
+          indexTo: nextFirstRoundingOutcome - BigInt(1),
+        });
+
+        currentOutcome = nextFirstRoundingOutcome;
+        break;
+      }
+
       if (
         nextRoundedPayoutBigInt > totalCollateral ||
         nextRoundedPayoutBigInt < 0 ||
@@ -316,17 +327,6 @@ export function splitIntoRanges(
         }
 
         currentOutcome = to;
-        break;
-      }
-
-      if (nextMidRoundedOutcome >= nextFirstRoundingOutcome) {
-        result.push({
-          payout: clamp(toBigInt(currentPayout)),
-          indexFrom: currentMidRoundedOutcome,
-          indexTo: nextFirstRoundingOutcome - BigInt(1),
-        });
-
-        currentOutcome = nextFirstRoundingOutcome;
         break;
       }
 
