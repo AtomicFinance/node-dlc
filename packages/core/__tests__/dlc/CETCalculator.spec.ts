@@ -771,10 +771,14 @@ describe('CETCalculator', () => {
       maxOutcome,
     } = CoveredCall.buildCurve(BigInt(31520), BigInt(1e8), 2, 17);
 
-    it('should properly split and round with one interval', () => {
+    it('should properly split and round with two intervals', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
           beginInterval: BigInt(0),
+          roundingMod: BigInt(1),
+        },
+        {
+          beginInterval: BigInt(31520),
           roundingMod: BigInt(100000),
         },
       ];
@@ -819,7 +823,7 @@ describe('CETCalculator', () => {
       17,
     );
 
-    it('should properly split and round with one interval', () => {
+    it('should properly split and round with two intervals', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
           beginInterval: BigInt(0),
@@ -871,11 +875,62 @@ describe('CETCalculator', () => {
       18,
     );
 
-    it('should properly split and round with one interval', () => {
+    it('should properly split and round with two intervals', () => {
       const roundingIntervals: RoundingInterval[] = [
         {
           beginInterval: BigInt(0),
           roundingMod: BigInt(1011),
+        },
+        {
+          beginInterval: BigInt(62000),
+          roundingMod: BigInt(1),
+        },
+      ];
+
+      const from = BigInt(0);
+      const to = maxOutcome;
+      const fromPayout = BigInt(0);
+      const toPayout = totalCollateral;
+
+      const ranges = splitIntoRanges(
+        from,
+        to,
+        fromPayout,
+        toPayout,
+        totalCollateral,
+        hyperbola,
+        roundingIntervals,
+      );
+
+      validateRanges(
+        ranges,
+        from,
+        fromPayout,
+        to,
+        toPayout,
+        hyperbola,
+        roundingIntervals,
+        totalCollateral,
+      );
+    });
+
+    it('should properly split and round with many interval', () => {
+      const roundingIntervals: RoundingInterval[] = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(1011),
+        },
+        {
+          beginInterval: BigInt(32000),
+          roundingMod: BigInt(4302),
+        },
+        {
+          beginInterval: BigInt(32001),
+          roundingMod: BigInt(1011),
+        },
+        {
+          beginInterval: BigInt(34001),
+          roundingMod: BigInt(7011),
         },
         {
           beginInterval: BigInt(62000),
