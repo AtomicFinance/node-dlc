@@ -208,7 +208,11 @@ describe('OrderOffer', () => {
 
     it('serializes with ircinfo', () => {
       const ircInfo = new OrderIrcInfoV0();
-      ircInfo.nick = 'A0F5k4H9C56xgbRF1';
+      ircInfo.nick = 'A0F5k4H9C56xgbRF';
+      ircInfo.pubKey = Buffer.from(
+        '022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
+        'hex',
+      );
 
       instance.ircInfo = ircInfo;
 
@@ -252,7 +256,7 @@ describe('OrderOffer', () => {
         "0000000000000001" + // fee_rate_per_vb
         "00000064" + // cet_locktime
         "000000c8" + // refund_locktime
-        "fdf536140b73747261746567792d383861815d8961815d89fdf5381211413046356b344839433536786762524631" // order_irc_info_v0 tlv
+        "fdf536140b73747261746567792d383861815d8961815d89fdf5383210413046356b3448394335367867625246022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3" // order_irc_info_v0 tlv
       ); // prettier-ignore
     });
   });
@@ -345,14 +349,20 @@ describe('OrderOffer', () => {
     it('converts to JSON with ircinfo', async () => {
       const bufWithIrcInfo = Buffer.concat([
         buf,
-        Buffer.from('fdf5381211413046356b344839433536786762524631', 'hex'),
+        Buffer.from(
+          'fdf536140b73747261746567792d383861815d8961815d89fdf5383210413046356b3448394335367867625246022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
+          'hex',
+        ),
       ]);
 
       const instance = OrderOfferV0.deserialize(bufWithIrcInfo);
 
       const json = instance.toJSON();
-      expect(json.tlvs[0].type === MessageType.OrderIrcInfoV0).to.equal(true);
-      expect((json.tlvs[0] as IOrderIrcInfoJSON).nick).to.equal(
+      const i = json.tlvs.findIndex(
+        (tlv) => tlv.type === MessageType.OrderIrcInfoV0,
+      );
+      expect(json.tlvs[i].type === MessageType.OrderIrcInfoV0).to.equal(true);
+      expect((json.tlvs[i] as IOrderIrcInfoJSON).nick).to.equal(
         (instance.ircInfo as OrderIrcInfoV0).nick,
       );
     });

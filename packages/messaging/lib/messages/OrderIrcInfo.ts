@@ -47,6 +47,8 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
     const nickBuf = reader.readBytes(Number(nickLength));
     instance.nick = nickBuf.toString();
 
+    instance.pubKey = reader.readBytes(33);
+
     return instance;
   }
 
@@ -59,6 +61,8 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
 
   public nick: string;
 
+  public pubKey: Buffer;
+
   /**
    * Converts order_metadata_v0 to JSON
    */
@@ -66,6 +70,7 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
     return {
       type: this.type,
       nick: this.nick,
+      pubKey: this.pubKey.toString('hex'),
     };
   }
 
@@ -79,6 +84,7 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
     const dataWriter = new BufferWriter();
     dataWriter.writeBigSize(this.nick.length);
     dataWriter.writeBytes(Buffer.from(this.nick));
+    dataWriter.writeBytes(this.pubKey);
 
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
@@ -90,4 +96,5 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
 export interface IOrderIrcInfoJSON {
   type: number;
   nick: string;
+  pubKey: string;
 }
