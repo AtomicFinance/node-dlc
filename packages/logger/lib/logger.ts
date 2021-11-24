@@ -124,7 +124,7 @@ export class Logger implements ILogger {
   private _log(level: LogLevel, area: string, instance: string, args: any[]) {
     if (!shouldLog(this.level, level)) return;
     const formattedMsg = this._format(level, area, instance, args);
-    this._write(formattedMsg);
+    this._write(formattedMsg, level);
   }
 
   private _format(
@@ -150,9 +150,9 @@ export class Logger implements ILogger {
     }
   }
 
-  private _write(msg: string) {
+  private _write(msg: string, level: LogLevel) {
     for (const transport of this._root.transports) {
-      transport.write(msg);
+      transport.write(msg, level);
     }
   }
 }
