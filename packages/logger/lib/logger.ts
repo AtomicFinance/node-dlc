@@ -1,4 +1,3 @@
-import { ConsoleTransport } from '@node-lightning/logger';
 import util from 'util';
 
 import { LogLevel } from './log-level';
@@ -124,7 +123,8 @@ export class Logger implements ILogger {
   private _log(level: LogLevel, area: string, instance: string, args: any[]) {
     if (!shouldLog(this.level, level)) return;
     const formattedMsg = this._format(level, area, instance, args);
-    this._write(formattedMsg, level);
+    const error = this._findError(args, formattedMsg);
+    this._write(formattedMsg, level, error);
   }
 
   private _format(
@@ -138,8 +138,13 @@ export class Logger implements ILogger {
     const instanceFmt = instance ? ' ' + instance : '';
 
     // convert buffers to hex encodings
+    // and extracts message from error unless LogLevel Trace
     args = args.map((arg) =>
-      Buffer.isBuffer(arg) ? arg.toString('hex') : arg,
+      Buffer.isBuffer(arg)
+        ? arg.toString('hex')
+        : arg instanceof Error && level !== LogLevel.Trace
+        ? arg.toString()
+        : arg,
     );
 
     const msg = util.format(args[0], ...args.slice(1));
@@ -150,9 +155,18 @@ export class Logger implements ILogger {
     }
   }
 
-  private _write(msg: string, level: LogLevel) {
+  private _findError(args, formattedMsg): Error {
+    const error = args.find((arg) => arg instanceof Error);
+    if (!error) {
+      return new Error(formattedMsg);
+    } else {
+      return error;
+    }
+  }
+
+  private _write(msg: string, level: LogLevel, error: Error) {
     for (const transport of this._root.transports) {
-      transport.write(msg, level);
+      transport.write(msg, level, error);
     }
   }
 }
