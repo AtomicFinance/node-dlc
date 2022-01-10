@@ -15,6 +15,7 @@
     "publish:all": "lerna publish from-package",
     "prepublishOnly": "npm run build"
   },
+  "pre-commit": [ "lint" ],
   "publishConfig": {
     "access": "public"
   },
@@ -51,6 +52,7 @@
     "mocha": "^8.3.2",
     "nodemon": "^2.0.4",
     "nyc": "^15.1.0",
+    "pre-commit": "^1.2.2",
     "prettier": "^2.2.1",
     "sinon": "^7.5.0",
     "source-map-support": "^0.5.19",
