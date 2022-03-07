@@ -168,7 +168,7 @@ export const buildOrderOffer = (
   orderOffer.offerCollateralSatoshis = totalCollateral - BigInt(premium);
   orderOffer.feeRatePerVb = BigInt(feePerByte);
 
-  orderOffer.cetLocktime = expiration;
+  orderOffer.cetLocktime = Math.floor(new Date().getTime() / 1000); // set to current time
   orderOffer.refundLocktime = expiration + 604800; // 1 week later
   return orderOffer;
 };
