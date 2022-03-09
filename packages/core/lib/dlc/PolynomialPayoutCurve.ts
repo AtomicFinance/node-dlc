@@ -19,7 +19,9 @@ export class PolynomialPayoutCurve {
   private readonly slope: BigNumber;
   private readonly left: DlcPoint;
   private readonly right: DlcPoint;
+
   constructor(points: DlcPoint[]) {
+    this.points = points;
     this.left = points[0];
     this.right = points[points.length - 1];
 
@@ -54,9 +56,10 @@ export class PolynomialPayoutCurve {
     const { left, slope } = this;
     const y = new BigNumber(Number(payout));
 
-    // Inverse function
-    // x = (y - b) / m
-    const outcome = y.minus(left.payout).dividedBy(slope);
+    // Find the x value for the given y
+    // m = (y2 - y1) / (x2 - x1)
+    // x1 = (y2 - y1) / m + x2
+    const outcome = y.minus(left.payout).dividedBy(slope).plus(left.outcome);
     return BigInt(outcome.toString());
   }
 
