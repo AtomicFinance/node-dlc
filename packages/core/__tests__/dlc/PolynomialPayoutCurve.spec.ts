@@ -1,5 +1,3 @@
-// Write specs for PolynomialPayoutCurve class
-
 import { MessageType, PolynomialPayoutCurvePiece } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
