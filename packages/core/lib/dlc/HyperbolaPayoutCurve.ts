@@ -7,13 +7,8 @@ import {
 import BigNumber from 'bignumber.js';
 
 import { CETPayout } from '..';
+import { fromPrecision, getPrecision } from '../utils/Precision';
 import { splitIntoRanges } from './CETCalculator';
-
-const getPrecision = (num: BigNumber): number =>
-  num.decimalPlaces(16).abs().modulo(1).shiftedBy(16).toNumber();
-
-const fromPrecision = (precision: number): BigNumber =>
-  new BigNumber(precision).shiftedBy(-16);
 
 export class HyperbolaPayoutCurve {
   constructor(
