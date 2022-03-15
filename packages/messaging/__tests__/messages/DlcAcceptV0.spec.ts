@@ -125,6 +125,12 @@ describe('DlcAccept', () => {
         instance.type,
       );
     });
+
+    it('deserializes without cets', () => {
+      // Set parseCets to false
+      const dlcAccept = DlcAccept.deserialize(instance.serialize(), false);
+      expect(dlcAccept.cetSignatures.sigs.length).to.be.equal(0);
+    });
   });
 
   describe('DlcAcceptV0', () => {

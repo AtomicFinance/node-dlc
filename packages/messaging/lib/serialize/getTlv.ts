@@ -12,3 +12,9 @@ export function getTlv(reader: BufferReader): Buffer {
 
   return writer.toBuffer();
 }
+
+export function skipTlv(reader: BufferReader): void {
+  reader.readBigSize();
+  const length = reader.readBigSize();
+  reader.readBytes(Number(length));
+}

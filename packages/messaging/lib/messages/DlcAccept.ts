@@ -6,7 +6,7 @@ import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
+import { getTlv, skipTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignaturesV0,
   ICetAdaptorSignaturesV0JSON,
@@ -21,14 +21,14 @@ import {
 } from './NegotiationFields';
 
 export abstract class DlcAccept implements IDlcMessage {
-  public static deserialize(buf: Buffer): DlcAcceptV0 {
+  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf);
+        return DlcAcceptV0.deserialize(buf, parseCets);
       default:
         throw new Error(`Dlc Accept message type must be DlcAcceptV0`);
     }
@@ -56,7 +56,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * Deserializes an oracle_info message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcAcceptV0 {
+  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
     const instance = new DlcAcceptV0();
     const reader = new BufferReader(buf);
 
@@ -74,7 +74,14 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
-    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
+    if (parseCets) {
+      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+        getTlv(reader),
+      );
+    } else {
+      skipTlv(reader);
+      instance.cetSignatures = new CetAdaptorSignaturesV0();
+    }
     instance.refundSignature = reader.readBytes(64);
     instance.negotiationFields = NegotiationFields.deserialize(getTlv(reader));
 
