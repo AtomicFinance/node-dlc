@@ -10,7 +10,7 @@ import { LinearPayout } from '../../lib/dlc/finance/LinearPayout';
 import { PolynomialPayoutCurve } from '../../lib/dlc/PolynomialPayoutCurve';
 import { fromPrecision } from '../../lib/utils/Precision';
 
-describe.only('PolynomialPayoutCurve', () => {
+describe('PolynomialPayoutCurve', () => {
   const points = [
     {
       outcome: new BigNumber(1),
