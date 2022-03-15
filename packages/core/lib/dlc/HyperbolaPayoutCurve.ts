@@ -9,8 +9,9 @@ import BigNumber from 'bignumber.js';
 import { CETPayout } from '..';
 import { fromPrecision, getPrecision } from '../utils/Precision';
 import { splitIntoRanges } from './CETCalculator';
+import PayoutCurve from './PayoutCurve';
 
-export class HyperbolaPayoutCurve {
+export class HyperbolaPayoutCurve implements PayoutCurve {
   constructor(
     private a: BigNumber,
     private b: BigNumber,

@@ -7,7 +7,7 @@ import {
 import BigNumber from 'bignumber.js';
 
 import { fromPrecision, getPrecision } from '../utils/Precision';
-import { CETPayout } from './CETCalculator';
+import { CETPayout, mergePayouts, splitIntoRanges } from './CETCalculator';
 
 interface DlcPoint {
   outcome: BigNumber;
@@ -21,6 +21,7 @@ export class PolynomialPayoutCurve {
   private readonly right: DlcPoint;
 
   constructor(points: DlcPoint[]) {
+    if (points.length !== 2) throw new Error('Must have two points');
     this.points = points;
     this.left = points[0];
     this.right = points[points.length - 1];
@@ -36,7 +37,7 @@ export class PolynomialPayoutCurve {
    * @param outcome The outcome to get the payout for
    * @returns The payout for the outcome
    */
-  getPayoutForOutcome(outcome: bigint): BigNumber {
+  getPayout(outcome: bigint): BigNumber {
     const { left, slope } = this;
 
     const x = new BigNumber(Number(outcome));
@@ -57,9 +58,13 @@ export class PolynomialPayoutCurve {
     const y = new BigNumber(Number(payout));
 
     // Find the x value for the given y
-    // m = (y2 - y1) / (x2 - x1)
-    // x1 = (y2 - y1) / m + x2
-    const outcome = y.minus(left.payout).dividedBy(slope).plus(left.outcome);
+    // slope = (y2 - y1) / (x2 - x1)
+    // x1 = (y2 - y1) / slope + x2
+    const outcome = y
+      .minus(left.payout)
+      .dividedBy(slope)
+      .plus(left.outcome)
+      .integerValue();
     return BigInt(outcome.toString());
   }
 
@@ -129,31 +134,54 @@ export class PolynomialPayoutCurve {
     totalCollateral: bigint,
     roundingIntervals: RoundingIntervalsV0,
   ): CETPayout[] {
-    if (payoutFunction.pieces.length !== 1)
-      throw new Error('Must have at least one piece');
-    const {
-      endpoint,
-      endpointPayout,
-      payoutCurvePiece,
-    } = payoutFunction.pieces[0];
+    if (payoutFunction.pieces.length !== 3)
+      throw new Error('Must have at least three pieces');
 
-    if (payoutCurvePiece.type !== MessageType.PolynomialPayoutCurvePiece)
+    if (
+      payoutFunction.pieces[0].payoutCurvePiece.type !==
+        MessageType.PolynomialPayoutCurvePiece ||
+      payoutFunction.pieces[1].payoutCurvePiece.type !==
+        MessageType.PolynomialPayoutCurvePiece ||
+      payoutFunction.pieces[2].payoutCurvePiece.type !==
+        MessageType.PolynomialPayoutCurvePiece
+    )
       throw new Error('Payout curve piece must be a polynomial');
+
+    const { payoutCurvePiece } = payoutFunction.pieces[1];
 
     const _payoutCurvePiece = payoutCurvePiece as PolynomialPayoutCurvePiece;
 
     const curve = this.fromPayoutCurvePiece(_payoutCurvePiece);
 
-    // TODO: Create a function for rounding intervals for polynomial payout curves
-    // return splitIntoRanges(
-    //   payoutFunction.endpoint0,
-    //   endpoint,
-    //   payoutFunction.endpointPayout0,
-    //   endpointPayout,
-    //   totalCollateral,
-    //   curve,
-    //   roundingIntervals.intervals,
-    // );
-    return [];
+    const CETS: CETPayout[] = [];
+
+    CETS.push(
+      // Max loss curve
+      {
+        payout: payoutFunction.pieces[0].endpointPayout,
+        indexFrom: payoutFunction.endpoint0,
+        indexTo: payoutFunction.pieces[0].endpoint,
+      },
+
+      // payout curve
+      ...splitIntoRanges(
+        payoutFunction.pieces[0].endpoint,
+        payoutFunction.pieces[1].endpoint,
+        payoutFunction.pieces[0].endpointPayout,
+        payoutFunction.pieces[1].endpointPayout,
+        totalCollateral,
+        curve,
+        roundingIntervals.intervals,
+      ),
+
+      // max gain curve
+      {
+        payout: payoutFunction.pieces[2].endpointPayout,
+        indexFrom: payoutFunction.pieces[1].endpoint,
+        indexTo: payoutFunction.pieces[2].endpoint,
+      },
+    );
+
+    return mergePayouts(CETS);
   }
 }

@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 
 import { BigIntMath, toBigInt } from '../utils/BigIntUtils';
 import { HyperbolaPayoutCurve } from './HyperbolaPayoutCurve';
+import { PolynomialPayoutCurve } from './PolynomialPayoutCurve';
 
 export function zipWithIndex<T>(arr: T[]): [T, number][] {
   return arr.map((a, i) => [a, i]);
@@ -203,7 +204,7 @@ export function splitIntoRanges(
   fromPayout: bigint, // endpoint_payout
   toPayout: bigint, // endpoint_payout
   totalCollateral: bigint,
-  curve: HyperbolaPayoutCurve,
+  curve: HyperbolaPayoutCurve | PolynomialPayoutCurve,
   roundingIntervals: RoundingInterval[],
 ): CETPayout[] {
   if (to - from <= 0) {
@@ -351,7 +352,11 @@ export function splitIntoRanges(
   });
 
   // merge neighbouring ranges with same payout
-  return result.reduce((acc: CETPayout[], range) => {
+  return mergePayouts(result);
+}
+
+export const mergePayouts = (payouts: CETPayout[]): CETPayout[] => {
+  return payouts.reduce((acc: CETPayout[], range) => {
     const prev = acc[acc.length - 1];
     if (prev) {
       if (
@@ -366,7 +371,7 @@ export function splitIntoRanges(
 
     return [...acc, range];
   }, []);
-}
+};
 
 export function roundPayout(payout: BigNumber, rounding: bigint): bigint {
   const roundingBN = new BigNumber(rounding.toString());
