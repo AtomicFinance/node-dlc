@@ -191,8 +191,6 @@ describe('PolynomialPayoutCurve', () => {
         roundingIntervals,
       );
 
-      console.log(payouts);
-
       const n = payouts.length - 1;
 
       const maxOutcome = BigInt(
@@ -245,8 +243,6 @@ describe('PolynomialPayoutCurve', () => {
         maxPayout,
         roundingIntervals,
       );
-
-      console.log(payouts);
 
       const n = payouts.length - 1;
 
