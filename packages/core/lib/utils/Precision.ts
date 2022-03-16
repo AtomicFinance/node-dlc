@@ -15,5 +15,8 @@ export const getPrecision = (num: BigNumber): number =>
  * @param precision
  * @returns The number with the given precision
  */
-export const fromPrecision = (precision: number): BigNumber =>
-  new BigNumber(precision).shiftedBy(-16);
+export const fromPrecision = (precision: number): BigNumber => {
+  if (precision.toString().length > 16)
+    throw new Error('Precision is too large');
+  return new BigNumber(precision).shiftedBy(-16);
+};
