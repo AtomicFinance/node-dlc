@@ -310,9 +310,13 @@ describe('RocksdbDlcStore', () => {
 
   describe('find dlc_offer by contract_id', () => {
     it('should return dlc offer object', async () => {
-      const tempContractIds = await sut.findTempContractIds([contractId]);
+      const tempContractIdsMapping = await sut.findTempContractIds([
+        contractId,
+      ]);
       const dlcOffers = await sut.findDlcOffersByTempContractIds(
-        tempContractIds,
+        tempContractIdsMapping.map(
+          (tempContractIdsMapping) => tempContractIdsMapping[1],
+        ),
       );
 
       const actual = dlcOffers[0];
