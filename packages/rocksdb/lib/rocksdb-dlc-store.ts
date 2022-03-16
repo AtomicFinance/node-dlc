@@ -174,11 +174,12 @@ export class RocksdbDlcStore extends RocksdbBase {
     const tempContractIds = await Promise.all(
       contractIds.map(async (contractId) => {
         const dlcAccept = await this.findDlcAccept(contractId, false);
+        if (!dlcAccept) return;
         return dlcAccept.tempContractId;
       }),
     );
 
-    return tempContractIds;
+    return tempContractIds.filter((tempContractId) => !!tempContractId);
   }
 
   public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {
