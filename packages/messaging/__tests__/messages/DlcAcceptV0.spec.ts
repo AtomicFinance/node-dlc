@@ -140,6 +140,22 @@ describe('DlcAccept', () => {
           dlcAcceptHex.toString('hex'),
         );
       });
+
+      it('serializes a dlcAccept without cets', () => {
+        const _dlcAcceptWithoutSigs = DlcAccept.deserialize(
+          instance.serialize(),
+          false,
+        );
+        const dlcAcceptWithoutSigsHex = _dlcAcceptWithoutSigs
+          .serialize()
+          .toString('hex');
+        const dlcAcceptWithoutSigs = DlcAccept.deserialize(
+          Buffer.from(dlcAcceptWithoutSigsHex, 'hex'),
+          true,
+        );
+
+        expect(dlcAcceptWithoutSigs.cetSignatures.sigs.length).to.be.equal(0);
+      });
     });
 
     describe('deserialize', () => {

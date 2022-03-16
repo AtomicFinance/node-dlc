@@ -1,5 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
+// TODO: add unit tests
 export function getTlv(reader: BufferReader): Buffer {
   const type = reader.readBigSize();
   const length = reader.readBigSize();
