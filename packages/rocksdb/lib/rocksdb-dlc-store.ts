@@ -65,6 +65,17 @@ export class RocksdbDlcStore extends RocksdbBase {
     return DlcOfferV0.deserialize(raw);
   }
 
+  public async findDlcOffersByTempContractIds(
+    tempContractIds: Buffer[],
+  ): Promise<DlcOfferV0[]> {
+    const dlcOffers = await Promise.all(
+      tempContractIds.map((tempContractId) =>
+        this.findDlcOffer(tempContractId),
+      ),
+    );
+    return dlcOffers.filter((dlcOffer) => !!dlcOffer);
+  }
+
   public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
     const value = dlcOffer.serialize();
     const tempContractId = sha256(value);
@@ -129,11 +140,14 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
-  public async findDlcAccept(contractId: Buffer): Promise<DlcAcceptV0> {
+  public async findDlcAccept(
+    contractId: Buffer,
+    parseCets = true,
+  ): Promise<DlcAcceptV0> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcAcceptV0.deserialize(raw);
+    return DlcAcceptV0.deserialize(raw, parseCets);
   }
 
   public async findDlcAcceptByOutpoint(
@@ -154,6 +168,17 @@ export class RocksdbDlcStore extends RocksdbBase {
     ]);
     const contractId = await this._safeGet<Buffer>(key);
     return contractId;
+  }
+
+  public async findTempContractIds(contractIds: Buffer[]): Promise<Buffer[]> {
+    const tempContractIds = await Promise.all(
+      contractIds.map(async (contractId) => {
+        const dlcAccept = await this.findDlcAccept(contractId, false);
+        return dlcAccept.tempContractId;
+      }),
+    );
+
+    return tempContractIds;
   }
 
   public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {

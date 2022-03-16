@@ -125,6 +125,12 @@ describe('DlcAccept', () => {
         instance.type,
       );
     });
+
+    it('deserializes without cets', () => {
+      // Set parseCets to false
+      const dlcAccept = DlcAccept.deserialize(instance.serialize(), false);
+      expect(dlcAccept.cetSignatures.sigs.length).to.be.equal(0);
+    });
   });
 
   describe('DlcAcceptV0', () => {
@@ -133,6 +139,22 @@ describe('DlcAccept', () => {
         expect(instance.serialize().toString('hex')).to.equal(
           dlcAcceptHex.toString('hex'),
         );
+      });
+
+      it('serializes a dlcAccept without cets', () => {
+        const _dlcAcceptWithoutSigs = DlcAccept.deserialize(
+          instance.serialize(),
+          false,
+        );
+        const dlcAcceptWithoutSigsHex = _dlcAcceptWithoutSigs
+          .serialize()
+          .toString('hex');
+        const dlcAcceptWithoutSigs = DlcAccept.deserialize(
+          Buffer.from(dlcAcceptWithoutSigsHex, 'hex'),
+          true,
+        );
+
+        expect(dlcAcceptWithoutSigs.cetSignatures.sigs.length).to.be.equal(0);
       });
     });
 
