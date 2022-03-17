@@ -93,8 +93,6 @@ export class PolynomialPayoutCurve {
    * @returns True if the curves are the same
    */
   equals(curve: PolynomialPayoutCurve): boolean {
-    if (this.points.length !== curve.points.length) return false;
-
     return this.points.every((point, i) => {
       const otherPoint = curve.points[i];
       return (
@@ -134,53 +132,57 @@ export class PolynomialPayoutCurve {
     totalCollateral: bigint,
     roundingIntervals: RoundingIntervalsV0,
   ): CETPayout[] {
-    if (payoutFunction.pieces.length !== 3)
-      throw new Error('Must have at least three pieces');
+    if (payoutFunction.pieces.length < 1)
+      throw new Error('Must have at least one piece');
 
-    if (
-      payoutFunction.pieces[0].payoutCurvePiece.type !==
-        MessageType.PolynomialPayoutCurvePiece ||
-      payoutFunction.pieces[1].payoutCurvePiece.type !==
-        MessageType.PolynomialPayoutCurvePiece ||
-      payoutFunction.pieces[2].payoutCurvePiece.type !==
-        MessageType.PolynomialPayoutCurvePiece
-    )
-      throw new Error('Payout curve piece must be a polynomial');
-
-    const { payoutCurvePiece } = payoutFunction.pieces[1];
-
-    const _payoutCurvePiece = payoutCurvePiece as PolynomialPayoutCurvePiece;
-
-    const curve = this.fromPayoutCurvePiece(_payoutCurvePiece);
+    payoutFunction.pieces.forEach((piece) => {
+      if (
+        piece.payoutCurvePiece.type !== MessageType.PolynomialPayoutCurvePiece
+      )
+        throw new Error('Payout curve piece must be a polynomial');
+    });
 
     const CETS: CETPayout[] = [];
 
-    CETS.push(
-      // Max loss curve
-      {
-        payout: payoutFunction.pieces[0].endpointPayout,
-        indexFrom: payoutFunction.endpoint0,
-        indexTo: payoutFunction.pieces[0].endpoint,
-      },
+    // 1. Add the first piece to the list
+    const { payoutCurvePiece } = payoutFunction.pieces[0];
 
-      // payout curve
+    const curve = this.fromPayoutCurvePiece(
+      payoutCurvePiece as PolynomialPayoutCurvePiece,
+    );
+
+    CETS.push(
       ...splitIntoRanges(
+        payoutFunction.endpoint0,
         payoutFunction.pieces[0].endpoint,
-        payoutFunction.pieces[1].endpoint,
+        payoutFunction.endpointPayout0,
         payoutFunction.pieces[0].endpointPayout,
-        payoutFunction.pieces[1].endpointPayout,
         totalCollateral,
         curve,
         roundingIntervals.intervals,
       ),
-
-      // max gain curve
-      {
-        payout: payoutFunction.pieces[2].endpointPayout,
-        indexFrom: payoutFunction.pieces[1].endpoint,
-        indexTo: payoutFunction.pieces[2].endpoint,
-      },
     );
+
+    // 2. If there are subsequent pieces, add them to the list
+    for (let i = 1; i < payoutFunction.pieces.length; i++) {
+      const { payoutCurvePiece } = payoutFunction.pieces[i];
+
+      const curve = this.fromPayoutCurvePiece(
+        payoutCurvePiece as PolynomialPayoutCurvePiece,
+      );
+
+      CETS.push(
+        ...splitIntoRanges(
+          payoutFunction.pieces[i - 1].endpoint,
+          payoutFunction.pieces[i].endpoint,
+          payoutFunction.pieces[i - 1].endpointPayout,
+          payoutFunction.pieces[i].endpointPayout,
+          totalCollateral,
+          curve,
+          roundingIntervals.intervals,
+        ),
+      );
+    }
 
     return mergePayouts(CETS);
   }

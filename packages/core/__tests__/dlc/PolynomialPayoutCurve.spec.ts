@@ -1,11 +1,13 @@
 import {
   MessageType,
+  PayoutFunctionV0,
   PolynomialPayoutCurvePiece,
   RoundingIntervalsV0,
 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
 
+import { HyperbolaPayoutCurve } from '../../lib';
 import { LinearPayout } from '../../lib/dlc/finance/LinearPayout';
 import { PolynomialPayoutCurve } from '../../lib/dlc/PolynomialPayoutCurve';
 import { fromPrecision } from '../../lib/utils/Precision';
@@ -37,7 +39,7 @@ describe('PolynomialPayoutCurve', () => {
               payout: new BigNumber(1),
             },
           ]),
-      ).to.throw;
+      ).to.throw('Must have two points');
 
       // 3 points
       expect(
@@ -270,6 +272,66 @@ describe('PolynomialPayoutCurve', () => {
       expect(payouts[n].indexFrom).to.eq(endOutcome - 1n);
       expect(payouts[n].indexTo).to.eq(maxOutcome);
       expect(payouts[n].payout).to.eq(maxPayout);
+    });
+
+    it('should fail if < 1 payout function pieces', () => {
+      const maxPayout = 60n;
+
+      const payoutFunction = new PayoutFunctionV0();
+      payoutFunction.pieces = [];
+      payoutFunction.endpoint0 = 0n;
+      payoutFunction.endpointPayout0 = 0n;
+
+      const intervals = [{ beginInterval: 0n, roundingMod: 1n }];
+      const roundingIntervals = new RoundingIntervalsV0();
+      roundingIntervals.intervals = intervals;
+
+      expect(() => {
+        PolynomialPayoutCurve.computePayouts(
+          payoutFunction,
+          maxPayout,
+          roundingIntervals,
+        );
+      }).to.throw('Must have at least one piece');
+    });
+
+    it('should fail if there is a non-polynomial payout curve piece', () => {
+      const maxPayout = 60n;
+
+      const hyperbola = new HyperbolaPayoutCurve(
+        new BigNumber(1),
+        new BigNumber(0),
+        new BigNumber(0),
+        new BigNumber(500000),
+        new BigNumber(0),
+        new BigNumber(0),
+        true,
+      ).toPayoutCurvePiece();
+
+      const pieces = [
+        {
+          payoutCurvePiece: hyperbola,
+          endpoint: 2n,
+          endpointPayout: 2n,
+          extraPrecision: 0,
+        },
+      ];
+      const payoutFunction = new PayoutFunctionV0();
+      payoutFunction.pieces = pieces;
+      payoutFunction.endpoint0 = 0n;
+      payoutFunction.endpointPayout0 = 0n;
+
+      const intervals = [{ beginInterval: 0n, roundingMod: 1n }];
+      const roundingIntervals = new RoundingIntervalsV0();
+      roundingIntervals.intervals = intervals;
+
+      expect(() => {
+        PolynomialPayoutCurve.computePayouts(
+          payoutFunction,
+          maxPayout,
+          roundingIntervals,
+        );
+      }).to.throw('Payout curve piece must be a polynomial');
     });
   });
 });

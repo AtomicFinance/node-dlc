@@ -242,14 +242,34 @@ export function splitIntoRanges(
     indexTo: from,
   });
 
+  // In the case of a constant payout curve (fromPayout === toPayout), we can skip the range evaluation
+  if (fromPayout === toPayout) {
+    result.push({
+      payout: toPayout,
+      indexFrom: from,
+      indexTo: to,
+    });
+    // outcome = endpoint_1
+    result.push({
+      payout: toPayout,
+      indexFrom: to,
+      indexTo: to,
+    });
+    // merge neighbouring ranges with same payout
+    return mergePayouts(result);
+  }
+
   let currentOutcome = from + BigInt(1);
 
+  // iterate over entire range of outcomes from [from, to]
   while (currentOutcome < to) {
     const [rounding, roundingIndex] = getRoundingForOutcome(currentOutcome);
 
+    // either the next rounding interval, or the end of the range
     const nextFirstRoundingOutcome =
       reversedIntervals[roundingIndex - 1]?.beginInterval || to;
 
+    // temporary variable to hold the current payout
     let currentPayout = new BigNumber(
       roundPayout(
         clampBN(curve.getPayout(currentOutcome)),

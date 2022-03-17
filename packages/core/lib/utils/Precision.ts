@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 
+// Precision refers to the number of digits after the decimal point.
 // Refer to https://github.com/discreetlogcontracts/dlcspecs/blob/master/PayoutCurve.md#version-0-payout_function
 
 /**
