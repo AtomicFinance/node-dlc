@@ -28,7 +28,6 @@ describe('OrderOffer Builder', () => {
         strikePrice,
         premium,
         12,
-        157788000,
         10000,
         'bitcoin',
       );
@@ -44,7 +43,6 @@ describe('OrderOffer Builder', () => {
         totalCollateral,
         premium,
         12,
-        157788000,
         10000,
         'bitcoin',
       );
@@ -62,7 +60,6 @@ describe('OrderOffer Builder', () => {
         totalCollateral,
         premium,
         12,
-        157788000,
         10000,
         'bitcoin',
       );

@@ -21,7 +21,6 @@ export const buildCoveredCallOrderOffer = (
   strikePrice: number,
   premium: number,
   feePerByte: number,
-  expiration: number,
   rounding: number,
   network: string,
 ): OrderOfferV0 => {
@@ -31,7 +30,6 @@ export const buildCoveredCallOrderOffer = (
     strikePrice,
     premium,
     feePerByte,
-    expiration,
     rounding,
     network,
     'call',
@@ -45,7 +43,6 @@ export const buildShortPutOrderOffer = (
   totalCollateral: number,
   premium: number,
   feePerByte: number,
-  expiration: number,
   rounding: number,
   network: string,
 ): OrderOfferV0 => {
@@ -55,7 +52,6 @@ export const buildShortPutOrderOffer = (
     strikePrice,
     premium,
     feePerByte,
-    expiration,
     rounding,
     network,
     'put',
@@ -84,7 +80,6 @@ export const buildOrderOffer = (
   strikePrice: number,
   premium: number,
   feePerByte: number,
-  expiration: number,
   rounding: number,
   network: string,
   type: 'call' | 'put',
@@ -169,6 +164,7 @@ export const buildOrderOffer = (
   orderOffer.feeRatePerVb = BigInt(feePerByte);
 
   orderOffer.cetLocktime = Math.floor(new Date().getTime() / 1000); // set to current time
-  orderOffer.refundLocktime = expiration + 604800; // 1 week later
+  orderOffer.refundLocktime =
+    announcement.oracleEvent.eventMaturityEpoch + 604800; // 1 week after maturity
   return orderOffer;
 };
