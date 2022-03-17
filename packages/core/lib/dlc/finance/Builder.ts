@@ -60,6 +60,18 @@ export const buildShortPutOrderOffer = (
 };
 
 /**
+ * Compute rounding intervals for a covered call
+ *
+ * @param rounding
+ * @param contractSize
+ * @returns
+ */
+export const computeRoundingModulus = (
+  rounding: number,
+  contractSize: number,
+): bigint => BigInt(Math.floor(rounding * (contractSize / 1e8)));
+
+/**
  * Builds an order offer for a covered call or short put
  *
  * @param announcement oracle announcement
@@ -100,6 +112,7 @@ export const buildOrderOffer = (
     totalCollateral?: bigint;
   };
   const roundingIntervals = new RoundingIntervalsV0();
+  const roundingMod = computeRoundingModulus(rounding, contractSize);
 
   if (type === 'call') {
     payoutFunctionInfo = CoveredCall.buildPayoutFunction(
@@ -117,7 +130,7 @@ export const buildOrderOffer = (
       },
       {
         beginInterval: BigInt(strikePrice),
-        roundingMod: BigInt(Math.floor(rounding * contractSize)),
+        roundingMod,
       },
     ];
   } else {
@@ -132,7 +145,7 @@ export const buildOrderOffer = (
     roundingIntervals.intervals = [
       {
         beginInterval: BigInt(0),
-        roundingMod: BigInt(Math.floor(rounding * contractSize)),
+        roundingMod,
       },
       {
         beginInterval: BigInt(strikePrice),
