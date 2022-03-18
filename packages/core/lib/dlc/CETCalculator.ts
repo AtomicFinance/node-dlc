@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 
 import { BigIntMath, toBigInt } from '../utils/BigIntUtils';
 import { HyperbolaPayoutCurve } from './HyperbolaPayoutCurve';
+import { PolynomialPayoutCurve } from './PolynomialPayoutCurve';
 
 export function zipWithIndex<T>(arr: T[]): [T, number][] {
   return arr.map((a, i) => [a, i]);
@@ -203,7 +204,7 @@ export function splitIntoRanges(
   fromPayout: bigint, // endpoint_payout
   toPayout: bigint, // endpoint_payout
   totalCollateral: bigint,
-  curve: HyperbolaPayoutCurve,
+  curve: HyperbolaPayoutCurve | PolynomialPayoutCurve,
   roundingIntervals: RoundingInterval[],
 ): CETPayout[] {
   if (to - from <= 0) {
@@ -241,14 +242,34 @@ export function splitIntoRanges(
     indexTo: from,
   });
 
+  // In the case of a constant payout curve (fromPayout === toPayout), we can skip the range evaluation
+  if (fromPayout === toPayout) {
+    result.push({
+      payout: toPayout,
+      indexFrom: from,
+      indexTo: to,
+    });
+    // outcome = endpoint_1
+    result.push({
+      payout: toPayout,
+      indexFrom: to,
+      indexTo: to,
+    });
+    // merge neighbouring ranges with same payout
+    return mergePayouts(result);
+  }
+
   let currentOutcome = from + BigInt(1);
 
+  // iterate over entire range of outcomes from [from, to]
   while (currentOutcome < to) {
     const [rounding, roundingIndex] = getRoundingForOutcome(currentOutcome);
 
+    // either the next rounding interval, or the end of the range
     const nextFirstRoundingOutcome =
       reversedIntervals[roundingIndex - 1]?.beginInterval || to;
 
+    // temporary variable to hold the current payout
     let currentPayout = new BigNumber(
       roundPayout(
         clampBN(curve.getPayout(currentOutcome)),
@@ -351,7 +372,11 @@ export function splitIntoRanges(
   });
 
   // merge neighbouring ranges with same payout
-  return result.reduce((acc: CETPayout[], range) => {
+  return mergePayouts(result);
+}
+
+export const mergePayouts = (payouts: CETPayout[]): CETPayout[] => {
+  return payouts.reduce((acc: CETPayout[], range) => {
     const prev = acc[acc.length - 1];
     if (prev) {
       if (
@@ -366,7 +391,7 @@ export function splitIntoRanges(
 
     return [...acc, range];
   }, []);
-}
+};
 
 export function roundPayout(payout: BigNumber, rounding: bigint): bigint {
   const roundingBN = new BigNumber(rounding.toString());

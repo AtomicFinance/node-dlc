@@ -9,6 +9,7 @@
 Node-DLC is a an implementation of Bitcoin DLC Protocol in the Node.js runtime, with CET signature generation achieved with [cfd-dlc](https://github.com/cryptogarageinc/cfd-dlc-js) wrapper (written in C++).
 
 ## Modules
+
 - [@node-dlc/cli](https://github.com/atomicfinance/node-dlc/tree/master/packages/cli)
 - [@node-dlc/core](https://github.com/atomicfinance/node-dlc/tree/master/packages/core)
 - [@node-dlc/logger](https://github.com/atomicfinance/node-dlc/tree/master/packages/logger)
@@ -19,6 +20,7 @@ Node-DLC is a an implementation of Bitcoin DLC Protocol in the Node.js runtime, 
 ## Dependencies
 
 Many elements of the project as well as components are inspired by [Node-Lightning](https://github.com/altangent/node-lightning/), an Node.js implementation of the Bitcoin Lightning Network. The project also uses several packages such as:
+
 - [@node-lightning/bitcoin](https://github.com/altangent/node-lightning/tree/main/packages/bitcoin)
 - [@node-lightning/bufio](https://github.com/altangent/node-lightning/tree/main/packages/bufio)
 - [@node-lightning/core](https://github.com/altangent/node-lightning/tree/main/packages/core)
@@ -35,15 +37,18 @@ Note: These packages contains functionality for message **generation**, **serial
 For DLC wallet functionality, you can check out [ChainAbstractionLayer-Finance](https://github.com/atomicfinance/chainabstractionlayer-finance) which uses [Node-DLC](https://github.com/AtomicFinance/node-dlc) messaging functionality and [Liquality ChainAbstractionLayer](https://github.com/liquality/chainabstractionlayer) wallet functionality to enable easy creation of wallets with the capability of entering into DLCs.
 
 Implemented features:
+
 - Dlc [Offer](packages/messaging/lib/messages/DlcOffer.ts), [Accept](packages/messaging/lib/messages/DlcAccept.ts), [Sign](packages/messaging/lib/messages/DlcSign.ts) V0 message support
 - Oracle [Announcement](packages/messaging/lib/messages/OracleAnnouncementV0.ts) and [Attestation](packages/messaging/lib/messages/OracleAttestationV0.ts) V0 message support
 - ContractInfo V0 and V1 [message](packages/messaging/lib/messages/ContractInfo.ts) support (multi oracle message support)
 - Enum Event Descriptor and Digit Decomposition Event Descriptor V0 [message](packages/messaging/lib/messages/EventDescriptor.ts) support
 - Numeric Outcome [message](packages/messaging/lib/messages/RoundingIntervalsV0.ts) and [payout generation](packages/core/lib/dlc/HyperbolaPayoutCurve.ts) support
+- Polynomial (linear) payout [message](packages/messaging/lib/messages/PayoutCurvePiece.ts) and [curve](packages/core/lib/dlc/PolynomialPayoutCurve.ts) support
 - Hyperbola (1/x) shaped payout [message](packages/messaging/lib/messages/PayoutCurvePiece.ts) and [curve](packages/core/lib/dlc/HyperbolaPayoutCurve.ts) support
 - Dlc [Close](packages/messaging/lib/messages/DlcClose.ts) V0 message support from [mutual close proposal](https://github.com/discreetlogcontracts/dlcspecs/pull/170)
 
 Missing features:
+
 - Backwards compatibility with (messaging and serialization proposal)[https://github.com/discreetlogcontracts/dlcspecs/pull/171]
 - [V0 Oracle Changes](https://github.com/discreetlogcontracts/dlcspecs/pull/167) message types proposal
 
