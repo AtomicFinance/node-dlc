@@ -69,7 +69,7 @@ describe('OrderOffer Builder', () => {
     });
   });
 
-  describe.only('computeRoundingModulus', () => {
+  describe('computeRoundingModulus', () => {
     it('should properly compute the rounding modulus for 0.0001 BTC', () => {
       const modulus = computeRoundingModulus(100000, 10000);
       expect(modulus).to.equal(BigInt(10));
