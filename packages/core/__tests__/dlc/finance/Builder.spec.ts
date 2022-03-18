@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import {
   buildCoveredCallOrderOffer,
   buildShortPutOrderOffer,
+  computeRoundingModulus,
 } from '../../../lib';
 
 describe('OrderOffer Builder', () => {
@@ -65,6 +66,28 @@ describe('OrderOffer Builder', () => {
       );
 
       expect(() => orderOffer.validate()).to.throw(Error);
+    });
+  });
+
+  describe('computeRoundingModulus', () => {
+    it('should properly compute the rounding modulus for 0.0001 BTC', () => {
+      const modulus = computeRoundingModulus(100000, 10000);
+      expect(modulus).to.equal(BigInt(10));
+    });
+
+    it('should properly compute the rounding modulus for 1 BTC', () => {
+      const modulus = computeRoundingModulus(100000, 100000000);
+      expect(modulus).to.equal(BigInt(100000));
+    });
+
+    it('should properly compute the rounding modulus for 1.25 BTC', () => {
+      const modulus = computeRoundingModulus(5000, 125000000);
+      expect(modulus).to.equal(BigInt(6250));
+    });
+
+    it('should properly compute the rounding modulus for 0.9 BTC', () => {
+      const modulus = computeRoundingModulus(100000, 90000000);
+      expect(modulus).to.equal(BigInt(90000));
     });
   });
 });
