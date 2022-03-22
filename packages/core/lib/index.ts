@@ -5,5 +5,7 @@ export * from './dlc/finance/LinearPayout';
 export * from './dlc/finance/OptionInfo';
 export * from './dlc/finance/ShortPut';
 export * from './dlc/HyperbolaPayoutCurve';
+export * from './dlc/PayoutCurve';
+export * from './dlc/PolynomialPayoutCurve';
 export * from './dlc/TxBuilder';
 export * from './dlc/TxFinalizer';
