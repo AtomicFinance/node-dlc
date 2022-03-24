@@ -7,6 +7,7 @@ import sinonChai from 'sinon-chai';
 
 import { ChannelType } from '../../lib/irc/ChannelType';
 import { IrcOrderManager } from '../../lib/irc/IrcOrderManager';
+import { IrcServers } from '../../lib/irc/Servers';
 import { createFakeLogger } from './helpers';
 
 chai.should();
@@ -38,14 +39,14 @@ describe('IrcOrderManager', () => {
     sut = new IrcOrderManager(
       createFakeLogger(),
       keyPair1.privateKey,
-      ['irc.darkscience.net'],
+      [IrcServers.primary_server.host],
       false,
       ChannelType.TestMarketPit,
     );
     bob = new IrcOrderManager(
       createFakeLogger(),
       keyPair2.privateKey,
-      ['irc.darkscience.net'],
+      [IrcServers.primary_server.host],
       false,
       ChannelType.TestMarketPit,
     );

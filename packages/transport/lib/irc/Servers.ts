@@ -4,12 +4,12 @@ interface IrcServer {
 }
 
 const primary_server: IrcServer = {
-  host: 'irc.darkscience.net',
+  host: 'irc.hackint.org',
   port: 6697,
 };
 
 const secondary_server: IrcServer = {
-  host: 'irc.hackint.org',
+  host: 'irc.darkscience.net',
   port: 6697,
 };
 
