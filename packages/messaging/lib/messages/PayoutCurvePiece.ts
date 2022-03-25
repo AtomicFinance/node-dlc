@@ -78,7 +78,7 @@ export class PolynomialPayoutCurvePiece
 
   public length: bigint;
 
-  public points: IPoint[];
+  public points: IPoint[] = [];
 
   /**
    * Converts polynomial_payout_curve_piece to JSON
