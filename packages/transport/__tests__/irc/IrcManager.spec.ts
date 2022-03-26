@@ -22,15 +22,15 @@ describe('IrcManager', () => {
     sut = new IrcManager(
       createFakeLogger(),
       keyPair1.privateKey,
-      ['irc.darkscience.net'],
-      false,
+      ['irc.darkscience.net', 'irc.hackint.org'],
+      true,
       ChannelType.TestMarketPit,
     );
     bob = new IrcManager(
       createFakeLogger(),
       keyPair2.privateKey,
-      ['irc.darkscience.net'],
-      false,
+      ['irc.darkscience.net', 'irc.hackint.org'],
+      true,
       ChannelType.TestMarketPit,
     );
 
@@ -48,7 +48,7 @@ describe('IrcManager', () => {
   });
 
   describe('emit messages', () => {
-    it('should only emit msgs from valid nicks in channel', (done) => {
+    it.only('should only emit msgs from valid nicks in channel', (done) => {
       const expectedMsg = '0110';
 
       sut.on('message', (from, to, msg) => {

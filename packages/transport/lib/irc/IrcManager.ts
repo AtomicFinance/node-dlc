@@ -84,7 +84,7 @@ export class IrcManager extends EventEmitter {
   public privKey: Buffer; // 32 Bytes
   public pubKey: Buffer; // 33 Bytes
   public keyPair;
-  public serverIndex = 0;
+  public serverIndex = -1;
   public servers: string[];
   public logger: ILogger;
   public nick: string;
@@ -103,6 +103,7 @@ export class IrcManager extends EventEmitter {
     port = 6697,
     useWhitelist = false,
     whitelistHandler: WhitelistHandler = undefined,
+    retryCount = 5,
   ) {
     super();
     this.keyPair = ECPair.fromPrivateKey(privKey);
@@ -117,6 +118,8 @@ export class IrcManager extends EventEmitter {
       debug,
       secure: true,
       channels: [this.channel],
+      retryCount,
+      autoConnect: false,
     };
     this.useWhitelist = useWhitelist;
     this.whitelistHandler = whitelistHandler;
@@ -138,6 +141,17 @@ export class IrcManager extends EventEmitter {
   public start(): void {
     this.logger.info('starting irc manager');
 
+    this.setupClient();
+  }
+
+  public setupClient(): void {
+    this.serverIndex += 1;
+
+    console.log(
+      'this.servers[this.serverIndex]',
+      this.servers[this.serverIndex],
+    );
+
     this.client = new irc.Client(
       this.servers[this.serverIndex],
       this.nick,
@@ -145,6 +159,13 @@ export class IrcManager extends EventEmitter {
     );
 
     this._setupListeners();
+
+    // console.log('this.opts.retryCount', this.opts.retryCount);
+    this.client.connect();
+
+    this.client.conn.addListener('abort', () => {
+      console.log('abort 111');
+    });
   }
 
   public stop(): void {
@@ -174,49 +195,57 @@ export class IrcManager extends EventEmitter {
   private _setupListeners() {
     this.connectState = ConnectState.Connecting;
 
-    this.client.addListener('message', (from, to, message) => {
-      this.logger.debug('%s => %s: %s', from, to, message);
-      if (
-        IrcManager.nickValid(from) &&
-        from !== this.nick &&
-        (!this.useWhitelist || this.whitelistHandler(from))
-      ) {
-        this._processMsg(from, to, message);
-      }
+    this.client.addListener('raw', (msg) => {
+      this.logger.debug('raw 11', msg);
     });
 
-    this.client.addListener('pm', (nick, message) => {
-      this.logger.debug('Got private message from %s: %s', nick, message);
-      if (
-        IrcManager.nickValid(nick) &&
-        nick === this.nick &&
-        (!this.useWhitelist || this.whitelistHandler(nick))
-      ) {
-        this._processMsg(nick, this.nick, message);
-      }
-    });
+    // this.client.addListener('message', (from, to, message) => {
+    //   this.logger.debug('%s => %s: %s', from, to, message);
+    //   if (
+    //     IrcManager.nickValid(from) &&
+    //     from !== this.nick &&
+    //     (!this.useWhitelist || this.whitelistHandler(from))
+    //   ) {
+    //     this._processMsg(from, to, message);
+    //   }
+    // });
 
-    this.client.addListener('join', (channel, who) => {
-      if (who === this.nick) {
-        this.started = true;
-        this.connectState = ConnectState.Connected;
-      }
-      this.logger.debug('%s has joined %s', who, channel);
-    });
+    // this.client.addListener('pm', (nick, message) => {
+    //   this.logger.debug('Got private message from %s: %s', nick, message);
+    //   if (
+    //     IrcManager.nickValid(nick) &&
+    //     nick === this.nick &&
+    //     (!this.useWhitelist || this.whitelistHandler(nick))
+    //   ) {
+    //     this._processMsg(nick, this.nick, message);
+    //   }
+    // });
 
-    this.client.addListener('part', (channel, who, reason) => {
-      this.logger.debug('%s has left %s: %s', who, channel, reason);
-    });
+    // this.client.addListener('join', (channel, who) => {
+    //   if (who === this.nick) {
+    //     this.started = true;
+    //     this.connectState = ConnectState.Connected;
+    //   }
+    //   this.logger.debug('%s has joined %s', who, channel);
+    // });
 
-    this.client.addListener('kick', (channel, who, by, reason) => {
-      this.logger.debug(
-        '%s was kicked from %s by %s: %s',
-        who,
-        channel,
-        by,
-        reason,
-      );
-    });
+    // this.client.addListener('part', (channel, who, reason) => {
+    //   this.logger.debug('%s has left %s: %s', who, channel, reason);
+    // });
+
+    // this.client.addListener('kick', (channel, who, by, reason) => {
+    //   this.logger.debug(
+    //     '%s was kicked from %s by %s: %s',
+    //     who,
+    //     channel,
+    //     by,
+    //     reason,
+    //   );
+    // });
+
+    // this.client.addListener('error', (msg) => {
+    //   this.logger.debug('error: ', msg);
+    // });
   }
 
   private _processMsg(from: string, to: string, msg: string) {

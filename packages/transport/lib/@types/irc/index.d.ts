@@ -15,6 +15,7 @@ declare module 'irc' {
     connect(retryCount?: number, callback?: (arg: any) => void): void;
     disconnect(message?: string, callback?: (arg: any) => void): void;
     activateFloodProtection(interval?: number): void;
+    conn: any;
   }
 
   interface ClientClass {
@@ -41,6 +42,7 @@ declare module 'irc' {
     channelPrefixes?: string;
     messageSplit?: number;
     encoding?: string;
+    retryCount?: number;
   }
 
   export const Client: ClientClass;
