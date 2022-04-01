@@ -22,6 +22,8 @@ import {
 } from './OrderIrcInfo';
 import { OrderMetadata, OrderMetadataV0 } from './OrderMetadata';
 
+const LOCKTIME_THRESHOLD = 500000000;
+
 export abstract class OrderOffer {
   public static deserialize(buf: Buffer): OrderOffer {
     const reader = new BufferReader(buf);
@@ -111,8 +113,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public ircInfo: OrderIrcInfo;
 
   public validate(): void {
+    // 0. Validate fields
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
-    this.contractInfo.validate();
     validateBigInt(
       this.offerCollateralSatoshis,
       'offerCollateralSatoshis',
@@ -121,6 +123,48 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     validateBigInt(this.feeRatePerVb, 'feeRatePerVb', OrderOfferV0.name);
     validateNumber(this.cetLocktime, 'cetLocktime', OrderOfferV0.name);
     validateNumber(this.refundLocktime, 'refundLocktime', OrderOfferV0.name);
+
+    // 1. Type is set automatically in class
+    // 2. contract_flags field is ignored
+    // 3. chain_hash must be validated as input by end user
+    // 4. payout_spk and change_spk must be standard script pubkeys
+
+    // 5. offer_collateral_satoshis must be greater than or equal to 1000
+
+    if (this.offerCollateralSatoshis < 1000) {
+      throw new Error(
+        'offer_collateral_satoshis must be greater than or equal to 1000',
+      );
+    }
+
+    // 6. cet_locktime and refund_locktime must either both be unix timestamps, or both be block heights.
+    // https://en.bitcoin.it/wiki/NLockTime
+    // https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki#detailed-specification
+    // https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L39
+
+    if (
+      !(
+        (this.cetLocktime < LOCKTIME_THRESHOLD &&
+          this.refundLocktime < LOCKTIME_THRESHOLD) ||
+        (this.cetLocktime >= LOCKTIME_THRESHOLD &&
+          this.refundLocktime >= LOCKTIME_THRESHOLD)
+      )
+    ) {
+      throw new Error('cetLocktime and refundLocktime must be in same units');
+    }
+
+    // 7. cetLocktime must be less than refundLocktime
+    if (this.cetLocktime >= this.refundLocktime) {
+      throw new Error('cetLocktime must be less than refundLocktime');
+    }
+
+    // validate contractInfo
+    this.contractInfo.validate();
+
+    // totalCollaterial should be > offerCollaterial (logical validation)
+    if (this.contractInfo.totalCollateral <= this.offerCollateralSatoshis) {
+      throw new Error('totalCollateral should be greater than offerCollateral');
+    }
   }
 
   /**

@@ -8,6 +8,11 @@ import secp256k1 from 'secp256k1';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import {
+  validateBigInt,
+  validateBuffer,
+  validateNumber,
+} from '../validation/validate';
+import {
   ContractInfo,
   IContractInfoV0JSON,
   IContractInfoV1JSON,
@@ -146,6 +151,17 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
    * @throws Will throw an error if validation fails
    */
   public validate(): void {
+    // 0. Validate fields
+    validateBuffer(this.chainHash, 'chainHash', DlcOfferV0.name, 32);
+    validateBigInt(
+      this.offerCollateralSatoshis,
+      'offerCollateralSatoshis',
+      DlcOfferV0.name,
+    );
+    validateBigInt(this.feeRatePerVb, 'feeRatePerVb', DlcOfferV0.name);
+    validateNumber(this.cetLocktime, 'cetLocktime', DlcOfferV0.name);
+    validateNumber(this.refundLocktime, 'refundLocktime', DlcOfferV0.name);
+
     // 1. Type is set automatically in class
     // 2. contract_flags field is ignored
     // 3. chain_hash must be validated as input by end user
