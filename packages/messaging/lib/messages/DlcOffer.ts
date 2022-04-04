@@ -175,18 +175,24 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     }
 
     // 6. offer_collateral_satoshis must be greater than or equal to 1000
-
     if (this.offerCollateralSatoshis < 1000) {
       throw new Error(
         'offer_collateral_satoshis must be greater than or equal to 1000',
       );
     }
 
+    if (this.cetLocktime < 0) {
+      throw new Error('cet_locktime must be greater than or equal to 0');
+    }
+
+    if (this.refundLocktime < 0) {
+      throw new Error('refund_locktime must be greater than or equal to 0');
+    }
+
     // 7. cet_locktime and refund_locktime must either both be unix timestamps, or both be block heights.
     // https://en.bitcoin.it/wiki/NLockTime
     // https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki#detailed-specification
     // https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L39
-
     if (
       !(
         (this.cetLocktime < LOCKTIME_THRESHOLD &&

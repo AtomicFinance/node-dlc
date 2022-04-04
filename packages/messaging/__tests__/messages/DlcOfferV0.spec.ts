@@ -297,6 +297,20 @@ describe('DlcOffer', () => {
         }).to.not.throw(Error);
       });
 
+      it('should throw if cet_locktime is less than 0', () => {
+        instance.cetLocktime = -1;
+        expect(() => {
+          instance.validate();
+        }).to.throw('cet_locktime must be greater than or equal to 0');
+      });
+
+      it('should throw if refund_locktime is less than 0', () => {
+        instance.refundLocktime = -1;
+        expect(() => {
+          instance.validate();
+        }).to.throw('refund_locktime must be greater than or equal to 0');
+      });
+
       it('should throw if cet_locktime and refund_locktime are not in same units', () => {
         instance.cetLocktime = 100;
         instance.refundLocktime = LOCKTIME_THRESHOLD + 200;

@@ -65,12 +65,24 @@ export class OracleEventV0 implements IDlcMessage {
 
   public eventId: string;
 
+  /**
+   * Validates correctness of all fields in the message
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Oracle.md
+   * @throws Will throw an error if validation fails
+   */
   public validate(): void {
+    if (this.eventMaturityEpoch < 0) {
+      throw new Error('eventMaturityEpoch must be greater than or equal to 0');
+    }
+
     if (
       this.eventDescriptor.type === DigitDecompositionEventDescriptorV0.type
     ) {
       const eventDescriptor = this
         .eventDescriptor as DigitDecompositionEventDescriptorV0;
+
+      eventDescriptor.validate();
+
       if (eventDescriptor.nbDigits !== this.oracleNonces.length) {
         throw Error(
           'OracleEvent oracleNonces length must match DigitDecompositionEventDescriptor nbDigits',

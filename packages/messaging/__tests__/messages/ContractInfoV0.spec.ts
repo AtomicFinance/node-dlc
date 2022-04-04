@@ -18,7 +18,7 @@ import { MessageType } from '../../lib/MessageType';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe('OracleInfoV0', () => {
+describe('ContractInfoV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new ContractInfoV0();

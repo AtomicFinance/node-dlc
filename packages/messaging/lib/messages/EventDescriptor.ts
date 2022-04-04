@@ -157,6 +157,22 @@ export class DigitDecompositionEventDescriptorV0
   public nbDigits: number;
 
   /**
+   * Validates correctness of all fields in the message
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Oracle.md
+   * @throws Will throw an error if validation fails
+   */
+  public validate(): void {
+    if (this.base <= 0) {
+      throw new Error('base must be greater than 0');
+    }
+
+    // TODO: support isSigned according to specifications
+    if (this.isSigned) {
+      throw new Error('node-dlc does not support isSigned');
+    }
+  }
+
+  /**
    * Converts digit_decomposition_event_descriptor_v0 to JSON
    */
   public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
