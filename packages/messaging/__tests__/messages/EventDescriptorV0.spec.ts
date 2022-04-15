@@ -16,8 +16,6 @@ describe('EventDescriptorV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      console.log(instance.serialize().toString('hex'));
-
       expect(instance.serialize().toString("hex")).to.equal(
         "fdd80a" + // type event_descriptor
         "11" + // length

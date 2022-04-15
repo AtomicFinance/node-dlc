@@ -97,6 +97,15 @@ export class ContractInfoV0 implements IDlcMessage {
           .contractDescriptor as ContractDescriptorV1;
         contractDescriptor.validate();
 
+        // roundingmod should not be greater than totalCollateral
+        for (const interval of contractDescriptor.roundingIntervals.intervals) {
+          if (interval.roundingMod > this.totalCollateral) {
+            throw new Error(
+              `Rounding modulus ${interval.roundingMod} is greater than total collateral ${this.totalCollateral}`,
+            );
+          }
+        }
+
         switch (this.oracleInfo.announcement.oracleEvent.eventDescriptor.type) {
           case MessageType.DigitDecompositionEventDescriptorV0:
             // eslint-disable-next-line no-case-declarations
@@ -106,6 +115,8 @@ export class ContractInfoV0 implements IDlcMessage {
               throw new Error(
                 'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
               );
+
+            // Sanity check. Shouldn't be hit since there are other validations which should catch this in OracleEventV0.
             // eslint-disable-next-line no-case-declarations
             const oracleEvent = this.oracleInfo.announcement
               .oracleEvent as OracleEventV0;
