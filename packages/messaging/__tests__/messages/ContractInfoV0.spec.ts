@@ -18,7 +18,7 @@ import { MessageType } from '../../lib/MessageType';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe('OracleInfoV0', () => {
+describe('ContractInfoV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new ContractInfoV0();
@@ -191,107 +191,65 @@ describe('OracleInfoV0', () => {
   });
 
   describe('validate', () => {
-    it('should throw Error if oracle numDigits does not match', () => {
-      const eventDescriptorNumDigits = 17;
-      const contractDescriptorNumDigits = 18;
+    let eventDescriptorNumDigits;
+    let contractDescriptorNumDigits;
+    let oracleInfo: OracleInfoV0;
+    let oracleAnnouncement: OracleAnnouncementV0;
+    let hyperbolaPayoutCurvePiece: HyperbolaPayoutCurvePiece;
+    let payoutFunction: PayoutFunctionV0;
+
+    beforeEach(() => {
+      eventDescriptorNumDigits = 18;
+      contractDescriptorNumDigits = 18;
 
       const eventDescriptor = new DigitDecompositionEventDescriptorV0();
       eventDescriptor.base = 2;
       eventDescriptor.isSigned = false;
-      eventDescriptor.unit = 'BTC-USD';
+      eventDescriptor.unit = 'BTCUSD';
       eventDescriptor.precision = 0;
       eventDescriptor.nbDigits = eventDescriptorNumDigits;
 
       const oracleEvent = new OracleEventV0();
       oracleEvent.oracleNonces = [
-        Buffer.from(
-          '86abd0a6bfd4eb3c922942b2b9dc73bde7c9dd8c7aa99002a8163c2e4b38cd62',
-          'hex',
-        ),
-        Buffer.from(
-          '892bd4e9e6721212f7564d6852d61079ee91e6ec34be9ac82d372ab95a30843b',
-          'hex',
-        ),
-        Buffer.from(
-          '51803a36bc1f730c4c98d4c42670e4032dddd95a3c1652b2605b6da4a183b557',
-          'hex',
-        ),
-        Buffer.from(
-          'f2251ae87c0e2beb60c446a7bddb6a5fc2f8a40f4f6654debe1cfea1c10cda60',
-          'hex',
-        ),
-        Buffer.from(
-          '8241d2e6ee7c8461dc97819388f70194288d971bdd1fb33ceecc3b385231e109',
-          'hex',
-        ),
-        Buffer.from(
-          'f40acbd8eb1f991af7a6cdecfb4ee55bc0c0cc0b0e57fd25c0806f527090b9f0',
-          'hex',
-        ),
-        Buffer.from(
-          'd1e1a0bdf4b77e51cd3cdf48ddcd4eacfe470093cf5c6d4efc6378c2707768ba',
-          'hex',
-        ),
-        Buffer.from(
-          'db378b479adcc1e8a2d9529660de84a83f670f10a1b132802475ab25e930bfe1',
-          'hex',
-        ),
-        Buffer.from(
-          'cc464acf38acf689392e2a42a285293dbc1508fd068ff71773af1aa9ba745035',
-          'hex',
-        ),
-        Buffer.from(
-          '22b35d2f0c8c57e3a05b1b3302184c04a13d993182e3b16164cd8aec8654f2e2',
-          'hex',
-        ),
-        Buffer.from(
-          'b86687fbdde1916777de543456ad0ca8b1fd53bd8bb27c63c4f8f2b8515266e6',
-          'hex',
-        ),
-        Buffer.from(
-          '3c1557ff94451f7f39a8813b4745da1a96e6557bf342b3673af227b868fea945',
-          'hex',
-        ),
-        Buffer.from(
-          '42d08251205359fda89476e54b6ca32cd2ffbcf114ca0054e8c2d3c75937fd12',
-          'hex',
-        ),
-        Buffer.from(
-          '1775f577eb78fcd6a2473fcc924b38f0131771acc43e0372393385cb16e2bb7b',
-          'hex',
-        ),
-        Buffer.from(
-          '0757f00df962a4cad733650fe954c0435beed69f660a1b0ad94cdbbe0b832c34',
-          'hex',
-        ),
-        Buffer.from(
-          '726fd163999a9696eaac31bc1fb9c3a09111afe01e48f1426febb145a4880bb2',
-          'hex',
-        ),
-        Buffer.from(
-          'aef72be43d1b240db3b26fa668f3c28fe9d929cfa5183501ee2c4797029c39a6',
-          'hex',
-        ),
-      ];
-      oracleEvent.eventMaturityEpoch = 1617170572;
-      oracleEvent.eventDescriptor = eventDescriptor;
-      oracleEvent.eventId = 'btc/usd';
+        'c3347aa29db9f5e619483a92e746be91982bc66127e856bee62daeb91148cb92',
+        'fbdffe731b410c1d735ad7ce868f40d5b4a44c29131b0feca0f9c28f3a5c2fee',
+        '4326fc9c19013d4ca30f9f5dc184a6dab417acd4486528f14dbae2d2279bd29e',
+        'dd88db0628df7e17ddcafe3a274518d0a4f6baa100308b5522ad099b27305b5b',
+        '448774d5544b0151f112dd6f1cfc28df0e575e38bb8acb5c164357ebdb8bd364',
+        '5b8dd47e80fe9c12741190a515ff7d8a801911ab64f8c6117303cf0f065ae055',
+        '4b1f14efbba6e3bf7e5f4c40d5735ff126f23ac9a41659a05bebdd3596eb8d56',
+        'd8d7524476c8f5e014a536cf513de7136fac9d3925d1f479c2f68b09ea3f43cd',
+        '3719a5d31121084fd9f25f77bf042d2da23075102acf59e3e592e8a3a2220940',
+        '64cf5b50bbc405c14078f82240aa38403fafcbee3c74c3e8ca361e60001cbc74',
+        '149631c02f1f26ead45f9560ffe6cb1684c8c068d6eb1f03fdd655827b9f2531',
+        '2669158073d4c5ebe4855e724b6650f8214697b17eeac1ef33a582d4efb73c90',
+        '6abaac5f261322a5097115aaadaeca025e4eae0cdfb26fc591bc05820606929e',
+        'b437c474dff5ed40fb7dcf298f5a1a70e95658135cb72008c3fbd515d86e59c3',
+        'f85acb02775200421eda2c99c4a12975c9ac0d460ae7c9340e814745df4ebb54',
+        '5a719fe0b7e44bab56448a4007f40a09f3adc57fcee18089d6334655c407a63a',
+        '27540f4887299b36646b7c2202aef86bb0e7e68efc508583039f74c41cb57d66',
+        'ed5b9a675d77506b71f597dc59e6777cbba054c82d3ba139e82d74ca717b0d0c',
+      ].map((hex) => Buffer.from(hex, 'hex'));
 
-      const oracleAnnouncement = new OracleAnnouncementV0();
+      oracleEvent.eventMaturityEpoch = 1635321600;
+      oracleEvent.eventDescriptor = eventDescriptor;
+      oracleEvent.eventId = 'Deribit-BTC-27OCT21';
+
+      oracleAnnouncement = new OracleAnnouncementV0();
       oracleAnnouncement.announcementSig = Buffer.from(
-        '86abd0a6bfd4eb3c922942b2b9dc73bde7c9dd8c7aa99002a8163c2e4b38cd62dec932dab7eaf0327464a70baa62af80e3a9f7338a2e99ef4ed8a5af264e36e2',
+        'c3347aa29db9f5e619483a92e746be91982bc66127e856bee62daeb91148cb92a1074a802a481c008ba44143c752e519c28d906658e5257d9d82e80ef66cbf0f',
         'hex',
       );
       oracleAnnouncement.oraclePubkey = Buffer.from(
-        'd2e95c66de1c365bfce6d8fcc31895bf3c2e77e7298c98e7ceadd0abaf8ee334',
+        '4f15b5e4b8000c33a8e5bbdbc6802375a7d6e7cefcfbf098aa51ce7da0f910c1',
         'hex',
       );
       oracleAnnouncement.oracleEvent = oracleEvent;
 
-      const oracleInfo = new OracleInfoV0();
+      oracleInfo = new OracleInfoV0();
       oracleInfo.announcement = oracleAnnouncement;
 
-      const hyperbolaPayoutCurvePiece = new HyperbolaPayoutCurvePiece();
+      hyperbolaPayoutCurvePiece = new HyperbolaPayoutCurvePiece();
       hyperbolaPayoutCurvePiece.usePositivePiece = true;
       hyperbolaPayoutCurvePiece.translateOutcomeSign = true;
       hyperbolaPayoutCurvePiece.translateOutcome = BigInt(0);
@@ -312,7 +270,7 @@ describe('OracleInfoV0', () => {
       hyperbolaPayoutCurvePiece.d = BigInt(4000000000);
       hyperbolaPayoutCurvePiece.dExtraPrecision = 0;
 
-      const payoutFunction = new PayoutFunctionV0();
+      payoutFunction = new PayoutFunctionV0();
       payoutFunction.endpoint0 = BigInt(0);
       payoutFunction.endpointPayout0 = BigInt(969482);
       payoutFunction.extraPrecision0 = 0;
@@ -324,7 +282,8 @@ describe('OracleInfoV0', () => {
           extraPrecision: 0,
         },
       ];
-
+    });
+    it('should throw Error if oracle numDigits does not match', () => {
       const roundingIntervals = new RoundingIntervalsV0();
       roundingIntervals.intervals = [
         {
@@ -334,7 +293,7 @@ describe('OracleInfoV0', () => {
       ];
 
       const contractDescriptor = new ContractDescriptorV1();
-      contractDescriptor.numDigits = contractDescriptorNumDigits;
+      contractDescriptor.numDigits = 5; // modified
       contractDescriptor.payoutFunction = payoutFunction;
       contractDescriptor.roundingIntervals = roundingIntervals;
 
@@ -348,135 +307,34 @@ describe('OracleInfoV0', () => {
       }).to.throw(Error);
     });
 
-    it('should throw Error if oracle nonces length different than nbDigits', () => {
-      const eventDescriptorNumDigits = 18;
-      const contractDescriptorNumDigits = 18;
-
-      const eventDescriptor = new DigitDecompositionEventDescriptorV0();
-      eventDescriptor.base = 2;
-      eventDescriptor.isSigned = false;
-      eventDescriptor.unit = 'BTC-USD';
-      eventDescriptor.precision = 0;
-      eventDescriptor.nbDigits = eventDescriptorNumDigits;
-
-      const oracleEvent = new OracleEventV0();
-      oracleEvent.oracleNonces = [
-        Buffer.from(
-          '86abd0a6bfd4eb3c922942b2b9dc73bde7c9dd8c7aa99002a8163c2e4b38cd62',
-          'hex',
-        ),
-        Buffer.from(
-          '892bd4e9e6721212f7564d6852d61079ee91e6ec34be9ac82d372ab95a30843b',
-          'hex',
-        ),
-        Buffer.from(
-          '51803a36bc1f730c4c98d4c42670e4032dddd95a3c1652b2605b6da4a183b557',
-          'hex',
-        ),
-        Buffer.from(
-          'f2251ae87c0e2beb60c446a7bddb6a5fc2f8a40f4f6654debe1cfea1c10cda60',
-          'hex',
-        ),
-        Buffer.from(
-          '8241d2e6ee7c8461dc97819388f70194288d971bdd1fb33ceecc3b385231e109',
-          'hex',
-        ),
-        Buffer.from(
-          'f40acbd8eb1f991af7a6cdecfb4ee55bc0c0cc0b0e57fd25c0806f527090b9f0',
-          'hex',
-        ),
-        Buffer.from(
-          'd1e1a0bdf4b77e51cd3cdf48ddcd4eacfe470093cf5c6d4efc6378c2707768ba',
-          'hex',
-        ),
-        Buffer.from(
-          'db378b479adcc1e8a2d9529660de84a83f670f10a1b132802475ab25e930bfe1',
-          'hex',
-        ),
-        Buffer.from(
-          'cc464acf38acf689392e2a42a285293dbc1508fd068ff71773af1aa9ba745035',
-          'hex',
-        ),
-        Buffer.from(
-          '22b35d2f0c8c57e3a05b1b3302184c04a13d993182e3b16164cd8aec8654f2e2',
-          'hex',
-        ),
-        Buffer.from(
-          'b86687fbdde1916777de543456ad0ca8b1fd53bd8bb27c63c4f8f2b8515266e6',
-          'hex',
-        ),
-        Buffer.from(
-          '3c1557ff94451f7f39a8813b4745da1a96e6557bf342b3673af227b868fea945',
-          'hex',
-        ),
-        Buffer.from(
-          '42d08251205359fda89476e54b6ca32cd2ffbcf114ca0054e8c2d3c75937fd12',
-          'hex',
-        ),
-        Buffer.from(
-          '1775f577eb78fcd6a2473fcc924b38f0131771acc43e0372393385cb16e2bb7b',
-          'hex',
-        ),
-        Buffer.from(
-          '0757f00df962a4cad733650fe954c0435beed69f660a1b0ad94cdbbe0b832c34',
-          'hex',
-        ),
-        Buffer.from(
-          '726fd163999a9696eaac31bc1fb9c3a09111afe01e48f1426febb145a4880bb2',
-          'hex',
-        ),
-      ];
-      oracleEvent.eventMaturityEpoch = 1617170572;
-      oracleEvent.eventDescriptor = eventDescriptor;
-      oracleEvent.eventId = 'btc/usd';
-
-      const oracleAnnouncement = new OracleAnnouncementV0();
-      oracleAnnouncement.announcementSig = Buffer.from(
-        '86abd0a6bfd4eb3c922942b2b9dc73bde7c9dd8c7aa99002a8163c2e4b38cd62dec932dab7eaf0327464a70baa62af80e3a9f7338a2e99ef4ed8a5af264e36e2',
-        'hex',
-      );
-      oracleAnnouncement.oraclePubkey = Buffer.from(
-        'd2e95c66de1c365bfce6d8fcc31895bf3c2e77e7298c98e7ceadd0abaf8ee334',
-        'hex',
-      );
-      oracleAnnouncement.oracleEvent = oracleEvent;
-
-      const oracleInfo = new OracleInfoV0();
-      oracleInfo.announcement = oracleAnnouncement;
-
-      const hyperbolaPayoutCurvePiece = new HyperbolaPayoutCurvePiece();
-      hyperbolaPayoutCurvePiece.usePositivePiece = true;
-      hyperbolaPayoutCurvePiece.translateOutcomeSign = true;
-      hyperbolaPayoutCurvePiece.translateOutcome = BigInt(0);
-      hyperbolaPayoutCurvePiece.translateOutcomeExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.translatePayoutSign = false;
-      hyperbolaPayoutCurvePiece.translatePayout = BigInt(30518);
-      hyperbolaPayoutCurvePiece.translatePayoutExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.aSign = true;
-      hyperbolaPayoutCurvePiece.a = BigInt(1);
-      hyperbolaPayoutCurvePiece.aExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.bSign = true;
-      hyperbolaPayoutCurvePiece.b = BigInt(0);
-      hyperbolaPayoutCurvePiece.bExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.cSign = true;
-      hyperbolaPayoutCurvePiece.c = BigInt(0);
-      hyperbolaPayoutCurvePiece.cExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.dSign = true;
-      hyperbolaPayoutCurvePiece.d = BigInt(4000000000);
-      hyperbolaPayoutCurvePiece.dExtraPrecision = 0;
-
-      const payoutFunction = new PayoutFunctionV0();
-      payoutFunction.endpoint0 = BigInt(0);
-      payoutFunction.endpointPayout0 = BigInt(969482);
-      payoutFunction.extraPrecision0 = 0;
-      payoutFunction.pieces = [
+    it('should throw Error if roundingMod is too big', () => {
+      const roundingIntervals = new RoundingIntervalsV0();
+      roundingIntervals.intervals = [
         {
-          payoutCurvePiece: hyperbolaPayoutCurvePiece,
-          endpoint: BigInt(131071),
-          endpointPayout: BigInt(0),
-          extraPrecision: 0,
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(1000000),
         },
       ];
+
+      const contractDescriptor = new ContractDescriptorV1();
+      contractDescriptor.numDigits = contractDescriptorNumDigits;
+      contractDescriptor.payoutFunction = payoutFunction;
+      contractDescriptor.roundingIntervals = roundingIntervals;
+
+      const contractInfo = new ContractInfoV0();
+      contractInfo.totalCollateral = BigInt(969482);
+      contractInfo.contractDescriptor = contractDescriptor;
+      contractInfo.oracleInfo = oracleInfo;
+
+      expect(function () {
+        contractInfo.validate();
+      }).to.throw(
+        'Rounding modulus 1000000 is greater than total collateral 969482',
+      );
+    });
+
+    it('should throw Error if oracle nonces length different than nbDigits', () => {
+      oracleInfo.announcement.oracleEvent.oracleNonces.pop();
 
       const roundingIntervals = new RoundingIntervalsV0();
       roundingIntervals.intervals = [
@@ -498,7 +356,9 @@ describe('OracleInfoV0', () => {
 
       expect(function () {
         contractInfo.validate();
-      }).to.throw(Error);
+      }).to.throw(
+        'OracleEvent oracleNonces length must match DigitDecompositionEventDescriptor nbDigits',
+      );
     });
   });
 });

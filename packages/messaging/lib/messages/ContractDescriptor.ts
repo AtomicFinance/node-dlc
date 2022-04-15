@@ -158,6 +158,15 @@ export class ContractDescriptorV1
   public roundingIntervals: RoundingIntervalsV0;
 
   /**
+   * Validates correctness of all fields in the message
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#the-contract_descriptor-type
+   * @throws Will throw an error if validation fails
+   */
+  public validate(): void {
+    this.roundingIntervals.validate();
+  }
+
+  /**
    * Converts contract_descriptor_v1 to JSON
    */
   public toJSON(): ContractDescriptorV1JSON {

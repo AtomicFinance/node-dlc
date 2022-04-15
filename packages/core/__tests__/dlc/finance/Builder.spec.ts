@@ -1,5 +1,6 @@
 import { OracleAnnouncementV0 } from '@node-dlc/messaging';
 import { expect } from 'chai';
+import sinon from 'sinon';
 
 import {
   buildCoveredCallOrderOffer,
@@ -23,6 +24,8 @@ describe('OrderOffer Builder', () => {
     );
 
     it('should build a covered call OrderOffer correctly', () => {
+      sinon.stub(Date.prototype, 'getTime').returns(Date.UTC(2021, 1, 5));
+
       const orderOffer = buildCoveredCallOrderOffer(
         oracleAnnouncement,
         contractSize,

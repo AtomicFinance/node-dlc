@@ -10,6 +10,7 @@ import {
 } from './ContractDescriptor';
 import { DlcMessage, IDlcMessage } from './DlcMessage';
 import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
+import { OracleEventV0 } from './OracleEventV0';
 import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
 
 export abstract class ContractInfo extends DlcMessage {
@@ -82,6 +83,11 @@ export class ContractInfoV0 implements IDlcMessage {
 
   public oracleInfo: OracleInfoV0;
 
+  /**
+   * Validates correctness of all fields in the message
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#the-contract_info-type
+   * @throws Will throw an error if validation fails
+   */
   public validate(): void {
     this.oracleInfo.validate();
     switch (this.contractDescriptor.type) {
@@ -89,6 +95,17 @@ export class ContractInfoV0 implements IDlcMessage {
         // eslint-disable-next-line no-case-declarations
         const contractDescriptor = this
           .contractDescriptor as ContractDescriptorV1;
+        contractDescriptor.validate();
+
+        // roundingmod should not be greater than totalCollateral
+        for (const interval of contractDescriptor.roundingIntervals.intervals) {
+          if (interval.roundingMod > this.totalCollateral) {
+            throw new Error(
+              `Rounding modulus ${interval.roundingMod} is greater than total collateral ${this.totalCollateral}`,
+            );
+          }
+        }
+
         switch (this.oracleInfo.announcement.oracleEvent.eventDescriptor.type) {
           case MessageType.DigitDecompositionEventDescriptorV0:
             // eslint-disable-next-line no-case-declarations
@@ -98,6 +115,18 @@ export class ContractInfoV0 implements IDlcMessage {
               throw new Error(
                 'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
               );
+
+            // Sanity check. Shouldn't be hit since there are other validations which should catch this in OracleEventV0.
+            // eslint-disable-next-line no-case-declarations
+            const oracleEvent = this.oracleInfo.announcement
+              .oracleEvent as OracleEventV0;
+            if (
+              oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
+            ) {
+              throw new Error(
+                'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
+              );
+            }
             break;
           default:
             throw new Error(
@@ -180,6 +209,11 @@ export class ContractInfoV1 implements IDlcMessage {
 
   public contractOraclePairs: IContractOraclePair[] = [];
 
+  /**
+   * Validates correctness of all fields in the message
+   * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#the-contract_info-type
+   * @throws Will throw an error if validation fails
+   */
   public validate(): void {
     this.contractOraclePairs.forEach((oraclePair) => {
       oraclePair.oracleInfo.validate();
@@ -187,6 +221,8 @@ export class ContractInfoV1 implements IDlcMessage {
         case MessageType.ContractDescriptorV1:
           // eslint-disable-next-line no-case-declarations
           const contractDescriptor = oraclePair.contractDescriptor as ContractDescriptorV1;
+          contractDescriptor.validate();
+
           switch (
             oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
           ) {
@@ -199,6 +235,16 @@ export class ContractInfoV1 implements IDlcMessage {
                 throw new Error(
                   'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
                 );
+              // eslint-disable-next-line no-case-declarations
+              const oracleEvent = oraclePair.oracleInfo.announcement
+                .oracleEvent as OracleEventV0;
+              if (
+                oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
+              ) {
+                throw new Error(
+                  'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
+                );
+              }
           }
       }
     });

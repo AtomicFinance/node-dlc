@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { MessageType } from '../../lib';
+import { LOCKTIME_THRESHOLD, MessageType } from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import {
   IOrderIrcInfoJSON,
@@ -365,6 +365,92 @@ describe('OrderOffer', () => {
       expect((json.tlvs[i] as IOrderIrcInfoJSON).nick).to.equal(
         (instance.ircInfo as OrderIrcInfoV0).nick,
       );
+    });
+  });
+
+  describe('validate', () => {
+    let instance: OrderOfferV0;
+    beforeEach(() => {
+      instance = OrderOfferV0.deserialize(buf);
+    });
+
+    it('should throw if offerCollateralSatoshis is less than 1000', () => {
+      instance.offerCollateralSatoshis = BigInt(999);
+      expect(function () {
+        instance.validate();
+      }).to.throw(
+        'offer_collateral_satoshis must be greater than or equal to 1000',
+      );
+
+      // boundary check
+      instance.offerCollateralSatoshis = BigInt(1000);
+      expect(function () {
+        instance.validate();
+      }).to.not.throw();
+    });
+
+    it('should throw if cet_locktime is less than 0', () => {
+      instance.cetLocktime = -1;
+      expect(() => {
+        instance.validate();
+      }).to.throw('cet_locktime must be greater than or equal to 0');
+    });
+
+    it('should throw if refund_locktime is less than 0', () => {
+      instance.refundLocktime = -1;
+      expect(() => {
+        instance.validate();
+      }).to.throw('refund_locktime must be greater than or equal to 0');
+    });
+
+    it('should throw if cet_locktime and refund_locktime are not in same units', () => {
+      instance.cetLocktime = 100;
+      instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
+      expect(function () {
+        instance.validate();
+      }).to.throw(Error);
+    });
+
+    it('should not throw if cet_locktime and refund_locktime are in same units', () => {
+      instance.cetLocktime = 100;
+      instance.refundLocktime = 200;
+      expect(function () {
+        instance.validate();
+      }).to.not.throw(Error);
+
+      instance.cetLocktime = LOCKTIME_THRESHOLD + 100;
+      instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
+      expect(function () {
+        instance.validate();
+      }).to.not.throw(Error);
+    });
+
+    it('should throw if cet_locktime >= refund_locktime', () => {
+      instance.cetLocktime = 200;
+      instance.refundLocktime = 100;
+      expect(function () {
+        instance.validate();
+      }).to.throw(Error);
+
+      instance.cetLocktime = 100;
+      instance.refundLocktime = 100;
+      expect(function () {
+        instance.validate();
+      }).to.throw(Error);
+    });
+
+    it('should throw if totalCollateral <= offerCollateral', () => {
+      instance.contractInfo.totalCollateral = BigInt(200000000);
+      instance.offerCollateralSatoshis = BigInt(200000000);
+      expect(function () {
+        instance.validate();
+      }).to.throw(Error);
+
+      instance.contractInfo.totalCollateral = BigInt(200000000);
+      instance.offerCollateralSatoshis = BigInt(200000001);
+      expect(function () {
+        instance.validate();
+      }).to.throw(Error);
     });
   });
 });

@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
-import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import {
+  DigitDecompositionEventDescriptorV0,
+  EnumEventDescriptorV0,
+} from '../../lib/messages/EventDescriptor';
 import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 
 describe('OracleEventV0', () => {
@@ -85,6 +88,56 @@ describe('OracleEventV0', () => {
           '64756d6d7932', // outcome_2
       );
       expect(instance.eventId).to.equal(eventId.toString());
+    });
+  });
+
+  describe('validate', () => {
+    const instance = new OracleEventV0();
+
+    beforeEach(() => {
+      instance.length = BigInt(64);
+      instance.oracleNonces.push(oracleNonce);
+      instance.eventMaturityEpoch = 0;
+      instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
+        Buffer.from(
+          'fdd806' + // type enum_event_descriptor
+            '10' + // length
+            '0002' + // num_outcomes
+            '06' + // outcome_1_len
+            '64756d6d7931' + // outcome_1
+            '06' + // outcome_2_len
+            '64756d6d7932', // outcome_2
+          'hex',
+        ),
+      );
+      instance.eventId = eventId.toString();
+    });
+
+    it('should not throw error', () => {
+      expect(() => instance.validate()).to.not.throw();
+    });
+
+    it('should throw if eventMaturityEpoch is less than 0', () => {
+      instance.eventMaturityEpoch = -1;
+      expect(() => instance.validate()).to.throw();
+    });
+
+    it('should throw if oracleNonces.length !== eventDescriptor.nbDigits', () => {
+      instance.eventDescriptor = DigitDecompositionEventDescriptorV0.deserialize(
+        Buffer.from(
+          'fdd80a' + // type
+            '11' + // length
+            '0002' + // base (Switch to '02' with oracle_announcement_v1)
+            '00' + // isSigned
+            '07' + // unit_Len
+            '6274632f757364' + // btc/usd (unit)
+            '00000000' + // precision
+            '0011', // nb_digits
+          'hex',
+        ),
+      ); // prettier-ignore);
+      instance.oracleNonces = [];
+      expect(() => instance.validate()).to.throw();
     });
   });
 });
