@@ -17,7 +17,6 @@ import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
 
 export interface IDlcMessage {
-  type: MessageType;
   serialize(): Buffer;
 }
 
