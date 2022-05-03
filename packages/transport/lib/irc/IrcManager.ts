@@ -3,7 +3,7 @@ import { Base58 } from '@node-lightning/bitcoin';
 import { sha256 } from '@node-lightning/crypto';
 import { ECPair } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
-import irc from 'irc';
+import irc from 'irc-upd';
 import secp256k1 from 'secp256k1';
 
 import { ChannelType } from './ChannelType';
