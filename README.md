@@ -34,7 +34,7 @@ Many elements of the project as well as components are inspired by [Node-Lightni
 `@node-dlc/messaging` and `@node-dlc/core` packages implement many aspects of the DLC Specification
 
 Note: These packages contains functionality for message **generation**, **serialization** and **deserialization** and contain no logic for wallet functionality
-For DLC wallet functionality, you can check out [ChainAbstractionLayer-Finance](https://github.com/atomicfinance/chainabstractionlayer-finance) which uses [Node-DLC](https://github.com/AtomicFinance/node-dlc) messaging functionality and [Liquality ChainAbstractionLayer](https://github.com/liquality/chainabstractionlayer) wallet functionality to enable easy creation of wallets with the capability of entering into DLCs.
+For DLC wallet functionality, you can check out [Chainify-Finance](https://github.com/atomicfinance/chainify-finance) which uses [Node-DLC](https://github.com/AtomicFinance/node-dlc) messaging functionality and [Liquality Chainify](https://github.com/liquality/chainify) wallet functionality to enable easy creation of wallets with the capability of entering into DLCs.
 
 Implemented features:
 
