@@ -1,5 +1,4 @@
 // tslint:disable: no-unused-expression
-import { sleep } from '@liquality/utils';
 import { ECPair } from 'bitcoinjs-lib';
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
@@ -7,6 +6,7 @@ import sinonChai from 'sinon-chai';
 import { ChannelType } from '../../lib/irc/ChannelType';
 import { IrcManager } from '../../lib/irc/IrcManager';
 import { IrcServers } from '../../lib/irc/Servers';
+import { sleep } from '../util';
 import { createFakeLogger } from './helpers';
 
 chai.should();

@@ -1,9 +1,9 @@
-import { sleep } from '@liquality/utils';
 import { Tx } from '@node-lightning/bitcoin';
 import { Block, Transaction } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
 
 import { DlcTransactionsV0 } from '../messages/DlcTransactions';
+import { sleep } from '../util';
 import { IDlcStore } from './DlcStore';
 import {
   HasHash,
