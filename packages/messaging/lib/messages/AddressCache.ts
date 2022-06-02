@@ -1,5 +1,5 @@
-import { BitcoinNetwork } from '@liquality/bitcoin-networks';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 
 import { MessageType } from '../MessageType';

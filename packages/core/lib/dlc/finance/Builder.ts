@@ -1,5 +1,3 @@
-import { chainHashFromNetwork } from '@atomicfinance/bitcoin-networks';
-import { BitcoinNetworks } from '@liquality/bitcoin-networks';
 import {
   ContractDescriptorV1,
   ContractInfoV0,
@@ -11,6 +9,7 @@ import {
   PayoutFunctionV0,
   RoundingIntervalsV0,
 } from '@node-dlc/messaging';
+import { BitcoinNetworks, chainHashFromNetwork } from 'bitcoin-networks';
 
 import { CoveredCall } from './CoveredCall';
 import { ShortPut } from './ShortPut';
