@@ -1,4 +1,4 @@
-import BitcoinNetworks from '@liquality/bitcoin-networks';
+import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
 import { AddressCache, IAddressCache } from '../../lib/messages/AddressCache';
