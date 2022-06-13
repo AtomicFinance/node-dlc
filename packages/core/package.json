@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@node-dlc/messaging": "^0.19.2",
-    "@node-lightning/bitcoin": "0.26.1",
-    "@node-lightning/core": "0.26.1",
+    "@node-lightning/bitcoin": "0.27.0",
+    "@node-lightning/core": "0.27.0",
     "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0"
   },
