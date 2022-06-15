@@ -15,6 +15,7 @@ import { LinearPayout } from '../../../lib';
 import {
   getCsoInfoFromContractInfo,
   getCsoInfoFromOffer,
+  validateCsoPayoutFunction,
 } from '../../../lib/dlc/finance/CsoInfo';
 
 const buildCsoDlcOfferFixture = (
@@ -58,23 +59,24 @@ const buildCsoDlcOfferFixture = (
 };
 
 describe('CsoInfo', () => {
+  const minPayout = 60000000n;
+  const maxPayout = 100000000n;
+  const startOutcome = 800000n;
+  const endOutcome = 1200000n;
+  const offerCollateralValue = 80000000n;
+
+  const oracleBase = 2;
+  const oracleDigits = 21;
+
+  const expiry = new Date(1620014750000);
+
+  const maxGain = Value.fromBitcoin(0.2);
+  const maxLoss = Value.fromBitcoin(0.2);
+
+  const contractSize = Value.fromBitcoin(1);
+  const offerCollateral = Value.fromBitcoin(0.8);
+
   describe('CsoInfo from linear curve message', () => {
-    const minPayout = 60000000n;
-    const maxPayout = 100000000n;
-    const offerCollateralValue = 80000000n;
-    const startOutcome = 800000n;
-    const endOutcome = 1200000n;
-    const oracleBase = 2;
-    const oracleDigits = 21;
-
-    const expiry = new Date(1620014750000);
-
-    const maxGain = Value.fromBitcoin(0.2);
-    const maxLoss = Value.fromBitcoin(0.2);
-
-    const contractSize = Value.fromBitcoin(1);
-    const offerCollateral = Value.fromBitcoin(0.8);
-
     const { payoutFunction } = LinearPayout.buildPayoutFunction(
       minPayout,
       maxPayout,
@@ -119,5 +121,39 @@ describe('CsoInfo', () => {
         offerCollateral,
       });
     });
+  });
+
+  describe('validateCsoPayoutFunction', () => {
+    it('should throw if event outcome is not an ascending line', () => {
+      const startOutcome = 900000n;
+      const endOutcome = 900000n;
+
+      const { payoutFunction } = LinearPayout.buildPayoutFunction(
+        minPayout,
+        maxPayout,
+        startOutcome,
+        endOutcome,
+        oracleBase,
+        oracleDigits,
+      );
+
+      expect(() => validateCsoPayoutFunction(payoutFunction)).to.throw(Error);
+    });
+  });
+
+  it('should throw if maxLoss to maxGain is not an ascending line', () => {
+    const minPayout = 100000000n;
+    const maxPayout = 100000000n;
+
+    const { payoutFunction } = LinearPayout.buildPayoutFunction(
+      minPayout,
+      maxPayout,
+      startOutcome,
+      endOutcome,
+      oracleBase,
+      oracleDigits,
+    );
+
+    expect(() => validateCsoPayoutFunction(payoutFunction)).to.throw(Error);
   });
 });

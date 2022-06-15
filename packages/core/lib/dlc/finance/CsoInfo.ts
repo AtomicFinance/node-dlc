@@ -8,6 +8,7 @@ import {
   PolynomialPayoutCurvePiece,
 } from '@node-dlc/messaging';
 import { Value } from '@node-lightning/bitcoin';
+import assert from 'assert';
 
 import { UNIT_MULTIPLIER } from './Builder';
 import { HasContractInfo, HasType } from './OptionInfo';
@@ -21,6 +22,14 @@ export interface CsoInfo {
   offerCollateral: Value;
 }
 
+const ONE_BTC_CONTRACT = Value.fromBitcoin(1);
+
+/**
+ * Get CsoInfo from Contract Info and validate
+
+ * @param {ContractInfo} _contractInfo
+ * @returns {CsoInfo}
+ */
 export const getCsoInfoFromContractInfo = (
   _contractInfo: ContractInfo,
 ): CsoInfo => {
@@ -47,34 +56,25 @@ export const getCsoInfoFromContractInfo = (
     throw Error('Only PayoutFunctionV0 currently supported');
 
   const payoutFunction = contractDescriptor.payoutFunction as PayoutFunctionV0;
-  if (payoutFunction.pieces.length === 0)
-    throw Error('PayoutFunction must have at least one PayoutCurvePiece');
-  if (payoutFunction.pieces.length < 3)
-    throw Error('Must be at least 3 PayoutCurvePieces');
 
-  const payoutCurvePiece = payoutFunction.pieces[0]
-    .payoutCurvePiece as PolynomialPayoutCurvePiece;
-  if (payoutCurvePiece.type !== MessageType.PolynomialPayoutCurvePiece)
-    throw Error('Must be PolynomialPayoutCurvePiece');
+  validateCsoPayoutFunction(payoutFunction);
 
   const initialPiece = payoutFunction.pieces[0];
-  const finalPiece = payoutFunction.pieces[1];
+  const midPiece = payoutFunction.pieces[1];
 
   const minPayout = initialPiece.endpointPayout;
-  const maxPayout = finalPiece.endpointPayout;
+  const maxPayout = midPiece.endpointPayout;
 
   const startOutcome = initialPiece.endpoint;
-  const endOutcome = finalPiece.endpoint;
+  const endOutcome = midPiece.endpoint;
 
   const unit = eventDescriptor.unit;
 
-  const defaultContract = Value.fromBitcoin(1);
-
   const maxGain = Value.fromSats(
-    endOutcome * UNIT_MULTIPLIER[unit.toLowerCase()] - defaultContract.sats,
+    endOutcome * UNIT_MULTIPLIER[unit.toLowerCase()] - ONE_BTC_CONTRACT.sats,
   );
   const maxLoss = Value.fromSats(
-    defaultContract.sats - startOutcome * UNIT_MULTIPLIER[unit.toLowerCase()],
+    ONE_BTC_CONTRACT.sats - startOutcome * UNIT_MULTIPLIER[unit.toLowerCase()],
   );
 
   const contractSize = Value.fromSats(contractInfo.totalCollateral);
@@ -93,6 +93,12 @@ export const getCsoInfoFromContractInfo = (
   };
 };
 
+/**
+ * Get CsoInfo from OrderOffer or DlcOffer and validate
+ *
+ * @param {HasContractInfo & HasType} offer
+ * @returns {CsoInfo}
+ */
 export const getCsoInfoFromOffer = (
   offer: HasContractInfo & HasType,
 ): CsoInfo => {
@@ -103,4 +109,75 @@ export const getCsoInfoFromOffer = (
     throw Error('Only DlcOfferV0 and OrderOfferV0 currently supported');
 
   return getCsoInfoFromContractInfo(offer.contractInfo);
+};
+
+/**
+ * Validate Payout Function for proper CSO format
+ *
+ * It should have 3 PayoutCurvePieces which consist of a flat line (maxLoss),
+ * ascending line (maxLoss to maxGain) and finally another flat line (maxGain)
+ *
+ * All PayoutCurvePieces should be type PolynomialPayoutCurvePieces
+ *
+ * @param {PayoutFunctionV0} payoutFunction
+ */
+export const validateCsoPayoutFunction = (
+  payoutFunction: PayoutFunctionV0,
+): void => {
+  assert(
+    payoutFunction.pieces.length === 3,
+    'CSO Payout Function must have 3 PayoutCurvePieces',
+  );
+  for (const [i, piece] of payoutFunction.pieces.entries()) {
+    assert(
+      piece.payoutCurvePiece.type === MessageType.PolynomialPayoutCurvePiece,
+      'CSO Payout Function PayoutCurvePieces must be PolynomialCurvePieces',
+    );
+
+    const payoutCurvePiece = piece.payoutCurvePiece as PolynomialPayoutCurvePiece;
+    const points = payoutCurvePiece.points;
+
+    // eventOutcome should always be ascending
+    assert(
+      points[0].eventOutcome < points[1].eventOutcome,
+      'CSO Payout Function PayoutCurvePiece point payout should be an ascending line',
+    );
+
+    // endpoints should always be ascending
+    let previousPiece;
+    if (i > 0) {
+      previousPiece = payoutFunction.pieces[i - 1];
+      assert(previousPiece.endpoint < piece.endpoint);
+    }
+
+    switch (i) {
+      case 0:
+        // endpoints should always be ascending
+        assert(payoutFunction.endpoint0 < piece.endpoint);
+
+        // maxLoss should be a flat line
+        assert(payoutFunction.endpointPayout0 === piece.endpointPayout);
+        assert(
+          points[0].outcomePayout === points[1].outcomePayout,
+          'CSO Payout Function maxLoss PayoutCurvePiece point should be a flat line',
+        );
+        break;
+      case 1:
+        // maxLoss to maxGain should be an ascending line
+        assert(previousPiece.endpointPayout < piece.endpointPayout);
+        assert(
+          points[0].outcomePayout < points[1].outcomePayout,
+          'CSO Payout Function maxLoss to maxGain PayoutCurvePiece point should be an ascending line',
+        );
+        break;
+      case 2:
+        // maxGain should be a flat line
+        assert(previousPiece.endpointPayout === piece.endpointPayout);
+        assert(
+          points[0].outcomePayout === points[1].outcomePayout,
+          'CSO Payout Function maxGain PayoutCurvePiece point should be a flat line',
+        );
+        break;
+    }
+  }
 };
