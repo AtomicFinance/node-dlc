@@ -298,7 +298,9 @@ export const buildLinearOrderOffer = (
   network: BitcoinNetwork,
 ): OrderOfferV0 => {
   if (maxPayout.lt(minPayout))
-    throw Error('Max Payout must be greater than Min Payout');
+    throw Error('maxPayout must be greater than minPayout');
+  if (endOutcome < startOutcome)
+    throw Error('endOutcome must be greater than startOutcome');
 
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
