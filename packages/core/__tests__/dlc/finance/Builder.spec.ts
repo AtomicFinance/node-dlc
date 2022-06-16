@@ -1,11 +1,24 @@
-import { OracleAnnouncementV0 } from '@node-dlc/messaging';
+import {
+  ContractDescriptorV1,
+  ContractInfoV0,
+  OracleAnnouncementV0,
+  PayoutFunctionV0,
+} from '@node-dlc/messaging';
+import { Value } from '@node-lightning/bitcoin';
+import {
+  BitcoinNetwork,
+  BitcoinNetworks,
+  chainHashFromNetwork,
+} from 'bitcoin-networks';
 import { expect } from 'chai';
 import sinon from 'sinon';
 
 import {
   buildCoveredCallOrderOffer,
+  buildCustomStrategyOrderOffer,
   buildShortPutOrderOffer,
   computeRoundingModulus,
+  UNIT_MULTIPLIER,
 } from '../../../lib';
 
 describe('OrderOffer Builder', () => {
@@ -66,6 +79,91 @@ describe('OrderOffer Builder', () => {
         12,
         10000,
         'bitcoin',
+      );
+
+      expect(() => orderOffer.validate()).to.throw(Error);
+    });
+  });
+
+  describe('buildCustomStrategyOrderOffer', () => {
+    const contractSizes: Value[] = [
+      Value.fromBitcoin(1),
+      Value.fromBitcoin(0.1),
+      Value.fromBitcoin(0.5),
+      Value.fromBitcoin(1.5),
+      Value.fromBitcoin(2),
+    ];
+
+    const defaultContractSize = Value.fromBitcoin(1);
+
+    const maxLoss = Value.fromBitcoin(0.2);
+    const maxGain = Value.fromBitcoin(0.04);
+    const feeRate = 2n;
+    const rounding = Value.fromSats(25000);
+    const network = BitcoinNetworks.bitcoin;
+
+    const oracleAnnouncementBuf = Buffer.from(
+      'fdd824fd032e4a2b121973a7d2be4784fb6fb0c7b97405b757fb078b58bb729756a7372bf1bdc05c373472fc57fde0a07dcdad027f48f313fa1e349ab8bb936472735fce5221ff9c4885aa0c5987046ada7e729dac33591777a37af8bf14dedb95997d0c7d4bfdd822fd02c800154a2b121973a7d2be4784fb6fb0c7b97405b757fb078b58bb729756a7372bf1bdd7cb55eee59faac9a590e7d3bab782276daa0744786aaff3f69a1e51de99012339492f00198932d8057eb6742bd5245e37fd22b44e0bfaa68577ce5654b478786eb7dc091559699292dc060ee82864cffd863eb8fa876682099af34a8f3eab9174773231e6950b077df212df3fc91c199c34200cd8ce00f1c8a050ad471bfc1478e90d06bd77f11fc3804435556ed5dc1eb19b95a978f595ba127ea225c4662e22ea614cab60054d9b21da904cd9eac5b514a6a011de635ad08e0c72766a7bbc9144df24fe6bf3e0d631a61a1da27e93c6f4ea6829795f4c63628747415a41ffe199129639d7a6c430184aa925b9ab224c9180b64c86959bd7abc9ffa08fe4421952114839d5120f4ea9c9437364b4956b25a141aeefbc30d3e6cc811f9424d266671dc330b7f3d00f1f7a521e14697a0259499e6cc8fa0da13a095279f827cfe2cf11508c6d8d1405f6cb337d68fbe29fde5acbb094ff397c14c24f084ac6ef466b1d85d5160de41ed8ed435ab52f948788dc45406e07f02683c9822431d91d95a04e11e4fdb521485aa8737bdd8c67cfefd0d103f86005491181e704adafc7f49cc9700ce8cffda9c9b265bc64ed19b42d4b5e4449f6b0da81342923c45f37b1381b3a29b9acce9818f4ec6af0ecbddc063e64868f350281054d13599e6e35d503532b6fa9c0db85db703dde1de21142b351ecce626128f98ddb5dab11f669c16de45d3dd054786aa5e3fb6369114b97bee6c26d21be0f71258dfa3e8ec8b8890719eef8e817b69072f74325088781a50b4cd5fe74493828dfe9cb21b698901e48f9f4d7b70a636794feae500aac237add2630bad1257b0cac1b71a8fcd5dbd7540a84ccac5d48b76afae2b3dfe3ea8eb8cd6e67febb6a1433504329948e426064108cfdd80a0e00020004626974730000000000150f73747261746567794f7574636f6d65',
+      'hex',
+    );
+
+    const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+      oracleAnnouncementBuf,
+    );
+
+    const unit = 'bits';
+
+    for (const contractSize of contractSizes) {
+      it(`should build a CSO OrderOffer with contract size ${contractSize.bitcoin} BTC correctly`, () => {
+        const orderOffer = buildCustomStrategyOrderOffer(
+          oracleAnnouncement,
+          contractSize,
+          maxLoss,
+          maxGain,
+          feeRate,
+          rounding,
+          network,
+        );
+
+        const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
+          .contractDescriptor as ContractDescriptorV1)
+          .payoutFunction as PayoutFunctionV0).pieces;
+
+        expect(() => orderOffer.validate()).to.not.throw(Error);
+        expect(orderOffer.contractInfo.totalCollateral).to.equal(
+          contractSize.sats,
+        );
+        expect(orderOffer.offerCollateralSatoshis).to.equal(
+          contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
+        );
+        expect(payoutCurvePieces[0].endpoint).to.equal(
+          (defaultContractSize.sats - maxLoss.sats) /
+            BigInt(UNIT_MULTIPLIER[unit]),
+        );
+        expect(payoutCurvePieces[1].endpoint).to.equal(
+          (defaultContractSize.sats + maxGain.sats) /
+            BigInt(UNIT_MULTIPLIER[unit]),
+        );
+        expect(payoutCurvePieces[0].endpointPayout).to.equal(
+          contractSize.sats -
+            (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
+            (maxGain.sats * contractSize.sats) / BigInt(1e8),
+        );
+        expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+      });
+    }
+
+    it('should fail to build a CSO OrderOffer with an invalid oracleAnnouncement', () => {
+      oracleAnnouncement.announcementSig = Buffer.from('deadbeef', 'hex');
+
+      const orderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSizes[0],
+        maxLoss,
+        maxGain,
+        feeRate,
+        rounding,
+        network,
       );
 
       expect(() => orderOffer.validate()).to.throw(Error);
