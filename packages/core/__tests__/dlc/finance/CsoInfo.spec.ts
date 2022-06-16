@@ -7,6 +7,7 @@ import {
   OracleEventV0,
   OracleInfoV0,
   PayoutFunctionV0,
+  PolynomialPayoutCurvePiece,
 } from '@node-dlc/messaging';
 import { Value } from '@node-lightning/bitcoin';
 import { expect } from 'chai';
@@ -152,6 +153,25 @@ describe('CsoInfo', () => {
       endOutcome,
       oracleBase,
       oracleDigits,
+    );
+
+    expect(() => validateCsoPayoutFunction(payoutFunction)).to.throw(Error);
+  });
+
+  it('should throw if Payout Function point outcome payout not continuous', () => {
+    const { payoutFunction } = LinearPayout.buildPayoutFunction(
+      minPayout,
+      maxPayout,
+      startOutcome,
+      endOutcome,
+      oracleBase,
+      oracleDigits,
+    );
+
+    // Subtract 1 from outcomePayout to create gap in point outcome payout
+    (payoutFunction.pieces[0]
+      .payoutCurvePiece as PolynomialPayoutCurvePiece).points[1].outcomePayout -= BigInt(
+      1,
     );
 
     expect(() => validateCsoPayoutFunction(payoutFunction)).to.throw(Error);

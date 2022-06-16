@@ -144,10 +144,18 @@ export const validateCsoPayoutFunction = (
     );
 
     // endpoints should always be ascending
-    let previousPiece;
+    let previousPiece, previousPoints;
     if (i > 0) {
       previousPiece = payoutFunction.pieces[i - 1];
-      assert(previousPiece.endpoint < piece.endpoint);
+      previousPoints = previousPiece.payoutCurvePiece.points;
+      assert(
+        previousPiece.endpoint < piece.endpoint,
+        'CSO Payout Function point endpoints should be an ascending line',
+      );
+      assert(
+        previousPoints[1].outcomePayout === points[0].outcomePayout,
+        'CSO Payout Function point outcome payout should be continuous without gaps',
+      );
     }
 
     switch (i) {
