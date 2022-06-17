@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/core",
-  "version": "0.19.4",
+  "version": "0.19.5",
   "description": "DLC Core",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -23,8 +23,8 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/messaging": "0.19.4",
-    "@node-dlc/bitcoin": "0.19.4",
+    "@node-dlc/bitcoin": "^0.19.5",
+    "@node-dlc/messaging": "^0.19.5",
     "@node-lightning/core": "0.26.1",
     "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0"
