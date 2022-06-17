@@ -1,9 +1,8 @@
 {
-  "name": "@node-dlc/core",
+  "name": "@node-dlc/bitcoin",
   "version": "0.19.4",
-  "description": "DLC Core",
+  "description": "DLC bitcoin",
   "scripts": {
-    "start": "npm run build && node dist/index.js",
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
     "lint": "../../node_modules/.bin/eslint --ignore-path ../../.eslintignore  -c ../../.eslintrc.js .",
     "lint:fix": "../../node_modules/.bin/eslint --fix --ignore-path ../../.eslintignore  -c ../../.eslintrc.js .",
@@ -12,25 +11,15 @@
   },
   "keywords": [
     "dlc",
-    "core"
+    "bitcoin"
   ],
   "author": "Atomic Finance <info@atomic.finance>",
-  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/daemon",
+  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/bitcoin",
   "license": "MIT",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
-  },
-  "dependencies": {
-    "@node-dlc/messaging": "0.19.4",
-    "@node-dlc/bitcoin": "0.19.4",
-    "@node-lightning/core": "0.26.1",
-    "bignumber.js": "^9.0.1",
-    "bitcoin-networks": "^1.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "16.10.3"
   },
   "publishConfig": {
     "access": "public"

@@ -1,3 +1,4 @@
+import { Value } from '@node-dlc/bitcoin';
 import {
   ContractDescriptorV1,
   ContractInfo,
@@ -7,7 +8,6 @@ import {
   PayoutFunctionV0,
   PolynomialPayoutCurvePiece,
 } from '@node-dlc/messaging';
-import { Value } from '@node-lightning/bitcoin';
 import assert from 'assert';
 
 import { UNIT_MULTIPLIER } from './Builder';

@@ -1,3 +1,4 @@
+import { Value } from '@node-dlc/bitcoin';
 import {
   ContractDescriptorV1,
   ContractInfoV0,
@@ -9,7 +10,6 @@ import {
   PayoutFunctionV0,
   RoundingIntervalsV0,
 } from '@node-dlc/messaging';
-import { Value } from '@node-lightning/bitcoin';
 import {
   BitcoinNetwork,
   BitcoinNetworks,
