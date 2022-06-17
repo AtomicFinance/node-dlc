@@ -1,15 +1,11 @@
+import { Value } from '@node-dlc/bitcoin';
 import {
   ContractDescriptorV1,
   ContractInfoV0,
   OracleAnnouncementV0,
   PayoutFunctionV0,
 } from '@node-dlc/messaging';
-import { Value } from '@node-lightning/bitcoin';
-import {
-  BitcoinNetwork,
-  BitcoinNetworks,
-  chainHashFromNetwork,
-} from 'bitcoin-networks';
+import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 import sinon from 'sinon';
 
