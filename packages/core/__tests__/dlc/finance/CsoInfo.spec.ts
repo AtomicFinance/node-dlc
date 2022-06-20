@@ -122,6 +122,29 @@ describe('CsoInfo', () => {
         offerCollateral,
       });
     });
+
+    it('should throw if offerCollateralSatoshis does not match calculated offerCollateral', () => {
+      const { payoutFunction } = LinearPayout.buildPayoutFunction(
+        minPayout,
+        maxPayout,
+        startOutcome,
+        endOutcome,
+        oracleBase,
+        oracleDigits,
+      );
+
+      const dlcOffer = buildCsoDlcOfferFixture(
+        oracleDigits,
+        expiry,
+        payoutFunction,
+        maxPayout,
+        offerCollateralValue,
+      );
+
+      dlcOffer.offerCollateralSatoshis -= BigInt(10000);
+
+      expect(() => getCsoInfoFromOffer(dlcOffer)).to.throw(Error);
+    });
   });
 
   describe('validateCsoPayoutFunction', () => {
