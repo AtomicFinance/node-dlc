@@ -11,7 +11,11 @@ import {
 import assert from 'assert';
 
 import { UNIT_MULTIPLIER } from './Builder';
-import { HasContractInfo, HasType } from './OptionInfo';
+import {
+  HasContractInfo,
+  HasOfferCollateralSatoshis,
+  HasType,
+} from './OptionInfo';
 
 export interface CsoInfo {
   maxLoss: Value;
@@ -100,7 +104,7 @@ export const getCsoInfoFromContractInfo = (
  * @returns {CsoInfo}
  */
 export const getCsoInfoFromOffer = (
-  offer: HasContractInfo & HasType,
+  offer: HasContractInfo & HasType & HasOfferCollateralSatoshis,
 ): CsoInfo => {
   if (
     offer.type !== MessageType.DlcOfferV0 &&
@@ -108,7 +112,12 @@ export const getCsoInfoFromOffer = (
   )
     throw Error('Only DlcOfferV0 and OrderOfferV0 currently supported');
 
-  return getCsoInfoFromContractInfo(offer.contractInfo);
+  const csoInfo = getCsoInfoFromContractInfo(offer.contractInfo);
+
+  if (csoInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
+    throw Error('Offer was not generated with CSO ContractInfo');
+
+  return csoInfo;
 };
 
 /**
