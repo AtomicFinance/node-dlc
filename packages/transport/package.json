@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/transport",
-  "version": "0.19.6",
+  "version": "0.19.7",
   "description": "DLC Transport",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -24,8 +24,8 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/core": "^0.19.6",
-    "@node-dlc/messaging": "^0.19.6",
+    "@node-dlc/core": "^0.19.7",
+    "@node-dlc/messaging": "^0.19.7",
     "@node-lightning/bitcoin": "0.26.1",
     "@node-lightning/bufio": "0.26.1",
     "@node-lightning/crypto": "0.26.1",
