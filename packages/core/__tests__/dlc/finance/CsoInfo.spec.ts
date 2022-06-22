@@ -107,6 +107,7 @@ describe('CsoInfo', () => {
         maxPayout,
         contractSize,
         offerCollateral,
+        expiry,
       });
     });
 
@@ -120,6 +121,7 @@ describe('CsoInfo', () => {
         maxPayout,
         contractSize,
         offerCollateral,
+        expiry,
       });
     });
 

@@ -24,6 +24,7 @@ export interface CsoInfo {
   maxPayout: bigint;
   contractSize: Value;
   offerCollateral: Value;
+  expiry: Date;
 }
 
 const ONE_BTC_CONTRACT = Value.fromBitcoin(1);
@@ -45,6 +46,8 @@ export const getCsoInfoFromContractInfo = (
     throw Error('Only ContractDescriptorV1 currently supported');
 
   const oracleInfo = contractInfo.oracleInfo;
+
+  const { eventMaturityEpoch } = oracleInfo.announcement.oracleEvent;
 
   const eventDescriptor = oracleInfo.announcement.oracleEvent
     .eventDescriptor as DigitDecompositionEventDescriptorV0;
@@ -87,6 +90,8 @@ export const getCsoInfoFromContractInfo = (
     Value.fromSats((maxGain.sats * contractSize.sats) / BigInt(1e8)),
   );
 
+  const expiry = new Date(eventMaturityEpoch * 1000);
+
   return {
     maxGain,
     maxLoss,
@@ -94,6 +99,7 @@ export const getCsoInfoFromContractInfo = (
     maxPayout,
     contractSize,
     offerCollateral,
+    expiry,
   };
 };
 
