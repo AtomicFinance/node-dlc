@@ -3,7 +3,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import { FundingInput, IFundingInputJSON } from './FundingInput';
 import {
   FundingSignaturesV0,
   IFundingSignaturesV0JSON,
@@ -53,7 +53,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     instance.fundInputSerialId = reader.readUInt64BE();
     const fundingInputsLen = reader.readUInt16BE();
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
     }
     instance.fundingSignatures = FundingSignaturesV0.deserialize(
       getTlv(reader),
@@ -77,7 +77,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   public fundInputSerialId: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInput[] = [];
 
   public fundingSignatures: FundingSignaturesV0;
 
@@ -111,7 +111,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
     // Ensure input serial ids are unique
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInput) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -119,7 +119,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     }
 
     // Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
+    this.fundingInputs.forEach((input: FundingInput) => input.validate());
   }
 
   /**
@@ -146,6 +146,6 @@ export interface IDlcCloseV0JSON {
   offerPayoutSatoshis: number;
   acceptPayoutSatoshis: number;
   fundInputSerialId: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputJSON[];
   fundingSignatures: IFundingSignaturesV0JSON;
 }

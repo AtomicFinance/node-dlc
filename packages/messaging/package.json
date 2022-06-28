@@ -26,6 +26,7 @@
     "@node-lightning/bufio": "0.26.1",
     "@node-lightning/checksum": "0.26.1",
     "@node-lightning/wire": "0.26.1",
+    "@node-dlc/bitcoin": "0.19.7",
     "bip-schnorr": "0.6.3",
     "bitcoin-networks": "^1.0.0",
     "bitcoinjs-lib": "5.2.0"

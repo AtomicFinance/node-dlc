@@ -3,8 +3,8 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
-import { IRoundingIntervalsV0JSON } from './RoundingIntervalsV0';
+import { RoundingIntervals } from './RoundingIntervals';
+import { IRoundingIntervalsJSON } from './RoundingIntervals';
 
 export abstract class NegotiationFields {
   public static deserialize(
@@ -110,9 +110,7 @@ export class NegotiationFieldsV1
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      getTlv(reader),
-    );
+    instance.roundingIntervals = RoundingIntervals.deserialize(getTlv(reader));
 
     return instance;
   }
@@ -124,7 +122,7 @@ export class NegotiationFieldsV1
 
   public length: bigint;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervals;
 
   /**
    * Converts negotiation_fields_v1 to JSON
@@ -230,7 +228,7 @@ export interface INegotiationFieldsV0JSON {
 
 export interface INegotiationFieldsV1JSON {
   type: number;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsJSON;
 }
 
 export interface INegotiationFieldsV2JSON {

@@ -1,39 +1,39 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
-import {
-  IRoundingIntervalsV0JSON,
-  RoundingIntervalsV0,
-} from './RoundingIntervalsV0';
+import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
+export enum ContractDescriptorType {
+  Enumerated = 0,
+  Numeric = 1,
+}
 export abstract class ContractDescriptor {
   public static deserialize(
-    buf: Buffer,
-  ): ContractDescriptorV0 | ContractDescriptorV1 {
-    const reader = new BufferReader(buf);
+    reader: Buffer | BufferReader,
+  ): EnumeratedContractDescriptor | NumericContractDescriptor {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readBigSize());
+    const tempReader = new BufferReader(reader.peakBytes());
+    const type = Number(tempReader.readBigSize());
 
     switch (type) {
-      case MessageType.ContractDescriptorV0:
-        return ContractDescriptorV0.deserialize(buf);
-      case MessageType.ContractDescriptorV1:
-        return ContractDescriptorV1.deserialize(buf);
+      case ContractDescriptorType.Enumerated:
+        return EnumeratedContractDescriptor.deserialize(reader);
+      case ContractDescriptorType.Numeric:
+        return NumericContractDescriptor.deserialize(reader);
       default:
         throw new Error(
-          `Contract Descriptor TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
+          `Contract Descriptor TLV type must be Enumerated or Numeric`,
         );
     }
   }
 
   public abstract type: number;
 
-  public abstract length: bigint;
-
-  public abstract toJSON(): ContractDescriptorV0JSON | ContractDescriptorV1JSON;
+  public abstract toJSON():
+    | EnumContractDescriptorJSON
+    | NumericContractDescriptorJSON;
 
   public abstract serialize(): Buffer;
 }
@@ -42,24 +42,26 @@ export abstract class ContractDescriptor {
  * ContractDescriptor V0 contains information about a contract's outcomes
  * and their corresponding payouts.
  */
-export class ContractDescriptorV0
+export class EnumeratedContractDescriptor
   extends ContractDescriptor
   implements IDlcMessage {
-  public static type = MessageType.ContractDescriptorV0;
+  public static type = ContractDescriptorType.Enumerated;
 
   /**
    * Deserializes an contract_descriptor_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): ContractDescriptorV0 {
-    const instance = new ContractDescriptorV0();
-    const reader = new BufferReader(buf);
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): EnumeratedContractDescriptor {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+
+    const instance = new EnumeratedContractDescriptor();
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    reader.readBigSize(); // num_outcomes
+    const numOutcomes = reader.readBigSize(); // num_outcomes
 
-    while (!reader.eof) {
+    for (let i = 0; i < numOutcomes; i++) {
       instance.outcomes.push({
         outcome: reader.readBytes(32),
         localPayout: reader.readUInt64BE(),
@@ -72,24 +74,23 @@ export class ContractDescriptorV0
   /**
    * The type for contract_descriptor_v0 message. contract_descriptor_v0 = 42768
    */
-  public type = ContractDescriptorV0.type;
-
-  public length: bigint;
+  public type = EnumeratedContractDescriptor.type;
 
   public outcomes: IOutcome[] = [];
 
   /**
    * Converts contract_descriptor_v0 to JSON
    */
-  public toJSON(): ContractDescriptorV0JSON {
+  public toJSON(): EnumContractDescriptorJSON {
     return {
-      type: this.type,
-      outcomes: this.outcomes.map((outcome) => {
-        return {
-          outcome: outcome.outcome.toString('hex'),
-          localPayout: Number(outcome.localPayout),
-        };
-      }),
+      enumeratedContractDescriptor: {
+        payouts: this.outcomes.map((payout) => {
+          return {
+            outcome: payout.outcome.toString('hex'),
+            localPayout: Number(payout.localPayout),
+          };
+        }),
+      },
     };
   }
 
@@ -108,7 +109,6 @@ export class ContractDescriptorV0
       dataWriter.writeUInt64BE(outcome.localPayout);
     }
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
@@ -119,27 +119,30 @@ export class ContractDescriptorV0
  * ContractDescriptor V1 contains information about a contract's outcomes
  * and their corresponding payouts.
  */
-export class ContractDescriptorV1
+export class NumericContractDescriptor
   extends ContractDescriptor
   implements IDlcMessage {
-  public static type = MessageType.ContractDescriptorV1;
+  public static type = ContractDescriptorType.Numeric;
 
   /**
    * Deserializes an contract_descriptor_v1 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): ContractDescriptorV1 {
-    const instance = new ContractDescriptorV1();
-    const reader = new BufferReader(buf);
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): NumericContractDescriptor {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+    const instance = new NumericContractDescriptor();
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
+    console.log('10');
     instance.numDigits = reader.readUInt16BE(); // num_digits
+    console.log('numeric contract descriptor numdigits', instance.numDigits);
+    console.log('11');
 
-    instance.payoutFunction = PayoutFunction.deserialize(getTlv(reader));
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      getTlv(reader),
-    );
+    instance.payoutFunction = PayoutFunction.deserialize(reader);
+    console.log('12');
+    instance.roundingIntervals = RoundingIntervals.deserialize(reader);
 
     return instance;
   }
@@ -147,15 +150,13 @@ export class ContractDescriptorV1
   /**
    * The type for contract_descriptor_v1 message. contract_descriptor_v1 = 42784
    */
-  public type = ContractDescriptorV1.type;
-
-  public length: bigint;
+  public type = NumericContractDescriptor.type;
 
   public numDigits: number;
 
   public payoutFunction: PayoutFunction;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervals;
 
   /**
    * Validates correctness of all fields in the message
@@ -169,12 +170,13 @@ export class ContractDescriptorV1
   /**
    * Converts contract_descriptor_v1 to JSON
    */
-  public toJSON(): ContractDescriptorV1JSON {
+  public toJSON(): NumericContractDescriptorJSON {
     return {
-      type: this.type,
-      numDigits: this.numDigits,
-      payoutFunction: this.payoutFunction.toJSON(),
-      roundingIntervals: this.roundingIntervals.toJSON(),
+      numericOutcomeContractDescriptor: {
+        numDigits: this.numDigits,
+        payoutFunction: this.payoutFunction.toJSON(),
+        roundingIntervals: this.roundingIntervals.toJSON(),
+      },
     };
   }
 
@@ -190,7 +192,6 @@ export class ContractDescriptorV1
     dataWriter.writeBytes(this.payoutFunction.serialize());
     dataWriter.writeBytes(this.roundingIntervals.serialize());
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
@@ -207,14 +208,16 @@ interface IOutcomeJSON {
   localPayout: number;
 }
 
-export interface ContractDescriptorV0JSON {
-  type: number;
-  outcomes: IOutcomeJSON[];
+export interface EnumContractDescriptorJSON {
+  enumeratedContractDescriptor: {
+    payouts: IOutcomeJSON[];
+  };
 }
 
-export interface ContractDescriptorV1JSON {
-  type: number;
-  numDigits: number;
-  payoutFunction: PayoutFunctionV0JSON;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+export interface NumericContractDescriptorJSON {
+  numericOutcomeContractDescriptor: {
+    numDigits: number;
+    payoutFunction: PayoutFunctionV0JSON;
+    roundingIntervals: IRoundingIntervalsJSON;
+  };
 }

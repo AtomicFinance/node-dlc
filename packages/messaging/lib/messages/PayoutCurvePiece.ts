@@ -10,17 +10,22 @@ export enum PayoutCurvePieceType {
 
 export abstract class PayoutCurvePiece {
   public static deserialize(
-    buf: Buffer,
+    reader: Buffer | BufferReader,
   ): PolynomialPayoutCurvePiece | HyperbolaPayoutCurvePiece {
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readBigSize());
+    const tempReader = new BufferReader(reader.peakBytes());
+    const type = Number(tempReader.readBigSize());
+
+    console.log('reader.peakbytes', reader.peakBytes().toString('hex'));
+
+    console.log('type', type);
 
     switch (type) {
       case PayoutCurvePieceType.PolynomialPayoutCurvePiece:
-        return PolynomialPayoutCurvePiece.deserialize(buf);
+        return PolynomialPayoutCurvePiece.deserialize(reader);
       case PayoutCurvePieceType.HyperbolaPayoutCurvePiece:
-        return HyperbolaPayoutCurvePiece.deserialize(buf);
+        return HyperbolaPayoutCurvePiece.deserialize(reader);
       default:
         throw new Error(
           `Payout function TLV type must be PolynomialPayoutCurvePiece or HyperbolaPayoutCurvePiece`,
@@ -51,18 +56,25 @@ export class PolynomialPayoutCurvePiece
    * Deserializes an polynomial_payout_curve_piece message
    * @param buf
    */
-  public static deserialize(buf: Buffer): PolynomialPayoutCurvePiece {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): PolynomialPayoutCurvePiece {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+
     const instance = new PolynomialPayoutCurvePiece();
-    const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
-    reader.readBigSize(); // num_pts
+    console.log('19');
+    const numPoints = reader.readBigSize(); // num_pts
+    console.log('numPoints', numPoints);
 
-    while (!reader.eof) {
+    for (let i = 0; i < numPoints; i++) {
       const eventOutcome = reader.readUInt64BE();
       const outcomePayout = reader.readUInt64BE();
       const extraPrecision = reader.readUInt16BE();
+
+      console.log('eventOutcome', eventOutcome);
+      console.log('outcomePayout', outcomePayout);
 
       instance.points.push({
         eventOutcome,
@@ -110,7 +122,7 @@ export class PolynomialPayoutCurvePiece
     writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
-    dataWriter.writeUInt16BE(this.points.length);
+    dataWriter.writeBigSize(this.points.length);
 
     for (const point of this.points) {
       dataWriter.writeUInt64BE(point.eventOutcome);
@@ -131,37 +143,46 @@ export class PolynomialPayoutCurvePiece
 export class HyperbolaPayoutCurvePiece
   extends PayoutCurvePiece
   implements IDlcMessage {
-  public static type = MessageType.HyperbolaPayoutCurvePiece;
+  public static type = PayoutCurvePieceType.HyperbolaPayoutCurvePiece;
 
   /**
    * Deserializes an hyperbola_payout_curve_piece message
    * @param buf
    */
-  public static deserialize(buf: Buffer): HyperbolaPayoutCurvePiece {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): HyperbolaPayoutCurvePiece {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+
     const instance = new HyperbolaPayoutCurvePiece();
-    const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
+    console.log('18');
     instance.usePositivePiece = reader.readUInt8() === 1;
+    console.log('21');
     instance.translateOutcomeSign = reader.readUInt8() === 1;
     instance.translateOutcome = reader.readUInt64BE();
     instance.translateOutcomeExtraPrecision = reader.readUInt16BE();
+    console.log('22');
     instance.translatePayoutSign = reader.readUInt8() === 1;
     instance.translatePayout = reader.readUInt64BE();
     instance.translatePayoutExtraPrecision = reader.readUInt16BE();
     instance.aSign = reader.readUInt8() === 1;
+    console.log('23');
     instance.a = reader.readUInt64BE();
     instance.aExtraPrecision = reader.readUInt16BE();
     instance.bSign = reader.readUInt8() === 1;
+    console.log('24');
     instance.b = reader.readUInt64BE();
     instance.bExtraPrecision = reader.readUInt16BE();
     instance.cSign = reader.readUInt8() === 1;
+    console.log('25');
     instance.c = reader.readUInt64BE();
     instance.cExtraPrecision = reader.readUInt16BE();
     instance.dSign = reader.readUInt8() === 1;
     instance.d = reader.readUInt64BE();
     instance.dExtraPrecision = reader.readUInt16BE();
+    console.log('20');
 
     return instance;
   }
@@ -280,7 +301,6 @@ export class HyperbolaPayoutCurvePiece
     dataWriter.writeUInt64BE(this.d);
     dataWriter.writeUInt16BE(this.dExtraPrecision);
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
@@ -303,11 +323,13 @@ export interface PolynomialPayoutCurvePieceJSON {
 }
 
 export interface HyperbolaPayoutCurvePieceJSON {
-  usePositivePiece: boolean;
-  translateOutcome: number;
-  translatePayout: number;
-  a: number;
-  b: number;
-  c: number;
-  d: number;
+  hyperbolaPayoutCurvePiece: {
+    usePositivePiece: boolean;
+    translateOutcome: number;
+    translatePayout: number;
+    a: number;
+    b: number;
+    c: number;
+    d: number;
+  };
 }

@@ -12,7 +12,7 @@ import {
   ICetAdaptorSignaturesV0JSON,
 } from './CetAdaptorSignaturesV0';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import { FundingInput, IFundingInputJSON } from './FundingInput';
 import {
   INegotiationFieldsV0JSON,
   INegotiationFieldsV1JSON,
@@ -69,7 +69,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     instance.payoutSerialId = reader.readUInt64BE();
     const fundingInputsLen = reader.readUInt16BE();
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
     }
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
@@ -103,7 +103,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
   public payoutSerialId: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInput[] = [];
 
   public changeSPK: Buffer;
 
@@ -170,7 +170,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     // 4. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInput) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -178,11 +178,11 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     }
 
     // 5. Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
+    this.fundingInputs.forEach((input: FundingInput) => input.validate());
 
     // validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
-      const input = fundingInput as FundingInputV0;
+      const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.acceptCollateralSatoshis >= fundingAmount) {
@@ -262,7 +262,7 @@ export class DlcAcceptWithoutSigs {
     readonly fundingPubKey: Buffer,
     readonly payoutSPK: Buffer,
     readonly payoutSerialId: bigint,
-    readonly fundingInputs: FundingInputV0[],
+    readonly fundingInputs: FundingInput[],
     readonly changeSPK: Buffer,
     readonly changeSerialId: bigint,
     readonly negotiationFields: NegotiationFields,
@@ -276,7 +276,7 @@ export interface IDlcAcceptV0JSON {
   fundingPubKey: string;
   payoutSPK: string;
   payoutSerialId: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputJSON[];
   changeSPK: string;
   changeSerialId: number;
   cetSignatures: ICetAdaptorSignaturesV0JSON;

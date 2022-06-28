@@ -1,6 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
@@ -8,23 +7,27 @@ import {
   OracleAnnouncementV0JSON,
 } from './OracleAnnouncementV0';
 
+export enum OracleInfoType {
+  Single = 0,
+}
+
 /**
  * OracleInfo contains information about the oracles to be used in
  * executing a DLC.
  */
-export class OracleInfoV0 implements IDlcMessage {
-  public static type = MessageType.OracleInfoV0;
+export class SingleOracleInfo implements IDlcMessage {
+  public static type = OracleInfoType.Single;
 
   /**
    * Deserializes an oracle_info_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleInfoV0 {
-    const instance = new OracleInfoV0();
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): SingleOracleInfo {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+
+    const instance = new SingleOracleInfo();
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
     instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
 
     return instance;
@@ -33,9 +36,7 @@ export class OracleInfoV0 implements IDlcMessage {
   /**
    * The type for oracle_info_v0 message. oracle_info_v0 = 42770
    */
-  public type = OracleInfoV0.type;
-
-  public length: bigint;
+  public type = SingleOracleInfo.type;
 
   public announcement: OracleAnnouncementV0;
 
@@ -46,10 +47,11 @@ export class OracleInfoV0 implements IDlcMessage {
   /**
    * Converts oracle_info_v0 to JSON
    */
-  public toJSON(): OracleInfoV0JSON {
+  public toJSON(): SingleOracleInfoJSON {
     return {
-      type: this.type,
-      announcement: this.announcement.toJSON(),
+      single: {
+        oracleAnnouncement: this.announcement.toJSON(),
+      },
     };
   }
 
@@ -63,14 +65,14 @@ export class OracleInfoV0 implements IDlcMessage {
     const dataWriter = new BufferWriter();
     dataWriter.writeBytes(this.announcement.serialize());
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
 }
 
-export interface OracleInfoV0JSON {
-  type: number;
-  announcement: OracleAnnouncementV0JSON;
+export interface SingleOracleInfoJSON {
+  single: {
+    oracleAnnouncement: OracleAnnouncementV0JSON;
+  };
 }

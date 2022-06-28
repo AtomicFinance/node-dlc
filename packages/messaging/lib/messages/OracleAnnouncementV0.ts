@@ -67,9 +67,8 @@ export class OracleAnnouncementV0 implements IDlcMessage {
    */
   public toJSON(): OracleAnnouncementV0JSON {
     return {
-      type: this.type,
-      announcementSig: this.announcementSig.toString('hex'),
-      oraclePubkey: this.oraclePubkey.toString('hex'),
+      oracleAnnouncement: this.announcementSig.toString('hex'),
+      oraclePublicKey: this.oraclePubkey.toString('hex'),
       oracleEvent: this.oracleEvent.toJSON(),
     };
   }
@@ -94,8 +93,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 }
 
 export interface OracleAnnouncementV0JSON {
-  type: number;
-  announcementSig: string;
-  oraclePubkey: string;
+  oracleAnnouncement: string;
+  oraclePublicKey: string;
   oracleEvent: IOracleEventV0JSON;
 }
