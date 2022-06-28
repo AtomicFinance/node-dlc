@@ -11,8 +11,8 @@ import {
 } from '../validation/validate';
 import {
   ContractInfo,
-  IContractInfoV0JSON,
-  IContractInfoV1JSON,
+  IDisjointContractInfoJSON,
+  ISingleContractInfoJSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
 import {
@@ -214,7 +214,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 export interface IOrderOfferJSON {
   type: number;
   chainHash: string;
-  contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
+  contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
   offerCollateralSatoshis: number;
   feeRatePerVb: number;
   cetLocktime: number;

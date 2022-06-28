@@ -1,11 +1,6 @@
 import { BufferReader } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
-import {
-  ContractDescriptorV0,
-  ContractDescriptorV1,
-} from './ContractDescriptor';
-import { ContractInfoV0, ContractInfoV1 } from './ContractInfo';
 import { DlcAcceptV0 } from './DlcAccept';
 import { DlcCloseV0 } from './DlcClose';
 import { DlcOfferV0 } from './DlcOffer';
@@ -24,10 +19,6 @@ export abstract class DlcMessage {
   public static deserialize(
     buf: Buffer,
   ):
-    | ContractDescriptorV0
-    | ContractDescriptorV1
-    | ContractInfoV0
-    | ContractInfoV1
     | OrderOfferV0
     | OrderAcceptV0
     | DlcOfferV0
@@ -42,14 +33,6 @@ export abstract class DlcMessage {
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
-      case MessageType.ContractDescriptorV0:
-        return ContractDescriptorV0.deserialize(buf);
-      case MessageType.ContractDescriptorV1:
-        return ContractDescriptorV1.deserialize(buf);
-      case MessageType.ContractInfoV0:
-        return ContractInfoV0.deserialize(buf);
-      case MessageType.ContractInfoV1:
-        return ContractInfoV1.deserialize(buf);
       case MessageType.OrderOfferV0:
         return OrderOfferV0.deserialize(buf);
       case MessageType.OrderAcceptV0:

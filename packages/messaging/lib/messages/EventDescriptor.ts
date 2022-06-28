@@ -77,7 +77,6 @@ export class EnumEventDescriptorV0
    */
   public toJSON(): IEnumEventDescriptorV0JSON {
     return {
-      type: this.type,
       outcomes: this.outcomes,
     };
   }
@@ -177,7 +176,6 @@ export class DigitDecompositionEventDescriptorV0
    */
   public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
     return {
-      type: this.type,
       base: this.base,
       isSigned: this.isSigned,
       unit: this.unit,
@@ -209,12 +207,10 @@ export class DigitDecompositionEventDescriptorV0
 }
 
 export interface IEnumEventDescriptorV0JSON {
-  type: number;
   outcomes: string[];
 }
 
 export interface IDigitDecompositionEventDescriptorV0JSON {
-  type: number;
   base: number;
   isSigned: boolean;
   unit: string;
