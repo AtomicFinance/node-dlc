@@ -96,17 +96,19 @@ export class RocksdbOrderStore extends RocksdbBase {
       const results: OrderOfferV0[] = [];
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.OrderOfferV0) {
-          results.push(OrderOfferV0.deserialize(data.value));
+          const orderOffer = OrderOfferV0.deserialize(data.value);
+
+          if (
+            tempOrderIds
+              .map((orderId) => orderId.toString('hex'))
+              .includes(sha256(orderOffer.serialize()).toString('hex'))
+          ) {
+            results.push(orderOffer);
+          }
         }
       });
       stream.on('end', () => {
-        resolve(
-          results.filter((orderOffer) => {
-            return tempOrderIds
-              .map((orderId) => orderId.toString('hex'))
-              .includes(sha256(orderOffer.serialize()).toString('hex'));
-          }),
-        );
+        resolve(results);
       });
       stream.on('error', (err) => reject(err));
     });
@@ -126,17 +128,19 @@ export class RocksdbOrderStore extends RocksdbBase {
       const results: OrderOfferV0[] = [];
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.OrderOfferV0) {
-          results.push(OrderOfferV0.deserialize(data.value));
+          const orderOffer = OrderOfferV0.deserialize(data.value);
+
+          if (
+            tempOrderIds
+              .map((orderId) => orderId.toString('hex'))
+              .includes(sha256(orderOffer.serialize()).toString('hex'))
+          ) {
+            results.push(orderOffer);
+          }
         }
       });
       stream.on('end', () => {
-        resolve(
-          results.filter((orderOffer) => {
-            return tempOrderIds
-              .map((orderId) => orderId.toString('hex'))
-              .includes(sha256(orderOffer.serialize()).toString('hex'));
-          }),
-        );
+        resolve(results);
       });
       stream.on('error', (err) => reject(err));
     });
