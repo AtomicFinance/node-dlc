@@ -114,6 +114,21 @@ export class RocksdbOrderStore extends RocksdbBase {
     });
   }
 
+  public async findOrderOfferByNickAndMetadata(
+    nick: string,
+    orderMetadataId: Buffer,
+  ): Promise<OrderOfferV0> {
+    const key = Buffer.concat([
+      Buffer.from([Prefix.OrderMetadataV0Nick]),
+      orderMetadataId,
+      Buffer.from(nick),
+    ]);
+    const tempOrderId = await this._safeGet<Buffer>(key);
+    if (!tempOrderId) return;
+
+    return this.findOrderOffer(tempOrderId);
+  }
+
   public async findOrderOffersByNickAndMetadata(
     nick: string,
     orderMetadataId: Buffer,
