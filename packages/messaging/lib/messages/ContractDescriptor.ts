@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { IDlcMessage } from './DlcMessage';
-import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
+import { PayoutFunction, PayoutFunctionJSON } from './PayoutFunction';
 import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
 export enum ContractDescriptorType {
@@ -62,8 +62,11 @@ export class EnumeratedContractDescriptor
     const numOutcomes = reader.readBigSize(); // num_outcomes
 
     for (let i = 0; i < numOutcomes; i++) {
+      const strLen = reader.readBigSize();
+      const strBuf = reader.readBytes(Number(strLen));
+
       instance.outcomes.push({
-        outcome: reader.readBytes(32),
+        outcome: strBuf.toString('utf8'),
         localPayout: reader.readUInt64BE(),
       });
     }
@@ -86,7 +89,7 @@ export class EnumeratedContractDescriptor
       enumeratedContractDescriptor: {
         payouts: this.outcomes.map((payout) => {
           return {
-            outcome: payout.outcome.toString('hex'),
+            outcome: payout.outcome,
             localPayout: Number(payout.localPayout),
           };
         }),
@@ -105,7 +108,8 @@ export class EnumeratedContractDescriptor
     dataWriter.writeBigSize(this.outcomes.length);
 
     for (const outcome of this.outcomes) {
-      dataWriter.writeBytes(outcome.outcome);
+      dataWriter.writeBigSize(outcome.outcome.length);
+      dataWriter.writeBytes(Buffer.from(outcome.outcome));
       dataWriter.writeUInt64BE(outcome.localPayout);
     }
 
@@ -199,7 +203,7 @@ export class NumericContractDescriptor
 }
 
 interface IOutcome {
-  outcome: Buffer;
+  outcome: string;
   localPayout: bigint;
 }
 
@@ -217,7 +221,7 @@ export interface EnumContractDescriptorJSON {
 export interface NumericContractDescriptorJSON {
   numericOutcomeContractDescriptor: {
     numDigits: number;
-    payoutFunction: PayoutFunctionV0JSON;
+    payoutFunction: PayoutFunctionJSON;
     roundingIntervals: IRoundingIntervalsJSON;
   };
 }

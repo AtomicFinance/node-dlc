@@ -10,8 +10,15 @@ import {
 } from './ContractDescriptor';
 import { IDlcMessage } from './DlcMessage';
 import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
+import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
 import { OracleEventV0 } from './OracleEventV0';
-import { SingleOracleInfo, SingleOracleInfoJSON } from './OracleInfo';
+import {
+  IMultiOracleInfoJSON,
+  ISingleOracleInfoJSON,
+  OracleInfo,
+  OracleInfoType,
+  SingleOracleInfo,
+} from './OracleInfo';
 
 export enum ContractInfoType {
   Single = 0,
@@ -75,7 +82,11 @@ export class SingleContractInfo implements IDlcMessage {
     instance.contractDescriptor = ContractDescriptor.deserialize(reader);
     console.log('test7');
     console.log('instance.contractdescriptor', instance.contractDescriptor);
-    instance.oracleInfo = SingleOracleInfo.deserialize(reader);
+    console.log(
+      'instance.contractdescriptorJSON',
+      JSON.stringify(instance.contractDescriptor.toJSON()),
+    );
+    instance.oracleInfo = OracleInfo.deserialize(reader);
 
     return instance;
   }
@@ -89,7 +100,7 @@ export class SingleContractInfo implements IDlcMessage {
 
   public contractDescriptor: ContractDescriptor;
 
-  public oracleInfo: SingleOracleInfo;
+  public oracleInfo: OracleInfo;
 
   /**
    * Validates correctness of all fields in the message
@@ -99,14 +110,13 @@ export class SingleContractInfo implements IDlcMessage {
   public validate(): void {
     this.oracleInfo.validate();
     switch (this.contractDescriptor.type) {
-      case ContractInfoType.Single:
+      case ContractDescriptorType.Numeric:
         // eslint-disable-next-line no-case-declarations
-        const contractDescriptor = this
-          .contractDescriptor as NumericContractDescriptor;
-        contractDescriptor.validate();
+        const descriptor = this.contractDescriptor as NumericContractDescriptor;
+        descriptor.validate();
 
         // roundingmod should not be greater than totalCollateral
-        for (const interval of contractDescriptor.roundingIntervals.intervals) {
+        for (const interval of descriptor.roundingIntervals.intervals) {
           if (interval.roundingMod > this.totalCollateral) {
             throw new Error(
               `Rounding modulus ${interval.roundingMod} is greater than total collateral ${this.totalCollateral}`,
@@ -114,33 +124,46 @@ export class SingleContractInfo implements IDlcMessage {
           }
         }
 
-        switch (this.oracleInfo.announcement.oracleEvent.eventDescriptor.type) {
-          case MessageType.DigitDecompositionEventDescriptorV0:
-            // eslint-disable-next-line no-case-declarations
-            const eventDescriptor = this.oracleInfo.announcement.oracleEvent
-              .eventDescriptor as DigitDecompositionEventDescriptorV0;
-            if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
-              throw new Error(
-                'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
-              );
-
-            // Sanity check. Shouldn't be hit since there are other validations which should catch this in OracleEventV0.
-            // eslint-disable-next-line no-case-declarations
-            const oracleEvent = this.oracleInfo.announcement
-              .oracleEvent as OracleEventV0;
-            if (
-              oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
-            ) {
-              throw new Error(
-                'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
-              );
-            }
-            break;
-          default:
-            throw new Error(
-              'Only ContractDescriptorV1 can be used with DigitDecompositionEventDescriptor',
+        switch (this.oracleInfo.type) {
+          case OracleInfoType.Single:
+            this.validateOracleAnnouncement(
+              descriptor,
+              (this.oracleInfo as SingleOracleInfo).announcement,
             );
         }
+    }
+  }
+
+  private validateOracleAnnouncement(
+    descriptor: NumericContractDescriptor,
+    announcement: OracleAnnouncementV0,
+  ) {
+    // eslint-disable-next-line no-case-declarations
+    const oracleInfo = this.oracleInfo as SingleOracleInfo;
+    switch (oracleInfo.announcement.oracleEvent.eventDescriptor.type) {
+      case MessageType.DigitDecompositionEventDescriptorV0:
+        // eslint-disable-next-line no-case-declarations
+        const eventDescriptor = oracleInfo.announcement.oracleEvent
+          .eventDescriptor as DigitDecompositionEventDescriptorV0;
+        if (eventDescriptor.nbDigits !== descriptor.numDigits)
+          throw new Error(
+            'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
+          );
+
+        // Sanity check. Shouldn't be hit since there are other validations which should catch this in OracleEventV0.
+        // eslint-disable-next-line no-case-declarations
+        const oracleEvent = oracleInfo.announcement
+          .oracleEvent as OracleEventV0;
+        if (oracleEvent.oracleNonces.length !== descriptor.numDigits) {
+          throw new Error(
+            'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
+          );
+        }
+        break;
+      default:
+        throw new Error(
+          'Only ContractDescriptorV1 can be used with DigitDecompositionEventDescriptor',
+        );
     }
   }
 
@@ -234,7 +257,7 @@ export class DisjointContractInfo implements IDlcMessage {
           contractDescriptor.validate();
 
           switch (
-            oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
+          oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
           ) {
             case MessageType.DigitDecompositionEventDescriptorV0:
               // eslint-disable-next-line no-case-declarations
@@ -307,9 +330,9 @@ interface IContractOraclePair {
 
 interface IContractOraclePairJSON {
   contractDescriptor:
-    | EnumContractDescriptorJSON
-    | NumericContractDescriptorJSON;
-  oracleInfo: SingleOracleInfoJSON;
+  | EnumContractDescriptorJSON
+  | NumericContractDescriptorJSON;
+  oracleInfo: ISingleOracleInfoJSON | IMultiOracleInfoJSON;
 }
 
 export interface ISingleContractInfoJSON {
@@ -317,9 +340,9 @@ export interface ISingleContractInfoJSON {
     totalCollateral: number;
     contractInfo: {
       contractDescriptor:
-        | EnumContractDescriptorJSON
-        | NumericContractDescriptorJSON;
-      oracleInfo: SingleOracleInfoJSON;
+      | EnumContractDescriptorJSON
+      | NumericContractDescriptorJSON;
+      oracleInfo: ISingleOracleInfoJSON | IMultiOracleInfoJSON;
     };
   };
 }
