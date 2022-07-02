@@ -49,6 +49,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     const instance = new DlcOfferV0();
     const reader = new BufferReader(buf);
 
+    console.log('==========================');
     reader.readUInt16BE(); // read type
     instance.protocolVersion = reader.readUInt32BE();
     instance.contractFlags = reader.readUInt8();

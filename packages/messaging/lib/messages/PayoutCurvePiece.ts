@@ -130,7 +130,6 @@ export class PolynomialPayoutCurvePiece
       dataWriter.writeUInt16BE(point.extraPrecision);
     }
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
@@ -237,21 +236,23 @@ export class HyperbolaPayoutCurvePiece
    */
   public toJSON(): HyperbolaPayoutCurvePieceJSON {
     return {
-      usePositivePiece: this.usePositivePiece,
-      translateOutcome: this.calculatePoint(
-        this.translateOutcomeSign,
-        this.translateOutcome,
-        this.translateOutcomeExtraPrecision,
-      ),
-      translatePayout: this.calculatePoint(
-        this.translatePayoutSign,
-        this.translatePayout,
-        this.translatePayoutExtraPrecision,
-      ),
-      a: this.calculatePoint(this.aSign, this.a, this.aExtraPrecision),
-      b: this.calculatePoint(this.bSign, this.b, this.bExtraPrecision),
-      c: this.calculatePoint(this.cSign, this.c, this.cExtraPrecision),
-      d: this.calculatePoint(this.dSign, this.d, this.dExtraPrecision),
+      hyperbolaPayoutCurvePiece: {
+        usePositivePiece: this.usePositivePiece,
+        translateOutcome: this.calculatePoint(
+          this.translateOutcomeSign,
+          this.translateOutcome,
+          this.translateOutcomeExtraPrecision,
+        ),
+        translatePayout: this.calculatePoint(
+          this.translatePayoutSign,
+          this.translatePayout,
+          this.translatePayoutExtraPrecision,
+        ),
+        a: this.calculatePoint(this.aSign, this.a, this.aExtraPrecision),
+        b: this.calculatePoint(this.bSign, this.b, this.bExtraPrecision),
+        c: this.calculatePoint(this.cSign, this.c, this.cExtraPrecision),
+        d: this.calculatePoint(this.dSign, this.d, this.dExtraPrecision),
+      },
     };
   }
 
