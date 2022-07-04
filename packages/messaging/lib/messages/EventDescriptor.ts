@@ -77,7 +77,9 @@ export class EnumEventDescriptorV0
    */
   public toJSON(): IEnumEventDescriptorV0JSON {
     return {
-      outcomes: this.outcomes,
+      enumEvent: {
+        outcomes: this.outcomes,
+      },
     };
   }
 
@@ -176,11 +178,13 @@ export class DigitDecompositionEventDescriptorV0
    */
   public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
     return {
-      base: this.base,
-      isSigned: this.isSigned,
-      unit: this.unit,
-      precision: this.precision,
-      nbDigits: this.nbDigits,
+      digitDecompositionEvent: {
+        base: this.base,
+        isSigned: this.isSigned,
+        unit: this.unit,
+        precision: this.precision,
+        nbDigits: this.nbDigits,
+      },
     };
   }
 
@@ -207,13 +211,17 @@ export class DigitDecompositionEventDescriptorV0
 }
 
 export interface IEnumEventDescriptorV0JSON {
-  outcomes: string[];
+  enumEvent: {
+    outcomes: string[];
+  };
 }
 
 export interface IDigitDecompositionEventDescriptorV0JSON {
-  base: number;
-  isSigned: boolean;
-  unit: string;
-  precision: number;
-  nbDigits: number;
+  digitDecompositionEvent: {
+    base: number;
+    isSigned: boolean;
+    unit: string;
+    precision: number;
+    nbDigits: number;
+  };
 }

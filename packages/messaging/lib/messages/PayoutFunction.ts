@@ -45,7 +45,7 @@ export class PayoutFunction implements IDlcMessage {
 
       instance.pieces.push({
         payoutCurvePiece,
-        endpoint: {
+        endPoint: {
           eventOutcome,
           outcomePayout: Value.fromSats(outcomePayout),
           extraPrecision,
@@ -85,12 +85,12 @@ export class PayoutFunction implements IDlcMessage {
     return {
       payoutFunctionPieces: this.pieces.map((piece) => {
         return {
-          payoutCurvePiece: piece.payoutCurvePiece.toJSON(),
-          endpoint: {
-            eventOutcome: Number(piece.endpoint.eventOutcome),
-            outcomePayout: Number(piece.endpoint.outcomePayout),
-            extraPrecision: piece.endpoint.extraPrecision,
+          endPoint: {
+            eventOutcome: Number(piece.endPoint.eventOutcome),
+            outcomePayout: Number(piece.endPoint.outcomePayout.sats),
+            extraPrecision: piece.endPoint.extraPrecision,
           },
+          payoutCurvePiece: piece.payoutCurvePiece.toJSON(),
         };
       }),
       lastEndpoint: {
@@ -111,9 +111,9 @@ export class PayoutFunction implements IDlcMessage {
     dataWriter.writeBigSize(this.pieces.length);
 
     for (const piece of this.pieces) {
-      dataWriter.writeUInt64BE(piece.endpoint.eventOutcome);
-      dataWriter.writeUInt64BE(piece.endpoint.outcomePayout.sats);
-      dataWriter.writeUInt16BE(piece.endpoint.extraPrecision);
+      dataWriter.writeUInt64BE(piece.endPoint.eventOutcome);
+      dataWriter.writeUInt64BE(piece.endPoint.outcomePayout.sats);
+      dataWriter.writeUInt16BE(piece.endPoint.extraPrecision);
       dataWriter.writeBytes(piece.payoutCurvePiece.serialize());
     }
 
@@ -141,11 +141,11 @@ interface IEndpointJSON {
 
 interface IPayoutCurvePieces {
   payoutCurvePiece: PayoutCurvePiece;
-  endpoint: IEndpoint;
+  endPoint: IEndpoint;
 }
 
 interface IPayoutCurvePiecesJSON {
-  endpoint: IEndpointJSON;
+  endPoint: IEndpointJSON;
   payoutCurvePiece:
     | PolynomialPayoutCurvePieceJSON
     | HyperbolaPayoutCurvePieceJSON;
