@@ -59,11 +59,14 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     console.log('test2');
     instance.contractInfo = ContractInfo.deserialize(reader);
     console.log('test3');
+    console.log('reader peakbytes', reader.peakBytes().toString('hex'));
     instance.fundingPubKey = reader.readBytes(33);
     const payoutSPKLen = reader.readUInt16BE();
     console.log('test4');
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
+    console.log('test4-1');
     instance.payoutSerialId = reader.readUInt64BE();
+    console.log('test4-2');
     instance.offerCollateralSatoshis = reader.readUInt64BE();
     console.log('test5');
     const fundingInputsLen = reader.readBigSize();
@@ -273,7 +276,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
         chainHash: this.chainHash.toString('hex'),
         temporaryContractId: this.temporaryContractId.toString('hex'),
         contractInfo: this.contractInfo.toJSON(),
-        fundingPubKey: this.fundingPubKey.toString('hex'),
+        fundingPubkey: this.fundingPubKey.toString('hex'),
         payoutSpk: this.payoutSPK.toString('hex'),
         payoutSerialId: Number(this.payoutSerialId),
         offerCollateral: Number(this.offerCollateralSatoshis),
@@ -334,7 +337,7 @@ export interface IDlcOfferV0JSON {
     chainHash: string;
     temporaryContractId: string;
     contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
-    fundingPubKey: string;
+    fundingPubkey: string;
     payoutSpk: string;
     payoutSerialId: number;
     offerCollateral: number;

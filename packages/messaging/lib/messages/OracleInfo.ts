@@ -131,6 +131,10 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
       const announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
       instance.announcements.push(announcement);
     }
+    instance.hasOracleParams = reader.readUInt8() === 1;
+    if (instance.hasOracleParams) {
+      instance.oracleParams = OracleParams.deserialize(reader);
+    }
 
     return instance;
   }
@@ -144,6 +148,10 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
 
   public announcements: OracleAnnouncementV0[] = [];
 
+  public hasOracleParams: boolean;
+
+  public oracleParams: OracleParams;
+
   public validate(): void {
     this.announcements.forEach((announcement) => {
       announcement.validate();
@@ -156,10 +164,11 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
   public toJSON(): IMultiOracleInfoJSON {
     return {
       multi: {
-        threshold: this.threshold, // TODO: UPDATE THRESHOLD
+        threshold: this.threshold,
         oracleAnnouncements: this.announcements.map((announcement) =>
           announcement.toJSON(),
         ),
+        oracleParams: this.hasOracleParams ? this.oracleParams.toJSON() : null,
       },
     };
   }
@@ -173,9 +182,14 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
 
     const dataWriter = new BufferWriter();
     dataWriter.writeUInt16BE(this.threshold);
+    dataWriter.writeBigSize(this.announcements.length);
     this.announcements.forEach((announcement) => {
       dataWriter.writeBytes(announcement.serialize());
     });
+    dataWriter.writeUInt8(this.hasOracleParams ? 1 : 0);
+    if (this.hasOracleParams) {
+      dataWriter.writeBytes(this.oracleParams.serialize());
+    }
 
     writer.writeBytes(dataWriter.toBuffer());
 
@@ -183,6 +197,59 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
   }
 }
 
+export class OracleParams implements IDlcMessage {
+  /**
+   * Deserializes an oracle_info_v0 message
+   * @param buf
+   */
+  public static deserialize(reader: Buffer | BufferReader): OracleParams {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+
+    const instance = new OracleParams();
+
+    instance.maxErrorExp = reader.readUInt16BE();
+    instance.minFailExp = reader.readUInt16BE();
+    instance.maximizeCoverage = reader.readUInt8() === 1;
+
+    return instance;
+  }
+
+  public maxErrorExp: number;
+
+  public minFailExp: number;
+
+  public maximizeCoverage: boolean;
+
+  /**
+   * Converts oracle_info_v0 to JSON
+   */
+  public toJSON(): IOracleParamsJSON {
+    return {
+      maxErrorExp: this.maxErrorExp,
+      minFailExp: this.minFailExp,
+      maximizeCoverage: this.maximizeCoverage,
+    };
+  }
+
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+
+    const dataWriter = new BufferWriter();
+    dataWriter.writeUInt16BE(this.maxErrorExp);
+    dataWriter.writeUInt16BE(this.minFailExp);
+    dataWriter.writeUInt8(this.maximizeCoverage ? 1 : 0);
+
+    writer.writeBytes(dataWriter.toBuffer());
+
+    return writer.toBuffer();
+  }
+}
+
+export interface IOracleParamsJSON {
+  maxErrorExp: number;
+  minFailExp: number;
+  maximizeCoverage: boolean;
+}
 export interface ISingleOracleInfoJSON {
   single: {
     oracleAnnouncement: OracleAnnouncementV0JSON;
@@ -192,5 +259,6 @@ export interface IMultiOracleInfoJSON {
   multi: {
     threshold: number;
     oracleAnnouncements: OracleAnnouncementV0JSON[];
+    oracleParams: IOracleParamsJSON | null;
   };
 }

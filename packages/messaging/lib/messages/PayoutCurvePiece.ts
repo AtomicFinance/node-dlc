@@ -104,13 +104,15 @@ export class PolynomialPayoutCurvePiece
    */
   public toJSON(): PolynomialPayoutCurvePieceJSON {
     return {
-      payoutPoints: this.points.map((point) => {
-        return {
-          eventOutcome: Number(point.eventOutcome),
-          outcomePayout: Number(point.outcomePayout),
-          extraPrecision: Number(point.extraPrecision),
-        };
-      }),
+      polynomialPayoutCurvePiece: {
+        payoutPoints: this.points.map((point) => {
+          return {
+            eventOutcome: Number(point.eventOutcome),
+            outcomePayout: Number(point.outcomePayout),
+            extraPrecision: Number(point.extraPrecision),
+          };
+        }),
+      },
     };
   }
 
@@ -183,6 +185,8 @@ export class HyperbolaPayoutCurvePiece
     instance.dExtraPrecision = reader.readUInt16BE();
     console.log('20');
 
+    console.log('translateOutcome', instance.translateOutcome);
+
     return instance;
   }
 
@@ -235,6 +239,15 @@ export class HyperbolaPayoutCurvePiece
    * Converts hyperbola_payout_curve_piece to JSON
    */
   public toJSON(): HyperbolaPayoutCurvePieceJSON {
+    console.log(
+      `this.translateOutcomeSign,
+    this.translateOutcome,
+    this.translateOutcomeExtraPrecision,`,
+      this.translateOutcomeSign,
+      this.translateOutcome,
+      this.translateOutcomeExtraPrecision,
+    );
+
     return {
       hyperbolaPayoutCurvePiece: {
         usePositivePiece: this.usePositivePiece,
@@ -270,7 +283,7 @@ export class HyperbolaPayoutCurvePiece
     value: bigint,
     precision: number,
   ): number {
-    return (sign ? 1 : -1) * ((Number(value) + precision) >> 16);
+    return (sign ? 1 : -1) * (Number(value) + precision / (1 << 16));
   }
 
   /**
@@ -320,7 +333,9 @@ interface IPointJSON {
 }
 
 export interface PolynomialPayoutCurvePieceJSON {
-  payoutPoints: IPointJSON[];
+  polynomialPayoutCurvePiece: {
+    payoutPoints: IPointJSON[];
+  };
 }
 
 export interface HyperbolaPayoutCurvePieceJSON {

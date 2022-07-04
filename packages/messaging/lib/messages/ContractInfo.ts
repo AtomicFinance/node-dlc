@@ -206,7 +206,7 @@ export class SingleContractInfo implements IDlcMessage {
  * their corresponding payouts, and the oracles to be used.
  */
 export class DisjointContractInfo implements IDlcMessage {
-  public static type = MessageType.ContractInfoV1;
+  public static type = ContractInfoType.Disjoint;
 
   /**
    * Deserializes an contract_info_v0 message
@@ -223,9 +223,12 @@ export class DisjointContractInfo implements IDlcMessage {
     instance.totalCollateral = reader.readUInt64BE();
 
     const numDisjointEvents = reader.readBigSize(); // read num_disjoint_events
+    console.log('numDisjointEvents', numDisjointEvents);
     for (let i = 0; i < numDisjointEvents; i++) {
+      console.log('i contractdescriptor', i);
       const contractDescriptor = ContractDescriptor.deserialize(reader);
-      const oracleInfo = SingleOracleInfo.deserialize(reader);
+      console.log('i oracleinfo', i);
+      const oracleInfo = OracleInfo.deserialize(reader);
 
       instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
     }
@@ -248,39 +251,38 @@ export class DisjointContractInfo implements IDlcMessage {
    * @throws Will throw an error if validation fails
    */
   public validate(): void {
-    this.contractOraclePairs.forEach((oraclePair) => {
-      oraclePair.oracleInfo.validate();
-      switch (oraclePair.contractDescriptor.type) {
-        case ContractDescriptorType.Numeric:
-          // eslint-disable-next-line no-case-declarations
-          const contractDescriptor = oraclePair.contractDescriptor as NumericContractDescriptor;
-          contractDescriptor.validate();
-
-          switch (
-          oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
-          ) {
-            case MessageType.DigitDecompositionEventDescriptorV0:
-              // eslint-disable-next-line no-case-declarations
-              const eventDescriptor = oraclePair.oracleInfo.announcement
-                .oracleEvent
-                .eventDescriptor as DigitDecompositionEventDescriptorV0;
-              if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
-                throw new Error(
-                  'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
-                );
-              // eslint-disable-next-line no-case-declarations
-              const oracleEvent = oraclePair.oracleInfo.announcement
-                .oracleEvent as OracleEventV0;
-              if (
-                oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
-              ) {
-                throw new Error(
-                  'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
-                );
-              }
-          }
-      }
-    });
+    // this.contractOraclePairs.forEach((oraclePair) => {
+    //   oraclePair.oracleInfo.validate();
+    //   switch (oraclePair.contractDescriptor.type) {
+    //     case ContractDescriptorType.Numeric:
+    //       // eslint-disable-next-line no-case-declarations
+    //       const contractDescriptor = oraclePair.contractDescriptor as NumericContractDescriptor;
+    //       contractDescriptor.validate();
+    //       switch (
+    //       oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
+    //       ) {
+    //         case MessageType.DigitDecompositionEventDescriptorV0:
+    //           // eslint-disable-next-line no-case-declarations
+    //           const eventDescriptor = oraclePair.oracleInfo.announcement
+    //             .oracleEvent
+    //             .eventDescriptor as DigitDecompositionEventDescriptorV0;
+    //           if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
+    //             throw new Error(
+    //               'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
+    //             );
+    //           // eslint-disable-next-line no-case-declarations
+    //           const oracleEvent = oraclePair.oracleInfo.announcement
+    //             .oracleEvent as OracleEventV0;
+    //           if (
+    //             oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
+    //           ) {
+    //             throw new Error(
+    //               'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
+    //             );
+    //           }
+    //       }
+    //   }
+    // });
   }
 
   /**
@@ -325,7 +327,7 @@ export class DisjointContractInfo implements IDlcMessage {
 
 interface IContractOraclePair {
   contractDescriptor: ContractDescriptor;
-  oracleInfo: SingleOracleInfo;
+  oracleInfo: OracleInfo;
 }
 
 interface IContractOraclePairJSON {
@@ -338,12 +340,7 @@ interface IContractOraclePairJSON {
 export interface ISingleContractInfoJSON {
   singleContractInfo: {
     totalCollateral: number;
-    contractInfo: {
-      contractDescriptor:
-      | EnumContractDescriptorJSON
-      | NumericContractDescriptorJSON;
-      oracleInfo: ISingleOracleInfoJSON | IMultiOracleInfoJSON;
-    };
+    contractInfo: IContractOraclePairJSON;
   };
 }
 
