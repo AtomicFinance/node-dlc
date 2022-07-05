@@ -6,17 +6,20 @@ import { IDlcMessage } from './DlcMessage';
 import { RoundingIntervals } from './RoundingIntervals';
 import { IRoundingIntervalsJSON } from './RoundingIntervals';
 
+export enum NegotiationFieldsType {
+  Single = 0,
+  Disjoint = 1,
+}
+
 export abstract class NegotiationFields {
   public static deserialize(
     buf: Buffer,
-  ): NegotiationFieldsV0 | NegotiationFieldsV1 | NegotiationFieldsV2 {
+  ): NegotiationFieldsV1 | NegotiationFieldsV2 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
-      case MessageType.NegotiationFieldsV0:
-        return NegotiationFieldsV0.deserialize(buf);
       case MessageType.NegotiationFieldsV1:
         return NegotiationFieldsV1.deserialize(buf);
       case MessageType.NegotiationFieldsV2:
@@ -32,84 +35,29 @@ export abstract class NegotiationFields {
 
   public abstract length: bigint;
 
-  public abstract toJSON():
-    | INegotiationFieldsV0JSON
-    | INegotiationFieldsV1JSON
-    | INegotiationFieldsV2JSON;
+  public abstract toJSON(): INegotiationFieldsV1JSON | INegotiationFieldsV2JSON;
 
   public abstract serialize(): Buffer;
-}
-
-/**
- * NegotiationFields V0 contains preferences of the accepter of a DLC
- * which are taken into account during DLC construction.
- */
-export class NegotiationFieldsV0
-  extends NegotiationFields
-  implements IDlcMessage {
-  public static type = MessageType.NegotiationFieldsV0;
-
-  /**
-   * Deserializes an negotiation_fields_v0 message
-   * @param buf
-   */
-  public static deserialize(buf: Buffer): NegotiationFieldsV0 {
-    const instance = new NegotiationFieldsV0();
-    const reader = new BufferReader(buf);
-
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-
-    return instance;
-  }
-
-  /**
-   * The type for negotiation_fields_v0 message. negotiation_fields_v0 = 55334
-   */
-  public type = NegotiationFieldsV0.type;
-
-  public length: bigint;
-
-  /**
-   * Converts negotiation_fields_v0 to JSON
-   */
-  public toJSON(): INegotiationFieldsV0JSON {
-    return {
-      type: this.type,
-    };
-  }
-
-  /**
-   * Serializes the negotiation_fields_v0 message into a Buffer
-   */
-  public serialize(): Buffer {
-    const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
-    writer.writeBigSize(0);
-
-    return writer.toBuffer();
-  }
 }
 
 /**
  * NegotiationFields V1 contains preferences of the acceptor of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV1
+export class SingleNegotiationFields
   extends NegotiationFields
   implements IDlcMessage {
-  public static type = MessageType.NegotiationFieldsV1;
+  public static type = NegotiationFieldsType.Single;
 
   /**
    * Deserializes an negotiation_fields_v1 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): NegotiationFieldsV1 {
-    const instance = new NegotiationFieldsV1();
+  public static deserialize(buf: Buffer): SingleNegotiationFields {
+    const instance = new SingleNegotiationFields();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
     instance.roundingIntervals = RoundingIntervals.deserialize(getTlv(reader));
 
     return instance;
@@ -118,7 +66,7 @@ export class NegotiationFieldsV1
   /**
    * The type for negotiation_fields_v1 message. negotiation_fields_v1 = 55336
    */
-  public type = NegotiationFieldsV1.type;
+  public type = SingleNegotiationFields.type;
 
   public length: bigint;
 
@@ -144,7 +92,6 @@ export class NegotiationFieldsV1
     const dataWriter = new BufferWriter();
     dataWriter.writeBytes(this.roundingIntervals.serialize());
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
@@ -234,7 +181,7 @@ export interface INegotiationFieldsV1JSON {
 export interface INegotiationFieldsV2JSON {
   type: number;
   negotiationFieldsList:
-    | INegotiationFieldsV0JSON[]
-    | INegotiationFieldsV1JSON[]
-    | INegotiationFieldsV2JSON[];
+  | INegotiationFieldsV0JSON[]
+  | INegotiationFieldsV1JSON[]
+  | INegotiationFieldsV2JSON[];
 }

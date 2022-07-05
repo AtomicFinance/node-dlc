@@ -1,6 +1,7 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
+import { DlcAcceptV0 } from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
@@ -26,22 +27,22 @@ import twoOfFiveOracleNumericalWithDiff from './TestVectors/two_of_five_oracle_n
 
 const testVectors = {
   enum3of3,
-  enum3of5,
-  enumAndNumerical3of5,
-  enumAndNumerical5of5,
-  enumAndNumericalWithDiff3of5,
-  enumAndNumericalWithDiff5of5,
-  enumSingleOracle,
-  singleOracleNumericalHyperbola,
-  singleOracleNumerical,
-  threeOfFiveOracleNumericalWithDiff,
-  threeOfThreeOracleNumerical,
-  threeOfThreeOracleNumericalWithDiff,
-  twoOfFiveOracleNumerical,
-  twoOfFiveOracleNumericalWithDiff,
+  // enum3of5,
+  // enumAndNumerical3of5,
+  // enumAndNumerical5of5,
+  // enumAndNumericalWithDiff3of5,
+  // enumAndNumericalWithDiff5of5,
+  // enumSingleOracle,
+  // singleOracleNumericalHyperbola,
+  // singleOracleNumerical,
+  // threeOfFiveOracleNumericalWithDiff,
+  // threeOfThreeOracleNumerical,
+  // threeOfThreeOracleNumericalWithDiff,
+  // twoOfFiveOracleNumerical,
+  // twoOfFiveOracleNumericalWithDiff,
 };
 
-describe.only('DlcOffer', () => {
+describe('DlcOffer', () => {
   for (const [testName, testVector] of Object.entries(testVectors)) {
     it(`should deserialize ${camelToUnderscore(testName)}`, () => {
       const dlcOffer = DlcOfferV0.deserialize(
@@ -55,6 +56,29 @@ describe.only('DlcOffer', () => {
         testVector.offer_message.serialized,
       );
       expect(JSON.stringify(dlcOffer.toJSON())).to.equal(
+        JSON.stringify(testVector.offer_message),
+      );
+    });
+  }
+});
+
+describe.only('DlcAccept', () => {
+  for (const [testName, testVector] of Object.entries(testVectors)) {
+    it(`should deserialize ${camelToUnderscore(testName)}`, () => {
+      const dlcAccept = DlcAcceptV0.deserialize(
+        Buffer.from(testVector.offer_message.serialized, 'hex'),
+      );
+      console.log('dlcAccept', dlcAccept);
+      console.log(
+        'dlcAccept.serialized',
+        dlcAccept.serialize().toString('hex'),
+      );
+      console.log('dlcAccept.JSON', JSON.stringify(dlcAccept.toJSON()));
+      const serializedDlcAccept = dlcAccept.serialize();
+      expect(serializedDlcAccept.toString('hex')).to.equal(
+        testVector.accept_message.serialized,
+      );
+      expect(JSON.stringify(dlcAccept.toJSON())).to.equal(
         JSON.stringify(testVector.offer_message),
       );
     });
