@@ -21,14 +21,14 @@ import {
 } from './NegotiationFields';
 
 export abstract class DlcAccept implements IDlcMessage {
-  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
+  public static deserialize(buf: Buffer): DlcAcceptV0 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf, parseCets);
+        return DlcAcceptV0.deserialize(buf);
       default:
         throw new Error(`Dlc Accept message type must be DlcAcceptV0`);
     }
@@ -56,34 +56,35 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * Deserializes an oracle_info message
    * @param buf
    */
-  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
+  public static deserialize(buf: Buffer): DlcAcceptV0 {
     const instance = new DlcAcceptV0();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
+    console.log('test1');
+    instance.protocolVersion = reader.readUInt32BE();
+    console.log('test2');
     instance.tempContractId = reader.readBytes(32);
+    console.log('test3');
     instance.acceptCollateralSatoshis = reader.readUInt64BE();
+    console.log('test4');
     instance.fundingPubKey = reader.readBytes(33);
+    console.log('test5');
     const payoutSPKLen = reader.readUInt16BE();
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
     instance.payoutSerialId = reader.readUInt64BE();
-    const fundingInputsLen = reader.readUInt16BE();
+    console.log('test6');
+    const fundingInputsLen = reader.readBigSize();
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInput.deserialize(reader));
     }
+    console.log('test7');
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
-    if (parseCets) {
-      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
-        getTlv(reader),
-      );
-    } else {
-      skipTlv(reader);
-      instance.cetSignatures = new CetAdaptorSignaturesV0();
-    }
+    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(reader);
     instance.refundSignature = reader.readBytes(64);
-    instance.negotiationFields = NegotiationFields.deserialize(getTlv(reader));
+    instance.negotiationFields = NegotiationFields.deserialize(reader);
 
     return instance;
   }
@@ -92,6 +93,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * The type for accept_channel message. accept_channel = 33
    */
   public type = DlcAcceptV0.type;
+
+  public protocolVersion: number;
 
   public tempContractId: Buffer;
 
@@ -266,7 +269,7 @@ export class DlcAcceptWithoutSigs {
     readonly changeSPK: Buffer,
     readonly changeSerialId: bigint,
     readonly negotiationFields: NegotiationFields,
-  ) {}
+  ) { }
 }
 
 export interface IDlcAcceptV0JSON {
@@ -282,9 +285,9 @@ export interface IDlcAcceptV0JSON {
   cetSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
   negotiationFields:
-    | INegotiationFieldsV0JSON
-    | INegotiationFieldsV1JSON
-    | INegotiationFieldsV2JSON;
+  | INegotiationFieldsV0JSON
+  | INegotiationFieldsV1JSON
+  | INegotiationFieldsV2JSON;
 }
 
 export interface IDlcAcceptV0Addresses {
