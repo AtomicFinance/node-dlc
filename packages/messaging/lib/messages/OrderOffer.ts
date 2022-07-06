@@ -107,9 +107,9 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
   public refundLocktime: number;
 
-  public metadata: OrderMetadata;
+  public metadata?: OrderMetadata;
 
-  public ircInfo: OrderIrcInfo;
+  public ircInfo?: OrderIrcInfo;
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
