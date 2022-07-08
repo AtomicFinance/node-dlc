@@ -7,7 +7,7 @@ import { IDlcMessage } from './DlcMessage';
  * CetAdaptorSignatures V0 contains CET signatures and any necessary
  * information linking the signatures to their corresponding outcome
  */
-export class CetAdaptorSignaturesV0 implements IDlcMessage {
+export class CetAdaptorSignatures implements IDlcMessage {
   public static type = MessageType.CetAdaptorSignaturesV0;
 
   /**
@@ -16,14 +16,14 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
    */
   public static deserialize(
     reader: Buffer | BufferReader,
-  ): CetAdaptorSignaturesV0 {
+  ): CetAdaptorSignatures {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const instance = new CetAdaptorSignaturesV0();
+    const instance = new CetAdaptorSignatures();
 
-    reader.readBigSize(); // nb_signatures
+    const nbSignatures = reader.readBigSize();
 
-    while (!reader.eof) {
+    for (let i = 0; i < nbSignatures; i++) {
       const encryptedSig = reader.readBytes(65);
       const dleqProof = reader.readBytes(97);
       instance.sigs.push({ encryptedSig, dleqProof });
@@ -35,7 +35,7 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   /**
    * The type for cet_adaptor_signature message. cet_adaptor_signature = 42774
    */
-  public type = CetAdaptorSignaturesV0.type;
+  public type = CetAdaptorSignatures.type;
 
   public length: bigint;
 
@@ -44,13 +44,12 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   /**
    * Converts cet_adaptor_signature to JSON
    */
-  public toJSON(): ICetAdaptorSignaturesV0JSON {
+  public toJSON(): ICetAdaptorSignaturesJSON {
     return {
-      type: this.type,
-      sigs: this.sigs.map((sig) => {
+      ecdsaAdaptorSignatures: this.sigs.map((sig) => {
         return {
-          encryptedSig: sig.encryptedSig.toString('hex'),
-          dleqProof: sig.dleqProof.toString('hex'),
+          signature:
+            sig.encryptedSig.toString('hex') + sig.dleqProof.toString('hex'),
         };
       }),
     };
@@ -80,12 +79,10 @@ interface ISig {
   dleqProof: Buffer;
 }
 
-export interface ICetAdaptorSignaturesV0JSON {
-  type: number;
-  sigs: ISigJSON[];
+export interface ICetAdaptorSignaturesJSON {
+  ecdsaAdaptorSignatures: ISigJSON[];
 }
 
 export interface ISigJSON {
-  encryptedSig: string;
-  dleqProof: string;
+  signature: string;
 }

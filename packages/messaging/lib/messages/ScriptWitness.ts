@@ -6,13 +6,13 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
  * Witness elements should not include their length as part of the witness
  * data.
  */
-export class ScriptWitnessV0 {
+export class ScriptWitness {
   /**
    * Deserializes an script_witness_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): ScriptWitnessV0 {
-    const instance = new ScriptWitnessV0();
+  public static deserialize(buf: Buffer): ScriptWitness {
+    const instance = new ScriptWitness();
     const reader = new BufferReader(buf);
 
     instance.length = reader.readUInt16BE();
@@ -39,7 +39,7 @@ export class ScriptWitnessV0 {
   /**
    * Converts script_witness_v0 to JSON
    */
-  public toJSON(): IScriptWitnessV0JSON {
+  public toJSON(): IScriptWitnessJSON {
     return {
       witness: this.witness.toString('hex'),
     };
@@ -58,6 +58,6 @@ export class ScriptWitnessV0 {
   }
 }
 
-export interface IScriptWitnessV0JSON {
+export interface IScriptWitnessJSON {
   witness: string;
 }
