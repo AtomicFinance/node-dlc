@@ -332,8 +332,8 @@ interface IContractOraclePair {
 
 interface IContractOraclePairJSON {
   contractDescriptor:
-  | EnumContractDescriptorJSON
-  | NumericContractDescriptorJSON;
+    | EnumContractDescriptorJSON
+    | NumericContractDescriptorJSON;
   oracleInfo: ISingleOracleInfoJSON | IMultiOracleInfoJSON;
 }
 

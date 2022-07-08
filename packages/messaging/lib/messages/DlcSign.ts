@@ -1,16 +1,12 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import {
-  CetAdaptorSignaturesV0,
-  ICetAdaptorSignaturesV0JSON,
-} from './CetAdaptorSignaturesV0';
+  CetAdaptorSignatures,
+  ICetAdaptorSignaturesJSON,
+} from './CetAdaptorSignatures';
 import { IDlcMessage } from './DlcMessage';
-import {
-  FundingSignaturesV0,
-  IFundingSignaturesV0JSON,
-} from './FundingSignaturesV0';
+import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
 
 export abstract class DlcSign {
   public static deserialize(buf: Buffer): DlcSignV0 {
@@ -50,12 +46,16 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
+    console.log('test1');
+    instance.protocolVersion = reader.readUInt32BE();
+    console.log('test2');
     instance.contractId = reader.readBytes(32);
-    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
+    console.log('test3');
+    instance.cetSignatures = CetAdaptorSignatures.deserialize(reader);
+    console.log('test4');
     instance.refundSignature = reader.readBytes(64);
-    instance.fundingSignatures = FundingSignaturesV0.deserialize(
-      getTlv(reader),
-    );
+    console.log('test5');
+    instance.fundingSignatures = FundingSignatures.deserialize(reader);
 
     return instance;
   }
@@ -65,24 +65,29 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
    */
   public type = DlcSignV0.type;
 
+  public protocolVersion: number;
+
   public contractId: Buffer;
 
-  public cetSignatures: CetAdaptorSignaturesV0;
+  public cetSignatures: CetAdaptorSignatures;
 
   public refundSignature: Buffer;
 
-  public fundingSignatures: FundingSignaturesV0;
+  public fundingSignatures: FundingSignatures;
 
   /**
    * Converts sign_dlc_v0 to JSON
    */
   public toJSON(): IDlcSignV0JSON {
     return {
-      type: this.type,
-      contractId: this.contractId.toString('hex'),
-      cetSignatures: this.cetSignatures.toJSON(),
-      refundSignature: this.refundSignature.toString('hex'),
-      fundingSignatures: this.fundingSignatures.toJSON(),
+      message: {
+        protocolVersion: this.protocolVersion,
+        contractId: this.contractId.toString('hex'),
+        cetAdaptorSignatures: this.cetSignatures.toJSON(),
+        refundSignature: this.refundSignature.toString('hex'),
+        fundingSignatures: this.fundingSignatures.toJSON(),
+      },
+      serialized: this.serialize().toString('hex'),
     };
   }
 
@@ -102,9 +107,12 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
 }
 
 export interface IDlcSignV0JSON {
-  type: number;
-  contractId: string;
-  cetSignatures: ICetAdaptorSignaturesV0JSON;
-  refundSignature: string;
-  fundingSignatures: IFundingSignaturesV0JSON;
+  message: {
+    protocolVersion: number;
+    contractId: string;
+    cetAdaptorSignatures: ICetAdaptorSignaturesJSON;
+    refundSignature: string;
+    fundingSignatures: IFundingSignaturesJSON;
+  };
+  serialized: string;
 }

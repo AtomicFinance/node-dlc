@@ -1,15 +1,7 @@
-import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
-import { DlcAcceptV0 } from '../../lib';
-import { ContractInfo } from '../../lib/messages/ContractInfo';
-import {
-  DlcOffer,
-  DlcOfferV0,
-  LOCKTIME_THRESHOLD,
-} from '../../lib/messages/DlcOffer';
-import { FundingInput } from '../../lib/messages/FundingInput';
-import { MessageType } from '../../lib/MessageType';
+import { DlcAcceptV0, DlcSignV0 } from '../../lib';
+import { DlcOfferV0 } from '../../lib/messages/DlcOffer';
 import enum3of3 from './TestVectors/enum_3_of_3_test.json';
 import enum3of5 from './TestVectors/enum_3_of_5_test.json';
 import enumAndNumerical3of5 from './TestVectors/enum_and_numerical_3_of_5_test.json';
@@ -62,13 +54,14 @@ describe('DlcOffer', () => {
   }
 });
 
-describe.only('DlcAccept', () => {
+describe('DlcAccept', () => {
   for (const [testName, testVector] of Object.entries(testVectors)) {
     it(`should deserialize ${camelToUnderscore(testName)}`, () => {
       const dlcAccept = DlcAcceptV0.deserialize(
-        Buffer.from(testVector.offer_message.serialized, 'hex'),
+        Buffer.from(testVector.accept_message.serialized, 'hex'),
       );
       console.log('dlcAccept', dlcAccept);
+      console.log('dlcAccept.serialize', dlcAccept.serialize);
       console.log(
         'dlcAccept.serialized',
         dlcAccept.serialize().toString('hex'),
@@ -79,7 +72,28 @@ describe.only('DlcAccept', () => {
         testVector.accept_message.serialized,
       );
       expect(JSON.stringify(dlcAccept.toJSON())).to.equal(
-        JSON.stringify(testVector.offer_message),
+        JSON.stringify(testVector.accept_message),
+      );
+    });
+  }
+});
+
+describe.only('DlcSign', () => {
+  for (const [testName, testVector] of Object.entries(testVectors)) {
+    it(`should deserialize ${camelToUnderscore(testName)}`, () => {
+      const dlcSign = DlcSignV0.deserialize(
+        Buffer.from(testVector.sign_message.serialized, 'hex'),
+      );
+      console.log('dlcSign', dlcSign);
+      console.log('dlcSign.serialize', dlcSign.serialize);
+      console.log('dlcSign.serialized', dlcSign.serialize().toString('hex'));
+      console.log('dlcSign.JSON', JSON.stringify(dlcSign.toJSON()));
+      const serializedDlcSign = dlcSign.serialize();
+      expect(serializedDlcSign.toString('hex')).to.equal(
+        testVector.sign_message.serialized,
+      );
+      expect(JSON.stringify(dlcSign.toJSON())).to.equal(
+        JSON.stringify(testVector.sign_message),
       );
     });
   }
