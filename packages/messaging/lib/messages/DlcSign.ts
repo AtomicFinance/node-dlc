@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { sigToDER } from '@node-lightning/crypto';
 
 import { MessageType } from '../MessageType';
 import {
@@ -55,6 +56,7 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     console.log('test4');
     instance.refundSignature = reader.readBytes(64);
     console.log('test5');
+    console.log('instance', instance);
     instance.fundingSignatures = FundingSignatures.deserialize(reader);
 
     return instance;
@@ -84,7 +86,7 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
         protocolVersion: this.protocolVersion,
         contractId: this.contractId.toString('hex'),
         cetAdaptorSignatures: this.cetSignatures.toJSON(),
-        refundSignature: this.refundSignature.toString('hex'),
+        refundSignature: sigToDER(this.refundSignature).toString('hex'),
         fundingSignatures: this.fundingSignatures.toJSON(),
       },
       serialized: this.serialize().toString('hex'),
@@ -97,6 +99,7 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
+    writer.writeUInt32BE(this.protocolVersion);
     writer.writeBytes(this.contractId);
     writer.writeBytes(this.cetSignatures.serialize());
     writer.writeBytes(this.refundSignature);
