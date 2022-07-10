@@ -15,18 +15,18 @@ export class ScriptWitness {
     const instance = new ScriptWitness();
     const reader = new BufferReader(buf);
 
-    instance.length = reader.readUInt16BE();
+    instance.length = Number(reader.readBigSize());
     instance.witness = reader.readBytes(instance.length);
 
     return instance;
   }
 
   public static getWitness(reader: BufferReader): Buffer {
-    const length = reader.readUInt16BE();
+    const length = reader.readBigSize();
     const body = reader.readBytes(Number(length));
 
     const writer = new BufferWriter();
-    writer.writeUInt16BE(length);
+    writer.writeBigSize(length);
     writer.writeBytes(body);
 
     return writer.toBuffer();
@@ -51,7 +51,7 @@ export class ScriptWitness {
   public serialize(): Buffer {
     const writer = new BufferWriter();
 
-    writer.writeUInt16BE(this.witness.length);
+    writer.writeBigSize(this.witness.length);
     writer.writeBytes(this.witness);
 
     return writer.toBuffer();

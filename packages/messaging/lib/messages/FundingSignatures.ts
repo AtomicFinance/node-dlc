@@ -17,10 +17,13 @@ export class FundingSignatures implements IDlcMessage {
 
     const instance = new FundingSignatures();
 
-    const numWitnesses = reader.readUInt16BE();
+    const numWitnesses = reader.readBigSize();
+
+    console.log('numWitnesses', numWitnesses);
 
     for (let i = 0; i < numWitnesses; i++) {
-      const numWitnessElements = reader.readUInt16BE();
+      const numWitnessElements = reader.readBigSize();
+      console.log('numWitnessElements', numWitnessElements);
       const witnessElements: ScriptWitness[] = [];
       for (let j = 0; j < numWitnessElements; j++) {
         const witness = ScriptWitness.getWitness(reader);
@@ -42,11 +45,11 @@ export class FundingSignatures implements IDlcMessage {
    */
   public toJSON(): IFundingSignaturesJSON {
     return {
-      fundingSignatures: {
-        witnessElements: this.witnessElements.map((witnessElement) => {
-          return witnessElement.map((witness) => witness.toJSON());
-        }),
-      },
+      fundingSignatures: this.witnessElements.map((witnessElement) => {
+        return {
+          witnessElements: witnessElement.map((witness) => witness.toJSON()),
+        };
+      }),
     };
   }
 
@@ -58,24 +61,25 @@ export class FundingSignatures implements IDlcMessage {
 
     const dataWriter = new BufferWriter();
 
-    dataWriter.writeUInt16BE(this.witnessElements.length);
+    dataWriter.writeBigSize(this.witnessElements.length);
 
     for (const witnessElements of this.witnessElements) {
-      dataWriter.writeUInt16BE(witnessElements.length);
+      dataWriter.writeBigSize(witnessElements.length);
       for (const witnessElement of witnessElements) {
         dataWriter.writeBytes(witnessElement.serialize());
       }
     }
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
 }
 
+export interface IWitnessElementsJSON {
+  witnessElements: IScriptWitnessJSON[];
+}
+
 export interface IFundingSignaturesJSON {
-  fundingSignatures: {
-    witnessElements: IScriptWitnessJSON[][];
-  };
+  fundingSignatures: IWitnessElementsJSON[];
 }
