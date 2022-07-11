@@ -2,6 +2,8 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { sigToDER } from '@node-lightning/crypto';
 
 import { MessageType } from '../MessageType';
+import { deserializeTlv, ITlv } from '../serialize/deserializeTlv';
+import { getTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignatures,
   ICetAdaptorSignaturesJSON,
@@ -59,6 +61,14 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     console.log('instance', instance);
     instance.fundingSignatures = FundingSignatures.deserialize(reader);
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
+    }
+
     return instance;
   }
 
@@ -76,6 +86,8 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
   public refundSignature: Buffer;
 
   public fundingSignatures: FundingSignatures;
+
+  public tlvs: ITlv[] = [];
 
   /**
    * Converts sign_dlc_v0 to JSON

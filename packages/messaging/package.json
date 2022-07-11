@@ -29,7 +29,8 @@
     "@node-dlc/bitcoin": "0.19.7",
     "bip-schnorr": "0.6.3",
     "bitcoin-networks": "^1.0.0",
-    "bitcoinjs-lib": "5.2.0"
+    "bitcoinjs-lib": "5.2.0",
+    "class-validator": "0.13.2"
   },
   "devDependencies": {
     "@node-lightning/logger": "0.26.1",

@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionJSON } from './PayoutFunction';
@@ -24,7 +25,7 @@ export abstract class ContractDescriptor {
         return NumericContractDescriptor.deserialize(reader);
       default:
         throw new Error(
-          `Contract Descriptor TLV type must be Enumerated or Numeric`,
+          `Contract Descriptor type must be Enumerated or Numeric`,
         );
     }
   }
@@ -39,7 +40,7 @@ export abstract class ContractDescriptor {
 }
 
 /**
- * ContractDescriptor V0 contains information about a contract's outcomes
+ * EnumeratedContractDescriptor contains information about a contract's outcomes
  * and their corresponding payouts.
  */
 export class EnumeratedContractDescriptor
@@ -48,7 +49,7 @@ export class EnumeratedContractDescriptor
   public static type = ContractDescriptorType.Enumerated;
 
   /**
-   * Deserializes an contract_descriptor_v0 message
+   * Deserializes an enumerated_contract_descriptor message
    * @param buf
    */
   public static deserialize(
@@ -58,8 +59,13 @@ export class EnumeratedContractDescriptor
 
     const instance = new EnumeratedContractDescriptor();
 
-    reader.readBigSize(); // read type
+    const type = reader.readBigSize(); // read type
+    assert(
+      Number(type) === this.type,
+      `Expected Enumerated Contract Descriptor, got type ${this.type}`,
+    );
     const numOutcomes = reader.readBigSize(); // num_outcomes
+    console.log('numOutcomes', numOutcomes);
 
     for (let i = 0; i < numOutcomes; i++) {
       const strLen = reader.readBigSize();
@@ -75,14 +81,14 @@ export class EnumeratedContractDescriptor
   }
 
   /**
-   * The type for contract_descriptor_v0 message. contract_descriptor_v0 = 42768
+   * The type for enumerated_contract_descriptor message
    */
   public type = EnumeratedContractDescriptor.type;
 
   public outcomes: IOutcome[] = [];
 
   /**
-   * Converts contract_descriptor_v0 to JSON
+   * Converts enumerated_contract_descriptor to JSON
    */
   public toJSON(): EnumContractDescriptorJSON {
     return {
@@ -98,7 +104,7 @@ export class EnumeratedContractDescriptor
   }
 
   /**
-   * Serializes the contract_descriptor_v0 message into a Buffer
+   * Serializes the enumerated_contract_descriptor message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -120,7 +126,7 @@ export class EnumeratedContractDescriptor
 }
 
 /**
- * ContractDescriptor V1 contains information about a contract's outcomes
+ * NumericContractDescriptor contains information about a contract's outcomes
  * and their corresponding payouts.
  */
 export class NumericContractDescriptor

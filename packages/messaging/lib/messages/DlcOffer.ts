@@ -24,7 +24,16 @@ export const LOCKTIME_THRESHOLD = 500000000;
 
 export abstract class DlcOffer {
   public static deserialize(buf: Buffer): DlcOfferV0 {
-    return DlcOfferV0.deserialize(buf);
+    const reader = new BufferReader(buf);
+
+    const type = Number(reader.readUInt16BE());
+
+    switch (type) {
+      case MessageType.DlcOfferV0:
+        return DlcOfferV0.deserialize(buf);
+      default:
+        throw new Error('Dlc Offer message type must be DlcOfferV0');
+    }
   }
 
   public abstract type: number;
@@ -33,7 +42,7 @@ export abstract class DlcOffer {
 
   public abstract validate(): void;
 
-  // public abstract toJSON(): IDlcOfferV0JSON;
+  public abstract toJSON(): IDlcOfferV0JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -70,6 +79,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     instance.offerCollateralSatoshis = reader.readUInt64BE();
     console.log('test5');
     const fundingInputsLen = reader.readBigSize();
+    console.log('fundingInputsLen', fundingInputsLen);
     console.log('test6');
 
     for (let i = 0; i < fundingInputsLen; i++) {
@@ -78,6 +88,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     console.log('test7');
 
     const changeSPKLen = reader.readUInt16BE();
+    console.log('changeSPKLen', changeSPKLen);
     console.log('test8');
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();

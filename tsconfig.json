@@ -8,7 +8,8 @@
     "removeComments": false,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "experimentalDecorators": true
   },
   "exclude": ["node_modules", "**/*.spec.ts", "dist"]
 }

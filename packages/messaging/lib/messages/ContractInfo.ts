@@ -33,7 +33,7 @@ export abstract class ContractInfo implements IDlcMessage {
     const tempReader = new BufferReader(reader.peakBytes());
     const type = Number(tempReader.readBigSize());
 
-    console.log('type', type);
+    console.log('reader.peakbytes', reader.peakBytes().toString('hex'));
 
     switch (type) {
       case ContractInfoType.Single:
@@ -42,7 +42,7 @@ export abstract class ContractInfo implements IDlcMessage {
         return DisjointContractInfo.deserialize(reader);
       default:
         throw new Error(
-          `Contract info TLV type must be ContractInfoV0 or ContractInfoV1`,
+          `ContractInfo type must be Single or Disjoint. Received ${type}`,
         );
     }
   }
@@ -59,7 +59,7 @@ export abstract class ContractInfo implements IDlcMessage {
 }
 
 /**
- * ContractInfo V0 contains information about a contract's outcomes,
+ * SingleContractInfo contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
 export class SingleContractInfo implements IDlcMessage {
@@ -92,7 +92,7 @@ export class SingleContractInfo implements IDlcMessage {
   }
 
   /**
-   * The type for contract_info_v0 message. contract_info_v0 = 55342
+   * The type for single_contract_info message.
    */
   public type = SingleContractInfo.type;
 
@@ -168,7 +168,7 @@ export class SingleContractInfo implements IDlcMessage {
   }
 
   /**
-   * Converts contract_info_v0 to JSON
+   * Converts single_contract_info to JSON
    */
   public toJSON(): ISingleContractInfoJSON {
     return {
@@ -183,7 +183,7 @@ export class SingleContractInfo implements IDlcMessage {
   }
 
   /**
-   * Serializes the contract_info_v0 message into a Buffer
+   * Serializes the single_contract_info message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -202,14 +202,14 @@ export class SingleContractInfo implements IDlcMessage {
 }
 
 /**
- * ContractInfo V1 contains information about a contract's outcomes,
+ * DisjointContractInfo contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
 export class DisjointContractInfo implements IDlcMessage {
   public static type = ContractInfoType.Disjoint;
 
   /**
-   * Deserializes an contract_info_v0 message
+   * Deserializes an disjoint_contract_info message
    * @param buf
    */
   public static deserialize(

@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { IOrderMetadataJSON } from '..';
 import { MessageType } from '../MessageType';
-import { deserializeTlv } from '../serialize/deserializeTlv';
+import { deserializeTlv, ITlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import {
   validateBigInt,
@@ -63,8 +63,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
+    instance.protocolVersion = reader.readUInt32BE();
+    instance.contractFlags = reader.readUInt8();
     instance.chainHash = reader.readBytes(32);
-    instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
+    instance.contractInfo = ContractInfo.deserialize(reader);
     instance.offerCollateralSatoshis = reader.readUInt64BE();
     instance.feeRatePerVb = reader.readUInt64BE();
     instance.cetLocktime = reader.readUInt32BE();
@@ -73,7 +75,9 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     while (!reader.eof) {
       const buf = getTlv(reader);
       const tlvReader = new BufferReader(buf);
-      const { type } = deserializeTlv(tlvReader);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
 
       switch (Number(type)) {
         case MessageType.OrderMetadataV0:
@@ -95,6 +99,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
    */
   public type = OrderOfferV0.type;
 
+  public protocolVersion: number;
+
+  public contractFlags: number;
+
   public chainHash: Buffer;
 
   public contractInfo: ContractInfo;
@@ -110,6 +118,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public metadata?: OrderMetadata;
 
   public ircInfo?: OrderIrcInfo;
+
+  public tlvs: ITlv[] = [];
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
@@ -174,20 +184,27 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
    * Converts order_offer_v0 to JSON
    */
   public toJSON(): IOrderOfferJSON {
-    const tlvs = [];
-
-    if (this.metadata) tlvs.push(this.metadata.toJSON());
-    if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
-
     return {
-      type: this.type,
-      chainHash: this.chainHash.toString('hex'),
-      contractInfo: this.contractInfo.toJSON(),
-      offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
-      feeRatePerVb: Number(this.feeRatePerVb),
-      cetLocktime: this.cetLocktime,
-      refundLocktime: this.refundLocktime,
-      tlvs,
+      message: {
+        protocolVersion: this.protocolVersion,
+        contractFlags: this.contractFlags,
+        chainHash: this.chainHash.toString('hex'),
+        contractInfo: this.contractInfo.toJSON(),
+        offerCollateral: Number(this.offerCollateralSatoshis),
+        feeRatePerVb: Number(this.feeRatePerVb),
+        cetLocktime: this.cetLocktime,
+        refundLocktime: this.refundLocktime,
+        metadata: this.metadata.toJSON(),
+        ircInfo: this.ircInfo.toJSON(),
+        tlvs: this.tlvs.map((tlv) => {
+          return {
+            type: Number(tlv.type),
+            length: Number(tlv.length),
+            body: tlv.body.toString('hex'),
+          };
+        }),
+      },
+      serialized: this.serialize().toString('hex'),
     };
   }
 
@@ -197,6 +214,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
+    writer.writeUInt32BE(this.protocolVersion);
+    writer.writeUInt8(this.contractFlags);
     writer.writeBytes(this.chainHash);
     writer.writeBytes(this.contractInfo.serialize());
     writer.writeUInt64BE(this.offerCollateralSatoshis);
@@ -210,14 +229,25 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     return writer.toBuffer();
   }
 }
+export interface ITlvJSON {
+  type: number;
+  length: number;
+  body: string;
+}
 
 export interface IOrderOfferJSON {
-  type: number;
-  chainHash: string;
-  contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
-  offerCollateralSatoshis: number;
-  feeRatePerVb: number;
-  cetLocktime: number;
-  refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON)[];
+  message: {
+    protocolVersion: number;
+    contractFlags: number;
+    chainHash: string;
+    contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
+    offerCollateral: number;
+    feeRatePerVb: number;
+    cetLocktime: number;
+    refundLocktime: number;
+    metadata: IOrderMetadataJSON;
+    ircInfo: IOrderIrcInfoJSON;
+    tlvs: ITlvJSON[];
+  };
+  serialized: string;
 }

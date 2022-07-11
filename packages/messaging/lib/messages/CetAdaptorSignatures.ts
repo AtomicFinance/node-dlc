@@ -16,6 +16,7 @@ export class CetAdaptorSignatures implements IDlcMessage {
    */
   public static deserialize(
     reader: Buffer | BufferReader,
+    parseCets = true,
   ): CetAdaptorSignatures {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
@@ -23,10 +24,15 @@ export class CetAdaptorSignatures implements IDlcMessage {
 
     const nbSignatures = reader.readBigSize();
 
-    for (let i = 0; i < nbSignatures; i++) {
-      const encryptedSig = reader.readBytes(65);
-      const dleqProof = reader.readBytes(97);
-      instance.sigs.push({ encryptedSig, dleqProof });
+    if (parseCets) {
+      for (let i = 0; i < nbSignatures; i++) {
+        const encryptedSig = reader.readBytes(65);
+        const dleqProof = reader.readBytes(97);
+        instance.sigs.push({ encryptedSig, dleqProof });
+      }
+    } else {
+      const cetsByteLength = nbSignatures * (BigInt(65) + BigInt(97));
+      reader.readBytes(Number(cetsByteLength));
     }
 
     return instance;
@@ -36,8 +42,6 @@ export class CetAdaptorSignatures implements IDlcMessage {
    * The type for cet_adaptor_signature message. cet_adaptor_signature = 42774
    */
   public type = CetAdaptorSignatures.type;
-
-  public length: bigint;
 
   public sigs: ISig[] = [];
 
