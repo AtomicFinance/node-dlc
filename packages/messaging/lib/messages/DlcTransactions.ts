@@ -48,9 +48,9 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
     instance.contractId = reader.readBytes(32);
 
-    const fundTxLen = reader.readUInt16BE();
+    const fundTxLen = reader.readBigSize();
     instance.fundTx = Tx.decode(
-      StreamReader.fromBuffer(reader.readBytes(fundTxLen)),
+      StreamReader.fromBuffer(reader.readBytes(Number(fundTxLen))),
     );
 
     instance.fundTxVout = reader.readUInt32BE();
@@ -64,20 +64,20 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
     instance.fundBroadcastHeight = reader.readUInt32BE();
 
-    const refundTxLen = reader.readUInt16BE();
+    const refundTxLen = reader.readBigSize();
     instance.refundTx = Tx.decode(
-      StreamReader.fromBuffer(reader.readBytes(refundTxLen)),
+      StreamReader.fromBuffer(reader.readBytes(Number(refundTxLen))),
     );
 
     const numCets = reader.readBigSize(); // num_cets
     for (let i = 0; i < numCets; i++) {
-      const cetLen = reader.readUInt16BE();
+      const cetLen = reader.readBigSize();
       if (parseCets || i === 0) {
         instance.cets.push(
-          Tx.decode(StreamReader.fromBuffer(reader.readBytes(cetLen))),
+          Tx.decode(StreamReader.fromBuffer(reader.readBytes(Number(cetLen)))),
         );
       } else {
-        reader.readBytes(cetLen);
+        reader.readBytes(Number(cetLen));
       }
     }
 
@@ -163,18 +163,18 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
     writer.writeBytes(this.contractId);
-    writer.writeUInt16BE(this.fundTx.serialize().length);
+    writer.writeBigSize(this.fundTx.serialize().length);
     writer.writeBytes(this.fundTx.serialize());
     writer.writeUInt32BE(this.fundTxVout);
     writer.writeBytes(this.fundEpoch.hash);
     writer.writeUInt32BE(this.fundEpoch.height);
     writer.writeUInt32BE(this.fundBroadcastHeight);
-    writer.writeUInt16BE(this.refundTx.serialize().length);
+    writer.writeBigSize(this.refundTx.serialize().length);
     writer.writeBytes(this.refundTx.serialize());
 
     writer.writeBigSize(this.cets.length);
     for (const cet of this.cets) {
-      writer.writeUInt16BE(cet.serialize().length);
+      writer.writeBigSize(cet.serialize().length);
       writer.writeBytes(cet.serialize());
     }
 

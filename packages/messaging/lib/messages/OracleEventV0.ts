@@ -34,17 +34,28 @@ export class OracleEventV0 implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
+    console.log('oracle event 1');
     instance.length = reader.readBigSize();
+    console.log('oracle event 2');
     const nonceCount = reader.readUInt16BE();
+    console.log('oracle event 3');
+
+    console.log('nonceCount', nonceCount);
+    console.log('instance', instance);
 
     for (let i = 0; i < nonceCount; i++) {
+      console.log('i', i);
       instance.oracleNonces.push(reader.readBytes(32));
     }
 
     instance.eventMaturityEpoch = reader.readUInt32BE();
+    console.log('oracle event 4');
     instance.eventDescriptor = EventDescriptor.deserialize(getTlv(reader));
+    console.log('oracle event 5');
     const eventIdLength = reader.readBigSize();
+    console.log('oracle event 6');
     const eventIdBuf = reader.readBytes(Number(eventIdLength));
+    console.log('oracle event 7');
     instance.eventId = eventIdBuf.toString();
 
     return instance;

@@ -1,6 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
@@ -32,9 +31,9 @@ export abstract class NegotiationFields {
 
   public abstract type: number;
 
-  public abstract length: bigint;
-
-  public abstract toJSON(): INegotiationFieldsV1JSON | INegotiationFieldsV2JSON;
+  public abstract toJSON():
+    | ISingleNegotiationFieldsJSON
+    | IDisjointNegotiationFieldsJSON;
 
   public abstract serialize(): Buffer;
 }
@@ -60,7 +59,7 @@ export class SingleNegotiationFields
     const instance = new SingleNegotiationFields();
 
     reader.readBigSize(); // read type
-    instance.roundingIntervals = RoundingIntervals.deserialize(getTlv(reader));
+    instance.roundingIntervals = RoundingIntervals.deserialize(reader);
 
     return instance;
   }
@@ -70,16 +69,13 @@ export class SingleNegotiationFields
    */
   public type = SingleNegotiationFields.type;
 
-  public length: bigint;
-
   public roundingIntervals: RoundingIntervals;
 
   /**
    * Converts negotiation_fields_v1 to JSON
    */
-  public toJSON(): INegotiationFieldsV1JSON {
+  public toJSON(): ISingleNegotiationFieldsJSON {
     return {
-      type: this.type,
       roundingIntervals: this.roundingIntervals.toJSON(),
     };
   }
@@ -137,16 +133,13 @@ export class DisjointNegotiationFields
    */
   public type = DisjointNegotiationFields.type;
 
-  public length: bigint;
-
   public negotiationFieldsList: NegotiationFields[] = [];
 
   /**
    * Converts negotiation_fields_v2 to JSON
    */
-  public toJSON(): INegotiationFieldsV2JSON {
+  public toJSON(): IDisjointNegotiationFieldsJSON {
     return {
-      type: this.type,
       negotiationFieldsList: this.negotiationFieldsList.map((field) =>
         field.toJSON(),
       ),
@@ -167,7 +160,6 @@ export class DisjointNegotiationFields
       dataWriter.writeBytes(negotiationFields.serialize());
     }
 
-    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
     return writer.toBuffer();
   }
@@ -175,19 +167,13 @@ export class DisjointNegotiationFields
 
 // TODO: fix JSON here
 
-export interface INegotiationFieldsV0JSON {
-  type: number;
-}
-
-export interface INegotiationFieldsV1JSON {
-  type: number;
+export interface ISingleNegotiationFieldsJSON {
   roundingIntervals: IRoundingIntervalsJSON;
 }
 
-export interface INegotiationFieldsV2JSON {
-  type: number;
-  negotiationFieldsList:
-    | INegotiationFieldsV0JSON[]
-    | INegotiationFieldsV1JSON[]
-    | INegotiationFieldsV2JSON[];
+export interface IDisjointNegotiationFieldsJSON {
+  negotiationFieldsList: (
+    | ISingleNegotiationFieldsJSON
+    | IDisjointNegotiationFieldsJSON
+  )[];
 }

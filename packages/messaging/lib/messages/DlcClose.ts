@@ -1,7 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
@@ -48,11 +47,11 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     instance.offerPayoutSatoshis = reader.readUInt64BE();
     instance.acceptPayoutSatoshis = reader.readUInt64BE();
     instance.fundInputSerialId = reader.readUInt64BE();
-    const fundingInputsLen = reader.readUInt16BE();
+    const fundingInputsLen = reader.readBigSize();
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInput.deserialize(reader));
     }
-    instance.fundingSignatures = FundingSignatures.deserialize(getTlv(reader));
+    instance.fundingSignatures = FundingSignatures.deserialize(reader);
 
     return instance;
   }
@@ -87,7 +86,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     writer.writeUInt64BE(this.offerPayoutSatoshis);
     writer.writeUInt64BE(this.acceptPayoutSatoshis);
     writer.writeUInt64BE(this.fundInputSerialId);
-    writer.writeUInt16BE(this.fundingInputs.length);
+    writer.writeBigSize(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {
       writer.writeBytes(fundingInput.serialize());

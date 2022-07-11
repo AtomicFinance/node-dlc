@@ -34,7 +34,7 @@ const testVectors = {
   twoOfFiveOracleNumericalWithDiff,
 };
 
-describe.only('Test Vectors', () => {
+describe('Test Vectors', () => {
   describe('DlcOffer', () => {
     for (const [testName, testVector] of Object.entries(testVectors)) {
       it(`should deserialize ${camelToUnderscore(testName)}`, () => {

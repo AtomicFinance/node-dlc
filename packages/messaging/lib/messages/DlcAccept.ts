@@ -6,6 +6,8 @@ import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
 import { MessageType } from '../MessageType';
+import { deserializeTlv, ITlv } from '../serialize/deserializeTlv';
+import { getTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignatures,
   ICetAdaptorSignaturesJSON,
@@ -13,20 +15,20 @@ import {
 import { IDlcMessage } from './DlcMessage';
 import { FundingInput, IFundingInputJSON } from './FundingInput';
 import {
-  INegotiationFieldsV1JSON,
-  INegotiationFieldsV2JSON,
+  IDisjointNegotiationFieldsJSON,
+  ISingleNegotiationFieldsJSON,
   NegotiationFields,
 } from './NegotiationFields';
 
 export abstract class DlcAccept implements IDlcMessage {
-  public static deserialize(buf: Buffer): DlcAcceptV0 {
+  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf);
+        return DlcAcceptV0.deserialize(buf, parseCets);
       default:
         throw new Error(`Dlc Accept message type must be DlcAcceptV0`);
     }
@@ -54,7 +56,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * Deserializes an oracle_info message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcAcceptV0 {
+  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
     const instance = new DlcAcceptV0();
     const reader = new BufferReader(buf);
 
@@ -83,7 +85,10 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
     console.log('test8');
-    instance.cetSignatures = CetAdaptorSignatures.deserialize(reader);
+    instance.cetSignatures = CetAdaptorSignatures.deserialize(
+      reader,
+      parseCets,
+    );
     console.log('test9');
     instance.refundSignature = reader.readBytes(64);
     console.log('test10');
@@ -92,6 +97,14 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       instance.negotiationFields = NegotiationFields.deserialize(reader);
     }
     console.log('test11');
+
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
+    }
 
     return instance;
   }
@@ -124,6 +137,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   public refundSignature: Buffer;
 
   public negotiationFields: null | NegotiationFields = null;
+
+  public tlvs: ITlv[] = [];
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -307,7 +322,9 @@ export interface IDlcAcceptV0JSON {
     changeSerialId: number;
     cetAdaptorSignatures: ICetAdaptorSignaturesJSON;
     refundSignature: string;
-    negotiationFields: INegotiationFieldsV1JSON | INegotiationFieldsV2JSON;
+    negotiationFields:
+      | ISingleNegotiationFieldsJSON
+      | IDisjointNegotiationFieldsJSON;
   };
   serialized: string;
 }

@@ -1,18 +1,11 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-
-export enum RoundingIntervalsType {
-  RoundingIntervals = 0,
-}
 
 /**
  * RoundingIntervals
  */
 export class RoundingIntervals implements IDlcMessage {
-  public static type = RoundingIntervalsType.RoundingIntervals;
-
   /**
    * Deserializes an rounding_intervals_v0 tlv
    * @param buf
@@ -36,10 +29,6 @@ export class RoundingIntervals implements IDlcMessage {
   /**
    * The type for rounding_intervals_v0 tlv. rounding_intervals_v0 = 42788
    */
-  public type = RoundingIntervals.type;
-
-  public length: bigint;
-
   public intervals: IInterval[] = [];
 
   /**

@@ -1,14 +1,16 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
-import { OrderCsoInfoV0 } from '../../lib';
-import { ContractInfo } from '../../lib/messages/ContractInfo';
+import {
+  ContractInfo,
+  ISingleContractInfoJSON,
+} from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
   DlcOfferV0,
   LOCKTIME_THRESHOLD,
 } from '../../lib/messages/DlcOffer';
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { FundingInput } from '../../lib/messages/FundingInput';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcOffer', () => {
@@ -16,26 +18,32 @@ describe('DlcOffer', () => {
 
   let instance: DlcOfferV0;
   const type = Buffer.from('a71a', 'hex');
+  const protocolVersion = Buffer.from('00000001', 'hex');
   const contractFlags = Buffer.from('00', 'hex');
   const chainHash = Buffer.from(
     '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
     'hex',
   );
+
+  const temporaryContractId = Buffer.from(
+    '2005f76575d3f0ff0fc32a7b8da3a4833d380f32eae5658704dd7ed945b6281a',
+    'hex',
+  );
   const contractInfo = Buffer.from(
-    'fdd82e' + // type contract_info
-      'fd0131' + // length
+    '00' + // type single_contract_info
       '000000000bebc200' + // total_collateral
-      'fda710' + // type contract_descriptor
-      '79' + // length
+      '00' + // type enumerated_contract_descriptor
       '03' + // num_outcomes
-      'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
+      '01' + // outcome_1_len
+      '31' + // outcome_1
       '0000000000000000' + // payout_1
-      'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
+      '01' + // outcome_2_len
+      '32' + // outcome_2
       '00000000092363a3' + // payout_2
-      '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
+      '01' + // outcome_3_len
+      '33' + // outcome_3
       '000000000bebc200' + // payout_3
-      'fda712' + // type oracle_info
-      'a8' + // length
+      '00' + // type single_oracle_info
       'fdd824' + // type oracle_announcement
       'a4' + // length
       'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
@@ -71,13 +79,12 @@ describe('DlcOffer', () => {
 
   const payoutSerialID = Buffer.from('0000000000b051dc', 'hex');
   const offerCollateralSatoshis = Buffer.from('0000000005f5e0FF', 'hex'); // 99999999
-  const fundingInputsLen = Buffer.from('0001', 'hex');
 
-  const fundingInputV0 = Buffer.from(
-    'fda714' +
-      '3f' + // length
-      '000000000000fa51' + // input_serial_id
-      '0029' + // prevtx_len
+  const fundingInputsLen = Buffer.from('01', 'hex');
+
+  const fundingInput = Buffer.from(
+    '000000000000fa51' + // input_serial_id
+      '29' + // prevtx_len
       '02000000000100c2eb0b00000000160014369d63a82ed846f4d47ad55045e594ab95539d6000000000' + // prevtx
       '00000000' + // prevtx_vout
       'ffffffff' + // sequence
@@ -100,8 +107,10 @@ describe('DlcOffer', () => {
 
   const dlcOfferHex = Buffer.concat([
     type,
+    protocolVersion,
     contractFlags,
     chainHash,
+    temporaryContractId,
     contractInfo,
     fundingPubKey,
     payoutSPKLen,
@@ -109,7 +118,7 @@ describe('DlcOffer', () => {
     payoutSerialID,
     offerCollateralSatoshis,
     fundingInputsLen,
-    fundingInputV0,
+    fundingInput,
     changeSPKLen,
     changeSPK,
     changeSerialID,
@@ -121,14 +130,16 @@ describe('DlcOffer', () => {
 
   beforeEach(() => {
     instance = new DlcOfferV0();
-    instance.contractFlags = contractFlags;
+    instance.protocolVersion = parseInt(protocolVersion.toString('hex'), 16);
+    instance.contractFlags = parseInt(contractFlags.toString('hex'), 16);
     instance.chainHash = chainHash;
+    instance.temporaryContractId = temporaryContractId;
     instance.contractInfo = ContractInfo.deserialize(contractInfo);
     instance.fundingPubKey = fundingPubKey;
     instance.payoutSPK = payoutSPK;
     instance.payoutSerialId = BigInt(11555292);
     instance.offerCollateralSatoshis = BigInt(99999999);
-    instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+    instance.fundingInputs = [FundingInput.deserialize(fundingInput)];
     instance.changeSPK = changeSPK;
     instance.changeSerialId = BigInt(2008045);
     instance.fundOutputSerialId = BigInt(5411962);
@@ -159,24 +170,15 @@ describe('DlcOffer', () => {
           dlcOfferHex.toString('hex'),
         );
       });
-
-      it('serializes with csoinfo', () => {
-        const csoInfo = new OrderCsoInfoV0();
-        csoInfo.shiftForFees = 'acceptor';
-        csoInfo.fees = BigInt(1000);
-
-        instance.csoInfo = csoInfo;
-        expect(instance.serialize().toString('hex')).to.equal(
-          Buffer.concat([dlcOfferHex, csoInfo.serialize()]).toString('hex'),
-        );
-      });
     });
 
     describe('deserialize', () => {
       it('deserializes', () => {
         const instance = DlcOfferV0.deserialize(dlcOfferHex);
 
-        expect(instance.contractFlags).to.deep.equal(contractFlags);
+        expect(instance.contractFlags).to.deep.equal(
+          parseInt(contractFlags.toString('hex'), 16),
+        );
         expect(instance.chainHash).to.deep.equal(chainHash);
         expect(instance.contractInfo.serialize().toString('hex')).to.equal(
           contractInfo.toString('hex'),
@@ -186,7 +188,7 @@ describe('DlcOffer', () => {
         expect(Number(instance.payoutSerialId)).to.equal(11555292);
         expect(Number(instance.offerCollateralSatoshis)).to.equal(99999999);
         expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
-          fundingInputV0.toString('hex'),
+          fundingInput.toString('hex'),
         );
         expect(instance.changeSPK).to.deep.equal(changeSPK);
         expect(Number(instance.changeSerialId)).to.equal(2008045);
@@ -201,55 +203,51 @@ describe('DlcOffer', () => {
           MessageType.DlcOfferV0,
         );
       });
-
-      it('deserializes with csoinfo', () => {
-        const csoInfo = new OrderCsoInfoV0();
-        csoInfo.shiftForFees = 'acceptor';
-        csoInfo.fees = BigInt(1000);
-
-        instance.csoInfo = csoInfo;
-        expect(
-          DlcOfferV0.deserialize(instance.serialize()).csoInfo.serialize(),
-        ).to.deep.equal(csoInfo.serialize());
-      });
     });
 
     describe('toJSON', () => {
       it('converts to JSON', async () => {
         const json = instance.toJSON();
-        expect(json.type).to.equal(instance.type);
-        expect(json.contractFlags).to.equal(
-          instance.contractFlags.toString('hex'),
+        expect(json.message.protocolVersion).to.equal(instance.protocolVersion);
+        expect(json.message.contractFlags).to.equal(instance.contractFlags);
+        expect(json.message.chainHash).to.equal(
+          instance.chainHash.toString('hex'),
         );
-        expect(json.chainHash).to.equal(instance.chainHash.toString('hex'));
-        expect(json.contractInfo.type).to.equal(instance.contractInfo.type);
-        expect(json.contractInfo.totalCollateral).to.equal(
-          Number(instance.contractInfo.totalCollateral),
-        );
+        expect(
+          (json.message.contractInfo as ISingleContractInfoJSON)
+            .singleContractInfo.totalCollateral,
+        ).to.equal(Number(instance.contractInfo.totalCollateral));
 
-        expect(json.fundingPubKey).to.equal(
+        expect(json.message.fundingPubkey).to.equal(
           instance.fundingPubKey.toString('hex'),
         );
-        expect(json.payoutSPK).to.equal(instance.payoutSPK.toString('hex'));
-        expect(json.payoutSerialId).to.equal(Number(instance.payoutSerialId));
-        expect(json.offerCollateralSatoshis).to.equal(
+        expect(json.message.payoutSpk).to.equal(
+          instance.payoutSPK.toString('hex'),
+        );
+        expect(json.message.payoutSerialId).to.equal(
+          Number(instance.payoutSerialId),
+        );
+        expect(json.message.offerCollateral).to.equal(
           Number(instance.offerCollateralSatoshis),
         );
-        expect(json.fundingInputs[0].type).to.equal(
-          instance.fundingInputs[0].type,
-        );
-        expect(json.fundingInputs[0].inputSerialId).to.equal(
+        expect(json.message.fundingInputs[0].inputSerialId).to.equal(
           Number(instance.fundingInputs[0].toJSON().inputSerialId),
         );
 
-        expect(json.changeSPK).to.equal(instance.changeSPK.toString('hex'));
-        expect(json.changeSerialId).to.equal(Number(instance.changeSerialId));
-        expect(json.fundOutputSerialId).to.equal(
+        expect(json.message.changeSpk).to.equal(
+          instance.changeSPK.toString('hex'),
+        );
+        expect(json.message.changeSerialId).to.equal(
+          Number(instance.changeSerialId),
+        );
+        expect(json.message.fundOutputSerialId).to.equal(
           Number(instance.fundOutputSerialId),
         );
-        expect(json.feeRatePerVb).to.equal(Number(instance.feeRatePerVb));
-        expect(json.cetLocktime).to.equal(instance.cetLocktime);
-        expect(json.refundLocktime).to.equal(instance.refundLocktime);
+        expect(json.message.feeRatePerVb).to.equal(
+          Number(instance.feeRatePerVb),
+        );
+        expect(json.message.cetLocktime).to.equal(instance.cetLocktime);
+        expect(json.message.refundLocktime).to.equal(instance.refundLocktime);
       });
     });
 
@@ -372,8 +370,8 @@ describe('DlcOffer', () => {
 
       it('should throw if inputSerialIds arent unique', () => {
         instance.fundingInputs = [
-          FundingInputV0.deserialize(fundingInputV0),
-          FundingInputV0.deserialize(fundingInputV0),
+          FundingInput.deserialize(fundingInput),
+          FundingInput.deserialize(fundingInput),
         ];
         expect(function () {
           instance.validate();

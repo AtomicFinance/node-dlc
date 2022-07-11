@@ -37,6 +37,8 @@ export class OracleAnnouncementV0 implements IDlcMessage {
     instance.announcementSig = reader.readBytes(64);
     console.log('deserialize OracleAnnouncementV0 3');
     instance.oraclePubkey = reader.readBytes(32);
+    console.log('deserialize OracleAnnouncementV0 4');
+    console.log('instance', instance);
     instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader));
 
     return instance;
