@@ -200,13 +200,6 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
         refundLocktime: this.refundLocktime,
         metadata: this.metadata.toJSON(),
         ircInfo: this.ircInfo.toJSON(),
-        tlvs: this.tlvs.map((tlv) => {
-          return {
-            type: Number(tlv.type),
-            length: Number(tlv.length),
-            body: tlv.body.toString('hex'),
-          };
-        }),
       },
       serialized: this.serialize().toString('hex'),
     };
@@ -252,7 +245,6 @@ export interface IOrderOfferJSON {
     refundLocktime: number;
     metadata: IOrderMetadataJSON;
     ircInfo: IOrderIrcInfoJSON;
-    tlvs: ITlvJSON[];
   };
   serialized: string;
 }

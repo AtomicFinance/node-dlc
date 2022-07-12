@@ -48,9 +48,10 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 
     reader.readUInt16BE(); // read type
     instance.tempOrderId = reader.readBytes(32);
-    instance.negotiationFields = OrderNegotiationFields.deserialize(
-      getTlv(reader),
-    );
+    const hasNegotiationFields = reader.readUInt8() === 1;
+    if (hasNegotiationFields) {
+      instance.negotiationFields = OrderNegotiationFields.deserialize(reader);
+    }
 
     return instance;
   }
