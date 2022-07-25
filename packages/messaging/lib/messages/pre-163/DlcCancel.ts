@@ -1,6 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
+import { MessageType } from '../../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class DlcCancel {
