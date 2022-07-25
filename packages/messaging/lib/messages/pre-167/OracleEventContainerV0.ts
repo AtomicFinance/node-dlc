@@ -1,8 +1,8 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
-import { IDlcMessage } from './DlcMessage';
+import { MessageType } from '../../MessageType';
+import { getTlv } from '../../serialize/getTlv';
+import { IDlcMessage } from '../DlcMessage';
 import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
 import { OracleAttestationV0 } from './OracleAttestationV0';
 

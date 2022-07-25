@@ -1,4 +1,5 @@
 import { Value } from '@node-dlc/bitcoin';
+import BigNumber from 'bignumber.js';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
@@ -12,12 +13,12 @@ import {
   DisjointContractInfo,
   SingleContractInfo,
 } from '../../lib/messages/ContractInfo';
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunction } from '../../lib/messages/PayoutFunction';
+import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/pre-167/EventDescriptor';
+import { OracleAnnouncementV0 } from '../../lib/messages/pre-167/OracleAnnouncementV0';
+import { OracleEventV0 } from '../../lib/messages/pre-167/OracleEventV0';
 import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
 
 chai.use(chaiAsPromised);
@@ -70,8 +71,6 @@ describe('ContractInfoV0', () => {
           'hex',
         ),
       );
-
-      console.log('instance.serialize()', instance.serialize().toString('hex'));
 
       expect(instance.serialize().toString("hex")).to.equal(
         "00" + // type single_contract_info
@@ -258,29 +257,14 @@ describe('ContractInfoV0', () => {
 
       hyperbolaPayoutCurvePiece = new HyperbolaPayoutCurvePiece();
       hyperbolaPayoutCurvePiece.usePositivePiece = true;
-      hyperbolaPayoutCurvePiece.translateOutcomeSign = true;
-      hyperbolaPayoutCurvePiece.translateOutcome = BigInt(0);
-      hyperbolaPayoutCurvePiece.translateOutcomeExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.translatePayoutSign = false;
-      hyperbolaPayoutCurvePiece.translatePayout = BigInt(30518);
-      hyperbolaPayoutCurvePiece.translatePayoutExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.aSign = true;
-      hyperbolaPayoutCurvePiece.a = BigInt(1);
-      hyperbolaPayoutCurvePiece.aExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.bSign = true;
-      hyperbolaPayoutCurvePiece.b = BigInt(0);
-      hyperbolaPayoutCurvePiece.bExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.cSign = true;
-      hyperbolaPayoutCurvePiece.c = BigInt(0);
-      hyperbolaPayoutCurvePiece.cExtraPrecision = 0;
-      hyperbolaPayoutCurvePiece.dSign = true;
-      hyperbolaPayoutCurvePiece.d = BigInt(4000000000);
-      hyperbolaPayoutCurvePiece.dExtraPrecision = 0;
+      hyperbolaPayoutCurvePiece.translateOutcome = new BigNumber(0);
+      hyperbolaPayoutCurvePiece.translatePayout = new BigNumber(30518);
+      hyperbolaPayoutCurvePiece.a = new BigNumber(1);
+      hyperbolaPayoutCurvePiece.b = new BigNumber(0);
+      hyperbolaPayoutCurvePiece.c = new BigNumber(0);
+      hyperbolaPayoutCurvePiece.d = new BigNumber(4000000000);
 
       payoutFunction = new PayoutFunction();
-      // payoutFunction.endpoint0 = BigInt(0);
-      // payoutFunction.endpointPayout0 = BigInt(969482);
-      // payoutFunction.extraPrecision0 = 0;
 
       payoutFunction.lastEndpoint.eventOutcome = BigInt(262143);
       payoutFunction.lastEndpoint.outcomePayout = Value.fromSats(969482);

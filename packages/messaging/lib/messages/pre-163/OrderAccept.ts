@@ -1,9 +1,11 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
+import { MessageType } from '../../MessageType';
+import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
-  IOrderNegotiationFieldsJSON,
+  IOrderNegotiationFieldsV0JSON,
+  IOrderNegotiationFieldsV1JSON,
   OrderNegotiationFields,
 } from './OrderNegotiationFields';
 
@@ -46,10 +48,9 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 
     reader.readUInt16BE(); // read type
     instance.tempOrderId = reader.readBytes(32);
-    const hasNegotiationFields = reader.readUInt8() === 1;
-    if (hasNegotiationFields) {
-      instance.negotiationFields = OrderNegotiationFields.deserialize(reader);
-    }
+    instance.negotiationFields = OrderNegotiationFields.deserialize(
+      getTlv(reader),
+    );
 
     return instance;
   }
@@ -61,7 +62,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 
   public tempOrderId: Buffer;
 
-  public negotiationFields: null | OrderNegotiationFields = null;
+  public negotiationFields: OrderNegotiationFields;
 
   /**
    * Converts order_negotiation_fields_v0 to JSON
@@ -81,10 +82,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
     writer.writeBytes(this.tempOrderId);
-    writer.writeUInt8(this.negotiationFields ? 1 : 0);
-    if (this.negotiationFields) {
-      writer.writeBytes(this.negotiationFields.serialize());
-    }
+    writer.writeBytes(this.negotiationFields.serialize());
 
     return writer.toBuffer();
   }
@@ -93,5 +91,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 export interface IOrderAcceptV0JSON {
   type: number;
   tempOrderId: string;
-  negotiationFields: IOrderNegotiationFieldsJSON;
+  negotiationFields:
+    | IOrderNegotiationFieldsV0JSON
+    | IOrderNegotiationFieldsV1JSON;
 }

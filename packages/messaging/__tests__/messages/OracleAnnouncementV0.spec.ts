@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/pre-167/EventDescriptor';
+import { OracleAnnouncementV0 } from '../../lib/messages/pre-167/OracleAnnouncementV0';
+import { OracleEventV0 } from '../../lib/messages/pre-167/OracleEventV0';
 
 describe('OracleAnnouncementV0', () => {
   const announcementSig = Buffer.from(

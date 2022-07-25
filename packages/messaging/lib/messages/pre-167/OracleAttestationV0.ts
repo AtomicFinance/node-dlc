@@ -1,8 +1,8 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { math, verify } from 'bip-schnorr';
 
-import { MessageType } from '../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { MessageType } from '../../MessageType';
+import { IDlcMessage } from '../DlcMessage';
 
 /**
  * In order to make it possible to hold oracles accountable in cases where

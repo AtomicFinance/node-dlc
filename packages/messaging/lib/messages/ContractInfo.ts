@@ -9,9 +9,6 @@ import {
   NumericContractDescriptorJSON,
 } from './ContractDescriptor';
 import { IDlcMessage } from './DlcMessage';
-import { DigitDecompositionEventDescriptorV0 } from './EventDescriptor';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
-import { OracleEventV0 } from './OracleEventV0';
 import {
   IMultiOracleInfoJSON,
   ISingleOracleInfoJSON,
@@ -19,6 +16,10 @@ import {
   OracleInfoType,
   SingleOracleInfo,
 } from './OracleInfo';
+import { ContractInfoV0, ContractInfoV1 } from './pre-163/ContractInfo';
+import { DigitDecompositionEventDescriptorV0 } from './pre-167/EventDescriptor';
+import { OracleAnnouncementV0 } from './pre-167/OracleAnnouncementV0';
+import { OracleEventV0 } from './pre-167/OracleEventV0';
 
 export enum ContractInfoType {
   Single = 0,
@@ -87,6 +88,18 @@ export class SingleContractInfo implements IDlcMessage {
       JSON.stringify(instance.contractDescriptor.toJSON()),
     );
     instance.oracleInfo = OracleInfo.deserialize(reader);
+
+    return instance;
+  }
+
+  public static fromPre163(contractInfo: ContractInfoV0): SingleContractInfo {
+    const instance = new SingleContractInfo();
+
+    instance.totalCollateral = contractInfo.totalCollateral;
+    instance.contractDescriptor = ContractDescriptor.from163(
+      contractInfo.contractDescriptor,
+    );
+    instance.oracleInfo = OracleInfo.fromPre163(contractInfo.oracleInfo);
 
     return instance;
   }
@@ -232,6 +245,23 @@ export class DisjointContractInfo implements IDlcMessage {
 
       instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
     }
+
+    return instance;
+  }
+
+  public static fromPre163(contractInfo: ContractInfoV1): DisjointContractInfo {
+    const instance = new DisjointContractInfo();
+
+    instance.totalCollateral = contractInfo.totalCollateral;
+
+    contractInfo.contractOraclePairs.forEach((oraclePair) => {
+      instance.contractOraclePairs.push({
+        contractDescriptor: ContractDescriptor.from163(
+          oraclePair.contractDescriptor,
+        ),
+        oracleInfo: OracleInfo.fromPre163(oraclePair.oracleInfo),
+      });
+    });
 
     return instance;
   }

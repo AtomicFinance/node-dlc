@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { MessageType } from '../../MessageType';
+import { IDlcMessage } from '../DlcMessage';
 
 export abstract class EventDescriptor {
   public static deserialize(
