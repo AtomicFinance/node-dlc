@@ -25,25 +25,13 @@ export class PayoutFunction implements IDlcMessage {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
     const instance = new PayoutFunction();
 
-    console.log('15');
     const numPieces = reader.readBigSize(); // num_pieces
-    console.log('15-1');
-    console.log('numPieces', numPieces);
 
     for (let i = 0; i < numPieces; i++) {
-      console.log('15-2');
       const eventOutcome = reader.readUInt64BE();
-      console.log('16');
       const outcomePayout = reader.readUInt64BE();
       const extraPrecision = reader.readUInt16BE();
-      console.log('17');
       const payoutCurvePiece = PayoutCurvePiece.deserialize(reader);
-      console.log('18');
-
-      console.log('eventOutcome', eventOutcome);
-      console.log('outcomePayout', outcomePayout);
-      console.log('extraPrecision', extraPrecision);
-      console.log('payoutCurvePiece', payoutCurvePiece);
 
       instance.pieces.push({
         payoutCurvePiece,
@@ -55,15 +43,9 @@ export class PayoutFunction implements IDlcMessage {
       });
     }
 
-    console.log('30');
-
     instance.lastEndpoint.eventOutcome = reader.readUInt64BE(); // endpoint0
-    console.log('30-a');
     instance.lastEndpoint.outcomePayout = Value.fromSats(reader.readUInt64BE()); // endpointPayout0
-    console.log('30-b');
     instance.lastEndpoint.extraPrecision = reader.readUInt16BE();
-
-    console.log('31');
 
     return instance;
   }

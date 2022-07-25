@@ -84,7 +84,6 @@ export class EnumeratedContractDescriptor
       `Expected Enumerated Contract Descriptor, got type ${this.type}`,
     );
     const numOutcomes = reader.readBigSize(); // num_outcomes
-    console.log('numOutcomes', numOutcomes);
 
     for (let i = 0; i < numOutcomes; i++) {
       const strLen = reader.readBigSize();
@@ -179,13 +178,8 @@ export class NumericContractDescriptor
     const instance = new NumericContractDescriptor();
 
     reader.readBigSize(); // read type
-    console.log('10');
     instance.numDigits = reader.readUInt16BE(); // num_digits
-    console.log('numeric contract descriptor numdigits', instance.numDigits);
-    console.log('11');
-
     instance.payoutFunction = PayoutFunction.deserialize(reader);
-    console.log('12');
     instance.roundingIntervals = RoundingIntervals.deserialize(reader);
 
     return instance;

@@ -41,12 +41,6 @@ describe('Test Vectors', () => {
         const dlcOffer = DlcOfferV0.deserialize(
           Buffer.from(testVector.offer_message.serialized, 'hex'),
         );
-        console.log('dlcOffer', dlcOffer);
-        console.log(
-          'dlcOffer.serialized',
-          dlcOffer.serialize().toString('hex'),
-        );
-        console.log('dlcOffer.JSON', JSON.stringify(dlcOffer.toJSON()));
         const serializedDlcOffer = dlcOffer.serialize();
         expect(serializedDlcOffer.toString('hex')).to.equal(
           testVector.offer_message.serialized,
@@ -64,13 +58,6 @@ describe('Test Vectors', () => {
         const dlcAccept = DlcAcceptV0.deserialize(
           Buffer.from(testVector.accept_message.serialized, 'hex'),
         );
-        console.log('dlcAccept', dlcAccept);
-        console.log('dlcAccept.serialize', dlcAccept.serialize);
-        console.log(
-          'dlcAccept.serialized',
-          dlcAccept.serialize().toString('hex'),
-        );
-        console.log('dlcAccept.JSON', JSON.stringify(dlcAccept.toJSON()));
         const serializedDlcAccept = dlcAccept.serialize();
         expect(serializedDlcAccept.toString('hex')).to.equal(
           testVector.accept_message.serialized,
@@ -88,10 +75,6 @@ describe('Test Vectors', () => {
         const dlcSign = DlcSignV0.deserialize(
           Buffer.from(testVector.sign_message.serialized, 'hex'),
         );
-        console.log('dlcSign', dlcSign);
-        console.log('dlcSign.serialize', dlcSign.serialize);
-        console.log('dlcSign.serialized', dlcSign.serialize().toString('hex'));
-        console.log('dlcSign.JSON', JSON.stringify(dlcSign.toJSON()));
         const serializedDlcSign = dlcSign.serialize();
         expect(serializedDlcSign.toString('hex')).to.equal(
           testVector.sign_message.serialized,

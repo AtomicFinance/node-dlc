@@ -19,11 +19,8 @@ export class FundingSignatures implements IDlcMessage {
 
     const numWitnesses = reader.readBigSize();
 
-    console.log('numWitnesses', numWitnesses);
-
     for (let i = 0; i < numWitnesses; i++) {
       const numWitnessElements = reader.readBigSize();
-      console.log('numWitnessElements', numWitnessElements);
       const witnessElements: ScriptWitness[] = [];
       for (let j = 0; j < numWitnessElements; j++) {
         const witness = ScriptWitness.getWitness(reader);

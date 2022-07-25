@@ -22,8 +22,6 @@ export abstract class OracleInfo implements IDlcMessage {
     const tempReader = new BufferReader(reader.peakBytes());
     const type = Number(tempReader.readBigSize());
 
-    console.log('type', type);
-
     switch (type) {
       case OracleInfoType.Single:
         return SingleOracleInfo.deserialize(reader);
@@ -69,10 +67,7 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
 
     const instance = new SingleOracleInfo();
 
-    console.log('deserialize singleoracleinfo');
     const type = reader.readBigSize(); // read type
-    console.log('type', type);
-    console.log('deserialize singleoracleinfo 1');
     instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
 
     return instance;
@@ -140,9 +135,7 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
 
     const instance = new MultiOracleInfo();
 
-    console.log('deserialize MultiOracleInfo');
     reader.readBigSize(); // read type
-    console.log('deserialize MultiOracleInfo 1');
     instance.threshold = reader.readUInt16BE();
     const numOracles = reader.readBigSize();
     for (let i = 0; i < numOracles; i++) {

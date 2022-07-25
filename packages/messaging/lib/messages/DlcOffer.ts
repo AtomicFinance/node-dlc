@@ -78,18 +78,13 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInput.deserialize(reader));
     }
-    console.log('test7');
 
     const changeSPKLen = reader.readUInt16BE();
-    console.log('changeSPKLen', changeSPKLen);
-    console.log('test8');
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
     instance.fundOutputSerialId = reader.readUInt64BE();
-    console.log('test9');
     instance.feeRatePerVb = reader.readUInt64BE();
     instance.cetLocktime = reader.readUInt32BE();
-    console.log('test10');
     instance.refundLocktime = reader.readUInt32BE();
 
     while (!reader.eof) {

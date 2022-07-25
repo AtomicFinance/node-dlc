@@ -61,42 +61,29 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
-    console.log('test1');
     instance.protocolVersion = reader.readUInt32BE();
-    console.log('test2');
     instance.tempContractId = reader.readBytes(32);
-    console.log('test3');
     instance.acceptCollateralSatoshis = reader.readUInt64BE();
-    console.log('test4');
     instance.fundingPubKey = reader.readBytes(33);
-    console.log('test5');
     const payoutSPKLen = reader.readUInt16BE();
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
     instance.payoutSerialId = reader.readUInt64BE();
-    console.log('test6');
-    console.log('instance', instance);
     const fundingInputsLen = reader.readBigSize();
-    console.log('fundingInputsLen', fundingInputsLen);
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInput.deserialize(reader));
     }
-    console.log('test7');
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
-    console.log('test8');
     instance.cetSignatures = CetAdaptorSignatures.deserialize(
       reader,
       parseCets,
     );
-    console.log('test9');
     instance.refundSignature = reader.readBytes(64);
-    console.log('test10');
     const hasNegotiationFields = reader.readUInt8() === 1;
     if (hasNegotiationFields) {
       instance.negotiationFields = NegotiationFields.deserialize(reader);
     }
-    console.log('test11');
 
     while (!reader.eof) {
       const buf = getTlv(reader);
@@ -246,7 +233,6 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * Serializes the accept_channel message into a Buffer
    */
   public serialize(): Buffer {
-    console.log('dlcAccept serialize');
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
     writer.writeUInt32BE(this.protocolVersion);
@@ -257,21 +243,16 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     writer.writeBytes(this.payoutSPK);
     writer.writeUInt64BE(this.payoutSerialId);
     writer.writeBigSize(this.fundingInputs.length);
-    console.log('test1');
 
     for (const fundingInput of this.fundingInputs) {
       writer.writeBytes(fundingInput.serialize());
     }
 
-    console.log('test2');
     writer.writeUInt16BE(this.changeSPK.length);
     writer.writeBytes(this.changeSPK);
     writer.writeUInt64BE(this.changeSerialId);
-    console.log('test3');
     writer.writeBytes(this.cetSignatures.serialize());
-    console.log('test4');
     writer.writeBytes(this.refundSignature);
-    console.log('test5');
     writer.writeUInt8(this.negotiationFields ? 1 : 0);
     if (this.negotiationFields) {
       writer.writeBytes(this.negotiationFields.serialize());

@@ -21,17 +21,12 @@ export class FundingInput implements IDlcMessage {
 
     const instance = new FundingInput();
 
-    console.log('funding input 1');
     instance.inputSerialId = reader.readUInt64BE();
-    console.log('funding input 2');
     const prevTxLen = reader.readBigSize();
-    console.log('funding input 3');
     instance.prevTx = Tx.decode(
       StreamReader.fromBuffer(reader.readBytes(Number(prevTxLen))),
     );
-    console.log('funding input 4');
     instance.prevTxVout = reader.readUInt32BE();
-    console.log('funding input 5');
     instance.sequence = new Sequence(reader.readUInt32LE());
     instance.maxWitnessLen = reader.readUInt16BE();
     const redeemScriptLen = reader.readUInt16BE();

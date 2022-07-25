@@ -34,8 +34,6 @@ export abstract class ContractInfo implements IDlcMessage {
     const tempReader = new BufferReader(reader.peakBytes());
     const type = Number(tempReader.readBigSize());
 
-    console.log('reader.peakbytes', reader.peakBytes().toString('hex'));
-
     switch (type) {
       case ContractInfoType.Single:
         return SingleContractInfo.deserialize(reader);
@@ -76,17 +74,8 @@ export class SingleContractInfo implements IDlcMessage {
     const instance = new SingleContractInfo();
 
     const type = reader.readBigSize(); // read type
-    console.log('type', type);
-    console.log('test5');
     instance.totalCollateral = reader.readUInt64BE();
-    console.log('test6');
     instance.contractDescriptor = ContractDescriptor.deserialize(reader);
-    console.log('test7');
-    console.log('instance.contractdescriptor', instance.contractDescriptor);
-    console.log(
-      'instance.contractdescriptorJSON',
-      JSON.stringify(instance.contractDescriptor.toJSON()),
-    );
     instance.oracleInfo = OracleInfo.deserialize(reader);
 
     return instance;
@@ -236,11 +225,8 @@ export class DisjointContractInfo implements IDlcMessage {
     instance.totalCollateral = reader.readUInt64BE();
 
     const numDisjointEvents = reader.readBigSize(); // read num_disjoint_events
-    console.log('numDisjointEvents', numDisjointEvents);
     for (let i = 0; i < numDisjointEvents; i++) {
-      console.log('i contractdescriptor', i);
       const contractDescriptor = ContractDescriptor.deserialize(reader);
-      console.log('i oracleinfo', i);
       const oracleInfo = OracleInfo.deserialize(reader);
 
       instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
