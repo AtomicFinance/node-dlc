@@ -1,6 +1,8 @@
 import { Tx } from '@node-lightning/core';
 
-import { DlcAcceptV0, DlcOfferV0, DlcTransactionsV0 } from '..';
+import { DlcAcceptV0 } from './DlcAccept';
+import { DlcOfferV0Pre163 } from './DlcOffer';
+import { DlcTransactionsV0Pre163 } from './DlcTransactions';
 
 /**
  * DlcClose Metadata object contains information required for verifying DlcClose
@@ -28,9 +30,9 @@ export class DlcCloseMetadata {
   }
 
   public static fromDlcMessages(
-    dlcOffer: DlcOfferV0,
+    dlcOffer: DlcOfferV0Pre163,
     dlcAccept: DlcAcceptV0,
-    dlcTxs: DlcTransactionsV0,
+    dlcTxs: DlcTransactionsV0Pre163,
   ): DlcCloseMetadata {
     const instance = new DlcCloseMetadata();
 
@@ -83,13 +85,13 @@ export class DlcCloseMetadata {
   }
 
   public toDlcMessages(): {
-    dlcOffer: DlcOfferV0;
+    dlcOffer: DlcOfferV0Pre163;
     dlcAccept: DlcAcceptV0;
-    dlcTxs: DlcTransactionsV0;
+    dlcTxs: DlcTransactionsV0Pre163;
   } {
-    const dlcOffer = new DlcOfferV0();
+    const dlcOffer = new DlcOfferV0Pre163();
     const dlcAccept = new DlcAcceptV0();
-    const dlcTxs = new DlcTransactionsV0();
+    const dlcTxs = new DlcTransactionsV0Pre163();
 
     dlcOffer.fundingPubKey = this.offerFundingPubKey;
     dlcAccept.fundingPubKey = this.acceptFundingPubKey;
