@@ -31,8 +31,6 @@ describe('PayoutFunction', () => {
       instance.lastEndpoint.outcomePayout = Value.fromSats(0);
       instance.lastEndpoint.extraPrecision = 0;
 
-      console.log('instance.serialize()', instance.serialize().toString('hex'));
-
       expect(instance.serialize().toString("hex")).to.equal(
         '01' + // num_pieces
         '000000000000c350' + // endpoint_0

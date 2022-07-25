@@ -49,16 +49,10 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
-    console.log('test1');
     instance.protocolVersion = reader.readUInt32BE();
-    console.log('test2');
     instance.contractId = reader.readBytes(32);
-    console.log('test3');
     instance.cetSignatures = CetAdaptorSignatures.deserialize(reader);
-    console.log('test4');
     instance.refundSignature = reader.readBytes(64);
-    console.log('test5');
-    console.log('instance', instance);
     instance.fundingSignatures = FundingSignatures.deserialize(reader);
 
     while (!reader.eof) {

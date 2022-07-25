@@ -28,10 +28,6 @@ export abstract class PayoutCurvePiece {
     const tempReader = new BufferReader(reader.peakBytes());
     const type = Number(tempReader.readBigSize());
 
-    console.log('reader.peakbytes', reader.peakBytes().toString('hex'));
-
-    console.log('type', type);
-
     switch (type) {
       case PayoutCurvePieceType.PolynomialPayoutCurvePiece:
         return PolynomialPayoutCurvePiece.deserialize(reader);
@@ -87,17 +83,12 @@ export class PolynomialPayoutCurvePiece
     const instance = new PolynomialPayoutCurvePiece();
 
     reader.readBigSize(); // read type
-    console.log('19');
     const numPoints = reader.readBigSize(); // num_pts
-    console.log('numPoints', numPoints);
 
     for (let i = 0; i < numPoints; i++) {
       const eventOutcome = reader.readUInt64BE();
       const outcomePayout = reader.readUInt64BE();
       const extraPrecision = reader.readUInt16BE();
-
-      console.log('eventOutcome', eventOutcome);
-      console.log('outcomePayout', outcomePayout);
 
       instance.points.push({
         eventOutcome,

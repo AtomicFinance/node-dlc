@@ -334,8 +334,6 @@ describe('OrderOffer', () => {
 
       const instance = OrderOfferV0.deserialize(bufWithMetadata);
 
-      console.log('instance', instance);
-
       const json = instance.toJSON();
       expect(json.message.chainHash).to.equal(
         instance.chainHash.toString('hex'),
