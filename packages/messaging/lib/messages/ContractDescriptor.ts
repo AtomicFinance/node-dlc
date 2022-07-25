@@ -3,6 +3,11 @@ import assert from 'assert';
 
 import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionJSON } from './PayoutFunction';
+import {
+  ContractDescriptorPre163,
+  ContractDescriptorV0,
+  ContractDescriptorV1,
+} from './pre-163/ContractDescriptor';
 import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
 export enum ContractDescriptorType {
@@ -27,6 +32,20 @@ export abstract class ContractDescriptor {
         throw new Error(
           `Contract Descriptor type must be Enumerated or Numeric`,
         );
+    }
+  }
+
+  public static from163(
+    contractDescriptor: ContractDescriptorPre163,
+  ): ContractDescriptor {
+    if (contractDescriptor instanceof ContractDescriptorV0) {
+      return EnumeratedContractDescriptor.fromPre163(contractDescriptor);
+    } else if (contractDescriptor instanceof ContractDescriptorV1) {
+      return NumericContractDescriptor.fromPre163(contractDescriptor);
+    } else {
+      throw new Error(
+        'Contract Descriptor must be ContractDescriptorV0 or ContractDescriptorV1',
+      );
     }
   }
 
@@ -76,6 +95,21 @@ export class EnumeratedContractDescriptor
         localPayout: reader.readUInt64BE(),
       });
     }
+
+    return instance;
+  }
+
+  public static fromPre163(
+    contractDescriptor: ContractDescriptorV0,
+  ): EnumeratedContractDescriptor {
+    const instance = new EnumeratedContractDescriptor();
+
+    instance.outcomes = contractDescriptor.outcomes.map((outcome) => {
+      return {
+        outcome: outcome.outcome.toString('utf8'),
+        localPayout: outcome.localPayout,
+      };
+    });
 
     return instance;
   }
@@ -153,6 +187,22 @@ export class NumericContractDescriptor
     instance.payoutFunction = PayoutFunction.deserialize(reader);
     console.log('12');
     instance.roundingIntervals = RoundingIntervals.deserialize(reader);
+
+    return instance;
+  }
+
+  public static fromPre163(
+    contractDescriptor: ContractDescriptorV1,
+  ): NumericContractDescriptor {
+    const instance = new NumericContractDescriptor();
+
+    instance.numDigits = contractDescriptor.numDigits;
+    instance.payoutFunction = PayoutFunction.fromPre163(
+      contractDescriptor.payoutFunction,
+    );
+    instance.roundingIntervals = RoundingIntervals.from163(
+      contractDescriptor.roundingIntervals,
+    );
 
     return instance;
   }

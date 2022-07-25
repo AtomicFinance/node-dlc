@@ -1,6 +1,12 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
+import { ContractDescriptor } from './ContractDescriptor';
+import {
+  ContractInfo,
+  IDisjointContractInfoJSON,
+  ISingleContractInfoJSON,
+} from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
 import { IOrderOfferJSON, OrderOffer } from './OrderOffer';
 
@@ -9,20 +15,22 @@ import { IOrderOfferJSON, OrderOffer } from './OrderOffer';
  * offer which are taken into account during DLC construction.
  */
 export class OrderNegotiationFields implements IDlcMessage {
-  public static type = MessageType.OrderNegotiationFieldsV1;
-
   /**
    * Deserializes an order_negotiation_fields_v1 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OrderNegotiationFieldsV1 {
-    const instance = new OrderNegotiationFieldsV1();
-    const reader = new BufferReader(buf);
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): OrderNegotiationFields {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    const newBuf = reader.readBytes();
-    instance.orderOffer = OrderOffer.deserialize(newBuf);
+    const instance = new OrderNegotiationFields();
+
+    instance.contractInfo = ContractInfo.deserialize(reader);
+    instance.offerCollateral = reader.readUInt64BE();
+    instance.feeRatePerVb = reader.readUInt64BE();
+    instance.cetLocktime = reader.readUInt32BE();
+    instance.refundLocktime = reader.readUInt32BE();
 
     return instance;
   }
@@ -30,19 +38,26 @@ export class OrderNegotiationFields implements IDlcMessage {
   /**
    * The type for order_negotiation_fields_v1 message. order_negotiation_fields_v1 = 65336
    */
-  public type = OrderNegotiationFieldsV1.type;
+  public contractInfo: ContractInfo;
 
-  public length: bigint;
+  public offerCollateral: bigint;
 
-  public orderOffer: OrderOffer;
+  public feeRatePerVb: bigint;
+
+  public cetLocktime: number;
+
+  public refundLocktime: number;
 
   /**
    * Converts order_negotiation_fields_v1 to JSON
    */
-  public toJSON(): IOrderNegotiationFieldsV1JSON {
+  public toJSON(): IOrderNegotiationFieldsJSON {
     return {
-      type: this.type,
-      orderOffer: this.orderOffer.toJSON(),
+      offerCollateral: Number(this.offerCollateral),
+      contractInfo: this.contractInfo.toJSON(),
+      feeRatePerVb: Number(this.feeRatePerVb),
+      cetLocktime: this.cetLocktime,
+      refundLocktime: this.refundLocktime,
     };
   }
 
@@ -51,23 +66,25 @@ export class OrderNegotiationFields implements IDlcMessage {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
-    dataWriter.writeBytes(this.orderOffer.serialize());
 
-    writer.writeBigSize(dataWriter.size);
+    dataWriter.writeBytes(this.contractInfo.serialize());
+    dataWriter.writeUInt64BE(this.offerCollateral);
+    dataWriter.writeUInt64BE(this.feeRatePerVb);
+    dataWriter.writeUInt32BE(this.cetLocktime);
+    dataWriter.writeUInt32BE(this.refundLocktime);
+
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
 }
 
-export interface IOrderNegotiationFieldsV0JSON {
-  type: number;
-}
-
-export interface IOrderNegotiationFieldsV1JSON {
-  type: number;
-  orderOffer: IOrderOfferJSON;
+export interface IOrderNegotiationFieldsJSON {
+  offerCollateral: number;
+  contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
+  feeRatePerVb: number;
+  cetLocktime: number;
+  refundLocktime: number;
 }

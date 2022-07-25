@@ -1,9 +1,9 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { math, verify } from 'bip-schnorr';
 
-import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
-import { IDlcMessage } from './DlcMessage';
+import { MessageType } from '../../MessageType';
+import { getTlv } from '../../serialize/getTlv';
+import { IDlcMessage } from '../DlcMessage';
 import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
 
 /**
@@ -29,16 +29,10 @@ export class OracleAnnouncementV0 implements IDlcMessage {
     const instance = new OracleAnnouncementV0();
     const reader = new BufferReader(buf);
 
-    console.log('deserialize OracleAnnouncementV0 1');
-    console.log('buf', buf.toString('hex'));
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    console.log('deserialize OracleAnnouncementV0 2');
     instance.announcementSig = reader.readBytes(64);
-    console.log('deserialize OracleAnnouncementV0 3');
     instance.oraclePubkey = reader.readBytes(32);
-    console.log('deserialize OracleAnnouncementV0 4');
-    console.log('instance', instance);
     instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader));
 
     return instance;

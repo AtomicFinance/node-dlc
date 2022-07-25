@@ -1,5 +1,6 @@
 import { Value } from '@node-dlc/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -8,6 +9,7 @@ import {
   PayoutCurvePiece,
   PolynomialPayoutCurvePieceJSON,
 } from './PayoutCurvePiece';
+import { PayoutFunctionV0 } from './pre-163/PayoutFunction';
 
 /**
  * PayoutFunction V0
@@ -66,6 +68,46 @@ export class PayoutFunction implements IDlcMessage {
     return instance;
   }
 
+  public static fromPre163(payoutFunction: PayoutFunctionV0): PayoutFunction {
+    const instance = new PayoutFunction();
+
+    const pieces = payoutFunction.pieces;
+
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pieces[i];
+
+      if (i === 0) {
+        instance.pieces.push({
+          endPoint: {
+            eventOutcome: payoutFunction.endpoint0,
+            outcomePayout: Value.fromSats(payoutFunction.endpointPayout0),
+            extraPrecision: payoutFunction.extraPrecision0,
+          },
+          payoutCurvePiece: PayoutCurvePiece.fromPre163(piece.payoutCurvePiece),
+        });
+      } else {
+        instance.pieces.push({
+          endPoint: {
+            eventOutcome: pieces[i - 1].endpoint,
+            outcomePayout: Value.fromSats(pieces[i - 1].endpointPayout),
+            extraPrecision: pieces[i - 1].extraPrecision,
+          },
+          payoutCurvePiece: PayoutCurvePiece.fromPre163(piece.payoutCurvePiece),
+        });
+      }
+    }
+
+    const lastPiece = pieces[pieces.length - 1];
+
+    instance.lastEndpoint.eventOutcome = lastPiece.endpoint;
+    instance.lastEndpoint.outcomePayout = Value.fromSats(
+      lastPiece.endpointPayout,
+    );
+    instance.lastEndpoint.extraPrecision = lastPiece.extraPrecision;
+
+    return instance;
+  }
+
   /**
    * The type for payout_function_v0 message. payout_function_v0 = 42790
    */
@@ -77,6 +119,11 @@ export class PayoutFunction implements IDlcMessage {
     outcomePayout: Value.fromSats(0n),
     extraPrecision: 0,
   };
+
+  public validate(): void {
+    assert(this.pieces.length >= 1, `num pieces MUST be at least 1`);
+    // TODO: add validation that endpoints must strictly increase
+  }
 
   /**
    * Converts payout_function_v0 to JSON

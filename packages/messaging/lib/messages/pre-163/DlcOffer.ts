@@ -5,115 +5,60 @@ import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
-import { MessageType } from '../MessageType';
-import {
-  deserializeTlv,
-  ITlv,
-  serializeTlv,
-} from '../serialize/deserializeTlv';
-import { getTlv } from '../serialize/getTlv';
+import { MessageType } from '../../MessageType';
+import { getTlv } from '../../serialize/getTlv';
 import {
   ContractInfo,
-  IDisjointContractInfoJSON,
-  ISingleContractInfoJSON,
+  IContractInfoV0JSON,
+  IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInput, IFundingInputJSON } from './FundingInput';
-import { DlcOfferV0Pre163, IDlcOfferV0Pre163JSON } from './pre-163/DlcOffer';
+import {
+  FundingInput,
+  FundingInputV0,
+  IFundingInputV0JSON,
+} from './FundingInput';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 
-export abstract class DlcOffer {
-  public static deserialize(buf: Buffer): DlcOffer {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    if (type === MessageType.DlcOfferV0) {
-      try {
-        return DlcOfferV0.deserialize(buf);
-      } catch (e) {
-        return DlcOfferV0Pre163.deserialize(buf);
-      }
-    } else {
-      throw Error('Dlc Offer message type must be DlcOfferV0');
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract getAddresses(network: BitcoinNetwork): IDlcOfferV0Addresses;
-
-  public abstract validate(): void;
-
-  public abstract toJSON(): IDlcOfferV0JSON | IDlcOfferV0Pre163JSON;
-
-  public abstract serialize(): Buffer;
-}
-
-export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
+/**
+ * DlcOffer message contains information about a node and indicates its
+ * desire to enter into a new contract. This is the first step toward
+ * creating the funding transaction and CETs.
+ */
+export class DlcOfferV0Pre163 implements IDlcMessage {
   public static type = MessageType.DlcOfferV0;
 
   /**
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcOfferV0 {
-    const instance = new DlcOfferV0();
+  public static deserialize(buf: Buffer): DlcOfferV0Pre163 {
+    const instance = new DlcOfferV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
-    instance.protocolVersion = reader.readUInt32BE();
-    instance.contractFlags = reader.readUInt8();
+    instance.contractFlags = reader.readBytes(1);
     instance.chainHash = reader.readBytes(32);
-    instance.temporaryContractId = reader.readBytes(32);
-    instance.contractInfo = ContractInfo.deserialize(reader);
+    instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
     instance.fundingPubKey = reader.readBytes(33);
     const payoutSPKLen = reader.readUInt16BE();
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
     instance.payoutSerialId = reader.readUInt64BE();
     instance.offerCollateralSatoshis = reader.readUInt64BE();
-    const fundingInputsLen = reader.readBigSize();
+    const fundingInputsLen = reader.readUInt16BE();
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInput.deserialize(reader));
+      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
     }
-    console.log('test7');
 
     const changeSPKLen = reader.readUInt16BE();
-    console.log('changeSPKLen', changeSPKLen);
-    console.log('test8');
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
     instance.fundOutputSerialId = reader.readUInt64BE();
-    console.log('test9');
     instance.feeRatePerVb = reader.readUInt64BE();
     instance.cetLocktime = reader.readUInt32BE();
-    console.log('test10');
     instance.refundLocktime = reader.readUInt32BE();
-
-    while (!reader.eof) {
-      const buf = getTlv(reader);
-      const tlvReader = new BufferReader(buf);
-      const { type, length, body } = deserializeTlv(tlvReader);
-
-      instance.tlvs.push({ type, length, body });
-    }
-
-    return instance;
-  }
-
-  public static fromPre163(
-    offer: DlcOfferV0Pre163,
-    temporaryContractId: Buffer,
-  ): DlcOfferV0 {
-    const instance = new DlcOfferV0();
-
-    instance.protocolVersion = 1;
-    instance.contractFlags = offer.contractFlags.readUInt8();
-    instance.chainHash = offer.chainHash;
-    instance.temporaryContractId = temporaryContractId;
-    // instance.contractInfo =
 
     return instance;
   }
@@ -121,15 +66,11 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   /**
    * The type for offer_dlc_v0 message. offer_dlc_v0 = 42778
    */
-  public type = DlcOfferV0.type;
+  public type = DlcOfferV0Pre163.type;
 
-  public protocolVersion: number;
-
-  public contractFlags: number;
+  public contractFlags: Buffer;
 
   public chainHash: Buffer;
-
-  public temporaryContractId: Buffer;
 
   public contractInfo: ContractInfo;
 
@@ -154,8 +95,6 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   public cetLocktime: number;
 
   public refundLocktime: number;
-
-  public tlvs: ITlv[] = [];
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -249,7 +188,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     // 9. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInput) => input.inputSerialId,
+      (input: FundingInputV0) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -274,7 +213,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
     // validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
-      const input = fundingInput as FundingInput;
+      const input = fundingInput as FundingInputV0;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.offerCollateralSatoshis >= fundingAmount) {
@@ -287,47 +226,41 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   /**
    * Converts dlc_offer_v0 to JSON
    */
-  public toJSON(): IDlcOfferV0JSON {
+  public toJSON(): IDlcOfferV0Pre163JSON {
     return {
-      message: {
-        protocolVersion: this.protocolVersion,
-        contractFlags: this.contractFlags,
-        chainHash: this.chainHash.toString('hex'),
-        temporaryContractId: this.temporaryContractId.toString('hex'),
-        contractInfo: this.contractInfo.toJSON(),
-        fundingPubkey: this.fundingPubKey.toString('hex'),
-        payoutSpk: this.payoutSPK.toString('hex'),
-        payoutSerialId: Number(this.payoutSerialId),
-        offerCollateral: Number(this.offerCollateralSatoshis),
-        fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-        changeSpk: this.changeSPK.toString('hex'),
-        changeSerialId: Number(this.changeSerialId),
-        fundOutputSerialId: Number(this.fundOutputSerialId),
-        feeRatePerVb: Number(this.feeRatePerVb),
-        cetLocktime: this.cetLocktime,
-        refundLocktime: this.refundLocktime,
-      },
-      serialized: this.serialize().toString('hex'),
+      type: this.type,
+      contractFlags: this.contractFlags.toString('hex'),
+      chainHash: this.chainHash.toString('hex'),
+      contractInfo: this.contractInfo.toJSON(),
+      fundingPubKey: this.fundingPubKey.toString('hex'),
+      payoutSPK: this.payoutSPK.toString('hex'),
+      payoutSerialId: Number(this.payoutSerialId),
+      offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
+      fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
+      changeSPK: this.changeSPK.toString('hex'),
+      changeSerialId: Number(this.changeSerialId),
+      fundOutputSerialId: Number(this.fundOutputSerialId),
+      feeRatePerVb: Number(this.feeRatePerVb),
+      cetLocktime: this.cetLocktime,
+      refundLocktime: this.refundLocktime,
     };
   }
 
   /**
-   * Serializes the offer_dlc_v0 message into =a Buffer
+   * Serializes the offer_dlc_v0 message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
-    writer.writeUInt32BE(this.protocolVersion);
-    writer.writeUInt8(this.contractFlags);
+    writer.writeBytes(this.contractFlags);
     writer.writeBytes(this.chainHash);
-    writer.writeBytes(this.temporaryContractId);
     writer.writeBytes(this.contractInfo.serialize());
     writer.writeBytes(this.fundingPubKey);
     writer.writeUInt16BE(this.payoutSPK.length);
     writer.writeBytes(this.payoutSPK);
     writer.writeUInt64BE(this.payoutSerialId);
     writer.writeUInt64BE(this.offerCollateralSatoshis);
-    writer.writeBigSize(this.fundingInputs.length);
+    writer.writeUInt16BE(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {
       writer.writeBytes(fundingInput.serialize());
@@ -341,34 +274,26 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     writer.writeUInt32BE(this.cetLocktime);
     writer.writeUInt32BE(this.refundLocktime);
 
-    for (const tlv of this.tlvs) {
-      serializeTlv(tlv, writer);
-    }
-
     return writer.toBuffer();
   }
 }
 
-export interface IDlcOfferV0JSON {
-  message: {
-    protocolVersion: number;
-    contractFlags: number;
-    chainHash: string;
-    temporaryContractId: string;
-    contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
-    fundingPubkey: string;
-    payoutSpk: string;
-    payoutSerialId: number;
-    offerCollateral: number;
-    fundingInputs: IFundingInputJSON[];
-    changeSpk: string;
-    changeSerialId: number;
-    fundOutputSerialId: number;
-    feeRatePerVb: number;
-    cetLocktime: number;
-    refundLocktime: number;
-  };
-  serialized: string;
+export interface IDlcOfferV0Pre163JSON {
+  type: number;
+  contractFlags: string;
+  chainHash: string;
+  contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
+  fundingPubKey: string;
+  payoutSPK: string;
+  payoutSerialId: number;
+  offerCollateralSatoshis: number;
+  fundingInputs: IFundingInputV0JSON[];
+  changeSPK: string;
+  changeSerialId: number;
+  fundOutputSerialId: number;
+  feeRatePerVb: number;
+  cetLocktime: number;
+  refundLocktime: number;
 }
 
 export interface IDlcOfferV0Addresses {

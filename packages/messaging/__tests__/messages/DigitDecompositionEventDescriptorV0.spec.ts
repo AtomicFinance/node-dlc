@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/pre-167/EventDescriptor';
 
 describe('DigitDecompositionEventDescriptorV0', () => {
   describe('serialize', () => {

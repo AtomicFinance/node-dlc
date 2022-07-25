@@ -2,10 +2,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
+import { OracleInfoV0 } from './pre-163/OracleInfoV0';
 import {
   OracleAnnouncementV0,
   OracleAnnouncementV0JSON,
-} from './OracleAnnouncementV0';
+} from './pre-167/OracleAnnouncementV0';
 
 export enum OracleInfoType {
   Single = 0,
@@ -30,8 +31,16 @@ export abstract class OracleInfo implements IDlcMessage {
         return MultiOracleInfo.deserialize(reader);
       default:
         throw new Error(
-          `Contract info TLV type must be ContractInfoV0 or ContractInfoV1`,
+          `Contract info type must be ContractInfoV0 or ContractInfoV1`,
         );
+    }
+  }
+
+  public static fromPre163(oracleInfo: OracleInfoV0): OracleInfo {
+    if (oracleInfo instanceof OracleInfoV0) {
+      return SingleOracleInfo.from163(oracleInfo);
+    } else {
+      throw new Error('fromPre163 only suports OracleInfoV0');
     }
   }
 
@@ -65,6 +74,14 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
     console.log('type', type);
     console.log('deserialize singleoracleinfo 1');
     instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
+
+    return instance;
+  }
+
+  public static from163(oracleInfo: OracleInfoV0): SingleOracleInfo {
+    const instance = new SingleOracleInfo();
+
+    instance.announcement = oracleInfo.announcement;
 
     return instance;
   }

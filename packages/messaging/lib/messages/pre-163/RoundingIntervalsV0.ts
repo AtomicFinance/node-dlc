@@ -1,25 +1,29 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
+import { MessageType } from '../../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { RoundingIntervalsV0 } from './pre-163/RoundingIntervalsV0';
 
 /**
- * RoundingIntervals
+ * RoundingIntervals V0
  */
-export class RoundingIntervals implements IDlcMessage {
+export class RoundingIntervalsV0 implements IDlcMessage {
+  public static type = MessageType.RoundingIntervalsV0;
+
   /**
    * Deserializes an rounding_intervals_v0 tlv
    * @param buf
    */
-  public static deserialize(reader: Buffer | BufferReader): RoundingIntervals {
-    if (reader instanceof Buffer) reader = new BufferReader(reader);
-    const instance = new RoundingIntervals();
+  public static deserialize(buf: Buffer): RoundingIntervalsV0 {
+    const instance = new RoundingIntervalsV0();
+    const reader = new BufferReader(buf);
 
-    const numRoundingIntervals = reader.readBigSize(); // num_rounding_intervals
+    reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+    reader.readUInt16BE(); // num_rounding_intervals
 
-    for (let i = 0; i < numRoundingIntervals; i++) {
-      const beginInterval = reader.readUInt64BE();
-      const roundingMod = reader.readUInt64BE();
+    while (!reader.eof) {
+      const beginInterval = reader.readBigSize();
+      const roundingMod = reader.readBigSize();
 
       instance.intervals.push({ beginInterval, roundingMod });
     }
@@ -27,19 +31,13 @@ export class RoundingIntervals implements IDlcMessage {
     return instance;
   }
 
-  public static from163(
-    roundingIntervals: RoundingIntervalsV0,
-  ): RoundingIntervals {
-    const instance = new RoundingIntervals();
-
-    instance.intervals = roundingIntervals.intervals;
-
-    return instance;
-  }
-
   /**
    * The type for rounding_intervals_v0 tlv. rounding_intervals_v0 = 42788
    */
+  public type = RoundingIntervalsV0.type;
+
+  public length: bigint;
+
   public intervals: IInterval[] = [];
 
   /**
@@ -68,8 +66,9 @@ export class RoundingIntervals implements IDlcMessage {
   /**
    * Converts rounding_intervals_v0 to JSON
    */
-  public toJSON(): IRoundingIntervalsJSON {
+  public toJSON(): IRoundingIntervalsV0JSON {
     return {
+      type: this.type,
       intervals: this.intervals.map((interval) => {
         return {
           beginInterval: Number(interval.beginInterval),
@@ -84,15 +83,17 @@ export class RoundingIntervals implements IDlcMessage {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
+    writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
-    dataWriter.writeBigSize(this.intervals.length);
+    dataWriter.writeUInt16BE(this.intervals.length);
 
     for (const interval of this.intervals) {
-      dataWriter.writeUInt64BE(interval.beginInterval);
-      dataWriter.writeUInt64BE(interval.roundingMod);
+      dataWriter.writeBigSize(interval.beginInterval);
+      dataWriter.writeBigSize(interval.roundingMod);
     }
 
+    writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
@@ -109,6 +110,7 @@ interface IIntervalJSON {
   roundingMod: number;
 }
 
-export interface IRoundingIntervalsJSON {
+export interface IRoundingIntervalsV0JSON {
+  type: number;
   intervals: IIntervalJSON[];
 }
