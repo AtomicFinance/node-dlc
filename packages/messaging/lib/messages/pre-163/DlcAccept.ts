@@ -8,7 +8,7 @@ import secp256k1 from 'secp256k1';
 import { MessageType } from '../../MessageType';
 import { getTlv, skipTlv } from '../../serialize/getTlv';
 import {
-  CetAdaptorSignaturesV0,
+  CetAdaptorSignaturesV0Pre163,
   ICetAdaptorSignaturesV0JSON,
 } from './CetAdaptorSignaturesV0';
 import { IDlcMessage } from './DlcMessage';
@@ -17,31 +17,8 @@ import {
   INegotiationFieldsV0JSON,
   INegotiationFieldsV1JSON,
   INegotiationFieldsV2JSON,
-  NegotiationFields,
+  NegotiationFieldsPre163,
 } from './NegotiationFields';
-
-export abstract class DlcAccept implements IDlcMessage {
-  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf, parseCets);
-      default:
-        throw new Error(`Dlc Accept message type must be DlcAcceptV0`);
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract getAddresses(network: BitcoinNetwork): IDlcAcceptV0Addresses;
-
-  public abstract toJSON(): IDlcAcceptV0JSON;
-
-  public abstract serialize(): Buffer;
-}
 
 /**
  * DlcAccept contains information about a node and indicates its
@@ -49,15 +26,15 @@ export abstract class DlcAccept implements IDlcMessage {
  * transaction signatures. This is the second step toward creating
  * the funding transaction and closing transactions.
  */
-export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
+export class DlcAcceptV0Pre163 implements IDlcMessage {
   public static type = MessageType.DlcAcceptV0;
 
   /**
    * Deserializes an oracle_info message
    * @param buf
    */
-  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
-    const instance = new DlcAcceptV0();
+  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0Pre163 {
+    const instance = new DlcAcceptV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -75,15 +52,17 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
     if (parseCets) {
-      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+      instance.cetSignatures = CetAdaptorSignaturesV0Pre163.deserialize(
         getTlv(reader),
       );
     } else {
       skipTlv(reader);
-      instance.cetSignatures = new CetAdaptorSignaturesV0();
+      instance.cetSignatures = new CetAdaptorSignaturesV0Pre163();
     }
     instance.refundSignature = reader.readBytes(64);
-    instance.negotiationFields = NegotiationFields.deserialize(getTlv(reader));
+    instance.negotiationFields = NegotiationFieldsPre163.deserialize(
+      getTlv(reader),
+    );
 
     return instance;
   }
@@ -91,7 +70,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   /**
    * The type for accept_channel message. accept_channel = 33
    */
-  public type = DlcAcceptV0.type;
+  public type = DlcAcceptV0Pre163.type;
 
   public tempContractId: Buffer;
 
@@ -109,11 +88,11 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
   public changeSerialId: bigint;
 
-  public cetSignatures: CetAdaptorSignaturesV0;
+  public cetSignatures: CetAdaptorSignaturesV0Pre163;
 
   public refundSignature: Buffer;
 
-  public negotiationFields: NegotiationFields;
+  public negotiationFields: NegotiationFieldsPre163;
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -265,7 +244,7 @@ export class DlcAcceptWithoutSigs {
     readonly fundingInputs: FundingInputV0[],
     readonly changeSPK: Buffer,
     readonly changeSerialId: bigint,
-    readonly negotiationFields: NegotiationFields,
+    readonly negotiationFields: NegotiationFieldsPre163,
   ) {}
 }
 

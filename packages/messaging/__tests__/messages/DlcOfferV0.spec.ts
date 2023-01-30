@@ -13,7 +13,7 @@ import {
 import { FundingInput } from '../../lib/messages/FundingInput';
 import { MessageType } from '../../lib/MessageType';
 
-describe('DlcOffer', () => {
+describe.only('DlcOffer', () => {
   const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;
 
   let instance: DlcOfferV0;

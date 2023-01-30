@@ -1,6 +1,12 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { IDlcMessage } from './DlcMessage';
+import {
+  NegotiationFieldsPre163,
+  NegotiationFieldsV0,
+  NegotiationFieldsV1,
+  NegotiationFieldsV2,
+} from './pre-163/NegotiationFields';
 import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
 export enum NegotiationFieldsType {
@@ -26,6 +32,22 @@ export abstract class NegotiationFields {
         throw new Error(
           `Negotiation fields TLV type must be SingleNegotiationFields or DisjointNegotiationFields`,
         );
+    }
+  }
+
+  public static fromPre163(
+    negotiationFields: NegotiationFieldsPre163,
+  ): NegotiationFields {
+    if (negotiationFields instanceof NegotiationFieldsV0) {
+      return null;
+    } else if (negotiationFields instanceof NegotiationFieldsV1) {
+      return SingleNegotiationFields.fromPre163(negotiationFields);
+    } else if (negotiationFields instanceof NegotiationFieldsV2) {
+      return DisjointNegotiationFields.fromPre163(negotiationFields);
+    } else {
+      throw new Error(
+        'Negotiation fields must be NegotiationFieldsV0 or NegotiationFieldsV1 or NegotiationFieldsV2',
+      );
     }
   }
 
@@ -60,6 +82,16 @@ export class SingleNegotiationFields
 
     reader.readBigSize(); // read type
     instance.roundingIntervals = RoundingIntervals.deserialize(reader);
+
+    return instance;
+  }
+
+  public static fromPre163(
+    negotiationFields: NegotiationFieldsV1,
+  ): SingleNegotiationFields {
+    const instance = new SingleNegotiationFields();
+
+    instance.roundingIntervals = negotiationFields.roundingIntervals;
 
     return instance;
   }
@@ -124,6 +156,18 @@ export class DisjointNegotiationFields
         NegotiationFields.deserialize(reader),
       );
     }
+
+    return instance;
+  }
+
+  public static fromPre163(
+    negotiationFields: NegotiationFieldsV2,
+  ): DisjointNegotiationFields {
+    const instance = new DisjointNegotiationFields();
+
+    instance.negotiationFieldsList = negotiationFields.negotiationFieldsList.map(
+      NegotiationFields.fromPre163,
+    );
 
     return instance;
   }

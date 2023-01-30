@@ -8,36 +8,11 @@ import {
 import { MessageType } from '../../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class FundingInput {
-  public static deserialize(buf: Buffer): FundingInputV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.FundingInputV0:
-        return FundingInputV0.deserialize(buf);
-      default:
-        throw new Error(
-          `FundingInput function TLV type must be FundingInputV0`,
-        );
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract length: bigint;
-
-  public abstract toJSON(): IFundingInputV0JSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
  * FundingInput V0 contains information about a specific input to be used
  * in a funding transaction, as well as its corresponding on-chain UTXO.
  */
-export class FundingInputV0 extends FundingInput implements IDlcMessage {
+export class FundingInputV0 implements IDlcMessage {
   public static type = MessageType.FundingInputV0;
 
   /**

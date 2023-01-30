@@ -13,7 +13,7 @@ import {
 import { DlcMessagePre163, IDlcMessage } from './DlcMessage';
 import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
 
-export abstract class ContractInfo extends DlcMessagePre163 {
+export abstract class ContractInfoPre163 extends DlcMessagePre163 {
   public static deserialize(buf: Buffer): ContractInfoV0 | ContractInfoV1 {
     const reader = new BufferReader(buf);
 
@@ -48,7 +48,7 @@ export abstract class ContractInfo extends DlcMessagePre163 {
  * ContractInfo V0 contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
-export class ContractInfoV0 implements IDlcMessage {
+export class ContractInfoV0 extends ContractInfoPre163 implements IDlcMessage {
   public static type = MessageType.ContractInfoV0;
 
   /**
@@ -172,7 +172,7 @@ export class ContractInfoV0 implements IDlcMessage {
  * ContractInfo V1 contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
-export class ContractInfoV1 implements IDlcMessage {
+export class ContractInfoV1 extends ContractInfoPre163 implements IDlcMessage {
   public static type = MessageType.ContractInfoV1;
 
   /**

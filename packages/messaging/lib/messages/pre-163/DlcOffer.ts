@@ -8,16 +8,12 @@ import secp256k1 from 'secp256k1';
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import {
-  ContractInfo,
+  ContractInfoPre163,
   IContractInfoV0JSON,
   IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import {
-  FundingInput,
-  FundingInputV0,
-  IFundingInputV0JSON,
-} from './FundingInput';
+import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 
@@ -40,7 +36,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
     reader.readUInt16BE(); // read type
     instance.contractFlags = reader.readBytes(1);
     instance.chainHash = reader.readBytes(32);
-    instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
+    instance.contractInfo = ContractInfoPre163.deserialize(getTlv(reader));
     instance.fundingPubKey = reader.readBytes(33);
     const payoutSPKLen = reader.readUInt16BE();
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
@@ -49,7 +45,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
     const fundingInputsLen = reader.readUInt16BE();
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInput.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
     }
 
     const changeSPKLen = reader.readUInt16BE();
@@ -72,7 +68,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
 
   public chainHash: Buffer;
 
-  public contractInfo: ContractInfo;
+  public contractInfo: ContractInfoPre163;
 
   public fundingPubKey: Buffer;
 
@@ -82,7 +78,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
 
   public offerCollateralSatoshis: bigint;
 
-  public fundingInputs: FundingInput[] = [];
+  public fundingInputs: FundingInputV0[] = [];
 
   public changeSPK: Buffer;
 

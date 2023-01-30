@@ -9,7 +9,7 @@ import {
   validateNumber,
 } from '../../validation/validate';
 import {
-  ContractInfo,
+  ContractInfoPre163,
   IContractInfoV0JSON,
   IContractInfoV1JSON,
 } from './ContractInfo';
@@ -64,7 +64,7 @@ export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
 
     reader.readUInt16BE(); // read type
     instance.chainHash = reader.readBytes(32);
-    instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
+    instance.contractInfo = ContractInfoPre163.deserialize(getTlv(reader));
     instance.offerCollateralSatoshis = reader.readUInt64BE();
     instance.feeRatePerVb = reader.readUInt64BE();
     instance.cetLocktime = reader.readUInt32BE();
@@ -97,7 +97,7 @@ export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
 
   public chainHash: Buffer;
 
-  public contractInfo: ContractInfo;
+  public contractInfo: ContractInfoPre163;
 
   public offerCollateralSatoshis: bigint;
 
