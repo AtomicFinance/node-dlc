@@ -67,7 +67,7 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
 
     const instance = new SingleOracleInfo();
 
-    const type = reader.readBigSize(); // read type
+    reader.readBigSize(); // read type
     instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
 
     return instance;

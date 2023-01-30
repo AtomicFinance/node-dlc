@@ -16,7 +16,11 @@ import {
   OracleInfoType,
   SingleOracleInfo,
 } from './OracleInfo';
-import { ContractInfoV0, ContractInfoV1 } from './pre-163/ContractInfo';
+import {
+  ContractInfoPre163,
+  ContractInfoV0,
+  ContractInfoV1,
+} from './pre-163/ContractInfo';
 import { DigitDecompositionEventDescriptorV0 } from './pre-167/EventDescriptor';
 import { OracleAnnouncementV0 } from './pre-167/OracleAnnouncementV0';
 import { OracleEventV0 } from './pre-167/OracleEventV0';
@@ -46,6 +50,18 @@ export abstract class ContractInfo implements IDlcMessage {
     }
   }
 
+  public static fromPre163(
+    contractInfo: ContractInfoPre163,
+  ): SingleContractInfo | DisjointContractInfo {
+    if (contractInfo instanceof ContractInfoV0) {
+      return SingleContractInfo.fromPre163(contractInfo);
+    } else if (contractInfo instanceof ContractInfoV1) {
+      return DisjointContractInfo.fromPre163(contractInfo);
+    } else {
+      throw new Error('ContractInfo must be ContractInfoV0 or ContractInfoV1');
+    }
+  }
+
   public abstract type: number;
 
   public abstract totalCollateral: bigint;
@@ -61,7 +77,7 @@ export abstract class ContractInfo implements IDlcMessage {
  * SingleContractInfo contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
-export class SingleContractInfo implements IDlcMessage {
+export class SingleContractInfo extends ContractInfo implements IDlcMessage {
   public static type = ContractInfoType.Single;
 
   /**
@@ -73,7 +89,7 @@ export class SingleContractInfo implements IDlcMessage {
 
     const instance = new SingleContractInfo();
 
-    const type = reader.readBigSize(); // read type
+    reader.readBigSize(); // read type
     instance.totalCollateral = reader.readUInt64BE();
     instance.contractDescriptor = ContractDescriptor.deserialize(reader);
     instance.oracleInfo = OracleInfo.deserialize(reader);

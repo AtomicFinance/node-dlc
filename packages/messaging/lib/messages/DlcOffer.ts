@@ -108,7 +108,20 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     instance.contractFlags = offer.contractFlags.readUInt8();
     instance.chainHash = offer.chainHash;
     instance.temporaryContractId = temporaryContractId;
-    // instance.contractInfo =
+    instance.contractInfo = ContractInfo.fromPre163(offer.contractInfo);
+    instance.fundingPubKey = offer.fundingPubKey;
+    instance.payoutSPK = offer.payoutSPK;
+    instance.payoutSerialId = offer.payoutSerialId;
+    instance.offerCollateralSatoshis = offer.offerCollateralSatoshis;
+    instance.fundingInputs = offer.fundingInputs.map((input) =>
+      FundingInput.fromPre163(input),
+    );
+    instance.changeSPK = offer.changeSPK;
+    instance.changeSerialId = offer.changeSerialId;
+    instance.fundOutputSerialId = offer.fundOutputSerialId;
+    instance.feeRatePerVb = offer.feeRatePerVb;
+    instance.cetLocktime = offer.cetLocktime;
+    instance.refundLocktime = offer.refundLocktime;
 
     return instance;
   }

@@ -7,15 +7,15 @@ import { IDlcMessage } from './DlcMessage';
  * CetAdaptorSignatures V0 contains CET signatures and any necessary
  * information linking the signatures to their corresponding outcome
  */
-export class CetAdaptorSignaturesV0 implements IDlcMessage {
+export class CetAdaptorSignaturesV0Pre163 implements IDlcMessage {
   public static type = MessageType.CetAdaptorSignaturesV0;
 
   /**
    * Deserializes a cet_adaptor_signature_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): CetAdaptorSignaturesV0 {
-    const instance = new CetAdaptorSignaturesV0();
+  public static deserialize(buf: Buffer): CetAdaptorSignaturesV0Pre163 {
+    const instance = new CetAdaptorSignaturesV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -34,7 +34,7 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   /**
    * The type for cet_adaptor_signature message. cet_adaptor_signature = 42774
    */
-  public type = CetAdaptorSignaturesV0.type;
+  public type = CetAdaptorSignaturesV0Pre163.type;
 
   public length: bigint;
 

@@ -2,6 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
+import { CetAdaptorSignaturesV0Pre163 } from './pre-163/CetAdaptorSignaturesV0';
 
 /**
  * CetAdaptorSignatures V0 contains CET signatures and any necessary
@@ -34,6 +35,16 @@ export class CetAdaptorSignatures implements IDlcMessage {
       const cetsByteLength = nbSignatures * (BigInt(65) + BigInt(97));
       reader.readBytes(Number(cetsByteLength));
     }
+
+    return instance;
+  }
+
+  public static fromPre163(
+    cetSignatures: CetAdaptorSignaturesV0Pre163,
+  ): CetAdaptorSignatures {
+    const instance = new CetAdaptorSignatures();
+
+    instance.sigs = cetSignatures.sigs;
 
     return instance;
   }

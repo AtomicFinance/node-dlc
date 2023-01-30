@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 
-import { DlcAcceptV0, DlcSignV0 } from '../../lib';
-import { DlcOfferV0 } from '../../lib/messages/DlcOffer';
+import { DlcAcceptV0, DlcOfferV0, DlcSignV0 } from '../../lib';
 import enum3of3 from './TestVectors/enum_3_of_3_test.json';
 import enum3of5 from './TestVectors/enum_3_of_5_test.json';
 import enumAndNumerical3of5 from './TestVectors/enum_and_numerical_3_of_5_test.json';

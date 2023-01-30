@@ -6,7 +6,7 @@ import { IDlcMessage } from './DlcMessage';
 import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
 import { IRoundingIntervalsV0JSON } from './RoundingIntervalsV0';
 
-export abstract class NegotiationFields {
+export abstract class NegotiationFieldsPre163 {
   public static deserialize(
     buf: Buffer,
   ): NegotiationFieldsV0 | NegotiationFieldsV1 | NegotiationFieldsV2 {
@@ -45,7 +45,7 @@ export abstract class NegotiationFields {
  * which are taken into account during DLC construction.
  */
 export class NegotiationFieldsV0
-  extends NegotiationFields
+  extends NegotiationFieldsPre163
   implements IDlcMessage {
   public static type = MessageType.NegotiationFieldsV0;
 
@@ -96,7 +96,7 @@ export class NegotiationFieldsV0
  * which are taken into account during DLC construction.
  */
 export class NegotiationFieldsV1
-  extends NegotiationFields
+  extends NegotiationFieldsPre163
   implements IDlcMessage {
   public static type = MessageType.NegotiationFieldsV1;
 
@@ -158,7 +158,7 @@ export class NegotiationFieldsV1
  * which are taken into account during DLC construction.
  */
 export class NegotiationFieldsV2
-  extends NegotiationFields
+  extends NegotiationFieldsPre163
   implements IDlcMessage {
   public static type = MessageType.NegotiationFieldsV2;
 
@@ -176,7 +176,7 @@ export class NegotiationFieldsV2
 
     while (!reader.eof) {
       instance.negotiationFieldsList.push(
-        NegotiationFields.deserialize(getTlv(reader)),
+        NegotiationFieldsPre163.deserialize(getTlv(reader)),
       );
     }
 
@@ -190,7 +190,7 @@ export class NegotiationFieldsV2
 
   public length: bigint;
 
-  public negotiationFieldsList: NegotiationFields[] = [];
+  public negotiationFieldsList: NegotiationFieldsPre163[] = [];
 
   /**
    * Converts negotiation_fields_v2 to JSON

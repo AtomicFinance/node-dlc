@@ -7,10 +7,10 @@ import {
   ContractDescriptorV1,
 } from './ContractDescriptor';
 import { ContractInfoV0, ContractInfoV1 } from './ContractInfo';
-import { DlcAcceptV0 } from './DlcAccept';
+import { DlcAcceptV0Pre163 } from './DlcAccept';
 import { DlcCloseV0 } from './DlcClose';
 import { DlcOfferV0Pre163 } from './DlcOffer';
-import { DlcSignV0 } from './DlcSign';
+import { DlcSignV0Pre163 } from './DlcSign';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0Pre163 } from './OrderOffer';
 
@@ -30,8 +30,8 @@ export abstract class DlcMessagePre163 {
     | OrderOfferV0Pre163
     | OrderAcceptV0
     | DlcOfferV0Pre163
-    | DlcAcceptV0
-    | DlcSignV0
+    | DlcAcceptV0Pre163
+    | DlcSignV0Pre163
     | DlcCloseV0
     | OracleAttestationV0 {
     const reader = new BufferReader(buf);
@@ -54,9 +54,9 @@ export abstract class DlcMessagePre163 {
       case MessageType.DlcOfferV0:
         return DlcOfferV0Pre163.deserialize(buf);
       case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf);
+        return DlcAcceptV0Pre163.deserialize(buf);
       case MessageType.DlcSignV0:
-        return DlcSignV0.deserialize(buf);
+        return DlcSignV0Pre163.deserialize(buf);
       case MessageType.DlcCloseV0:
         return DlcCloseV0.deserialize(buf);
       case MessageType.OracleAttestationV0:

@@ -10,6 +10,7 @@ import {
 } from './CetAdaptorSignatures';
 import { IDlcMessage } from './DlcMessage';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
+import { DlcSignV0Pre163 } from './pre-163/DlcSign';
 
 export abstract class DlcSign {
   public static deserialize(buf: Buffer): DlcSignV0 {
@@ -62,6 +63,22 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
 
       instance.tlvs.push({ type, length, body });
     }
+
+    return instance;
+  }
+
+  public static fromPre163(sign: DlcSignV0Pre163): DlcSignV0 {
+    const instance = new DlcSignV0();
+
+    instance.protocolVersion = 1;
+    instance.contractId = sign.contractId;
+    instance.cetSignatures = CetAdaptorSignatures.fromPre163(
+      sign.cetSignatures,
+    );
+    instance.refundSignature = sign.refundSignature;
+    instance.fundingSignatures = FundingSignatures.fromPre163(
+      sign.fundingSignatures,
+    );
 
     return instance;
   }

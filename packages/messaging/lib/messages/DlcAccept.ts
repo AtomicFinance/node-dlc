@@ -19,6 +19,7 @@ import {
   ISingleNegotiationFieldsJSON,
   NegotiationFields,
 } from './NegotiationFields';
+import { DlcAcceptV0Pre163 } from './pre-163/DlcAccept';
 
 export abstract class DlcAccept implements IDlcMessage {
   public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
@@ -62,16 +63,26 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
     reader.readUInt16BE(); // read type
     instance.protocolVersion = reader.readUInt32BE();
-    instance.tempContractId = reader.readBytes(32);
-    instance.acceptCollateralSatoshis = reader.readUInt64BE();
+    console.log('test1');
+    instance.temporaryContractId = reader.readBytes(32);
+    instance.acceptCollateral = reader.readUInt64BE();
+    console.log('instance.acceptCollateral', instance.acceptCollateral);
     instance.fundingPubKey = reader.readBytes(33);
+    console.log('instance.fundingPubKey', instance.fundingPubKey);
     const payoutSPKLen = reader.readUInt16BE();
+    console.log('test2');
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
+    console.log('test3');
     instance.payoutSerialId = reader.readUInt64BE();
+    console.log('instance.payoutSerialId', instance.payoutSerialId);
+    console.log('test4');
     const fundingInputsLen = reader.readBigSize();
+    console.log('fundingInputsLen', fundingInputsLen);
+    console.log('test5');
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInput.deserialize(reader));
     }
+    console.log('test6');
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();
@@ -96,6 +107,31 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     return instance;
   }
 
+  public static fromPre163(accept: DlcAcceptV0Pre163): DlcAcceptV0 {
+    const instance = new DlcAcceptV0();
+
+    instance.protocolVersion = 1;
+    instance.temporaryContractId = accept.tempContractId;
+    instance.acceptCollateral = accept.acceptCollateralSatoshis;
+    instance.fundingPubKey = accept.fundingPubKey;
+    instance.payoutSPK = accept.payoutSPK;
+    instance.payoutSerialId = accept.payoutSerialId;
+    instance.fundingInputs = accept.fundingInputs.map((input) =>
+      FundingInput.fromPre163(input),
+    );
+    instance.changeSPK = accept.changeSPK;
+    instance.changeSerialId = accept.changeSerialId;
+    instance.cetSignatures = CetAdaptorSignatures.fromPre163(
+      accept.cetSignatures,
+    );
+    instance.refundSignature = accept.refundSignature;
+    instance.negotiationFields = NegotiationFields.fromPre163(
+      accept.negotiationFields,
+    );
+
+    return instance;
+  }
+
   /**
    * The type for accept_channel message. accept_channel = 33
    */
@@ -103,9 +139,9 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
   public protocolVersion: number;
 
-  public tempContractId: Buffer;
+  public temporaryContractId: Buffer;
 
-  public acceptCollateralSatoshis: bigint;
+  public acceptCollateral: bigint;
 
   public fundingPubKey: Buffer;
 
@@ -197,7 +233,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
-    if (this.acceptCollateralSatoshis >= fundingAmount) {
+    if (this.acceptCollateral >= fundingAmount) {
       throw new Error(
         'fundingAmount must be greater than acceptCollateralSatoshis',
       );
@@ -211,8 +247,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     return {
       message: {
         protocolVersion: this.protocolVersion,
-        temporaryContractId: this.tempContractId.toString('hex'),
-        acceptCollateral: Number(this.acceptCollateralSatoshis),
+        temporaryContractId: this.temporaryContractId.toString('hex'),
+        acceptCollateral: Number(this.acceptCollateral),
         fundingPubkey: this.fundingPubKey.toString('hex'),
         payoutSpk: this.payoutSPK.toString('hex'),
         payoutSerialId: Number(this.payoutSerialId),
@@ -236,8 +272,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
     writer.writeUInt32BE(this.protocolVersion);
-    writer.writeBytes(this.tempContractId);
-    writer.writeUInt64BE(this.acceptCollateralSatoshis);
+    writer.writeBytes(this.temporaryContractId);
+    writer.writeUInt64BE(this.acceptCollateral);
     writer.writeBytes(this.fundingPubKey);
     writer.writeUInt16BE(this.payoutSPK.length);
     writer.writeBytes(this.payoutSPK);
@@ -263,8 +299,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
   public withoutSigs(): DlcAcceptWithoutSigs {
     return new DlcAcceptWithoutSigs(
-      this.tempContractId,
-      this.acceptCollateralSatoshis,
+      this.temporaryContractId,
+      this.acceptCollateral,
       this.fundingPubKey,
       this.payoutSPK,
       this.payoutSerialId,
