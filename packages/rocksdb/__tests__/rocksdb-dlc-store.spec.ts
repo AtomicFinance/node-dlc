@@ -2,6 +2,7 @@
 
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
+  ContractInfoV0,
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,
@@ -57,7 +58,7 @@ describe('RocksdbDlcStore', () => {
     "06" + // outcome_2_len
     "64756d6d7932" + // outcome_2
     "05" + // event_id_length
-    "64756d6d79" + // event_id
+    "64756d6d79" + // event_id dummy
 
     "0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3" + // funding_pubkey
 
@@ -232,6 +233,22 @@ describe('RocksdbDlcStore', () => {
     it('should return the dlc_offer object', async () => {
       const tempContractId = sha256(dlcOfferHex);
       const actual = await sut.findDlcOffer(tempContractId);
+
+      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
+      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInputV0[];
+
+      expect(
+        actualFundingInputs[0].prevTx.serialize().toString('hex'),
+      ).to.equal(expectedFundingInputs[0].prevTx.serialize().toString('hex'));
+      expect(actual.contractInfo).to.deep.equal(dlcOffer.contractInfo);
+    });
+  });
+
+  describe('find dlc_offer by eventId', () => {
+    it('should return the dlc_offer object', async () => {
+      const response = await sut.findDlcOffersByEventId('dummy');
+
+      const actual = response[0];
 
       const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
       const expectedFundingInputs = dlcOffer.fundingInputs as FundingInputV0[];

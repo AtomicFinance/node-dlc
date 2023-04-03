@@ -1,5 +1,8 @@
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
+  ContractInfo,
+  ContractInfoV0,
+  ContractInfoV1,
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,
@@ -74,6 +77,42 @@ export class RocksdbDlcStore extends RocksdbBase {
       ),
     );
     return dlcOffers.filter((dlcOffer) => !!dlcOffer);
+  }
+
+  public async findDlcOffersByEventId(eventId: string): Promise<DlcOfferV0[]> {
+    return new Promise((resolve, reject) => {
+      const stream = this._db.createReadStream();
+      const results: DlcOfferV0[] = [];
+      stream.on('data', (data) => {
+        if (data.key[0] === Prefix.DlcOfferV0) {
+          const dlcOffer = DlcOfferV0.deserialize(data.value);
+          if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
+            if (
+              (dlcOffer.contractInfo as ContractInfoV0).oracleInfo.announcement
+                .oracleEvent.eventId === eventId
+            ) {
+              results.push(dlcOffer);
+            }
+          } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
+            (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
+              (pair) => {
+                if (
+                  pair.oracleInfo.announcement.oracleEvent.eventId === eventId
+                ) {
+                  results.push(dlcOffer);
+                  return true; // Returning true will stop the iteration since we've found a match
+                }
+                return false; // Returning false will continue the iteration to check other pairs
+              },
+            );
+          }
+        }
+      });
+      stream.on('end', () => {
+        resolve(results);
+      });
+      stream.on('error', (err) => reject(err));
+    });
   }
 
   public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
