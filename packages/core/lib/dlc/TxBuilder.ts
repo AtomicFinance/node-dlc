@@ -82,6 +82,10 @@ export class DlcTxBuilder {
       ...this.dlcAccept.fundingInputs,
     ];
 
+    fundingInputs.sort(
+      (a, b) => Number(a.inputSerialId) - Number(b.inputSerialId),
+    );
+
     fundingInputs.forEach((input) => {
       tx.addInput(
         OutPoint.fromString(
