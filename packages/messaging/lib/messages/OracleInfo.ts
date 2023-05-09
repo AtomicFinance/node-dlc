@@ -2,11 +2,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OracleInfoV0 } from './pre-163/OracleInfoV0';
+import { OracleInfoV0Pre163 } from './pre-163/OracleInfo';
 import {
-  OracleAnnouncementV0,
-  OracleAnnouncementV0JSON,
-} from './pre-167/OracleAnnouncementV0';
+  OracleAnnouncementV0Pre167,
+  OracleAnnouncementV0Pre167JSON,
+} from './pre-167/OracleAnnouncement';
 
 export enum OracleInfoType {
   Single = 0,
@@ -34,8 +34,8 @@ export abstract class OracleInfo implements IDlcMessage {
     }
   }
 
-  public static fromPre163(oracleInfo: OracleInfoV0): OracleInfo {
-    if (oracleInfo instanceof OracleInfoV0) {
+  public static fromPre163(oracleInfo: OracleInfoV0Pre163): OracleInfo {
+    if (oracleInfo instanceof OracleInfoV0Pre163) {
       return SingleOracleInfo.from163(oracleInfo);
     } else {
       throw new Error('fromPre163 only suports OracleInfoV0');
@@ -68,12 +68,12 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
     const instance = new SingleOracleInfo();
 
     reader.readBigSize(); // read type
-    instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
 
     return instance;
   }
 
-  public static from163(oracleInfo: OracleInfoV0): SingleOracleInfo {
+  public static from163(oracleInfo: OracleInfoV0Pre163): SingleOracleInfo {
     const instance = new SingleOracleInfo();
 
     instance.announcement = oracleInfo.announcement;
@@ -86,7 +86,7 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
    */
   public type = SingleOracleInfo.type;
 
-  public announcement: OracleAnnouncementV0;
+  public announcement: OracleAnnouncementV0Pre167;
 
   public validate(): void {
     this.announcement.validate();
@@ -139,7 +139,7 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
     instance.threshold = reader.readUInt16BE();
     const numOracles = reader.readBigSize();
     for (let i = 0; i < numOracles; i++) {
-      const announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
+      const announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
       instance.announcements.push(announcement);
     }
     instance.hasOracleParams = reader.readUInt8() === 1;
@@ -157,7 +157,7 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
 
   public threshold: number;
 
-  public announcements: OracleAnnouncementV0[] = [];
+  public announcements: OracleAnnouncementV0Pre167[] = [];
 
   public hasOracleParams: boolean;
 
@@ -263,13 +263,13 @@ export interface IOracleParamsJSON {
 }
 export interface ISingleOracleInfoJSON {
   single: {
-    oracleAnnouncement: OracleAnnouncementV0JSON;
+    oracleAnnouncement: OracleAnnouncementV0Pre167JSON;
   };
 }
 export interface IMultiOracleInfoJSON {
   multi: {
     threshold: number;
-    oracleAnnouncements: OracleAnnouncementV0JSON[];
+    oracleAnnouncements: OracleAnnouncementV0Pre167JSON[];
     oracleParams: IOracleParamsJSON | null;
   };
 }

@@ -1,20 +1,21 @@
 import { Tx } from '@node-lightning/core';
 
-import { DlcAcceptV0 } from './DlcAccept';
+import { DlcAcceptV0Pre163 } from './DlcAccept';
 import { DlcOfferV0Pre163 } from './DlcOffer';
 import { DlcTransactionsV0Pre163 } from './DlcTransactions';
+import {DlcCloseV0Pre163} from "./DlcClose";
 
 /**
  * DlcClose Metadata object contains information required for verifying DlcClose
  * message.
  */
-export class DlcCloseMetadata {
+export class DlcCloseMetadataV0Pre163 {
   /**
    * Convert JSON to DlcCloseMetadata
    * @param json
    */
-  public static fromJSON(json: IDlcCloseMetadataJSON): DlcCloseMetadata {
-    const instance = new DlcCloseMetadata();
+  public static fromJSON(json: IDlcCloseMetadataV0Pre163JSON): DlcCloseMetadataV0Pre163 {
+    const instance = new DlcCloseMetadataV0Pre163();
 
     instance.offerFundingPubKey = Buffer.from(json.offerFundingPubKey, 'hex');
     instance.acceptFundingPubKey = Buffer.from(json.acceptFundingPubKey, 'hex');
@@ -31,10 +32,10 @@ export class DlcCloseMetadata {
 
   public static fromDlcMessages(
     dlcOffer: DlcOfferV0Pre163,
-    dlcAccept: DlcAcceptV0,
+    dlcAccept: DlcAcceptV0Pre163,
     dlcTxs: DlcTransactionsV0Pre163,
-  ): DlcCloseMetadata {
-    const instance = new DlcCloseMetadata();
+  ): DlcCloseMetadataV0Pre163 {
+    const instance = new DlcCloseMetadataV0Pre163();
 
     instance.offerFundingPubKey = dlcOffer.fundingPubKey;
     instance.acceptFundingPubKey = dlcAccept.fundingPubKey;
@@ -70,7 +71,7 @@ export class DlcCloseMetadata {
   /**
    * Converts dlc_close_metadata to JSON
    */
-  public toJSON(): IDlcCloseMetadataJSON {
+  public toJSON(): IDlcCloseMetadataV0Pre163JSON {
     return {
       offerFundingPubKey: this.offerFundingPubKey.toString('hex'),
       acceptFundingPubKey: this.acceptFundingPubKey.toString('hex'),
@@ -86,11 +87,11 @@ export class DlcCloseMetadata {
 
   public toDlcMessages(): {
     dlcOffer: DlcOfferV0Pre163;
-    dlcAccept: DlcAcceptV0;
+    dlcAccept: DlcAcceptV0Pre163;
     dlcTxs: DlcTransactionsV0Pre163;
   } {
     const dlcOffer = new DlcOfferV0Pre163();
-    const dlcAccept = new DlcAcceptV0();
+    const dlcAccept = new DlcAcceptV0Pre163();
     const dlcTxs = new DlcTransactionsV0Pre163();
 
     dlcOffer.fundingPubKey = this.offerFundingPubKey;
@@ -107,7 +108,7 @@ export class DlcCloseMetadata {
   }
 }
 
-export interface IDlcCloseMetadataJSON {
+export interface IDlcCloseMetadataV0Pre163JSON {
   offerFundingPubKey: string;
   acceptFundingPubKey: string;
   offerPayoutSPK: string;

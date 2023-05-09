@@ -5,8 +5,8 @@ import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionJSON } from './PayoutFunction';
 import {
   ContractDescriptorPre163,
-  ContractDescriptorV0,
-  ContractDescriptorV1,
+  ContractDescriptorV0Pre163,
+  ContractDescriptorV1Pre163,
 } from './pre-163/ContractDescriptor';
 import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
@@ -38,9 +38,9 @@ export abstract class ContractDescriptor {
   public static from163(
     contractDescriptor: ContractDescriptorPre163,
   ): ContractDescriptor {
-    if (contractDescriptor instanceof ContractDescriptorV0) {
+    if (contractDescriptor instanceof ContractDescriptorV0Pre163) {
       return EnumeratedContractDescriptor.fromPre163(contractDescriptor);
-    } else if (contractDescriptor instanceof ContractDescriptorV1) {
+    } else if (contractDescriptor instanceof ContractDescriptorV1Pre163) {
       return NumericContractDescriptor.fromPre163(contractDescriptor);
     } else {
       throw new Error(
@@ -99,7 +99,7 @@ export class EnumeratedContractDescriptor
   }
 
   public static fromPre163(
-    contractDescriptor: ContractDescriptorV0,
+    contractDescriptor: ContractDescriptorV0Pre163,
   ): EnumeratedContractDescriptor {
     const instance = new EnumeratedContractDescriptor();
 
@@ -186,7 +186,7 @@ export class NumericContractDescriptor
   }
 
   public static fromPre163(
-    contractDescriptor: ContractDescriptorV1,
+    contractDescriptor: ContractDescriptorV1Pre163,
   ): NumericContractDescriptor {
     const instance = new NumericContractDescriptor();
 

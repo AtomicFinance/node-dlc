@@ -4,10 +4,10 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessage } from '../DlcMessage';
 import {
-  DigitDecompositionEventDescriptorV0,
-  EventDescriptor,
-  IDigitDecompositionEventDescriptorV0JSON,
-  IEnumEventDescriptorV0JSON,
+  DigitDecompositionEventDescriptorV0Pre167,
+  EventDescriptorPre167,
+  IDigitDecompositionEventDescriptorV0Pre167JSON,
+  IEnumEventDescriptorV0Pre167JSON,
 } from './EventDescriptor';
 
 /**
@@ -22,15 +22,15 @@ import {
  *   - the event ID which can be a name or categorization associated with
  *     the event by the oracle
  */
-export class OracleEventV0 implements IDlcMessage {
+export class OracleEventV0Pre167 implements IDlcMessage {
   public static type = MessageType.OracleEventV0;
 
   /**
    * Deserializes an oracle_event message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleEventV0 {
-    const instance = new OracleEventV0();
+  public static deserialize(buf: Buffer): OracleEventV0Pre167 {
+    const instance = new OracleEventV0Pre167();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -42,7 +42,7 @@ export class OracleEventV0 implements IDlcMessage {
     }
 
     instance.eventMaturityEpoch = reader.readUInt32BE();
-    instance.eventDescriptor = EventDescriptor.deserialize(getTlv(reader));
+    instance.eventDescriptor = EventDescriptorPre167.deserialize(getTlv(reader));
     const eventIdLength = reader.readBigSize();
     const eventIdBuf = reader.readBytes(Number(eventIdLength));
     instance.eventId = eventIdBuf.toString();
@@ -53,7 +53,7 @@ export class OracleEventV0 implements IDlcMessage {
   /**
    * The type for oracle_event message. oracle_event = 55330
    */
-  public type = OracleEventV0.type;
+  public type = OracleEventV0Pre167.type;
 
   public length: bigint;
 
@@ -61,7 +61,7 @@ export class OracleEventV0 implements IDlcMessage {
 
   public eventMaturityEpoch: number;
 
-  public eventDescriptor: EventDescriptor;
+  public eventDescriptor: EventDescriptorPre167;
 
   public eventId: string;
 
@@ -76,10 +76,10 @@ export class OracleEventV0 implements IDlcMessage {
     }
 
     if (
-      this.eventDescriptor.type === DigitDecompositionEventDescriptorV0.type
+      this.eventDescriptor.type === DigitDecompositionEventDescriptorV0Pre167.type
     ) {
       const eventDescriptor = this
-        .eventDescriptor as DigitDecompositionEventDescriptorV0;
+        .eventDescriptor as DigitDecompositionEventDescriptorV0Pre167;
 
       eventDescriptor.validate();
 
@@ -94,7 +94,7 @@ export class OracleEventV0 implements IDlcMessage {
   /**
    * Converts oracle_event to JSON
    */
-  public toJSON(): IOracleEventV0JSON {
+  public toJSON(): IOracleEventV0Pre167JSON {
     return {
       oracleNonces: this.oracleNonces.map((oracle) => oracle.toString('hex')),
       eventMaturityEpoch: this.eventMaturityEpoch,
@@ -129,11 +129,11 @@ export class OracleEventV0 implements IDlcMessage {
   }
 }
 
-export interface IOracleEventV0JSON {
+export interface IOracleEventV0Pre167JSON {
   oracleNonces: string[];
   eventMaturityEpoch: number;
   eventDescriptor:
-    | IEnumEventDescriptorV0JSON
-    | IDigitDecompositionEventDescriptorV0JSON;
+    | IEnumEventDescriptorV0Pre167JSON
+    | IDigitDecompositionEventDescriptorV0Pre167JSON;
   eventId: string;
 }

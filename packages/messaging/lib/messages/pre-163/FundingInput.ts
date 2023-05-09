@@ -6,21 +6,21 @@ import {
 } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 /**
  * FundingInput V0 contains information about a specific input to be used
  * in a funding transaction, as well as its corresponding on-chain UTXO.
  */
-export class FundingInputV0 implements IDlcMessage {
+export class FundingInputV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.FundingInputV0;
 
   /**
    * Deserializes an funding_input_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): FundingInputV0 {
-    const instance = new FundingInputV0();
+  public static deserialize(buf: Buffer): FundingInputV0Pre163 {
+    const instance = new FundingInputV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -42,7 +42,7 @@ export class FundingInputV0 implements IDlcMessage {
   /**
    * The type for funding_input_v0 message. funding_input_v0 = 42772
    */
-  public type = FundingInputV0.type;
+  public type = FundingInputV0Pre163.type;
 
   public length: bigint;
 
@@ -79,7 +79,7 @@ export class FundingInputV0 implements IDlcMessage {
   /**
    * Converts funding_input_v0 to JSON
    */
-  public toJSON(): IFundingInputV0JSON {
+  public toJSON(): IFundingInputV0Pre163JSON {
     return {
       type: this.type,
       inputSerialId: Number(this.inputSerialId),
@@ -115,7 +115,7 @@ export class FundingInputV0 implements IDlcMessage {
   }
 }
 
-export interface IFundingInputV0JSON {
+export interface IFundingInputV0Pre163JSON {
   type: number;
   inputSerialId: number;
   prevTx: string;

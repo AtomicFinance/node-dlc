@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 
 import {
-  DigitDecompositionEventDescriptorV0,
-  EnumEventDescriptorV0,
+  DigitDecompositionEventDescriptorV0Pre167,
+  EnumEventDescriptorV0Pre167,
 } from '../../lib/messages/pre-167/EventDescriptor';
-import { OracleEventV0 } from '../../lib/messages/pre-167/OracleEventV0';
+import { OracleEventV0Pre167 } from '../../lib/messages/pre-167/OracleEvent';
 
 describe('OracleEventV0', () => {
   const oracleNonce = Buffer.from(
@@ -16,12 +16,12 @@ describe('OracleEventV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleEventV0();
+      const instance = new OracleEventV0Pre167();
 
       instance.length = BigInt(64);
       instance.oracleNonces.push(oracleNonce);
       instance.eventMaturityEpoch = 0;
-      instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
+      instance.eventDescriptor = EnumEventDescriptorV0Pre167.deserialize(
         Buffer.from(
           'fdd806' + // type enum_event_descriptor
             '10' + // length
@@ -74,7 +74,7 @@ describe('OracleEventV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleEventV0.deserialize(buf);
+      const instance = OracleEventV0Pre167.deserialize(buf);
 
       expect(instance.oracleNonces[0]).to.deep.equal(oracleNonce);
       expect(instance.eventMaturityEpoch).to.equal(0);
@@ -92,13 +92,13 @@ describe('OracleEventV0', () => {
   });
 
   describe('validate', () => {
-    const instance = new OracleEventV0();
+    const instance = new OracleEventV0Pre167();
 
     beforeEach(() => {
       instance.length = BigInt(64);
       instance.oracleNonces.push(oracleNonce);
       instance.eventMaturityEpoch = 0;
-      instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
+      instance.eventDescriptor = EnumEventDescriptorV0Pre167.deserialize(
         Buffer.from(
           'fdd806' + // type enum_event_descriptor
             '10' + // length
@@ -123,7 +123,7 @@ describe('OracleEventV0', () => {
     });
 
     it('should throw if oracleNonces.length !== eventDescriptor.nbDigits', () => {
-      instance.eventDescriptor = DigitDecompositionEventDescriptorV0.deserialize(
+      instance.eventDescriptor = DigitDecompositionEventDescriptorV0Pre167.deserialize(
         Buffer.from(
           'fdd80a' + // type
             '11' + // length

@@ -2,8 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { CetAdaptorSignaturesV0Pre163 } from './pre-163/CetAdaptorSignaturesV0';
-
+import { CetAdaptorSignaturesV0Pre163 } from './pre-163/CetAdaptorSignatures';
 /**
  * CetAdaptorSignatures V0 contains CET signatures and any necessary
  * information linking the signatures to their corresponding outcome

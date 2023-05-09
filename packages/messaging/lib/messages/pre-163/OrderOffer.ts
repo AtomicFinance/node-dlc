@@ -10,21 +10,22 @@ import {
 } from '../../validation/validate';
 import {
   ContractInfoPre163,
-  IContractInfoV0JSON,
-  IContractInfoV1JSON,
+  IContractInfoV0Pre163JSON,
+  IContractInfoV1Pre163JSON,
 } from './ContractInfo';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 import {
-  IOrderIrcInfoJSON,
-  OrderIrcInfo,
-  OrderIrcInfoV0,
+  IOrderIrcInfoV0Pre163JSON,
+  OrderIrcInfoPre163,
+  OrderIrcInfoV0Pre163,
 } from './OrderIrcInfo';
-import { IOrderMetadataJSON } from './OrderMetadata';
-import { OrderMetadata, OrderMetadataV0 } from './OrderMetadata';
+import { IOrderMetadataV0Pre163JSON} from './OrderMetadata';
+import { OrderMetadataPre163, OrderMetadataV0Pre163 } from './OrderMetadata';
+import {OrderNegotiationFieldsPre163} from "./OrderNegotiationFields";
 
 const LOCKTIME_THRESHOLD = 500000000;
-export abstract class OrderOffer {
-  public static deserialize(buf: Buffer): OrderOffer {
+export abstract class OrderOfferPre163 {
+  public static deserialize(buf: Buffer): OrderOfferPre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
@@ -41,7 +42,7 @@ export abstract class OrderOffer {
 
   public abstract validate(): void;
 
-  public abstract toJSON(): IOrderOfferJSON;
+  public abstract toJSON(): IOrderOfferV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -51,7 +52,7 @@ export abstract class OrderOffer {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
+export class OrderOfferV0Pre163 extends OrderOfferPre163 implements IDlcMessagePre163 {
   public static type = MessageType.OrderOfferV0;
 
   /**
@@ -77,10 +78,10 @@ export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
 
       switch (Number(type)) {
         case MessageType.OrderMetadataV0:
-          instance.metadata = OrderMetadataV0.deserialize(buf);
+          instance.metadata = OrderMetadataV0Pre163.deserialize(buf);
           break;
         case MessageType.OrderIrcInfoV0:
-          instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
+          instance.ircInfo = OrderIrcInfoV0Pre163.deserialize(buf);
           break;
         default:
           break;
@@ -107,9 +108,9 @@ export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
 
   public refundLocktime: number;
 
-  public metadata?: OrderMetadata;
+  public metadata?: OrderMetadataPre163;
 
-  public ircInfo?: OrderIrcInfo;
+  public ircInfo?: OrderIrcInfoPre163;
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0Pre163.name, 32);
@@ -177,7 +178,7 @@ export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
   /**
    * Converts order_offer_v0 to JSON
    */
-  public toJSON(): IOrderOfferJSON {
+  public toJSON(): IOrderOfferV0Pre163JSON {
     const tlvs = [];
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
@@ -215,13 +216,13 @@ export class OrderOfferV0Pre163 extends OrderOffer implements IDlcMessage {
   }
 }
 
-export interface IOrderOfferJSON {
+export interface IOrderOfferV0Pre163JSON {
   type: number;
   chainHash: string;
-  contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
+  contractInfo: IContractInfoV0Pre163JSON | IContractInfoV1Pre163JSON;
   offerCollateralSatoshis: number;
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON)[];
+  tlvs: (IOrderMetadataV0Pre163JSON | IOrderIrcInfoV0Pre163JSON)[];
 }

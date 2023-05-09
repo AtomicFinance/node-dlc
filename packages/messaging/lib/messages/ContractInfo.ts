@@ -18,12 +18,12 @@ import {
 } from './OracleInfo';
 import {
   ContractInfoPre163,
-  ContractInfoV0,
-  ContractInfoV1,
+  ContractInfoV0Pre163,
+  ContractInfoV1Pre163,
 } from './pre-163/ContractInfo';
-import { DigitDecompositionEventDescriptorV0 } from './pre-167/EventDescriptor';
-import { OracleAnnouncementV0 } from './pre-167/OracleAnnouncementV0';
-import { OracleEventV0 } from './pre-167/OracleEventV0';
+import { DigitDecompositionEventDescriptorV0Pre167 } from './pre-167/EventDescriptor';
+import { OracleAnnouncementV0Pre167 } from './pre-167/OracleAnnouncement';
+import { OracleEventV0Pre167 } from './pre-167/OracleEvent';
 
 export enum ContractInfoType {
   Single = 0,
@@ -53,9 +53,9 @@ export abstract class ContractInfo implements IDlcMessage {
   public static fromPre163(
     contractInfo: ContractInfoPre163,
   ): SingleContractInfo | DisjointContractInfo {
-    if (contractInfo instanceof ContractInfoV0) {
+    if (contractInfo instanceof ContractInfoV0Pre163) {
       return SingleContractInfo.fromPre163(contractInfo);
-    } else if (contractInfo instanceof ContractInfoV1) {
+    } else if (contractInfo instanceof ContractInfoV1Pre163) {
       return DisjointContractInfo.fromPre163(contractInfo);
     } else {
       throw new Error('ContractInfo must be ContractInfoV0 or ContractInfoV1');
@@ -97,7 +97,9 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
     return instance;
   }
 
-  public static fromPre163(contractInfo: ContractInfoV0): SingleContractInfo {
+  public static fromPre163(
+    contractInfo: ContractInfoV0Pre163,
+  ): SingleContractInfo {
     const instance = new SingleContractInfo();
 
     instance.totalCollateral = contractInfo.totalCollateral;
@@ -154,7 +156,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 
   private validateOracleAnnouncement(
     descriptor: NumericContractDescriptor,
-    announcement: OracleAnnouncementV0,
+    announcement: OracleAnnouncementV0Pre167,
   ) {
     // eslint-disable-next-line no-case-declarations
     const oracleInfo = this.oracleInfo as SingleOracleInfo;
@@ -162,16 +164,16 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
       case MessageType.DigitDecompositionEventDescriptorV0:
         // eslint-disable-next-line no-case-declarations
         const eventDescriptor = oracleInfo.announcement.oracleEvent
-          .eventDescriptor as DigitDecompositionEventDescriptorV0;
+          .eventDescriptor as DigitDecompositionEventDescriptorV0Pre167;
         if (eventDescriptor.nbDigits !== descriptor.numDigits)
           throw new Error(
             'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
           );
 
-        // Sanity check. Shouldn't be hit since there are other validations which should catch this in OracleEventV0.
+        // Sanity check. Shouldn't be hit since there are other validations which should catch this in OracleEvent.
         // eslint-disable-next-line no-case-declarations
         const oracleEvent = oracleInfo.announcement
-          .oracleEvent as OracleEventV0;
+          .oracleEvent as OracleEventV0Pre167;
         if (oracleEvent.oracleNonces.length !== descriptor.numDigits) {
           throw new Error(
             'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
@@ -251,7 +253,9 @@ export class DisjointContractInfo implements IDlcMessage {
     return instance;
   }
 
-  public static fromPre163(contractInfo: ContractInfoV1): DisjointContractInfo {
+  public static fromPre163(
+    contractInfo: ContractInfoV1Pre163,
+  ): DisjointContractInfo {
     const instance = new DisjointContractInfo();
 
     instance.totalCollateral = contractInfo.totalCollateral;
@@ -304,7 +308,7 @@ export class DisjointContractInfo implements IDlcMessage {
     //             );
     //           // eslint-disable-next-line no-case-declarations
     //           const oracleEvent = oraclePair.oracleInfo.announcement
-    //             .oracleEvent as OracleEventV0;
+    //             .oracleEvent as OracleEvent;
     //           if (
     //             oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
     //           ) {

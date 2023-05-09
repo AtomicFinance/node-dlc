@@ -6,7 +6,7 @@ import {
 } from '@node-lightning/bufio';
 
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0 } from './pre-163/FundingInput';
+import { FundingInputV0Pre163 } from './pre-163/FundingInput';
 
 /**
  * FundingInput V0 contains information about a specific input to be used
@@ -44,7 +44,7 @@ export class FundingInput implements IDlcMessage {
     return instance;
   }
 
-  public static fromPre163(fundingInput: FundingInputV0): FundingInput {
+  public static fromPre163(fundingInput: FundingInputV0Pre163): FundingInput {
     const instance = new FundingInput();
 
     instance.inputSerialId = fundingInput.inputSerialId;

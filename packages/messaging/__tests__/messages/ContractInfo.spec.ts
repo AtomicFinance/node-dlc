@@ -16,9 +16,9 @@ import {
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunction } from '../../lib/messages/PayoutFunction';
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/pre-167/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/pre-167/OracleAnnouncementV0';
-import { OracleEventV0 } from '../../lib/messages/pre-167/OracleEventV0';
+import { DigitDecompositionEventDescriptorV0Pre167 } from '../../lib/messages/pre-167/EventDescriptor';
+import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
+import { OracleEventV0Pre167 } from '../../lib/messages/pre-167/OracleEvent';
 import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
 
 chai.use(chaiAsPromised);
@@ -200,7 +200,7 @@ describe('ContractInfoV0', () => {
     let eventDescriptorNumDigits;
     let contractDescriptorNumDigits;
     let oracleInfo: SingleOracleInfo;
-    let oracleAnnouncement: OracleAnnouncementV0;
+    let oracleAnnouncement: OracleAnnouncementV0Pre167;
     let hyperbolaPayoutCurvePiece: HyperbolaPayoutCurvePiece;
     let payoutFunction: PayoutFunction;
 
@@ -208,14 +208,14 @@ describe('ContractInfoV0', () => {
       eventDescriptorNumDigits = 18;
       contractDescriptorNumDigits = 18;
 
-      const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+      const eventDescriptor = new DigitDecompositionEventDescriptorV0Pre167();
       eventDescriptor.base = 2;
       eventDescriptor.isSigned = false;
       eventDescriptor.unit = 'BTCUSD';
       eventDescriptor.precision = 0;
       eventDescriptor.nbDigits = eventDescriptorNumDigits;
 
-      const oracleEvent = new OracleEventV0();
+      const oracleEvent = new OracleEventV0Pre167();
       oracleEvent.oracleNonces = [
         'c3347aa29db9f5e619483a92e746be91982bc66127e856bee62daeb91148cb92',
         'fbdffe731b410c1d735ad7ce868f40d5b4a44c29131b0feca0f9c28f3a5c2fee',
@@ -241,7 +241,7 @@ describe('ContractInfoV0', () => {
       oracleEvent.eventDescriptor = eventDescriptor;
       oracleEvent.eventId = 'Deribit-BTC-27OCT21';
 
-      oracleAnnouncement = new OracleAnnouncementV0();
+      oracleAnnouncement = new OracleAnnouncementV0Pre167();
       oracleAnnouncement.announcementSig = Buffer.from(
         'c3347aa29db9f5e619483a92e746be91982bc66127e856bee62daeb91148cb92a1074a802a481c008ba44143c752e519c28d906658e5257d9d82e80ef66cbf0f',
         'hex',

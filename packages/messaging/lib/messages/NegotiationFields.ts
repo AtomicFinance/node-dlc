@@ -3,9 +3,9 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { IDlcMessage } from './DlcMessage';
 import {
   NegotiationFieldsPre163,
-  NegotiationFieldsV0,
-  NegotiationFieldsV1,
-  NegotiationFieldsV2,
+  NegotiationFieldsV0Pre163,
+  NegotiationFieldsV1Pre163,
+  NegotiationFieldsV2Pre163,
 } from './pre-163/NegotiationFields';
 import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
@@ -38,11 +38,11 @@ export abstract class NegotiationFields {
   public static fromPre163(
     negotiationFields: NegotiationFieldsPre163,
   ): NegotiationFields {
-    if (negotiationFields instanceof NegotiationFieldsV0) {
+    if (negotiationFields instanceof NegotiationFieldsV0Pre163) {
       return null;
-    } else if (negotiationFields instanceof NegotiationFieldsV1) {
+    } else if (negotiationFields instanceof NegotiationFieldsV1Pre163) {
       return SingleNegotiationFields.fromPre163(negotiationFields);
-    } else if (negotiationFields instanceof NegotiationFieldsV2) {
+    } else if (negotiationFields instanceof NegotiationFieldsV2Pre163) {
       return DisjointNegotiationFields.fromPre163(negotiationFields);
     } else {
       throw new Error(
@@ -87,7 +87,7 @@ export class SingleNegotiationFields
   }
 
   public static fromPre163(
-    negotiationFields: NegotiationFieldsV1,
+    negotiationFields: NegotiationFieldsV1Pre163,
   ): SingleNegotiationFields {
     const instance = new SingleNegotiationFields();
 
@@ -161,7 +161,7 @@ export class DisjointNegotiationFields
   }
 
   public static fromPre163(
-    negotiationFields: NegotiationFieldsV2,
+    negotiationFields: NegotiationFieldsV2Pre163,
   ): DisjointNegotiationFields {
     const instance = new DisjointNegotiationFields();
 

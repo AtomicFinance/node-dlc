@@ -7,10 +7,7 @@ import {
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import {
-  DlcTransactionsPre163,
-  DlcTransactionsV0Pre163,
-} from './pre-163/DlcTransactions';
+import { DlcTransactionsV0Pre163 } from './pre-163/DlcTransactions';
 
 export abstract class DlcTransactions {
   public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {

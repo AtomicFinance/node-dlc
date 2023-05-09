@@ -9,7 +9,7 @@ import {
   PayoutCurvePiece,
   PolynomialPayoutCurvePieceJSON,
 } from './PayoutCurvePiece';
-import { PayoutFunctionV0 } from './pre-163/PayoutFunction';
+import { PayoutFunctionV0Pre163 } from './pre-163/PayoutFunction';
 
 /**
  * PayoutFunction V0
@@ -50,7 +50,7 @@ export class PayoutFunction implements IDlcMessage {
     return instance;
   }
 
-  public static fromPre163(payoutFunction: PayoutFunctionV0): PayoutFunction {
+  public static fromPre163(payoutFunction: PayoutFunctionV0Pre163): PayoutFunction {
     const instance = new PayoutFunction();
 
     const pieces = payoutFunction.pieces;

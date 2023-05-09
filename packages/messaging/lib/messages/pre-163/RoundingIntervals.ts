@@ -1,20 +1,20 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 /**
  * RoundingIntervals V0
  */
-export class RoundingIntervalsV0 implements IDlcMessage {
+export class RoundingIntervalsV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.RoundingIntervalsV0;
 
   /**
    * Deserializes an rounding_intervals_v0 tlv
    * @param buf
    */
-  public static deserialize(buf: Buffer): RoundingIntervalsV0 {
-    const instance = new RoundingIntervalsV0();
+  public static deserialize(buf: Buffer): RoundingIntervalsV0Pre163 {
+    const instance = new RoundingIntervalsV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -34,7 +34,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   /**
    * The type for rounding_intervals_v0 tlv. rounding_intervals_v0 = 42788
    */
-  public type = RoundingIntervalsV0.type;
+  public type = RoundingIntervalsV0Pre163.type;
 
   public length: bigint;
 
@@ -66,7 +66,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   /**
    * Converts rounding_intervals_v0 to JSON
    */
-  public toJSON(): IRoundingIntervalsV0JSON {
+  public toJSON(): IRoundingIntervalsV0Pre163JSON {
     return {
       type: this.type,
       intervals: this.intervals.map((interval) => {
@@ -110,7 +110,7 @@ interface IIntervalJSON {
   roundingMod: number;
 }
 
-export interface IRoundingIntervalsV0JSON {
+export interface IRoundingIntervalsV0Pre163JSON {
   type: number;
   intervals: IIntervalJSON[];
 }

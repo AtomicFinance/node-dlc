@@ -1,22 +1,22 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
-import { IScriptWitnessV0JSON, ScriptWitnessV0 } from './ScriptWitnessV0';
+import { IDlcMessagePre163 } from './DlcMessage';
+import { IScriptWitnessV0Pre163JSON, ScriptWitnessV0Pre163 } from './ScriptWitness';
 
 /**
  * FundingSignatures V0 contains signatures of the funding transaction
  * and any necessary information linking the signatures to their inputs.
  */
-export class FundingSignaturesV0 implements IDlcMessage {
+export class FundingSignaturesV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.FundingSignaturesV0;
 
   /**
    * Deserializes an funding_signatures_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): FundingSignaturesV0 {
-    const instance = new FundingSignaturesV0();
+  public static deserialize(buf: Buffer): FundingSignaturesV0Pre163 {
+    const instance = new FundingSignaturesV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -25,10 +25,10 @@ export class FundingSignaturesV0 implements IDlcMessage {
 
     for (let i = 0; i < numWitnesses; i++) {
       const numWitnessElements = reader.readUInt16BE();
-      const witnessElements: ScriptWitnessV0[] = [];
+      const witnessElements: ScriptWitnessV0Pre163[] = [];
       for (let j = 0; j < numWitnessElements; j++) {
-        const witness = ScriptWitnessV0.getWitness(reader);
-        witnessElements.push(ScriptWitnessV0.deserialize(witness));
+        const witness = ScriptWitnessV0Pre163.getWitness(reader);
+        witnessElements.push(ScriptWitnessV0Pre163.deserialize(witness));
       }
       instance.witnessElements.push(witnessElements);
     }
@@ -39,16 +39,16 @@ export class FundingSignaturesV0 implements IDlcMessage {
   /**
    * The type for funding_signatures_v0 message. funding_signatures_v0 = 42776
    */
-  public type = FundingSignaturesV0.type;
+  public type = FundingSignaturesV0Pre163.type;
 
   public length: bigint;
 
-  public witnessElements: ScriptWitnessV0[][] = [];
+  public witnessElements: ScriptWitnessV0Pre163[][] = [];
 
   /**
    * Converts funding_signatures_v0 to JSON
    */
-  public toJSON(): IFundingSignaturesV0JSON {
+  public toJSON(): IFundingSignaturesV0Pre163JSON {
     return {
       type: this.type,
       witnessElements: this.witnessElements.map((witnessElement) => {
@@ -82,7 +82,7 @@ export class FundingSignaturesV0 implements IDlcMessage {
   }
 }
 
-export interface IFundingSignaturesV0JSON {
+export interface IFundingSignaturesV0Pre163JSON {
   type: number;
-  witnessElements: IScriptWitnessV0JSON[][];
+  witnessElements: IScriptWitnessV0Pre163JSON[][];
 }

@@ -4,20 +4,20 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import {
   CetAdaptorSignaturesV0Pre163,
-  ICetAdaptorSignaturesV0JSON,
-} from './CetAdaptorSignaturesV0';
-import { IDlcMessage } from './DlcMessage';
+  ICetAdaptorSignaturesV0Pre163JSON,
+} from './CetAdaptorSignatures';
+import { IDlcMessagePre163 } from './DlcMessage';
 import {
-  FundingSignaturesV0,
-  IFundingSignaturesV0JSON,
-} from './FundingSignaturesV0';
+  FundingSignaturesV0Pre163,
+  IFundingSignaturesV0Pre163JSON,
+} from './FundingSignatures';
 
 /**
  * DlcSign gives all of the initiator's signatures, which allows the
  * receiver to broadcast the funding transaction with both parties being
  * fully committed to all closing transactions.
  */
-export class DlcSignV0Pre163 implements IDlcMessage {
+export class DlcSignV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.DlcSignV0;
 
   /**
@@ -34,7 +34,7 @@ export class DlcSignV0Pre163 implements IDlcMessage {
       getTlv(reader),
     );
     instance.refundSignature = reader.readBytes(64);
-    instance.fundingSignatures = FundingSignaturesV0.deserialize(
+    instance.fundingSignatures = FundingSignaturesV0Pre163.deserialize(
       getTlv(reader),
     );
 
@@ -52,12 +52,12 @@ export class DlcSignV0Pre163 implements IDlcMessage {
 
   public refundSignature: Buffer;
 
-  public fundingSignatures: FundingSignaturesV0;
+  public fundingSignatures: FundingSignaturesV0Pre163;
 
   /**
    * Converts sign_dlc_v0 to JSON
    */
-  public toJSON(): IDlcSignV0JSON {
+  public toJSON(): IDlcSignV0Pre163JSON {
     return {
       type: this.type,
       contractId: this.contractId.toString('hex'),
@@ -82,10 +82,10 @@ export class DlcSignV0Pre163 implements IDlcMessage {
   }
 }
 
-export interface IDlcSignV0JSON {
+export interface IDlcSignV0Pre163JSON {
   type: number;
   contractId: string;
-  cetSignatures: ICetAdaptorSignaturesV0JSON;
+  cetSignatures: ICetAdaptorSignaturesV0Pre163JSON;
   refundSignature: string;
-  fundingSignatures: IFundingSignaturesV0JSON;
+  fundingSignatures: IFundingSignaturesV0Pre163JSON;
 }

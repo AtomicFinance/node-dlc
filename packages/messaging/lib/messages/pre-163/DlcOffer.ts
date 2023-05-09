@@ -9,11 +9,12 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import {
   ContractInfoPre163,
-  IContractInfoV0JSON,
-  IContractInfoV1JSON,
+  IContractInfoV0Pre163JSON,
+  IContractInfoV1Pre163JSON,
 } from './ContractInfo';
-import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import { IDlcMessagePre163 } from './DlcMessage';
+import { FundingInputV0Pre163, IFundingInputV0Pre163JSON } from './FundingInput';
+import {DlcInfoV0Pre163} from "./DlcInfo";
 
 export const LOCKTIME_THRESHOLD = 500000000;
 
@@ -22,7 +23,7 @@ export const LOCKTIME_THRESHOLD = 500000000;
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class DlcOfferV0Pre163 implements IDlcMessage {
+export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.DlcOfferV0;
 
   /**
@@ -45,7 +46,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
     const fundingInputsLen = reader.readUInt16BE();
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInputV0Pre163.deserialize(getTlv(reader)));
     }
 
     const changeSPKLen = reader.readUInt16BE();
@@ -78,7 +79,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
 
   public offerCollateralSatoshis: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInputV0Pre163[] = [];
 
   public changeSPK: Buffer;
 
@@ -97,7 +98,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
    * @param network Bitcoin Network
    * @returns {IDlcOfferV0Addresses}
    */
-  public getAddresses(network: BitcoinNetwork): IDlcOfferV0Addresses {
+  public getAddresses(network: BitcoinNetwork): IDlcOfferV0Pre163Addresses {
     const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))
       .serialize()
       .slice(1);
@@ -184,7 +185,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
     // 9. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInputV0Pre163) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -209,7 +210,7 @@ export class DlcOfferV0Pre163 implements IDlcMessage {
 
     // validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
-      const input = fundingInput as FundingInputV0;
+      const input = fundingInput as FundingInputV0Pre163;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.offerCollateralSatoshis >= fundingAmount) {
@@ -278,12 +279,12 @@ export interface IDlcOfferV0Pre163JSON {
   type: number;
   contractFlags: string;
   chainHash: string;
-  contractInfo: IContractInfoV0JSON | IContractInfoV1JSON;
+  contractInfo: IContractInfoV0Pre163JSON | IContractInfoV1Pre163JSON;
   fundingPubKey: string;
   payoutSPK: string;
   payoutSerialId: number;
   offerCollateralSatoshis: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputV0Pre163JSON[];
   changeSPK: string;
   changeSerialId: number;
   fundOutputSerialId: number;
@@ -292,7 +293,7 @@ export interface IDlcOfferV0Pre163JSON {
   refundLocktime: number;
 }
 
-export interface IDlcOfferV0Addresses {
+export interface IDlcOfferV0Pre163Addresses {
   fundingAddress: string;
   changeAddress: string;
   payoutAddress: string;

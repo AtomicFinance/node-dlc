@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
-import { OracleAnnouncementV0 } from '../../lib/messages/pre-167/OracleAnnouncementV0';
+import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
 
 describe('OracleInfoV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new SingleOracleInfo();
 
-      instance.announcement = OracleAnnouncementV0.deserialize(
+      instance.announcement = OracleAnnouncementV0Pre167.deserialize(
         Buffer.from(
           'fdd824' + // type oracle_announcement
             'a4' + // length

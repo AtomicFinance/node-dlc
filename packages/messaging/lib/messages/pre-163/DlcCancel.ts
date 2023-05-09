@@ -1,17 +1,17 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
-export abstract class DlcCancel {
-  public static deserialize(buf: Buffer): DlcCancelV0 {
+export abstract class DlcCancelPre163 {
+  public static deserialize(buf: Buffer): DlcCancelV0Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcCancelV0:
-        return DlcCancelV0.deserialize(buf);
+        return DlcCancelV0Pre163.deserialize(buf);
       default:
         throw new Error(`DLC Cancel message type must be DlcCancelV0`); // This is a temporary measure while protocol is being developed
     }
@@ -27,15 +27,15 @@ export abstract class DlcCancel {
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class DlcCancelV0 extends DlcCancel implements IDlcMessage {
+export class DlcCancelV0Pre163 extends DlcCancelPre163 implements IDlcMessagePre163 {
   public static type = MessageType.DlcCancelV0;
 
   /**
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcCancelV0 {
-    const instance = new DlcCancelV0();
+  public static deserialize(buf: Buffer): DlcCancelV0Pre163 {
+    const instance = new DlcCancelV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -48,7 +48,7 @@ export class DlcCancelV0 extends DlcCancel implements IDlcMessage {
   /**
    * The type for cancel_dlc_v0 message. cancel_dlc_v0 = 52172
    */
-  public type = DlcCancelV0.type;
+  public type = DlcCancelV0Pre163.type;
 
   public contractId: Buffer;
 

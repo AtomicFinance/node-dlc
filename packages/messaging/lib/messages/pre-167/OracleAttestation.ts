@@ -16,15 +16,15 @@ import { IDlcMessage } from '../DlcMessage';
  * from an un-trusted peer while being guaranteed that it originates from a
  * given oracle.
  */
-export class OracleAttestationV0 implements IDlcMessage {
+export class OracleAttestationV0Pre167 implements IDlcMessage {
   public static type = MessageType.OracleAttestationV0;
 
   /**
    * Deserializes an oracle_announcement_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleAttestationV0 {
-    const instance = new OracleAttestationV0();
+  public static deserialize(buf: Buffer): OracleAttestationV0Pre167 {
+    const instance = new OracleAttestationV0Pre167();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -55,7 +55,7 @@ export class OracleAttestationV0 implements IDlcMessage {
   /**
    * The type for oracle_announcement_v0 message. oracle_announcement_v0 = 55332
    */
-  public type = OracleAttestationV0.type;
+  public type = OracleAttestationV0Pre167.type;
 
   public length: bigint;
 
@@ -85,7 +85,7 @@ export class OracleAttestationV0 implements IDlcMessage {
   /**
    * Converts oracle_attestation_v0 to JSON
    */
-  public toJSON(): OracleAttestationV0JSON {
+  public toJSON(): OracleAttestationV0Pre167JSON {
     return {
       type: this.type,
       eventId: this.eventId,
@@ -124,7 +124,7 @@ export class OracleAttestationV0 implements IDlcMessage {
   }
 }
 
-export interface OracleAttestationV0JSON {
+export interface OracleAttestationV0Pre167JSON {
   type: number;
   eventId: string;
   oraclePubkey: string;

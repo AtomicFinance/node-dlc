@@ -1,18 +1,18 @@
 import { expect } from 'chai';
 
-import { OracleAnnouncementV0 } from '../../lib/messages/pre-167/OracleAnnouncementV0';
-import { OracleAttestationV0 } from '../../lib/messages/pre-167/OracleAttestationV0';
-import { OracleEventContainerV0 } from '../../lib/messages/pre-167/OracleEventContainerV0';
+import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
+import { OracleAttestationV0Pre167 } from '../../lib/messages/pre-167/OracleAttestation';
+import { OracleEventContainerV0Pre167 } from '../../lib/messages/pre-167/OracleEventContainer';
 
 describe('OracleEventContainerV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleEventContainerV0();
+      const instance = new OracleEventContainerV0Pre167();
 
       instance.length = BigInt(313);
       instance.oracleName = 'Atomic';
       instance.uri = '';
-      instance.announcement = OracleAnnouncementV0.deserialize(
+      instance.announcement = OracleAnnouncementV0Pre167.deserialize(
         Buffer.from(
           'fdd824' + // type oracle_announcement
             'a4' + // length
@@ -36,7 +36,7 @@ describe('OracleEventContainerV0', () => {
           'hex',
         ),
       );
-      instance.attestation = OracleAttestationV0.deserialize(
+      instance.attestation = OracleAttestationV0Pre167.deserialize(
         Buffer.from(
           'fdd868' + // type oracle_attestation_v0
             '7f' + // length
@@ -133,7 +133,7 @@ describe('OracleEventContainerV0', () => {
         'hex'
       ); // prettier-ignore
 
-      const instance = OracleEventContainerV0.deserialize(buf);
+      const instance = OracleEventContainerV0Pre167.deserialize(buf);
 
       expect(instance.length).to.deep.equal(BigInt(313));
       expect(instance.oracleName).to.equal('Atomic');

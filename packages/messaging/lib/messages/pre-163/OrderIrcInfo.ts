@@ -1,17 +1,17 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
-export abstract class OrderIrcInfo {
-  public static deserialize(buf: Buffer): OrderIrcInfo {
+export abstract class OrderIrcInfoPre163 {
+  public static deserialize(buf: Buffer): OrderIrcInfoPre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderIrcInfoV0:
-        return OrderIrcInfoV0.deserialize(buf);
+        return OrderIrcInfoV0Pre163.deserialize(buf);
       default:
         throw new Error(`Order irc info TLV type must be OrderIrcInfoV0`);
     }
@@ -19,7 +19,7 @@ export abstract class OrderIrcInfo {
 
   public abstract type: number;
 
-  public abstract toJSON(): IOrderIrcInfoJSON;
+  public abstract toJSON(): IOrderIrcInfoV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -29,15 +29,15 @@ export abstract class OrderIrcInfo {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
+export class OrderIrcInfoV0Pre163 extends OrderIrcInfoPre163 implements IDlcMessagePre163 {
   public static type = MessageType.OrderIrcInfoV0;
 
   /**
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OrderIrcInfoV0 {
-    const instance = new OrderIrcInfoV0();
+  public static deserialize(buf: Buffer): OrderIrcInfoV0Pre163 {
+    const instance = new OrderIrcInfoV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -55,7 +55,7 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
   /**
    * The type for order_metadata_v0 message. order_metadata_v0 = 62774
    */
-  public type = OrderIrcInfoV0.type;
+  public type = OrderIrcInfoV0Pre163.type;
 
   public length: bigint;
 
@@ -66,7 +66,7 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
   /**
    * Converts order_metadata_v0 to JSON
    */
-  public toJSON(): IOrderIrcInfoJSON {
+  public toJSON(): IOrderIrcInfoV0Pre163JSON {
     return {
       type: this.type,
       nick: this.nick,
@@ -93,7 +93,7 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
   }
 }
 
-export interface IOrderIrcInfoJSON {
+export interface IOrderIrcInfoV0Pre163JSON {
   type: number;
   nick: string;
   pubKey: string;

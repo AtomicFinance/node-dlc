@@ -9,14 +9,14 @@ import { MessageType } from '../../MessageType';
 import { getTlv, skipTlv } from '../../serialize/getTlv';
 import {
   CetAdaptorSignaturesV0Pre163,
-  ICetAdaptorSignaturesV0JSON,
-} from './CetAdaptorSignaturesV0';
-import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+  ICetAdaptorSignaturesV0Pre163JSON,
+} from './CetAdaptorSignatures';
+import { IDlcMessagePre163 } from './DlcMessage';
+import { FundingInputV0Pre163, IFundingInputV0Pre163JSON } from './FundingInput';
 import {
-  INegotiationFieldsV0JSON,
-  INegotiationFieldsV1JSON,
-  INegotiationFieldsV2JSON,
+  INegotiationFieldsV0Pre163JSON,
+  INegotiationFieldsV1Pre163JSON,
+  INegotiationFieldsV2Pre163JSON,
   NegotiationFieldsPre163,
 } from './NegotiationFields';
 
@@ -26,7 +26,7 @@ import {
  * transaction signatures. This is the second step toward creating
  * the funding transaction and closing transactions.
  */
-export class DlcAcceptV0Pre163 implements IDlcMessage {
+export class DlcAcceptV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.DlcAcceptV0;
 
   /**
@@ -46,7 +46,7 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
     instance.payoutSerialId = reader.readUInt64BE();
     const fundingInputsLen = reader.readUInt16BE();
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(FundingInputV0Pre163.deserialize(getTlv(reader)));
     }
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
@@ -82,7 +82,7 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
 
   public payoutSerialId: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInputV0Pre163[] = [];
 
   public changeSPK: Buffer;
 
@@ -99,7 +99,7 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
    * @param network Bitcoin Network
    * @returns {IDlcOfferV0Addresses}
    */
-  public getAddresses(network: BitcoinNetwork): IDlcAcceptV0Addresses {
+  public getAddresses(network: BitcoinNetwork): IDlcAcceptV0Pre163Addresses {
     const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))
       .serialize()
       .slice(1);
@@ -149,7 +149,7 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
     // 4. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInputV0Pre163) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -157,11 +157,11 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
     }
 
     // 5. Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
+    this.fundingInputs.forEach((input: FundingInputV0Pre163) => input.validate());
 
     // validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
-      const input = fundingInput as FundingInputV0;
+      const input = fundingInput as FundingInputV0Pre163;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.acceptCollateralSatoshis >= fundingAmount) {
@@ -174,7 +174,7 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
   /**
    * Converts dlc_accept_v0 to JSON
    */
-  public toJSON(): IDlcAcceptV0JSON {
+  public toJSON(): IDlcAcceptV0Pre163JSON {
     return {
       type: this.type,
       tempContractId: this.tempContractId.toString('hex'),
@@ -219,8 +219,8 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
     return writer.toBuffer();
   }
 
-  public withoutSigs(): DlcAcceptWithoutSigs {
-    return new DlcAcceptWithoutSigs(
+  public withoutSigs(): DlcAcceptV0Pre163WithoutSigs {
+    return new DlcAcceptV0Pre163WithoutSigs(
       this.tempContractId,
       this.acceptCollateralSatoshis,
       this.fundingPubKey,
@@ -234,39 +234,39 @@ export class DlcAcceptV0Pre163 implements IDlcMessage {
   }
 }
 
-export class DlcAcceptWithoutSigs {
+export class DlcAcceptV0Pre163WithoutSigs {
   constructor(
     readonly tempContractId: Buffer,
     readonly acceptCollateralSatoshis: bigint,
     readonly fundingPubKey: Buffer,
     readonly payoutSPK: Buffer,
     readonly payoutSerialId: bigint,
-    readonly fundingInputs: FundingInputV0[],
+    readonly fundingInputs: FundingInputV0Pre163[],
     readonly changeSPK: Buffer,
     readonly changeSerialId: bigint,
     readonly negotiationFields: NegotiationFieldsPre163,
   ) {}
 }
 
-export interface IDlcAcceptV0JSON {
+export interface IDlcAcceptV0Pre163JSON {
   type: number;
   tempContractId: string;
   acceptCollateralSatoshis: number;
   fundingPubKey: string;
   payoutSPK: string;
   payoutSerialId: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputV0Pre163JSON[];
   changeSPK: string;
   changeSerialId: number;
-  cetSignatures: ICetAdaptorSignaturesV0JSON;
+  cetSignatures: ICetAdaptorSignaturesV0Pre163JSON;
   refundSignature: string;
   negotiationFields:
-    | INegotiationFieldsV0JSON
-    | INegotiationFieldsV1JSON
-    | INegotiationFieldsV2JSON;
+    | INegotiationFieldsV0Pre163JSON
+    | INegotiationFieldsV1Pre163JSON
+    | INegotiationFieldsV2Pre163JSON;
 }
 
-export interface IDlcAcceptV0Addresses {
+export interface IDlcAcceptV0Pre163Addresses {
   fundingAddress: string;
   changeAddress: string;
   payoutAddress: string;

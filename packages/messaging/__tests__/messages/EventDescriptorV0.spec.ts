@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 
 import {
-  DigitDecompositionEventDescriptorV0,
-  EventDescriptor,
+  DigitDecompositionEventDescriptorV0Pre167,
+  EventDescriptorPre167,
   MessageType,
 } from '../../lib';
 
 describe('EventDescriptorV0', () => {
-  const instance = new DigitDecompositionEventDescriptorV0();
+  const instance = new DigitDecompositionEventDescriptorV0Pre167();
   instance.base = 2;
   instance.isSigned = false;
   instance.unit = 'BTC-USD';
@@ -31,7 +31,7 @@ describe('EventDescriptorV0', () => {
 
   describe('deserialize', () => {
     it('deserializes', () => {
-      const unknownInstance = EventDescriptor.deserialize(
+      const unknownInstance = EventDescriptorPre167.deserialize(
         Buffer.from(
           'fdd80a' + // type contract_descriptor
             '11' + // length
@@ -48,7 +48,7 @@ describe('EventDescriptorV0', () => {
       if (
         unknownInstance.type === MessageType.DigitDecompositionEventDescriptorV0
       ) {
-        const instance = unknownInstance as DigitDecompositionEventDescriptorV0;
+        const instance = unknownInstance as DigitDecompositionEventDescriptorV0Pre167;
 
         expect(instance.length).to.equal(17n);
         expect(instance.base).to.equal(2);
@@ -61,7 +61,7 @@ describe('EventDescriptorV0', () => {
   });
 
   describe('validate', () => {
-    const instance = new DigitDecompositionEventDescriptorV0();
+    const instance = new DigitDecompositionEventDescriptorV0Pre167();
 
     beforeEach(() => {
       instance.base = 2;

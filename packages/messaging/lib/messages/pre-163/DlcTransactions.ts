@@ -6,7 +6,7 @@ import {
 } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 export abstract class DlcTransactionsPre163 {
   public static deserialize(
@@ -27,7 +27,7 @@ export abstract class DlcTransactionsPre163 {
 
   public abstract type: number;
 
-  public abstract toJSON(): IDlcTransactionsV0JSON;
+  public abstract toJSON(): IDlcTransactionsV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -38,7 +38,7 @@ export abstract class DlcTransactionsPre163 {
  */
 export class DlcTransactionsV0Pre163
   extends DlcTransactionsPre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.DlcTransactionsV0;
 
   /**
@@ -141,7 +141,7 @@ export class DlcTransactionsV0Pre163
   /**
    * Converts dlc_transactions_v0 to JSON
    */
-  public toJSON(): IDlcTransactionsV0JSON {
+  public toJSON(): IDlcTransactionsV0Pre163JSON {
     return {
       type: this.type,
       contractId: this.contractId.toString('hex'),
@@ -209,7 +209,7 @@ const closeTypeToStr = (closeType: CloseType): string => {
   }
 };
 
-export interface IDlcTransactionsV0JSON {
+export interface IDlcTransactionsV0Pre163JSON {
   type: number;
   contractId: string;
   fundTx: string;

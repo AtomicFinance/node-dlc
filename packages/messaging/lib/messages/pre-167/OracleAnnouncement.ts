@@ -4,7 +4,7 @@ import { math, verify } from 'bip-schnorr';
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessage } from '../DlcMessage';
-import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
+import { IOracleEventV0Pre167JSON, OracleEventV0Pre167 } from './OracleEvent';
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -18,22 +18,22 @@ import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
  * from an un-trusted peer while being guaranteed that it originates from a
  * given oracle.
  */
-export class OracleAnnouncementV0 implements IDlcMessage {
+export class OracleAnnouncementV0Pre167 implements IDlcMessage {
   public static type = MessageType.OracleAnnouncementV0;
 
   /**
    * Deserializes an oracle_announcement_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleAnnouncementV0 {
-    const instance = new OracleAnnouncementV0();
+  public static deserialize(buf: Buffer): OracleAnnouncementV0Pre167 {
+    const instance = new OracleAnnouncementV0Pre167();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
     instance.announcementSig = reader.readBytes(64);
     instance.oraclePubkey = reader.readBytes(32);
-    instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader));
+    instance.oracleEvent = OracleEventV0Pre167.deserialize(getTlv(reader));
 
     return instance;
   }
@@ -41,7 +41,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   /**
    * The type for oracle_announcement_v0 message. oracle_announcement_v0 = 55332
    */
-  public type = OracleAnnouncementV0.type;
+  public type = OracleAnnouncementV0Pre167.type;
 
   public length: bigint;
 
@@ -49,7 +49,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 
   public oraclePubkey: Buffer;
 
-  public oracleEvent: OracleEventV0;
+  public oracleEvent: OracleEventV0Pre167;
 
   public validate(): void {
     this.oracleEvent.validate();
@@ -65,7 +65,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   /**
    * Converts oracle_announcement_v0 to JSON
    */
-  public toJSON(): OracleAnnouncementV0JSON {
+  public toJSON(): OracleAnnouncementV0Pre167JSON {
     return {
       announcementSignature: this.announcementSig.toString('hex'),
       oraclePublicKey: this.oraclePubkey.toString('hex'),
@@ -92,8 +92,8 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 }
 
-export interface OracleAnnouncementV0JSON {
+export interface OracleAnnouncementV0Pre167JSON {
   announcementSignature: string;
   oraclePublicKey: string;
-  oracleEvent: IOracleEventV0JSON;
+  oracleEvent: IOracleEventV0Pre167JSON;
 }

@@ -2,30 +2,30 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 import {
-  PayoutFunction,
-  PayoutFunctionV0,
-  PayoutFunctionV0JSON,
+  PayoutFunctionPre163,
+  PayoutFunctionV0Pre163,
+  PayoutFunctionV0Pre163JSON,
 } from './PayoutFunction';
 import {
-  IRoundingIntervalsV0JSON,
-  RoundingIntervalsV0,
-} from './RoundingIntervalsV0';
+  IRoundingIntervalsV0Pre163JSON,
+  RoundingIntervalsV0Pre163,
+} from './RoundingIntervals';
 
 export abstract class ContractDescriptorPre163 {
   public static deserialize(
     buf: Buffer,
-  ): ContractDescriptorV0 | ContractDescriptorV1 {
+  ): ContractDescriptorV0Pre163 | ContractDescriptorV1Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
       case MessageType.ContractDescriptorV0:
-        return ContractDescriptorV0.deserialize(buf);
+        return ContractDescriptorV0Pre163.deserialize(buf);
       case MessageType.ContractDescriptorV1:
-        return ContractDescriptorV1.deserialize(buf);
+        return ContractDescriptorV1Pre163.deserialize(buf);
       default:
         throw new Error(
           `Contract Descriptor TLV type must be ContractDescriptorV0 or ContractDescriptorV1`,
@@ -37,7 +37,7 @@ export abstract class ContractDescriptorPre163 {
 
   public abstract length: bigint;
 
-  public abstract toJSON(): ContractDescriptorV0JSON | ContractDescriptorV1JSON;
+  public abstract toJSON(): ContractDescriptorV0Pre163JSON | ContractDescriptorV1Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -46,17 +46,17 @@ export abstract class ContractDescriptorPre163 {
  * ContractDescriptor V0 contains information about a contract's outcomes
  * and their corresponding payouts.
  */
-export class ContractDescriptorV0
+export class ContractDescriptorV0Pre163
   extends ContractDescriptorPre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.ContractDescriptorV0;
 
   /**
    * Deserializes an contract_descriptor_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): ContractDescriptorV0 {
-    const instance = new ContractDescriptorV0();
+  public static deserialize(buf: Buffer): ContractDescriptorV0Pre163 {
+    const instance = new ContractDescriptorV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -76,7 +76,7 @@ export class ContractDescriptorV0
   /**
    * The type for contract_descriptor_v0 message. contract_descriptor_v0 = 42768
    */
-  public type = ContractDescriptorV0.type;
+  public type = ContractDescriptorV0Pre163.type;
 
   public length: bigint;
 
@@ -85,7 +85,7 @@ export class ContractDescriptorV0
   /**
    * Converts contract_descriptor_v0 to JSON
    */
-  public toJSON(): ContractDescriptorV0JSON {
+  public toJSON(): ContractDescriptorV0Pre163JSON {
     return {
       type: this.type,
       outcomes: this.outcomes.map((outcome) => {
@@ -123,25 +123,25 @@ export class ContractDescriptorV0
  * ContractDescriptor V1 contains information about a contract's outcomes
  * and their corresponding payouts.
  */
-export class ContractDescriptorV1
+export class ContractDescriptorV1Pre163
   extends ContractDescriptorPre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.ContractDescriptorV1;
 
   /**
    * Deserializes an contract_descriptor_v1 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): ContractDescriptorV1 {
-    const instance = new ContractDescriptorV1();
+  public static deserialize(buf: Buffer): ContractDescriptorV1Pre163 {
+    const instance = new ContractDescriptorV1Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
     instance.numDigits = reader.readUInt16BE(); // num_digits
 
-    instance.payoutFunction = PayoutFunction.deserialize(getTlv(reader));
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
+    instance.payoutFunction = PayoutFunctionPre163.deserialize(getTlv(reader));
+    instance.roundingIntervals = RoundingIntervalsV0Pre163.deserialize(
       getTlv(reader),
     );
 
@@ -151,15 +151,15 @@ export class ContractDescriptorV1
   /**
    * The type for contract_descriptor_v1 message. contract_descriptor_v1 = 42784
    */
-  public type = ContractDescriptorV1.type;
+  public type = ContractDescriptorV1Pre163.type;
 
   public length: bigint;
 
   public numDigits: number;
 
-  public payoutFunction: PayoutFunctionV0;
+  public payoutFunction: PayoutFunctionV0Pre163;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervalsV0Pre163;
 
   /**
    * Validates correctness of all fields in the message
@@ -173,7 +173,7 @@ export class ContractDescriptorV1
   /**
    * Converts contract_descriptor_v1 to JSON
    */
-  public toJSON(): ContractDescriptorV1JSON {
+  public toJSON(): ContractDescriptorV1Pre163JSON {
     return {
       type: this.type,
       numDigits: this.numDigits,
@@ -211,14 +211,14 @@ interface IOutcomeJSON {
   localPayout: number;
 }
 
-export interface ContractDescriptorV0JSON {
+export interface ContractDescriptorV0Pre163JSON {
   type: number;
   outcomes: IOutcomeJSON[];
 }
 
-export interface ContractDescriptorV1JSON {
+export interface ContractDescriptorV1Pre163JSON {
   type: number;
   numDigits: number;
-  payoutFunction: PayoutFunctionV0JSON;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  payoutFunction: PayoutFunctionV0Pre163JSON;
+  roundingIntervals: IRoundingIntervalsV0Pre163JSON;
 }

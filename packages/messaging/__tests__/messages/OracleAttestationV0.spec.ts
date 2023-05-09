@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { OracleAttestationV0 } from '../../lib/messages/pre-167/OracleAttestationV0';
+import { OracleAttestationV0Pre167 } from '../../lib/messages/pre-167/OracleAttestation';
 
 describe('OracleAttestationV0', () => {
   const attestationSig = Buffer.from(
@@ -21,7 +21,7 @@ describe('OracleAttestationV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleAttestationV0();
+      const instance = new OracleAttestationV0Pre167();
 
       instance.length = BigInt(127);
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
@@ -60,7 +60,7 @@ describe('OracleAttestationV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleAttestationV0.deserialize(buf);
+      const instance = OracleAttestationV0Pre167.deserialize(buf);
 
       expect(instance.length).to.equal(BigInt(127));
       expect(instance.eventId).to.equal('BTC-USD-OVER-50K-COINBASE');
@@ -72,7 +72,7 @@ describe('OracleAttestationV0', () => {
 
   describe('validate', () => {
     it('should validate when correct outcome signatures', () => {
-      const instance = new OracleAttestationV0();
+      const instance = new OracleAttestationV0Pre167();
 
       instance.length = BigInt(127);
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
@@ -86,7 +86,7 @@ describe('OracleAttestationV0', () => {
     });
 
     it('should invalidate when incorrect outcome signatures', () => {
-      const instance = new OracleAttestationV0();
+      const instance = new OracleAttestationV0Pre167();
 
       instance.length = BigInt(127);
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';

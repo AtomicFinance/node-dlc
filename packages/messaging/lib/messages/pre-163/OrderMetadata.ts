@@ -1,17 +1,17 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
-export abstract class OrderMetadata {
-  public static deserialize(buf: Buffer): OrderMetadata {
+export abstract class OrderMetadataPre163 {
+  public static deserialize(buf: Buffer): OrderMetadataPre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderMetadataV0:
-        return OrderMetadataV0.deserialize(buf);
+        return OrderMetadataV0Pre163.deserialize(buf);
       default:
         throw new Error(`Order metadata TLV type must be OrderMetadataV0`);
     }
@@ -19,7 +19,7 @@ export abstract class OrderMetadata {
 
   public abstract type: number;
 
-  public abstract toJSON(): IOrderMetadataJSON;
+  public abstract toJSON(): IOrderMetadataV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -29,15 +29,15 @@ export abstract class OrderMetadata {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
+export class OrderMetadataV0Pre163 extends OrderMetadataPre163 implements IDlcMessagePre163 {
   public static type = MessageType.OrderMetadataV0;
 
   /**
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OrderMetadataV0 {
-    const instance = new OrderMetadataV0();
+  public static deserialize(buf: Buffer): OrderMetadataV0Pre163 {
+    const instance = new OrderMetadataV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -57,7 +57,7 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
   /**
    * The type for order_metadata_v0 message. order_metadata_v0 = 62774
    */
-  public type = OrderMetadataV0.type;
+  public type = OrderMetadataV0Pre163.type;
 
   public length: bigint;
 
@@ -82,7 +82,7 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
   /**
    * Converts order_metadata_v0 to JSON
    */
-  public toJSON(): IOrderMetadataJSON {
+  public toJSON(): IOrderMetadataV0Pre163JSON {
     return {
       type: this.type,
       offerId: this.offerId,
@@ -111,7 +111,7 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
   }
 }
 
-export interface IOrderMetadataJSON {
+export interface IOrderMetadataV0Pre163JSON {
   type: number;
   offerId: string;
   createdAt: number;

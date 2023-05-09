@@ -2,22 +2,22 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 import {
-  HyperbolaPayoutCurvePieceJSON,
+  HyperbolaPayoutCurvePiecePre163JSON,
   PayoutCurvePiecePre163,
-  PolynomialPayoutCurvePieceJSON,
+  PolynomialPayoutCurvePiecePre163JSON,
 } from './PayoutCurvePiece';
 
-export abstract class PayoutFunction {
-  public static deserialize(buf: Buffer): PayoutFunctionV0 {
+export abstract class PayoutFunctionPre163 {
+  public static deserialize(buf: Buffer): PayoutFunctionV0Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
       case MessageType.PayoutFunctionV0:
-        return PayoutFunctionV0.deserialize(buf);
+        return PayoutFunctionV0Pre163.deserialize(buf);
       default:
         throw new Error(`Payout function TLV type must be PayoutFunctionV0`);
     }
@@ -27,7 +27,7 @@ export abstract class PayoutFunction {
 
   public abstract length: bigint;
 
-  public abstract toJSON(): PayoutFunctionV0JSON;
+  public abstract toJSON(): PayoutFunctionV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -35,15 +35,15 @@ export abstract class PayoutFunction {
 /**
  * PayoutFunction V0
  */
-export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
+export class PayoutFunctionV0Pre163 extends PayoutFunctionPre163 implements IDlcMessagePre163 {
   public static type = MessageType.PayoutFunctionV0;
 
   /**
    * Deserializes an payout_function_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): PayoutFunctionV0 {
-    const instance = new PayoutFunctionV0();
+  public static deserialize(buf: Buffer): PayoutFunctionV0Pre163 {
+    const instance = new PayoutFunctionV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -75,7 +75,7 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   /**
    * The type for payout_function_v0 message. payout_function_v0 = 42790
    */
-  public type = PayoutFunctionV0.type;
+  public type = PayoutFunctionV0Pre163.type;
 
   public length: bigint;
 
@@ -83,12 +83,12 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   public endpointPayout0: bigint;
   public extraPrecision0: number;
 
-  public pieces: IPayoutCurvePieces[] = [];
+  public pieces: IPayoutCurvePiecesPre163[] = [];
 
   /**
    * Converts payout_function_v0 to JSON
    */
-  public toJSON(): PayoutFunctionV0JSON {
+  public toJSON(): PayoutFunctionV0Pre163JSON {
     return {
       type: this.type,
       endpoint0: Number(this.endpoint0),
@@ -132,26 +132,26 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   }
 }
 
-interface IPayoutCurvePieces {
+interface IPayoutCurvePiecesPre163 {
   payoutCurvePiece: PayoutCurvePiecePre163;
   endpoint: bigint;
   endpointPayout: bigint;
   extraPrecision: number;
 }
 
-interface IPayoutCurvePiecesJSON {
+interface IPayoutCurvePiecesPre163JSON {
   payoutCurvePiece:
-    | PolynomialPayoutCurvePieceJSON
-    | HyperbolaPayoutCurvePieceJSON;
+    | PolynomialPayoutCurvePiecePre163JSON
+    | HyperbolaPayoutCurvePiecePre163JSON;
   endpoint: number;
   endpointPayout: number;
   extraPrecision: number;
 }
 
-export interface PayoutFunctionV0JSON {
+export interface PayoutFunctionV0Pre163JSON {
   type: number;
   endpoint0: number;
   endpointPayout0: number;
   extraPrecision0: number;
-  pieces: IPayoutCurvePiecesJSON[];
+  pieces: IPayoutCurvePiecesPre163JSON[];
 }

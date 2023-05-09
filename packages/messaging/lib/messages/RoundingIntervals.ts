@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { IDlcMessage } from './DlcMessage';
-import { RoundingIntervalsV0 } from './pre-163/RoundingIntervalsV0';
+import { RoundingIntervalsV0Pre163 } from './pre-163/RoundingIntervals';
 
 /**
  * RoundingIntervals
@@ -28,7 +28,7 @@ export class RoundingIntervals implements IDlcMessage {
   }
 
   public static from163(
-    roundingIntervals: RoundingIntervalsV0,
+    roundingIntervals: RoundingIntervalsV0Pre163,
   ): RoundingIntervals {
     const instance = new RoundingIntervals();
 

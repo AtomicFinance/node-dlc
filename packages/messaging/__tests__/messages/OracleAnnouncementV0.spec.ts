@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/pre-167/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/pre-167/OracleAnnouncementV0';
-import { OracleEventV0 } from '../../lib/messages/pre-167/OracleEventV0';
+import { DigitDecompositionEventDescriptorV0Pre167 } from '../../lib/messages/pre-167/EventDescriptor';
+import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
+import { OracleEventV0Pre167 } from '../../lib/messages/pre-167/OracleEvent';
 
 describe('OracleAnnouncementV0', () => {
   const announcementSig = Buffer.from(
@@ -23,12 +23,12 @@ describe('OracleAnnouncementV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleAnnouncementV0();
+      const instance = new OracleAnnouncementV0Pre167();
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
       instance.oraclePubkey = oraclePubkey;
-      instance.oracleEvent = OracleEventV0.deserialize(
+      instance.oracleEvent = OracleEventV0Pre167.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
             '40' + // length
@@ -97,7 +97,7 @@ describe('OracleAnnouncementV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleAnnouncementV0.deserialize(buf);
+      const instance = OracleAnnouncementV0Pre167.deserialize(buf);
 
       expect(instance.length).to.deep.equal(BigInt(164));
       expect(instance.announcementSig).to.deep.equal(announcementSig);
@@ -123,12 +123,12 @@ describe('OracleAnnouncementV0', () => {
 
   describe('validation', () => {
     it('should validate when correct signature', () => {
-      const instance = new OracleAnnouncementV0();
+      const instance = new OracleAnnouncementV0Pre167();
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
       instance.oraclePubkey = oraclePubkey;
-      instance.oracleEvent = OracleEventV0.deserialize(
+      instance.oracleEvent = OracleEventV0Pre167.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
             '40' + // length
@@ -154,12 +154,12 @@ describe('OracleAnnouncementV0', () => {
     });
 
     it('should invalidate when incorrect signature', () => {
-      const instance = new OracleAnnouncementV0();
+      const instance = new OracleAnnouncementV0Pre167();
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
       instance.oraclePubkey = invalidOraclePubkey;
-      instance.oracleEvent = OracleEventV0.deserialize(
+      instance.oracleEvent = OracleEventV0Pre167.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
             '40' + // length
@@ -196,7 +196,7 @@ describe('OracleAnnouncementV0', () => {
       'hex',
     );
 
-    const instance = OracleAnnouncementV0.deserialize(buf);
+    const instance = OracleAnnouncementV0Pre167.deserialize(buf);
 
     it('deserializes', async () => {
       expect(Number(instance.length)).to.equal(683);
@@ -221,7 +221,7 @@ describe('OracleAnnouncementV0', () => {
       expect(instance.oracleEvent.eventMaturityEpoch).to.equal(1613779200);
       expect(
         (instance.oracleEvent
-          .eventDescriptor as DigitDecompositionEventDescriptorV0).unit,
+          .eventDescriptor as DigitDecompositionEventDescriptorV0Pre167).unit,
       ).to.equal('btc/usd');
     });
 

@@ -8,8 +8,8 @@ import { DlcSignV0 } from './DlcSign';
 import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
-import { OracleAnnouncementV0 } from './pre-167/OracleAnnouncementV0';
-import { OracleAttestationV0 } from './pre-167/OracleAttestationV0';
+import { OracleAnnouncementV0Pre167 } from './pre-167/OracleAnnouncement';
+import { OracleAttestationV0Pre167 } from './pre-167/OracleAttestation';
 
 export interface IDlcMessage {
   serialize(): Buffer;
@@ -25,8 +25,8 @@ export abstract class DlcMessage {
     | DlcAcceptV0
     | DlcSignV0
     | DlcCloseV0
-    | OracleAttestationV0
-    | OracleAnnouncementV0
+    | OracleAttestationV0Pre167
+    | OracleAnnouncementV0Pre167
     | NodeAnnouncementMessage {
     const reader = new BufferReader(buf);
 
@@ -46,9 +46,9 @@ export abstract class DlcMessage {
       case MessageType.DlcCloseV0:
         return DlcCloseV0.deserialize(buf);
       case MessageType.OracleAttestationV0:
-        return OracleAttestationV0.deserialize(buf);
+        return OracleAttestationV0Pre167.deserialize(buf);
       case MessageType.OracleAnnouncementV0:
-        return OracleAnnouncementV0.deserialize(buf);
+        return OracleAnnouncementV0Pre167.deserialize(buf);
       case MessageType.NodeAnnouncement:
         return NodeAnnouncementMessage.deserialize(buf);
       default:

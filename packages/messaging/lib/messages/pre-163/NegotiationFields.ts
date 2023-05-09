@@ -2,25 +2,25 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
-import { IDlcMessage } from './DlcMessage';
-import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
-import { IRoundingIntervalsV0JSON } from './RoundingIntervalsV0';
+import { IDlcMessagePre163 } from './DlcMessage';
+import { RoundingIntervalsV0Pre163 } from './RoundingIntervals';
+import { IRoundingIntervalsV0Pre163JSON } from './RoundingIntervals';
 
 export abstract class NegotiationFieldsPre163 {
   public static deserialize(
     buf: Buffer,
-  ): NegotiationFieldsV0 | NegotiationFieldsV1 | NegotiationFieldsV2 {
+  ): NegotiationFieldsV0Pre163 | NegotiationFieldsV1Pre163 | NegotiationFieldsV2Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
       case MessageType.NegotiationFieldsV0:
-        return NegotiationFieldsV0.deserialize(buf);
+        return NegotiationFieldsV0Pre163.deserialize(buf);
       case MessageType.NegotiationFieldsV1:
-        return NegotiationFieldsV1.deserialize(buf);
+        return NegotiationFieldsV1Pre163.deserialize(buf);
       case MessageType.NegotiationFieldsV2:
-        return NegotiationFieldsV2.deserialize(buf);
+        return NegotiationFieldsV2Pre163.deserialize(buf);
       default:
         throw new Error(
           `Negotiation fields TLV type must be NegotiationFieldsV0, NegotiationFieldsV1 or NegotiationFieldsV2`,
@@ -33,9 +33,9 @@ export abstract class NegotiationFieldsPre163 {
   public abstract length: bigint;
 
   public abstract toJSON():
-    | INegotiationFieldsV0JSON
-    | INegotiationFieldsV1JSON
-    | INegotiationFieldsV2JSON;
+    | INegotiationFieldsV0Pre163JSON
+    | INegotiationFieldsV1Pre163JSON
+    | INegotiationFieldsV2Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -44,17 +44,17 @@ export abstract class NegotiationFieldsPre163 {
  * NegotiationFields V0 contains preferences of the accepter of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV0
+export class NegotiationFieldsV0Pre163
   extends NegotiationFieldsPre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.NegotiationFieldsV0;
 
   /**
    * Deserializes an negotiation_fields_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): NegotiationFieldsV0 {
-    const instance = new NegotiationFieldsV0();
+  public static deserialize(buf: Buffer): NegotiationFieldsV0Pre163 {
+    const instance = new NegotiationFieldsV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -66,14 +66,14 @@ export class NegotiationFieldsV0
   /**
    * The type for negotiation_fields_v0 message. negotiation_fields_v0 = 55334
    */
-  public type = NegotiationFieldsV0.type;
+  public type = NegotiationFieldsV0Pre163.type;
 
   public length: bigint;
 
   /**
    * Converts negotiation_fields_v0 to JSON
    */
-  public toJSON(): INegotiationFieldsV0JSON {
+  public toJSON(): INegotiationFieldsV0Pre163JSON {
     return {
       type: this.type,
     };
@@ -95,22 +95,22 @@ export class NegotiationFieldsV0
  * NegotiationFields V1 contains preferences of the acceptor of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV1
+export class NegotiationFieldsV1Pre163
   extends NegotiationFieldsPre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.NegotiationFieldsV1;
 
   /**
    * Deserializes an negotiation_fields_v1 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): NegotiationFieldsV1 {
-    const instance = new NegotiationFieldsV1();
+  public static deserialize(buf: Buffer): NegotiationFieldsV1Pre163 {
+    const instance = new NegotiationFieldsV1Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
+    instance.roundingIntervals = RoundingIntervalsV0Pre163.deserialize(
       getTlv(reader),
     );
 
@@ -120,16 +120,16 @@ export class NegotiationFieldsV1
   /**
    * The type for negotiation_fields_v1 message. negotiation_fields_v1 = 55336
    */
-  public type = NegotiationFieldsV1.type;
+  public type = NegotiationFieldsV1Pre163.type;
 
   public length: bigint;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervalsV0Pre163;
 
   /**
    * Converts negotiation_fields_v1 to JSON
    */
-  public toJSON(): INegotiationFieldsV1JSON {
+  public toJSON(): INegotiationFieldsV1Pre163JSON {
     return {
       type: this.type,
       roundingIntervals: this.roundingIntervals.toJSON(),
@@ -157,17 +157,17 @@ export class NegotiationFieldsV1
  * NegotiationFields V2 contains preferences of the acceptor of a DLC
  * which are taken into account during DLC construction.
  */
-export class NegotiationFieldsV2
+export class NegotiationFieldsV2Pre163
   extends NegotiationFieldsPre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.NegotiationFieldsV2;
 
   /**
    * Deserializes an negotiation_fields_v1 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): NegotiationFieldsV2 {
-    const instance = new NegotiationFieldsV2();
+  public static deserialize(buf: Buffer): NegotiationFieldsV2Pre163 {
+    const instance = new NegotiationFieldsV2Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -186,7 +186,7 @@ export class NegotiationFieldsV2
   /**
    * The type for negotiation_fields_v2 message. negotiation_fields_v2 = 55346
    */
-  public type = NegotiationFieldsV2.type;
+  public type = NegotiationFieldsV2Pre163.type;
 
   public length: bigint;
 
@@ -195,7 +195,7 @@ export class NegotiationFieldsV2
   /**
    * Converts negotiation_fields_v2 to JSON
    */
-  public toJSON(): INegotiationFieldsV2JSON {
+  public toJSON(): INegotiationFieldsV2Pre163JSON {
     return {
       type: this.type,
       negotiationFieldsList: this.negotiationFieldsList.map((field) =>
@@ -224,19 +224,19 @@ export class NegotiationFieldsV2
   }
 }
 
-export interface INegotiationFieldsV0JSON {
+export interface INegotiationFieldsV0Pre163JSON {
   type: number;
 }
 
-export interface INegotiationFieldsV1JSON {
+export interface INegotiationFieldsV1Pre163JSON {
   type: number;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsV0Pre163JSON;
 }
 
-export interface INegotiationFieldsV2JSON {
+export interface INegotiationFieldsV2Pre163JSON {
   type: number;
   negotiationFieldsList:
-    | INegotiationFieldsV0JSON[]
-    | INegotiationFieldsV1JSON[]
-    | INegotiationFieldsV2JSON[];
+    | INegotiationFieldsV0Pre163JSON[]
+    | INegotiationFieldsV1Pre163JSON[]
+    | INegotiationFieldsV2Pre163JSON[];
 }

@@ -1,13 +1,13 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 /**
  * CetAdaptorSignatures V0 contains CET signatures and any necessary
  * information linking the signatures to their corresponding outcome
  */
-export class CetAdaptorSignaturesV0Pre163 implements IDlcMessage {
+export class CetAdaptorSignaturesV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.CetAdaptorSignaturesV0;
 
   /**
@@ -43,7 +43,7 @@ export class CetAdaptorSignaturesV0Pre163 implements IDlcMessage {
   /**
    * Converts cet_adaptor_signature to JSON
    */
-  public toJSON(): ICetAdaptorSignaturesV0JSON {
+  public toJSON(): ICetAdaptorSignaturesV0Pre163JSON {
     return {
       type: this.type,
       sigs: this.sigs.map((sig) => {
@@ -81,7 +81,7 @@ interface ISig {
   dleqProof: Buffer;
 }
 
-export interface ICetAdaptorSignaturesV0JSON {
+export interface ICetAdaptorSignaturesV0Pre163JSON {
   type: number;
   sigs: ISigJSON[];
 }

@@ -3,29 +3,29 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import {
-  OracleAnnouncementV0,
-  OracleAnnouncementV0JSON,
-} from '../pre-167/OracleAnnouncementV0';
-import { IDlcMessage } from './DlcMessage';
+  OracleAnnouncementV0Pre167,
+  OracleAnnouncementV0Pre167JSON,
+} from '../pre-167/OracleAnnouncement';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 /**
  * OracleInfo contains information about the oracles to be used in
  * executing a DLC.
  */
-export class OracleInfoV0 implements IDlcMessage {
+export class OracleInfoV0Pre163 implements IDlcMessagePre163 {
   public static type = MessageType.OracleInfoV0;
 
   /**
    * Deserializes an oracle_info_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleInfoV0 {
-    const instance = new OracleInfoV0();
+  public static deserialize(buf: Buffer): OracleInfoV0Pre163 {
+    const instance = new OracleInfoV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
 
     return instance;
   }
@@ -33,11 +33,11 @@ export class OracleInfoV0 implements IDlcMessage {
   /**
    * The type for oracle_info_v0 message. oracle_info_v0 = 42770
    */
-  public type = OracleInfoV0.type;
+  public type = OracleInfoV0Pre163.type;
 
   public length: bigint;
 
-  public announcement: OracleAnnouncementV0;
+  public announcement: OracleAnnouncementV0Pre167;
 
   public validate(): void {
     this.announcement.validate();
@@ -46,7 +46,7 @@ export class OracleInfoV0 implements IDlcMessage {
   /**
    * Converts oracle_info_v0 to JSON
    */
-  public toJSON(): OracleInfoV0JSON {
+  public toJSON(): OracleInfoV0Pre163JSON {
     return {
       type: this.type,
       announcement: this.announcement.toJSON(),
@@ -70,7 +70,7 @@ export class OracleInfoV0 implements IDlcMessage {
   }
 }
 
-export interface OracleInfoV0JSON {
+export interface OracleInfoV0Pre163JSON {
   type: number;
-  announcement: OracleAnnouncementV0JSON;
+  announcement: OracleAnnouncementV0Pre167JSON;
 }

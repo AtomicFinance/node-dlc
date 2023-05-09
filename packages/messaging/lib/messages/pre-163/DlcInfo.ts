@@ -1,17 +1,18 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
+import {DlcCloseMetadataV0Pre163} from "./DlcCloseMetadata";
 
-export abstract class DlcInfo {
-  public static deserialize(buf: Buffer): DlcInfoV0 {
+export abstract class DlcInfoPre163 {
+  public static deserialize(buf: Buffer): DlcInfoV0Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcInfoV0:
-        return DlcInfoV0.deserialize(buf);
+        return DlcInfoV0Pre163.deserialize(buf);
       default:
         throw new Error(`DLC IDs message type must be DlcInfoV0`);
     }
@@ -25,15 +26,15 @@ export abstract class DlcInfo {
 /**
  * DlcInfo message contains list of buffers
  */
-export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
+export class DlcInfoV0Pre163 extends DlcInfoPre163 implements IDlcMessagePre163 {
   public static type = MessageType.DlcInfoV0;
 
   /**
    * Deserializes an dlc_ids_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcInfoV0 {
-    const instance = new DlcInfoV0();
+  public static deserialize(buf: Buffer): DlcInfoV0Pre163 {
+    const instance = new DlcInfoV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -51,7 +52,7 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
   /**
    * The type for dlc_info_v0 message
    */
-  public type = DlcInfoV0.type;
+  public type = DlcInfoV0Pre163.type;
 
   public numDlcOffers: number;
 

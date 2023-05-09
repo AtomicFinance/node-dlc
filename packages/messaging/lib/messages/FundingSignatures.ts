@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { IDlcMessage } from './DlcMessage';
-import { FundingSignaturesV0 } from './pre-163/FundingSignaturesV0';
+import { FundingSignaturesV0Pre163 } from './pre-163/FundingSignatures';
 import { IScriptWitnessJSON, ScriptWitness } from './ScriptWitness';
 
 /**
@@ -34,7 +34,7 @@ export class FundingSignatures implements IDlcMessage {
   }
 
   public static fromPre163(
-    fundingSignatures: FundingSignaturesV0,
+    fundingSignatures: FundingSignaturesV0Pre163,
   ): FundingSignatures {
     const instance = new FundingSignatures();
 

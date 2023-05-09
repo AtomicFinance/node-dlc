@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../../MessageType';
-import { IDlcMessage } from './DlcMessage';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 export abstract class PayoutCurvePiecePre163 {
   public static deserialize(
@@ -30,8 +30,8 @@ export abstract class PayoutCurvePiecePre163 {
   public abstract length: bigint;
 
   public abstract toJSON():
-    | PolynomialPayoutCurvePieceJSON
-    | HyperbolaPayoutCurvePieceJSON;
+    | PolynomialPayoutCurvePiecePre163JSON
+    | HyperbolaPayoutCurvePiecePre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -41,7 +41,7 @@ export abstract class PayoutCurvePiecePre163 {
  */
 export class PolynomialPayoutCurvePiecePre163
   extends PayoutCurvePiecePre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.PolynomialPayoutCurvePiece;
 
   /**
@@ -83,7 +83,7 @@ export class PolynomialPayoutCurvePiecePre163
   /**
    * Converts polynomial_payout_curve_piece to JSON
    */
-  public toJSON(): PolynomialPayoutCurvePieceJSON {
+  public toJSON(): PolynomialPayoutCurvePiecePre163JSON {
     return {
       type: this.type,
       points: this.points.map((point) => {
@@ -124,7 +124,7 @@ export class PolynomialPayoutCurvePiecePre163
  */
 export class HyperbolaPayoutCurvePiecePre163
   extends PayoutCurvePiecePre163
-  implements IDlcMessage {
+  implements IDlcMessagePre163 {
   public static type = MessageType.HyperbolaPayoutCurvePiece;
 
   /**
@@ -208,7 +208,7 @@ export class HyperbolaPayoutCurvePiecePre163
   /**
    * Converts hyperbola_payout_curve_piece to JSON
    */
-  public toJSON(): HyperbolaPayoutCurvePieceJSON {
+  public toJSON(): HyperbolaPayoutCurvePiecePre163JSON {
     return {
       type: this.type,
       usePositivePiece: this.usePositivePiece,
@@ -281,12 +281,12 @@ interface IPointJSON {
   extraPrecision: number;
 }
 
-export interface PolynomialPayoutCurvePieceJSON {
+export interface PolynomialPayoutCurvePiecePre163JSON {
   type: number;
   points: IPointJSON[];
 }
 
-export interface HyperbolaPayoutCurvePieceJSON {
+export interface HyperbolaPayoutCurvePiecePre163JSON {
   type: number;
   usePositivePiece: boolean;
   translateOutcomeSign: boolean;
