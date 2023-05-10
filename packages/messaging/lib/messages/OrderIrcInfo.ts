@@ -68,7 +68,6 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
    */
   public toJSON(): IOrderIrcInfoJSON {
     return {
-      type: this.type,
       nick: this.nick,
       pubKey: this.pubKey.toString('hex'),
     };
@@ -94,7 +93,6 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
 }
 
 export interface IOrderIrcInfoJSON {
-  type: number;
   nick: string;
   pubKey: string;
 }

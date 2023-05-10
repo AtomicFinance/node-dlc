@@ -26,7 +26,7 @@ export * from './messages/pre-167/OracleAnnouncement';
 export * from './messages/pre-167/OracleAttestation';
 export * from './messages/pre-167/OracleEventContainer';
 export * from './messages/pre-167/OracleEvent';
-export * from './messages/OracleIdentifierV0';
+export * from './messages/OracleIdentifier';
 export * from './messages/OracleInfo';
 export * from './messages/OrderAccept';
 export * from './messages/OrderCsoInfo';

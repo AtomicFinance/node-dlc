@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { OracleIdentifierV0 } from '../../lib/messages/OracleIdentifierV0';
+import { OracleIdentifierV0 } from '../../lib/messages/OracleIdentifier';
 
 describe('OracleIdentifierV0', () => {
   const oraclePubkey = Buffer.from(

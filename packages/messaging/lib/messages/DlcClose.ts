@@ -121,7 +121,6 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
    */
   public toJSON(): IDlcCloseV0JSON {
     return {
-      type: this.type,
       contractId: this.contractId.toString('hex'),
       closeSignature: this.closeSignature.toString('hex'),
       offerPayoutSatoshis: Number(this.offerPayoutSatoshis),
@@ -134,7 +133,6 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 }
 
 export interface IDlcCloseV0JSON {
-  type: number;
   contractId: string;
   closeSignature: string;
   offerPayoutSatoshis: number;

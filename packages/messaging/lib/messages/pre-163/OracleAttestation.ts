@@ -16,15 +16,15 @@ import { IDlcMessage } from '../DlcMessage';
  * from an un-trusted peer while being guaranteed that it originates from a
  * given oracle.
  */
-export class OracleAttestationV0Pre167 implements IDlcMessage {
+export class OracleAttestationV0Pre163 implements IDlcMessage {
   public static type = MessageType.OracleAttestationV0;
 
   /**
    * Deserializes an oracle_announcement_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleAttestationV0Pre167 {
-    const instance = new OracleAttestationV0Pre167();
+  public static deserialize(buf: Buffer): OracleAttestationV0Pre163 {
+    const instance = new OracleAttestationV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -55,7 +55,7 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
   /**
    * The type for oracle_announcement_v0 message. oracle_announcement_v0 = 55332
    */
-  public type = OracleAttestationV0Pre167.type;
+  public type = OracleAttestationV0Pre163.type;
 
   public length: bigint;
 
@@ -85,8 +85,9 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
   /**
    * Converts oracle_attestation_v0 to JSON
    */
-  public toJSON(): OracleAttestationV0Pre167JSON {
+  public toJSON(): OracleAttestationV0Pre163JSON {
     return {
+      type: this.type,
       eventId: this.eventId,
       oraclePubkey: this.oraclePubkey.toString('hex'),
       signatures: this.signatures.map((sig) => sig.toString('hex')),
@@ -123,7 +124,8 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
   }
 }
 
-export interface OracleAttestationV0Pre167JSON {
+export interface OracleAttestationV0Pre163JSON {
+  type: number;
   eventId: string;
   oraclePubkey: string;
   signatures: string[];

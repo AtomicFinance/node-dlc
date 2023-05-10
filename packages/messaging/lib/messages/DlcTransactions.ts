@@ -154,7 +154,6 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
    */
   public toJSON(): IDlcTransactionsV0JSON {
     return {
-      type: this.type,
       contractId: this.contractId.toString('hex'),
       fundTx: this.fundTx.serialize().toString('hex'),
       fundTxVout: this.fundTxVout,
@@ -221,7 +220,6 @@ const closeTypeToStr = (closeType: CloseType): string => {
 };
 
 export interface IDlcTransactionsV0JSON {
-  type: number;
   contractId: string;
   fundTx: string;
   fundTxVout: number;

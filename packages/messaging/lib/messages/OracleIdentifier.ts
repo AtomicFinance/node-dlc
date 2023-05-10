@@ -45,7 +45,6 @@ export class OracleIdentifierV0 implements IDlcMessage {
    */
   public toJSON(): IOracleIdentifierV0JSON {
     return {
-      type: this.type,
       oracleName: this.oracleName,
       oraclePubkey: this.oraclePubkey.toString('hex'),
     };
@@ -72,7 +71,6 @@ export class OracleIdentifierV0 implements IDlcMessage {
 }
 
 export interface IOracleIdentifierV0JSON {
-  type: number;
   oracleName: string;
   oraclePubkey: string;
 }

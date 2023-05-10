@@ -68,7 +68,6 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
    */
   public toJSON(): IOrderAcceptV0JSON {
     return {
-      type: this.type,
       tempOrderId: this.tempOrderId.toString('hex'),
       negotiationFields: this.negotiationFields.toJSON(),
     };
@@ -91,7 +90,6 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 }
 
 export interface IOrderAcceptV0JSON {
-  type: number;
   tempOrderId: string;
   negotiationFields: IOrderNegotiationFieldsJSON;
 }
