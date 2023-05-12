@@ -85,7 +85,7 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
   /**
    * Converts oracle_attestation_v0 to JSON
    */
-  public toJSON(): OracleAttestationV0Pre167JSON {
+  public toJSON(): IOracleAttestationV0Pre167JSON {
     return {
       eventId: this.eventId,
       oraclePubkey: this.oraclePubkey.toString('hex'),
@@ -123,7 +123,7 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
   }
 }
 
-export interface OracleAttestationV0Pre167JSON {
+export interface IOracleAttestationV0Pre167JSON {
   eventId: string;
   oraclePubkey: string;
   signatures: string[];

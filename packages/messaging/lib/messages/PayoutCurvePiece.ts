@@ -57,8 +57,8 @@ export abstract class PayoutCurvePiece {
   public abstract type: number;
 
   public abstract toJSON():
-    | PolynomialPayoutCurvePieceJSON
-    | HyperbolaPayoutCurvePieceJSON;
+    | IPolynomialPayoutCurvePieceJSON
+    | IHyperbolaPayoutCurvePieceJSON;
 
   public abstract serialize(): Buffer;
 }
@@ -130,7 +130,7 @@ export class PolynomialPayoutCurvePiece
   /**
    * Converts polynomial_payout_curve_piece to JSON
    */
-  public toJSON(): PolynomialPayoutCurvePieceJSON {
+  public toJSON(): IPolynomialPayoutCurvePieceJSON {
     return {
       polynomialPayoutCurvePiece: {
         payoutPoints: this.points.map((point) => {
@@ -256,7 +256,7 @@ export class HyperbolaPayoutCurvePiece
   /**
    * Converts hyperbola_payout_curve_piece to JSON
    */
-  public toJSON(): HyperbolaPayoutCurvePieceJSON {
+  public toJSON(): IHyperbolaPayoutCurvePieceJSON {
     return {
       hyperbolaPayoutCurvePiece: {
         usePositivePiece: this.usePositivePiece,
@@ -334,13 +334,13 @@ interface IPointJSON {
   extraPrecision: number;
 }
 
-export interface PolynomialPayoutCurvePieceJSON {
+export interface IPolynomialPayoutCurvePieceJSON {
   polynomialPayoutCurvePiece: {
     payoutPoints: IPointJSON[];
   };
 }
 
-export interface HyperbolaPayoutCurvePieceJSON {
+export interface IHyperbolaPayoutCurvePieceJSON {
   hyperbolaPayoutCurvePiece: {
     usePositivePiece: boolean;
     translateOutcome: number;

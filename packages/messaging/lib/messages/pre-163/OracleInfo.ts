@@ -4,7 +4,7 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import {
   OracleAnnouncementV0Pre167,
-  OracleAnnouncementV0Pre167JSON,
+  IOracleAnnouncementV0Pre167JSON,
 } from '../pre-167/OracleAnnouncement';
 import { IDlcMessagePre163 } from './DlcMessage';
 
@@ -46,7 +46,7 @@ export class OracleInfoV0Pre163 implements IDlcMessagePre163 {
   /**
    * Converts oracle_info_v0 to JSON
    */
-  public toJSON(): OracleInfoV0Pre163JSON {
+  public toJSON(): IOracleInfoV0Pre163JSON {
     return {
       type: this.type,
       announcement: this.announcement.toJSON(),
@@ -70,7 +70,7 @@ export class OracleInfoV0Pre163 implements IDlcMessagePre163 {
   }
 }
 
-export interface OracleInfoV0Pre163JSON {
+export interface IOracleInfoV0Pre163JSON {
   type: number;
-  announcement: OracleAnnouncementV0Pre167JSON;
+  announcement: IOracleAnnouncementV0Pre167JSON;
 }

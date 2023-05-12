@@ -4,9 +4,9 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessagePre163 } from './DlcMessage';
 import {
-  HyperbolaPayoutCurvePiecePre163JSON,
+  IHyperbolaPayoutCurvePiecePre163JSON,
   PayoutCurvePiecePre163,
-  PolynomialPayoutCurvePiecePre163JSON,
+  IPolynomialPayoutCurvePiecePre163JSON,
 } from './PayoutCurvePiece';
 
 export abstract class PayoutFunctionPre163 {
@@ -27,7 +27,7 @@ export abstract class PayoutFunctionPre163 {
 
   public abstract length: bigint;
 
-  public abstract toJSON(): PayoutFunctionV0Pre163JSON;
+  public abstract toJSON(): IPayoutFunctionV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -88,7 +88,7 @@ export class PayoutFunctionV0Pre163 extends PayoutFunctionPre163 implements IDlc
   /**
    * Converts payout_function_v0 to JSON
    */
-  public toJSON(): PayoutFunctionV0Pre163JSON {
+  public toJSON(): IPayoutFunctionV0Pre163JSON {
     return {
       type: this.type,
       endpoint0: Number(this.endpoint0),
@@ -141,14 +141,14 @@ interface IPayoutCurvePiecesPre163 {
 
 interface IPayoutCurvePiecesPre163JSON {
   payoutCurvePiece:
-    | PolynomialPayoutCurvePiecePre163JSON
-    | HyperbolaPayoutCurvePiecePre163JSON;
+    | IPolynomialPayoutCurvePiecePre163JSON
+    | IHyperbolaPayoutCurvePiecePre163JSON;
   endpoint: number;
   endpointPayout: number;
   extraPrecision: number;
 }
 
-export interface PayoutFunctionV0Pre163JSON {
+export interface IPayoutFunctionV0Pre163JSON {
   type: number;
   endpoint0: number;
   endpointPayout0: number;

@@ -6,7 +6,7 @@ import { IDlcMessagePre163 } from './DlcMessage';
 import {
   PayoutFunctionPre163,
   PayoutFunctionV0Pre163,
-  PayoutFunctionV0Pre163JSON,
+  IPayoutFunctionV0Pre163JSON,
 } from './PayoutFunction';
 import {
   IRoundingIntervalsV0Pre163JSON,
@@ -37,7 +37,7 @@ export abstract class ContractDescriptorPre163 {
 
   public abstract length: bigint;
 
-  public abstract toJSON(): ContractDescriptorV0Pre163JSON | ContractDescriptorV1Pre163JSON;
+  public abstract toJSON(): IContractDescriptorV0Pre163JSON | IContractDescriptorV1Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -85,7 +85,7 @@ export class ContractDescriptorV0Pre163
   /**
    * Converts contract_descriptor_v0 to JSON
    */
-  public toJSON(): ContractDescriptorV0Pre163JSON {
+  public toJSON(): IContractDescriptorV0Pre163JSON {
     return {
       type: this.type,
       outcomes: this.outcomes.map((outcome) => {
@@ -173,7 +173,7 @@ export class ContractDescriptorV1Pre163
   /**
    * Converts contract_descriptor_v1 to JSON
    */
-  public toJSON(): ContractDescriptorV1Pre163JSON {
+  public toJSON(): IContractDescriptorV1Pre163JSON {
     return {
       type: this.type,
       numDigits: this.numDigits,
@@ -211,14 +211,14 @@ interface IOutcomeJSON {
   localPayout: number;
 }
 
-export interface ContractDescriptorV0Pre163JSON {
+export interface IContractDescriptorV0Pre163JSON {
   type: number;
   outcomes: IOutcomeJSON[];
 }
 
-export interface ContractDescriptorV1Pre163JSON {
+export interface IContractDescriptorV1Pre163JSON {
   type: number;
   numDigits: number;
-  payoutFunction: PayoutFunctionV0Pre163JSON;
+  payoutFunction: IPayoutFunctionV0Pre163JSON;
   roundingIntervals: IRoundingIntervalsV0Pre163JSON;
 }

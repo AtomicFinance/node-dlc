@@ -127,7 +127,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
   public fundTxVout: number;
 
-  public fundEpoch: BlockEpoch = {
+  public fundEpoch: IBlockEpoch = {
     hash: Buffer.alloc(32),
     height: 0,
   };
@@ -138,7 +138,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
   public cets: Tx[] = [];
 
-  public closeEpoch: BlockEpoch = {
+  public closeEpoch: IBlockEpoch = {
     hash: Buffer.alloc(32),
     height: 0,
   };
@@ -238,7 +238,7 @@ export interface IBlockEpochJSON {
   height: number;
 }
 
-export interface BlockEpoch {
+export interface IBlockEpoch {
   hash: Buffer;
   height: number;
 }

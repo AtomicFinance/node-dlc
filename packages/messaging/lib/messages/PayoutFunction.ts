@@ -5,9 +5,9 @@ import assert from 'assert';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import {
-  HyperbolaPayoutCurvePieceJSON,
+  IHyperbolaPayoutCurvePieceJSON,
   PayoutCurvePiece,
-  PolynomialPayoutCurvePieceJSON,
+  IPolynomialPayoutCurvePieceJSON,
 } from './PayoutCurvePiece';
 import { PayoutFunctionV0Pre163 } from './pre-163/PayoutFunction';
 
@@ -110,7 +110,7 @@ export class PayoutFunction implements IDlcMessage {
   /**
    * Converts payout_function_v0 to JSON
    */
-  public toJSON(): PayoutFunctionJSON {
+  public toJSON(): IPayoutFunctionJSON {
     return {
       payoutFunctionPieces: this.pieces.map((piece) => {
         return {
@@ -176,11 +176,11 @@ interface IPayoutCurvePieces {
 interface IPayoutCurvePiecesJSON {
   endPoint: IEndpointJSON;
   payoutCurvePiece:
-    | PolynomialPayoutCurvePieceJSON
-    | HyperbolaPayoutCurvePieceJSON;
+    | IPolynomialPayoutCurvePieceJSON
+    | IHyperbolaPayoutCurvePieceJSON;
 }
 
-export interface PayoutFunctionJSON {
+export interface IPayoutFunctionJSON {
   payoutFunctionPieces: IPayoutCurvePiecesJSON[];
   lastEndpoint: IEndpointJSON;
 }

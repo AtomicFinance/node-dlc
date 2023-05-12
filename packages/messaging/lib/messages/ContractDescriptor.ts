@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import assert from 'assert';
 
 import { IDlcMessage } from './DlcMessage';
-import { PayoutFunction, PayoutFunctionJSON } from './PayoutFunction';
+import { PayoutFunction, IPayoutFunctionJSON } from './PayoutFunction';
 import {
   ContractDescriptorPre163,
   ContractDescriptorV0Pre163,
@@ -52,8 +52,8 @@ export abstract class ContractDescriptor {
   public abstract type: number;
 
   public abstract toJSON():
-    | EnumContractDescriptorJSON
-    | NumericContractDescriptorJSON;
+    | IEnumContractDescriptorJSON
+    | INumericContractDescriptorJSON;
 
   public abstract serialize(): Buffer;
 }
@@ -123,7 +123,7 @@ export class EnumeratedContractDescriptor
   /**
    * Converts enumerated_contract_descriptor to JSON
    */
-  public toJSON(): EnumContractDescriptorJSON {
+  public toJSON(): IEnumContractDescriptorJSON {
     return {
       enumeratedContractDescriptor: {
         payouts: this.outcomes.map((payout) => {
@@ -224,7 +224,7 @@ export class NumericContractDescriptor
   /**
    * Converts contract_descriptor_v1 to JSON
    */
-  public toJSON(): NumericContractDescriptorJSON {
+  public toJSON(): INumericContractDescriptorJSON {
     return {
       numericOutcomeContractDescriptor: {
         numDigits: this.numDigits,
@@ -262,16 +262,16 @@ interface IOutcomeJSON {
   localPayout: number;
 }
 
-export interface EnumContractDescriptorJSON {
+export interface IEnumContractDescriptorJSON {
   enumeratedContractDescriptor: {
     payouts: IOutcomeJSON[];
   };
 }
 
-export interface NumericContractDescriptorJSON {
+export interface INumericContractDescriptorJSON {
   numericOutcomeContractDescriptor: {
     numDigits: number;
-    payoutFunction: PayoutFunctionJSON;
+    payoutFunction: IPayoutFunctionJSON;
     roundingIntervals: IRoundingIntervalsJSON;
   };
 }

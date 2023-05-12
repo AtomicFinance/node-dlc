@@ -4,9 +4,9 @@ import { MessageType } from '../MessageType';
 import {
   ContractDescriptor,
   ContractDescriptorType,
-  EnumContractDescriptorJSON,
+  IEnumContractDescriptorJSON,
   NumericContractDescriptor,
-  NumericContractDescriptorJSON,
+  INumericContractDescriptorJSON,
 } from './ContractDescriptor';
 import { IDlcMessage } from './DlcMessage';
 import {
@@ -368,8 +368,8 @@ interface IContractOraclePair {
 
 interface IContractOraclePairJSON {
   contractDescriptor:
-    | EnumContractDescriptorJSON
-    | NumericContractDescriptorJSON;
+    | IEnumContractDescriptorJSON
+    | INumericContractDescriptorJSON;
   oracleInfo: ISingleOracleInfoJSON | IMultiOracleInfoJSON;
 }
 

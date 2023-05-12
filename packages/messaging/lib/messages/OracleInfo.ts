@@ -5,7 +5,7 @@ import { IDlcMessage } from './DlcMessage';
 import { OracleInfoV0Pre163 } from './pre-163/OracleInfo';
 import {
   OracleAnnouncementV0Pre167,
-  OracleAnnouncementV0Pre167JSON,
+  IOracleAnnouncementV0Pre167JSON,
 } from './pre-167/OracleAnnouncement';
 
 export enum OracleInfoType {
@@ -263,13 +263,13 @@ export interface IOracleParamsJSON {
 }
 export interface ISingleOracleInfoJSON {
   single: {
-    oracleAnnouncement: OracleAnnouncementV0Pre167JSON;
+    oracleAnnouncement: IOracleAnnouncementV0Pre167JSON;
   };
 }
 export interface IMultiOracleInfoJSON {
   multi: {
     threshold: number;
-    oracleAnnouncements: OracleAnnouncementV0Pre167JSON[];
+    oracleAnnouncements: IOracleAnnouncementV0Pre167JSON[];
     oracleParams: IOracleParamsJSON | null;
   };
 }

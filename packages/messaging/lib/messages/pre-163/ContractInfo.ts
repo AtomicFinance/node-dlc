@@ -6,12 +6,12 @@ import { DigitDecompositionEventDescriptorV0Pre167 } from '../pre-167/EventDescr
 import { OracleEventV0Pre167 } from '../pre-167/OracleEvent';
 import {
   ContractDescriptorPre163,
-  ContractDescriptorV0Pre163JSON,
+  IContractDescriptorV0Pre163JSON,
   ContractDescriptorV1Pre163,
-  ContractDescriptorV1Pre163JSON,
+  IContractDescriptorV1Pre163JSON,
 } from './ContractDescriptor';
 import { DlcMessagePre163, IDlcMessagePre163 } from './DlcMessage';
-import { OracleInfoV0Pre163, OracleInfoV0Pre163JSON } from './OracleInfo';
+import { OracleInfoV0Pre163, IOracleInfoV0Pre163JSON } from './OracleInfo';
 
 export abstract class ContractInfoPre163 extends DlcMessagePre163 {
   public static deserialize(buf: Buffer): ContractInfoV0Pre163 | ContractInfoV1Pre163 {
@@ -298,15 +298,15 @@ interface IContractOraclePair {
 }
 
 interface IContractOraclePairJSON {
-  contractDescriptor: ContractDescriptorV0Pre163JSON | ContractDescriptorV1Pre163JSON;
-  oracleInfo: OracleInfoV0Pre163JSON;
+  contractDescriptor: IContractDescriptorV0Pre163JSON | IContractDescriptorV1Pre163JSON;
+  oracleInfo: IOracleInfoV0Pre163JSON;
 }
 
 export interface IContractInfoV0Pre163JSON {
   type: number;
   totalCollateral: number;
-  contractDescriptor: ContractDescriptorV0Pre163JSON | ContractDescriptorV1Pre163JSON;
-  oracleInfo: OracleInfoV0Pre163JSON;
+  contractDescriptor: IContractDescriptorV0Pre163JSON | IContractDescriptorV1Pre163JSON;
+  oracleInfo: IOracleInfoV0Pre163JSON;
 }
 
 export interface IContractInfoV1Pre163JSON {
