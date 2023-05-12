@@ -25,9 +25,9 @@ export abstract class DlcMessage {
     | DlcAcceptV0
     | DlcSignV0
     | DlcCloseV0
+    | NodeAnnouncementMessage
     | OracleAttestationV0Pre167
-    | OracleAnnouncementV0Pre167
-    | NodeAnnouncementMessage {
+    | OracleAnnouncementV0Pre167 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
@@ -45,12 +45,25 @@ export abstract class DlcMessage {
         return DlcSignV0.deserialize(buf);
       case MessageType.DlcCloseV0:
         return DlcCloseV0.deserialize(buf);
+      case MessageType.NodeAnnouncement:
+        return NodeAnnouncementMessage.deserialize(buf);
+      default:
+        return this.deserializePre167(buf);
+    }
+  }
+
+  public static deserializePre167(
+    buf: Buffer,
+  ): OracleAttestationV0Pre167 | OracleAnnouncementV0Pre167 {
+    const reader = new BufferReader(buf);
+
+    const type = Number(reader.readBigSize()); // Handle BigSize type for pre167 messages
+
+    switch (type) {
       case MessageType.OracleAttestationV0:
         return OracleAttestationV0Pre167.deserialize(buf);
       case MessageType.OracleAnnouncementV0:
         return OracleAnnouncementV0Pre167.deserialize(buf);
-      case MessageType.NodeAnnouncement:
-        return NodeAnnouncementMessage.deserialize(buf);
       default:
         throw new Error(`Dlc Message type invalid`);
     }
