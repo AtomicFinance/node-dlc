@@ -51,7 +51,7 @@ export class EnumEventDescriptorV0Pre167
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
+    instance.length = reader.readBigSize();
     reader.readUInt16BE(); // num_outcomes
 
     while (!reader.eof) {
@@ -122,7 +122,7 @@ export class DigitDecompositionEventDescriptorV0Pre167
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
+    instance.length = reader.readBigSize();
 
     /**
      * NOTE: BASE IS INCORRECT FORMAT FOR DLC SPEC (SHOULD BE BIGSIZE)

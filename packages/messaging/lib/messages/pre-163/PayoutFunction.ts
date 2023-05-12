@@ -47,7 +47,7 @@ export class PayoutFunctionV0Pre163 extends PayoutFunctionPre163 implements IDlc
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
+    instance.length = reader.readBigSize();
     reader.readUInt16BE(); // num_pieces
     instance.endpoint0 = reader.readBigSize();
     instance.endpointPayout0 = reader.readBigSize();

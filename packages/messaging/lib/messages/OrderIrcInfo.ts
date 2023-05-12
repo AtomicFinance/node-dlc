@@ -41,7 +41,6 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
 
     const nickLength = reader.readBigSize();
     const nickBuf = reader.readBytes(Number(nickLength));
@@ -56,8 +55,6 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
    * The type for order_metadata_v0 message. order_metadata_v0 = 62774
    */
   public type = OrderIrcInfoV0.type;
-
-  public length: bigint;
 
   public nick: string;
 
@@ -79,14 +76,9 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-
-    const dataWriter = new BufferWriter();
-    dataWriter.writeBigSize(this.nick.length);
-    dataWriter.writeBytes(Buffer.from(this.nick));
-    dataWriter.writeBytes(this.pubKey);
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
+    writer.writeBigSize(this.nick.length);
+    writer.writeBytes(Buffer.from(this.nick));
+    writer.writeBytes(this.pubKey);
 
     return writer.toBuffer();
   }

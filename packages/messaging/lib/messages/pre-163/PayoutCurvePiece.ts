@@ -136,7 +136,7 @@ export class HyperbolaPayoutCurvePiecePre163
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
+    instance.length = reader.readBigSize();
     instance.usePositivePiece = reader.readUInt8() === 1;
     instance.translateOutcomeSign = reader.readUInt8() === 1;
     instance.translateOutcome = reader.readBigSize();

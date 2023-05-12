@@ -15,7 +15,6 @@ export class OracleIdentifierV0 implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
 
     const oracleNameLength = reader.readBigSize();
     const oracleNameBuf = reader.readBytes(Number(oracleNameLength));
@@ -29,8 +28,6 @@ export class OracleIdentifierV0 implements IDlcMessage {
    * The type for oracle_identifier message. oracle_identifier = 61472
    */
   public type = OracleIdentifierV0.type;
-
-  public length: bigint;
 
   public oracleName: string;
 
@@ -56,15 +53,9 @@ export class OracleIdentifierV0 implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-
-    const dataWriter = new BufferWriter();
-    dataWriter.writeBigSize(this.oracleName.length);
-    dataWriter.writeBytes(Buffer.from(this.oracleName));
-
-    dataWriter.writeBytes(this.oraclePubkey);
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
+    writer.writeBigSize(this.oracleName.length);
+    writer.writeBytes(Buffer.from(this.oracleName));
+    writer.writeBytes(this.oraclePubkey);
 
     return writer.toBuffer();
   }
