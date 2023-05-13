@@ -22,9 +22,9 @@ export class AddressCache {
     return instance;
   }
 
-  public static deserialize(buf: Buffer): AddressCache {
+  public static deserialize(reader: Buffer | BufferReader): AddressCache {
     const instance = new AddressCache();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     reader.readBigSize(); // num_cache_spks

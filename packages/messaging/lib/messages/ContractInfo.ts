@@ -82,7 +82,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 
   /**
    * Deserializes an contract_info_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): SingleContractInfo {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
@@ -230,7 +230,7 @@ export class DisjointContractInfo implements IDlcMessage {
 
   /**
    * Deserializes an disjoint_contract_info message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,

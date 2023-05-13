@@ -19,7 +19,7 @@ export class PayoutFunction implements IDlcMessage {
 
   /**
    * Deserializes an payout_function_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): PayoutFunction {
     if (reader instanceof Buffer) reader = new BufferReader(reader);

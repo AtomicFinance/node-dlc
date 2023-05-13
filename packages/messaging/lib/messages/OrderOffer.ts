@@ -25,14 +25,16 @@ import { OrderMetadata, OrderMetadataV0 } from './OrderMetadata';
 
 const LOCKTIME_THRESHOLD = 500000000;
 export abstract class OrderOffer {
-  public static deserialize(buf: Buffer): OrderOffer {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): OrderOffer {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderOfferV0:
-        return OrderOfferV0.deserialize(buf);
+        return OrderOfferV0.deserialize(reader);
       default:
         throw new Error(`Order offer TLV type must be OrderOfferV0`);
     }
@@ -57,11 +59,11 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
   /**
    * Deserializes an offer_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OrderOfferV0 {
+  public static deserialize(reader: Buffer | BufferReader): OrderOfferV0 {
     const instance = new OrderOfferV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     instance.protocolVersion = reader.readUInt32BE();

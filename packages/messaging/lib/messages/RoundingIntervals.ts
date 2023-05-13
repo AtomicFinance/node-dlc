@@ -9,7 +9,7 @@ import { RoundingIntervalsV0Pre163 } from './pre-163/RoundingIntervals';
 export class RoundingIntervals implements IDlcMessage {
   /**
    * Deserializes an rounding_intervals_v0 tlv
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): RoundingIntervals {
     if (reader instanceof Buffer) reader = new BufferReader(reader);

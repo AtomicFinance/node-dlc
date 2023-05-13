@@ -6,14 +6,16 @@ import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
 
 export abstract class DlcClose {
-  public static deserialize(buf: Buffer): DlcCloseV0 {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): DlcCloseV0 {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcCloseV0:
-        return DlcCloseV0.deserialize(buf);
+        return DlcCloseV0.deserialize(reader);
       default:
         throw new Error(`DLC Close message type must be DlcCloseV0`); // This is a temporary measure while protocol is being developed
     }
@@ -35,11 +37,11 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   /**
    * Deserializes an close_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): DlcCloseV0 {
+  public static deserialize(reader: Buffer | BufferReader): DlcCloseV0 {
     const instance = new DlcCloseV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     instance.contractId = reader.readBytes(32);

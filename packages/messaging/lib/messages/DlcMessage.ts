@@ -17,7 +17,7 @@ export interface IDlcMessage {
 
 export abstract class DlcMessage {
   public static deserialize(
-    buf: Buffer,
+    reader: Buffer | BufferReader,
   ):
     | OrderOfferV0
     | OrderAcceptV0
@@ -28,42 +28,46 @@ export abstract class DlcMessage {
     | NodeAnnouncementMessage
     | OracleAttestationV0Pre167
     | OracleAnnouncementV0Pre167 {
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderOfferV0:
-        return OrderOfferV0.deserialize(buf);
+        return OrderOfferV0.deserialize(reader);
       case MessageType.OrderAcceptV0:
-        return OrderAcceptV0.deserialize(buf);
+        return OrderAcceptV0.deserialize(reader);
       case MessageType.DlcOfferV0:
-        return DlcOfferV0.deserialize(buf);
+        return DlcOfferV0.deserialize(reader);
       case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf);
+        return DlcAcceptV0.deserialize(reader);
       case MessageType.DlcSignV0:
-        return DlcSignV0.deserialize(buf);
+        return DlcSignV0.deserialize(reader);
       case MessageType.DlcCloseV0:
-        return DlcCloseV0.deserialize(buf);
+        return DlcCloseV0.deserialize(reader);
       case MessageType.NodeAnnouncement:
-        return NodeAnnouncementMessage.deserialize(buf);
+        return NodeAnnouncementMessage.deserialize(reader);
       default:
-        return this.deserializePre167(buf);
+        return this.deserializePre167(reader);
     }
   }
 
   public static deserializePre167(
-    buf: Buffer,
+    reader: Buffer | BufferReader,
   ): OracleAttestationV0Pre167 | OracleAnnouncementV0Pre167 {
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readBigSize()); // Handle BigSize type for pre167 messages
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readBigSize()); // Handle BigSize type for pre167 messages
 
     switch (type) {
       case MessageType.OracleAttestationV0:
-        return OracleAttestationV0Pre167.deserialize(buf);
+        return OracleAttestationV0Pre167.deserialize(reader);
       case MessageType.OracleAnnouncementV0:
-        return OracleAnnouncementV0Pre167.deserialize(buf);
+        return OracleAnnouncementV0Pre167.deserialize(reader);
       default:
         throw new Error(`Dlc Message type invalid`);
     }

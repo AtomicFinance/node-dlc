@@ -71,7 +71,7 @@ export class SingleNegotiationFields
 
   /**
    * Deserializes an negotiation_fields_v1 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,
@@ -139,7 +139,7 @@ export class DisjointNegotiationFields
 
   /**
    * Deserializes an negotiation_fields_v1 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,

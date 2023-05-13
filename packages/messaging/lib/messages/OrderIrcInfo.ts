@@ -4,14 +4,16 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class OrderIrcInfo {
-  public static deserialize(buf: Buffer): OrderIrcInfo {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): OrderIrcInfo {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readBigSize());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderIrcInfoV0:
-        return OrderIrcInfoV0.deserialize(buf);
+        return OrderIrcInfoV0.deserialize(reader);
       default:
         throw new Error(`Order irc info TLV type must be OrderIrcInfoV0`);
     }
@@ -34,11 +36,11 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
 
   /**
    * Deserializes an offer_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OrderIrcInfoV0 {
+  public static deserialize(reader: Buffer | BufferReader): OrderIrcInfoV0 {
     const instance = new OrderIrcInfoV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
 

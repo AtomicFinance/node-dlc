@@ -15,7 +15,7 @@ import { FundingInputV0Pre163 } from './pre-163/FundingInput';
 export class FundingInput implements IDlcMessage {
   /**
    * Deserializes an funding_input_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): FundingInput {
     if (reader instanceof Buffer) reader = new BufferReader(reader);

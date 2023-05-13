@@ -8,14 +8,16 @@ import {
 } from './OrderNegotiationFields';
 
 export abstract class OrderAccept {
-  public static deserialize(buf: Buffer): OrderAccept {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): OrderAccept {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderAcceptV0:
-        return OrderAcceptV0.deserialize(buf);
+        return OrderAcceptV0.deserialize(reader);
       default:
         throw new Error(`Order accept TLV type must be OrderAcceptV0`);
     }
@@ -38,11 +40,11 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 
   /**
    * Deserializes an order_accept_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OrderAcceptV0 {
+  public static deserialize(reader: Buffer | BufferReader): OrderAcceptV0 {
     const instance = new OrderAcceptV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     instance.tempOrderId = reader.readBytes(32);

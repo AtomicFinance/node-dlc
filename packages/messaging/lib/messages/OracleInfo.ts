@@ -20,6 +20,7 @@ export abstract class OracleInfo implements IDlcMessage {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     const tempReader = new BufferReader(reader.peakBytes());
+
     const type = Number(tempReader.readBigSize());
 
     switch (type) {
@@ -60,7 +61,7 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
 
   /**
    * Deserializes an oracle_info_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): SingleOracleInfo {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
@@ -128,7 +129,7 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
 
   /**
    * Deserializes an oracle_info_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): MultiOracleInfo {
     if (reader instanceof Buffer) reader = new BufferReader(reader);

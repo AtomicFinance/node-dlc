@@ -4,14 +4,16 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class OrderMetadata {
-  public static deserialize(buf: Buffer): OrderMetadata {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): OrderMetadata {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readBigSize());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.OrderMetadataV0:
-        return OrderMetadataV0.deserialize(buf);
+        return OrderMetadataV0.deserialize(reader);
       default:
         throw new Error(`Order metadata TLV type must be OrderMetadataV0`);
     }
@@ -34,11 +36,11 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
 
   /**
    * Deserializes an offer_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OrderMetadataV0 {
+  public static deserialize(reader: Buffer | BufferReader): OrderMetadataV0 {
     const instance = new OrderMetadataV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
 

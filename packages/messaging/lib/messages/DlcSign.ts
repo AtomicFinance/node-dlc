@@ -13,14 +13,16 @@ import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
 import { DlcSignV0Pre163 } from './pre-163/DlcSign';
 
 export abstract class DlcSign {
-  public static deserialize(buf: Buffer): DlcSignV0 {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): DlcSignV0 {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcSignV0:
-        return DlcSignV0.deserialize(buf);
+        return DlcSignV0.deserialize(reader);
       default:
         throw new Error(`Dlc Sign message type must be DlcSignV0`);
     }
@@ -43,11 +45,11 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
 
   /**
    * Deserializes an sign_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): DlcSignV0 {
+  public static deserialize(reader: Buffer | BufferReader): DlcSignV0 {
     const instance = new DlcSignV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     instance.protocolVersion = reader.readUInt32BE();

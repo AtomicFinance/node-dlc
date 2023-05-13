@@ -17,7 +17,7 @@ import { IOrderOfferJSON, OrderOffer } from './OrderOffer';
 export class OrderNegotiationFields implements IDlcMessage {
   /**
    * Deserializes an order_negotiation_fields_v1 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,

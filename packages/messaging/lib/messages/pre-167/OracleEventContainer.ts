@@ -15,11 +15,11 @@ export class OracleEventContainerV0Pre167 implements IDlcMessage {
 
   /**
    * Deserializes an oracle_info_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OracleEventContainerV0Pre167 {
+  public static deserialize(reader: Buffer | BufferReader): OracleEventContainerV0Pre167 {
     const instance = new OracleEventContainerV0Pre167();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();

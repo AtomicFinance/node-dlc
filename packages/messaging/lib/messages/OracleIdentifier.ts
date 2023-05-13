@@ -8,11 +8,11 @@ export class OracleIdentifierV0 implements IDlcMessage {
 
   /**
    * Deserializes an oracle_event message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OracleIdentifierV0 {
+  public static deserialize(reader: Buffer | BufferReader): OracleIdentifierV0 {
     const instance = new OracleIdentifierV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
 

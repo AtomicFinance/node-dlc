@@ -22,14 +22,16 @@ import {
 import { DlcAcceptV0Pre163 } from './pre-163/DlcAccept';
 
 export abstract class DlcAccept implements IDlcMessage {
-  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcAcceptV0 {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcAcceptV0:
-        return DlcAcceptV0.deserialize(buf, parseCets);
+        return DlcAcceptV0.deserialize(reader, parseCets);
       default:
         throw new Error(`Dlc Accept message type must be DlcAcceptV0`);
     }
@@ -55,11 +57,11 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
   /**
    * Deserializes an oracle_info message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptV0 {
+  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcAcceptV0 {
     const instance = new DlcAcceptV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     instance.protocolVersion = reader.readUInt32BE();

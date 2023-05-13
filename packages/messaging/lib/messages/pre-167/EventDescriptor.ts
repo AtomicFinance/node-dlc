@@ -5,17 +5,19 @@ import { IDlcMessage } from '../DlcMessage';
 
 export abstract class EventDescriptorPre167 {
   public static deserialize(
-    buf: Buffer,
+    reader: Buffer | BufferReader,
   ): EnumEventDescriptorV0Pre167 | DigitDecompositionEventDescriptorV0Pre167 {
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readBigSize());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readBigSize());
 
     switch (type) {
       case MessageType.EnumEventDescriptorV0:
-        return EnumEventDescriptorV0Pre167.deserialize(buf);
+        return EnumEventDescriptorV0Pre167.deserialize(reader);
       case MessageType.DigitDecompositionEventDescriptorV0:
-        return DigitDecompositionEventDescriptorV0Pre167.deserialize(buf);
+        return DigitDecompositionEventDescriptorV0Pre167.deserialize(reader);
       default:
         throw new Error(
           `Payout function TLV type must be EnumEventDescriptorV0 or DigitDecompositionEventDescriptorV0`,
@@ -44,11 +46,11 @@ export class EnumEventDescriptorV0Pre167
 
   /**
    * Deserializes an enum_event_descriptor_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): EnumEventDescriptorV0Pre167 {
+  public static deserialize(reader: Buffer | BufferReader): EnumEventDescriptorV0Pre167 {
     const instance = new EnumEventDescriptorV0Pre167();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
@@ -115,11 +117,11 @@ export class DigitDecompositionEventDescriptorV0Pre167
 
   /**
    * Deserializes an digit_decomposition_event_descriptor_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): DigitDecompositionEventDescriptorV0Pre167 {
+  public static deserialize(reader: Buffer | BufferReader): DigitDecompositionEventDescriptorV0Pre167 {
     const instance = new DigitDecompositionEventDescriptorV0Pre167();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();

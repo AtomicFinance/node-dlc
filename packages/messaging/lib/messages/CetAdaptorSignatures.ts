@@ -12,7 +12,7 @@ export class CetAdaptorSignatures implements IDlcMessage {
 
   /**
    * Deserializes a cet_adaptor_signature_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,

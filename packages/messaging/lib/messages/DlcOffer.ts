@@ -24,16 +24,18 @@ import { DlcOfferV0Pre163, IDlcOfferV0Pre163JSON } from './pre-163/DlcOffer';
 export const LOCKTIME_THRESHOLD = 500000000;
 
 export abstract class DlcOffer {
-  public static deserialize(buf: Buffer): DlcOffer {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): DlcOffer {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     if (type === MessageType.DlcOfferV0) {
       try {
-        return DlcOfferV0.deserialize(buf);
+        return DlcOfferV0.deserialize(reader);
       } catch (e) {
-        return DlcOfferV0Pre163.deserialize(buf);
+        return DlcOfferV0Pre163.deserialize(reader.buffer);
       }
     } else {
       throw Error('Dlc Offer message type must be DlcOfferV0');
@@ -56,11 +58,11 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
   /**
    * Deserializes an offer_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): DlcOfferV0 {
+  public static deserialize(reader: Buffer | BufferReader): DlcOfferV0 {
     const instance = new DlcOfferV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
     instance.protocolVersion = reader.readUInt32BE();

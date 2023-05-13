@@ -10,14 +10,16 @@ import { IDlcMessage } from './DlcMessage';
 import { DlcTransactionsV0Pre163 } from './pre-163/DlcTransactions';
 
 export abstract class DlcTransactions {
-  public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcTransactionsV0 {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcTransactionsV0:
-        return DlcTransactionsV0.deserialize(buf, parseCets);
+        return DlcTransactionsV0.deserialize(reader, parseCets);
       default:
         throw new Error(`Dlc Transactions type must be DlcTransactionsV0`);
     }
@@ -39,11 +41,11 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
 
   /**
    * Deserializes an offer_dlc_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {
+  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcTransactionsV0 {
     const instance = new DlcTransactionsV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
 

@@ -11,7 +11,7 @@ import { IScriptWitnessJSON, ScriptWitness } from './ScriptWitness';
 export class FundingSignatures implements IDlcMessage {
   /**
    * Deserializes an funding_signatures_v0 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(reader: Buffer | BufferReader): FundingSignatures {
     if (reader instanceof Buffer) reader = new BufferReader(reader);

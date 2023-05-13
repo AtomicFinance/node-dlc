@@ -4,14 +4,16 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class DlcInfo {
-  public static deserialize(buf: Buffer): DlcInfoV0 {
-    const reader = new BufferReader(buf);
+  public static deserialize(reader: Buffer | BufferReader): DlcInfoV0 {
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    const type = Number(reader.readUInt16BE());
+    const tempReader = new BufferReader(reader.peakBytes());
+
+    const type = Number(tempReader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcInfoV0:
-        return DlcInfoV0.deserialize(buf);
+        return DlcInfoV0.deserialize(reader);
       default:
         throw new Error(`DLC IDs message type must be DlcInfoV0`);
     }
@@ -30,11 +32,11 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
 
   /**
    * Deserializes an dlc_ids_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): DlcInfoV0 {
+  public static deserialize(reader: Buffer | BufferReader): DlcInfoV0 {
     const instance = new DlcInfoV0();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
 

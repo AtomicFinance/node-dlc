@@ -69,7 +69,7 @@ export class EnumeratedContractDescriptor
 
   /**
    * Deserializes an enumerated_contract_descriptor message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,
@@ -169,7 +169,7 @@ export class NumericContractDescriptor
 
   /**
    * Deserializes an contract_descriptor_v1 message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,

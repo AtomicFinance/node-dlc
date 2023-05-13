@@ -21,11 +21,11 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
 
   /**
    * Deserializes an oracle_announcement_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): OracleAttestationV0Pre167 {
+  public static deserialize(reader: Buffer | BufferReader): OracleAttestationV0Pre167 {
     const instance = new OracleAttestationV0Pre167();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();

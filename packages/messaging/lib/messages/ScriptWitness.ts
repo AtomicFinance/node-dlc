@@ -9,11 +9,11 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 export class ScriptWitness {
   /**
    * Deserializes an script_witness_v0 message
-   * @param buf
+   * @param reader
    */
-  public static deserialize(buf: Buffer): ScriptWitness {
+  public static deserialize(reader: Buffer | BufferReader): ScriptWitness {
     const instance = new ScriptWitness();
-    const reader = new BufferReader(buf);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     instance.length = Number(reader.readBigSize());
     instance.witness = reader.readBytes(instance.length);

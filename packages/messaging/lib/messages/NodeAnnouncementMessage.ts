@@ -16,9 +16,10 @@ import { IWireMessage } from './IWireMessage';
 export class NodeAnnouncementMessage implements IWireMessage {
   public static type = MessageType.NodeAnnouncement;
 
-  public static deserialize(payload: Buffer) {
+  public static deserialize(reader: Buffer | BufferReader) {
     const instance = new NodeAnnouncementMessage();
-    const reader = new BufferReader(payload);
+    if (reader instanceof Buffer) reader = new BufferReader(reader);
+
     reader.readUInt16BE(); // read off type
 
     instance.signature = reader.readBytes(64);

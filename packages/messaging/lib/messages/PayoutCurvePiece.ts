@@ -26,6 +26,7 @@ export abstract class PayoutCurvePiece {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     const tempReader = new BufferReader(reader.peakBytes());
+
     const type = Number(tempReader.readBigSize());
 
     switch (type) {
@@ -73,7 +74,7 @@ export class PolynomialPayoutCurvePiece
 
   /**
    * Deserializes an polynomial_payout_curve_piece message
-   * @param buf
+   * @param reader
    */
   public static deserialize(
     reader: Buffer | BufferReader,
