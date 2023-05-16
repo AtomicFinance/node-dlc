@@ -49,6 +49,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     reader.readUInt16BE(); // read type
+    instance.protocolVersion = reader.readUInt32BE();
     instance.tempOrderId = reader.readBytes(32);
     const hasNegotiationFields = reader.readUInt8() === 1;
     if (hasNegotiationFields) {
@@ -71,6 +72,8 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
    */
   public type = OrderAcceptV0.type;
 
+  public protocolVersion: number;
+
   public tempOrderId: Buffer;
 
   public negotiationFields: null | OrderNegotiationFields = null;
@@ -83,6 +86,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
   public toJSON(): IOrderAcceptV0JSON {
     return {
       message: {
+        protocolVersion: this.protocolVersion,
         tempOrderId: this.tempOrderId.toString('hex'),
         negotiationFields: this.negotiationFields.toJSON(),
       },
@@ -96,6 +100,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
+    writer.writeUInt32BE(this.protocolVersion);
     writer.writeBytes(this.tempOrderId);
     writer.writeUInt8(this.negotiationFields ? 1 : 0);
     if (this.negotiationFields) {
@@ -112,6 +117,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 
 export interface IOrderAcceptV0JSON {
   message: {
+    protocolVersion: number;
     tempOrderId: string;
     negotiationFields: IOrderNegotiationFieldsJSON;
   };
