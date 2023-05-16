@@ -4,6 +4,8 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
+import { getTlv } from "../serialize/getTlv";
+import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 
 export abstract class DlcClose {
   public static deserialize(reader: Buffer | BufferReader): DlcCloseV0 {
@@ -55,6 +57,14 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     }
     instance.fundingSignatures = FundingSignatures.deserialize(reader);
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
+    }
+
     return instance;
   }
 
@@ -77,6 +87,8 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   public fundingSignatures: FundingSignatures;
 
+  public tlvs: ITlv[] = [];
+
   /**
    * Serializes the close_dlc_v0 message into a Buffer
    */
@@ -94,6 +106,10 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
       writer.writeBytes(fundingInput.serialize());
     }
     writer.writeBytes(this.fundingSignatures.serialize());
+
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
+    }
 
     return writer.toBuffer();
   }
@@ -123,23 +139,29 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
    */
   public toJSON(): IDlcCloseV0JSON {
     return {
-      contractId: this.contractId.toString('hex'),
-      closeSignature: this.closeSignature.toString('hex'),
-      offerPayoutSatoshis: Number(this.offerPayoutSatoshis),
-      acceptPayoutSatoshis: Number(this.acceptPayoutSatoshis),
-      fundInputSerialId: Number(this.fundInputSerialId),
-      fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-      fundingSignatures: this.fundingSignatures.toJSON(),
+      message: {
+        contractId: this.contractId.toString('hex'),
+        closeSignature: this.closeSignature.toString('hex'),
+        offerPayoutSatoshis: Number(this.offerPayoutSatoshis),
+        acceptPayoutSatoshis: Number(this.acceptPayoutSatoshis),
+        fundInputSerialId: Number(this.fundInputSerialId),
+        fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
+        fundingSignatures: this.fundingSignatures.toJSON(),
+      },
+      serialized: this.serialize().toString('hex'),
     };
   }
 }
 
 export interface IDlcCloseV0JSON {
-  contractId: string;
-  closeSignature: string;
-  offerPayoutSatoshis: number;
-  acceptPayoutSatoshis: number;
-  fundInputSerialId: number;
-  fundingInputs: IFundingInputJSON[];
-  fundingSignatures: IFundingSignaturesJSON;
+  message: {
+    contractId: string;
+    closeSignature: string;
+    offerPayoutSatoshis: number;
+    acceptPayoutSatoshis: number;
+    fundInputSerialId: number;
+    fundingInputs: IFundingInputJSON[];
+    fundingSignatures: IFundingSignaturesJSON;
+  };
+  serialized: string;
 }

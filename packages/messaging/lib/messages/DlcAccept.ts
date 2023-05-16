@@ -6,7 +6,7 @@ import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
 import { MessageType } from '../MessageType';
-import { deserializeTlv, ITlv } from '../serialize/deserializeTlv';
+import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 import { getTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignatures,
@@ -294,6 +294,10 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     writer.writeUInt8(this.negotiationFields ? 1 : 0);
     if (this.negotiationFields) {
       writer.writeBytes(this.negotiationFields.serialize());
+    }
+
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
     }
 
     return writer.toBuffer();

@@ -3,6 +3,8 @@ import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessage } from '../DlcMessage';
+import { getTlv } from "../../serialize/getTlv";
+import { deserializeTlv, ITlv, serializeTlv } from "../../serialize/deserializeTlv";
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -43,10 +45,22 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
       instance.signatures.push(signature);
     }
 
-    while (!reader.eof) {
+    let deserializedBytes =
+      2 + Number(eventIdLength) + 32 + 2 + numSignatures * 64; // Count 2 bytes for eventIdLength + eventIdLength
+    // + 32 bytes for oraclePubkey + 2 bytes for numSignatures + 64 bytes per signature
+    while (deserializedBytes < instance.length) {
       const outcomeLen = reader.readBigSize();
       const outcomeBuf = reader.readBytes(Number(outcomeLen));
       instance.outcomes.push(outcomeBuf.toString());
+      deserializedBytes += 2 + Number(outcomeLen); // Count 2 bytes for outcomeLen + outcomeLen
+    }
+
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
     }
 
     return instance;
@@ -66,6 +80,8 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
   public signatures: Buffer[] = [];
 
   public outcomes: string[] = [];
+
+  public tlvs: ITlv[] = [];
 
   public validate(): void {
     if (this.signatures.length !== this.outcomes.length) {
@@ -87,10 +103,13 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
    */
   public toJSON(): IOracleAttestationV0Pre167JSON {
     return {
-      eventId: this.eventId,
-      oraclePubkey: this.oraclePubkey.toString('hex'),
-      signatures: this.signatures.map((sig) => sig.toString('hex')),
-      outcomes: this.outcomes,
+      message: {
+        eventId: this.eventId,
+        oraclePubkey: this.oraclePubkey.toString('hex'),
+        signatures: this.signatures.map((sig) => sig.toString('hex')),
+        outcomes: this.outcomes,
+      },
+      serialized: this.serialize().toString('hex'),
     };
   }
 
@@ -119,13 +138,20 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
+    }
+
     return writer.toBuffer();
   }
 }
 
 export interface IOracleAttestationV0Pre167JSON {
-  eventId: string;
-  oraclePubkey: string;
-  signatures: string[];
-  outcomes: string[];
+  message: {
+    eventId: string;
+    oraclePubkey: string;
+    signatures: string[];
+    outcomes: string[];
+  };
+  serialized: string;
 }

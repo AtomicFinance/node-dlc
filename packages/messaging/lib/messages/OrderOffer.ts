@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { IOrderMetadataJSON } from '..';
 import { MessageType } from '../MessageType';
-import { deserializeTlv, ITlv } from '../serialize/deserializeTlv';
+import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 import { getTlv } from '../serialize/getTlv';
 import {
   validateBigInt,
@@ -225,6 +225,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
     if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
+
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
+    }
 
     return writer.toBuffer();
   }

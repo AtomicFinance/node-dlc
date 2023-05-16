@@ -6,6 +6,8 @@ import {
   IOrderNegotiationFieldsJSON,
   OrderNegotiationFields,
 } from './OrderNegotiationFields';
+import { getTlv } from "../serialize/getTlv";
+import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 
 export abstract class OrderAccept {
   public static deserialize(reader: Buffer | BufferReader): OrderAccept {
@@ -53,6 +55,14 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
       instance.negotiationFields = OrderNegotiationFields.deserialize(reader);
     }
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
+    }
+
     return instance;
   }
 
@@ -65,13 +75,18 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
 
   public negotiationFields: null | OrderNegotiationFields = null;
 
+  public tlvs: ITlv[] = [];
+
   /**
    * Converts order_negotiation_fields_v0 to JSON
    */
   public toJSON(): IOrderAcceptV0JSON {
     return {
-      tempOrderId: this.tempOrderId.toString('hex'),
-      negotiationFields: this.negotiationFields.toJSON(),
+      message: {
+        tempOrderId: this.tempOrderId.toString('hex'),
+        negotiationFields: this.negotiationFields.toJSON(),
+      },
+      serialized: this.serialize().toString('hex'),
     };
   }
 
@@ -87,11 +102,18 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
       writer.writeBytes(this.negotiationFields.serialize());
     }
 
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
+    }
+
     return writer.toBuffer();
   }
 }
 
 export interface IOrderAcceptV0JSON {
-  tempOrderId: string;
-  negotiationFields: IOrderNegotiationFieldsJSON;
+  message: {
+    tempOrderId: string;
+    negotiationFields: IOrderNegotiationFieldsJSON;
+  };
+  serialized: string;
 }

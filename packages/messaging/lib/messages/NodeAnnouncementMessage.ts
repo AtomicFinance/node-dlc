@@ -7,6 +7,7 @@ import { Address } from '../domain/Address';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IWireMessage } from './IWireMessage';
+import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 
 /**
  * This gossip message allows a node to indicate extra data associated with it,
@@ -33,12 +34,25 @@ export class NodeAnnouncementMessage implements IWireMessage {
     instance.alias = reader.readBytes(32);
     instance.addresses = [];
 
-    reader.readUInt16BE(); // addr_len
+    const addressBytes = reader.readUInt16BE(); // Read length of the addresses buffer
+    let deserializedBytes = 0;
+    while (deserializedBytes < addressBytes) {
+      const addressTLV = getTlv(reader); // Get next address TLV buffer
+      const tempAddrTLVReader = new BufferReader(addressTLV);
+      tempAddrTLVReader.readBigSize(); // read off type
+      const addrLength = tempAddrTLVReader.readBigSize(); // Read address length
+      deserializedBytes += 4 + Number(addrLength); // Count 2 bytes for type + 2 bytes for length + address length
+      // Deserialize address and push it to instance.addresses array
+      const address = Address.deserialize(addressTLV);
+      instance.addresses.push(address);
+    }
 
     while (!reader.eof) {
-      const address = Address.deserialize(getTlv(reader));
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
 
-      instance.addresses.push(address);
+      instance.tlvs.push({ type, length, body });
     }
 
     return instance;
@@ -101,6 +115,8 @@ export class NodeAnnouncementMessage implements IWireMessage {
    */
   public addresses: Address[] = [];
 
+  public tlvs: ITlv[] = [];
+
   public serialize() {
     const featuresBuffer = this.features.toBuffer();
     const featuresLen = featuresBuffer.length;
@@ -139,6 +155,10 @@ export class NodeAnnouncementMessage implements IWireMessage {
     writer.writeUInt16BE(addressBytes);
     for (const addressBuffer of addressBuffers) {
       writer.writeBytes(addressBuffer);
+    }
+
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
     }
 
     return writer.toBuffer();

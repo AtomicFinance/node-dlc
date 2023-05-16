@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { sigToDER } from '@node-lightning/crypto';
 
 import { MessageType } from '../MessageType';
-import { deserializeTlv, ITlv } from '../serialize/deserializeTlv';
+import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 import { getTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignatures,
@@ -129,6 +129,10 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     writer.writeBytes(this.cetSignatures.serialize());
     writer.writeBytes(this.refundSignature);
     writer.writeBytes(this.fundingSignatures.serialize());
+
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
+    }
 
     return writer.toBuffer();
   }

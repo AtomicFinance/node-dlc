@@ -5,6 +5,7 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessage } from '../DlcMessage';
 import { IOracleEventV0Pre167JSON, OracleEventV0Pre167 } from './OracleEvent';
+import { deserializeTlv, ITlv, serializeTlv } from "../../serialize/deserializeTlv";
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -35,6 +36,14 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
     instance.oraclePubkey = reader.readBytes(32);
     instance.oracleEvent = OracleEventV0Pre167.deserialize(getTlv(reader));
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type, length, body } = deserializeTlv(tlvReader);
+
+      instance.tlvs.push({ type, length, body });
+    }
+
     return instance;
   }
 
@@ -50,6 +59,8 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
   public oraclePubkey: Buffer;
 
   public oracleEvent: OracleEventV0Pre167;
+
+  public tlvs: ITlv[] = [];
 
   public validate(): void {
     this.oracleEvent.validate();
@@ -67,9 +78,12 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
    */
   public toJSON(): IOracleAnnouncementV0Pre167JSON {
     return {
-      announcementSignature: this.announcementSig.toString('hex'),
-      oraclePublicKey: this.oraclePubkey.toString('hex'),
-      oracleEvent: this.oracleEvent.toJSON(),
+      message: {
+        announcementSignature: this.announcementSig.toString('hex'),
+        oraclePublicKey: this.oraclePubkey.toString('hex'),
+        oracleEvent: this.oracleEvent.toJSON(),
+      },
+      serialized: this.serialize().toString('hex'),
     };
   }
 
@@ -88,12 +102,19 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
+    for (const tlv of this.tlvs) {
+      serializeTlv(tlv, writer);
+    }
+
     return writer.toBuffer();
   }
 }
 
 export interface IOracleAnnouncementV0Pre167JSON {
-  announcementSignature: string;
-  oraclePublicKey: string;
-  oracleEvent: IOracleEventV0Pre167JSON;
+  message: {
+    announcementSignature: string;
+    oraclePublicKey: string;
+    oracleEvent: IOracleEventV0Pre167JSON;
+  };
+  serialized: string;
 }

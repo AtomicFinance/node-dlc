@@ -121,12 +121,12 @@ describe('DlcClose', () => {
     describe('toJSON', () => {
       it('convert to JSON', async () => {
         const json = instance.toJSON();
-        expect(json.contractId).to.equal(contractId.toString('hex'));
-        expect(json.closeSignature).to.equal(closeSignature.toString('hex'));
-        expect(json.fundInputSerialId).to.equal(
+        expect(json.message.contractId).to.equal(contractId.toString('hex'));
+        expect(json.message.closeSignature).to.equal(closeSignature.toString('hex'));
+        expect(json.message.fundInputSerialId).to.equal(
           Number(fundInputSerialId.readBigInt64BE()),
         );
-        expect(json.fundingInputs[0].prevTx).to.equal(
+        expect(json.message.fundingInputs[0].prevTx).to.equal(
           instance.fundingInputs[0].prevTx.serialize().toString('hex'),
         );
       });
