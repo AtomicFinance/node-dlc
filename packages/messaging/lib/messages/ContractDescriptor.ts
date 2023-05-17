@@ -78,11 +78,12 @@ export class EnumeratedContractDescriptor
 
     const instance = new EnumeratedContractDescriptor();
 
-    const type = reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
     assert(
-      Number(type) === this.type,
-      `Expected Enumerated Contract Descriptor, got type ${this.type}`,
+      type === this.type,
+      `Expected ContractDescriptorType.Enumerated, got type ${type}`,
     );
+
     const numOutcomes = reader.readBigSize(); // num_outcomes
 
     for (let i = 0; i < numOutcomes; i++) {
@@ -177,7 +178,12 @@ export class NumericContractDescriptor
     if (reader instanceof Buffer) reader = new BufferReader(reader);
     const instance = new NumericContractDescriptor();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected ContractDescriptorType.Numeric, got type ${type}`,
+    );
+
     instance.numDigits = reader.readUInt16BE(); // num_digits
     instance.payoutFunction = PayoutFunction.deserialize(reader);
     instance.roundingIntervals = RoundingIntervals.deserialize(reader);

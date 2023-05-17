@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { deserializeTlv } from '../../serialize/deserializeTlv';
@@ -63,7 +64,9 @@ export class OrderOfferV0Pre163 extends OrderOfferPre163 implements IDlcMessageP
     const instance = new OrderOfferV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected OrderOfferV0, got type ${type}`);
+
     instance.chainHash = reader.readBytes(32);
     instance.contractInfo = ContractInfoPre163.deserialize(getTlv(reader));
     instance.offerCollateralSatoshis = reader.readUInt64BE();

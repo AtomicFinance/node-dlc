@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
@@ -52,7 +53,12 @@ export class PolynomialPayoutCurvePiecePre163
     const instance = new PolynomialPayoutCurvePiecePre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected PolynomialPayoutCurvePiece, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize(); // need to fix this
     reader.readUInt16BE(); // num_pts
 
@@ -135,7 +141,12 @@ export class HyperbolaPayoutCurvePiecePre163
     const instance = new HyperbolaPayoutCurvePiecePre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type || type === MessageType.OldHyperbolaPayoutCurvePiece,
+      `Expected HyperbolaPayoutCurvePiece or OldHyperbolaPayoutCurvePiece, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     instance.usePositivePiece = reader.readUInt8() === 1;
     instance.translateOutcomeSign = reader.readUInt8() === 1;

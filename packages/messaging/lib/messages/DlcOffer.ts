@@ -4,6 +4,7 @@ import { hash160 } from '@node-lightning/crypto';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import {
@@ -64,7 +65,9 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     const instance = new DlcOfferV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcOfferV0, got type ${type}`);
+
     instance.protocolVersion = reader.readUInt32BE();
     instance.contractFlags = reader.readUInt8();
     instance.chainHash = reader.readBytes(32);

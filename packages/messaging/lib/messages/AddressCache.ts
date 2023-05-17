@@ -1,6 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 
@@ -26,7 +27,9 @@ export class AddressCache {
     const instance = new AddressCache();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected AddressCache, got type ${type}`);
+
     reader.readBigSize(); // num_cache_spks
 
     while (!reader.eof) {

@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -46,7 +47,9 @@ export class PayoutFunctionV0Pre163 extends PayoutFunctionPre163 implements IDlc
     const instance = new PayoutFunctionV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected PayoutFunctionV0, got type ${type}`);
+
     instance.length = reader.readBigSize();
     reader.readUInt16BE(); // num_pieces
     instance.endpoint0 = reader.readBigSize();

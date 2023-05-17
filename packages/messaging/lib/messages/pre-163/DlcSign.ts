@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -28,7 +29,9 @@ export class DlcSignV0Pre163 implements IDlcMessagePre163 {
     const instance = new DlcSignV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcSignV0, got type ${type}`);
+
     instance.contractId = reader.readBytes(32);
     instance.cetSignatures = CetAdaptorSignaturesV0Pre163.deserialize(
       getTlv(reader),

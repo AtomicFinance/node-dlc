@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { IOrderMetadataJSON } from '..';
 import { MessageType } from '../MessageType';
@@ -65,7 +66,9 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     const instance = new OrderOfferV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected OrderOfferV0, got type ${type}`);
+
     instance.protocolVersion = reader.readUInt32BE();
     instance.contractFlags = reader.readUInt8();
     instance.chainHash = reader.readBytes(32);

@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -48,7 +49,9 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
     const instance = new OrderAcceptV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected OrderAcceptV0, got type ${type}`);
+
     instance.protocolVersion = reader.readUInt32BE();
     instance.tempOrderId = reader.readBytes(32);
     const hasNegotiationFields = reader.readUInt8() === 1;

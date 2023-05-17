@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -47,7 +48,9 @@ export class OrderAcceptV0Pre163 extends OrderAcceptPre163 implements IDlcMessag
     const instance = new OrderAcceptV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected OrderAcceptV0, got type ${type}`);
+
     instance.tempOrderId = reader.readBytes(32);
     instance.negotiationFields = OrderNegotiationFieldsPre163.deserialize(
       getTlv(reader),

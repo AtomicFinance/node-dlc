@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
@@ -68,7 +69,12 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
 
     const instance = new SingleOracleInfo();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected OracleInfoType.Single, got type ${type}`,
+    );
+
     instance.announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
 
     return instance;
@@ -136,7 +142,12 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
 
     const instance = new MultiOracleInfo();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected OracleInfoType.Multi, got type ${type}`,
+    );
+
     instance.threshold = reader.readUInt16BE();
     const numOracles = reader.readBigSize();
     for (let i = 0; i < numOracles; i++) {

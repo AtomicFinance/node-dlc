@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
@@ -38,7 +39,9 @@ export class DlcCancelV0Pre163 extends DlcCancelPre163 implements IDlcMessagePre
     const instance = new DlcCancelV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcCancelV0, got type ${type}`);
+
     instance.contractId = reader.readBytes(32);
     instance.cancelType = reader.readUInt8();
 

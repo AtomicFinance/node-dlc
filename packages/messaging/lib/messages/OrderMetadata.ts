@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -42,7 +43,8 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
     const instance = new OrderMetadataV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected OrderMetadataV0, got type ${type}`);
 
     const offerIdLength = reader.readBigSize();
     const offerIdBuf = reader.readBytes(Number(offerIdLength));

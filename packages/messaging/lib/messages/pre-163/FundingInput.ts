@@ -4,6 +4,7 @@ import {
   BufferWriter,
   StreamReader,
 } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
@@ -23,7 +24,9 @@ export class FundingInputV0Pre163 implements IDlcMessagePre163 {
     const instance = new FundingInputV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected DlcTransactionsV0, got type ${type}`);
+
     instance.length = reader.readBigSize();
     instance.inputSerialId = reader.readUInt64BE();
     const prevTxLen = reader.readUInt16BE();

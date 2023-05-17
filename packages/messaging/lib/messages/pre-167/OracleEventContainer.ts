@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -21,7 +22,12 @@ export class OracleEventContainerV0Pre167 implements IDlcMessage {
     const instance = new OracleEventContainerV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected OracleEventContainerV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
 
     const oracleNameLength = reader.readBigSize();

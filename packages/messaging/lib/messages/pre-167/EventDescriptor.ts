@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessage } from '../DlcMessage';
@@ -52,7 +53,12 @@ export class EnumEventDescriptorV0Pre167
     const instance = new EnumEventDescriptorV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected EnumEventDescriptorV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     reader.readUInt16BE(); // num_outcomes
 
@@ -123,7 +129,12 @@ export class DigitDecompositionEventDescriptorV0Pre167
     const instance = new DigitDecompositionEventDescriptorV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected DigitDecompositionEventDescriptorV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
 
     /**

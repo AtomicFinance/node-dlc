@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { IDlcMessage } from './DlcMessage';
 import {
@@ -80,7 +81,9 @@ export class SingleNegotiationFields
 
     const instance = new SingleNegotiationFields();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected NegotiationFieldsType.Single, got type ${type}`);
+
     instance.roundingIntervals = RoundingIntervals.deserialize(reader);
 
     return instance;
@@ -148,7 +151,9 @@ export class DisjointNegotiationFields
 
     const instance = new DisjointNegotiationFields();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected NegotiationFieldsType.Disjoint, got type ${type}`);
+
     const numDisjointEvents = reader.readBigSize(); // num_disjoint_events
 
     for (let i = 0; i < numDisjointEvents; i++) {

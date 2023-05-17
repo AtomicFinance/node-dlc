@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
@@ -52,7 +53,12 @@ export class OrderNegotiationFieldsV0Pre163
     const instance = new OrderNegotiationFieldsV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected OrderNegotiationFieldsV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
 
     return instance;
@@ -103,7 +109,12 @@ export class OrderNegotiationFieldsV1Pre163
     const instance = new OrderNegotiationFieldsV1Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected OrderNegotiationFieldsV1, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     const newBuf = reader.readBytes();
     instance.orderOffer = OrderOfferPre163.deserialize(newBuf);

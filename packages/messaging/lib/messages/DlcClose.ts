@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -45,7 +46,9 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     const instance = new DlcCloseV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcCloseV0, got type ${type}`);
+
     instance.contractId = reader.readBytes(32);
     instance.closeSignature = reader.readBytes(64);
     instance.offerPayoutSatoshis = reader.readUInt64BE();

@@ -1,5 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { math, verify } from 'bip-schnorr';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessage } from '../DlcMessage';
@@ -27,7 +28,12 @@ export class OracleAttestationV0Pre163 implements IDlcMessage {
     const instance = new OracleAttestationV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected OracleAttestationV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
 
     const eventIdLength = reader.readBigSize();

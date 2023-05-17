@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -59,7 +60,12 @@ export class ContractDescriptorV0Pre163
     const instance = new ContractDescriptorV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected ContractDescriptorV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     reader.readBigSize(); // num_outcomes
 
@@ -136,7 +142,12 @@ export class ContractDescriptorV1Pre163
     const instance = new ContractDescriptorV1Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected ContractDescriptorV1, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     instance.numDigits = reader.readUInt16BE(); // num_digits
 

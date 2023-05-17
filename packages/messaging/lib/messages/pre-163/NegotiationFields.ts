@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -57,7 +58,12 @@ export class NegotiationFieldsV0Pre163
     const instance = new NegotiationFieldsV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected NegotiationFieldsV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
 
     return instance;
@@ -108,7 +114,12 @@ export class NegotiationFieldsV1Pre163
     const instance = new NegotiationFieldsV1Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected NegotiationFieldsV1, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     instance.roundingIntervals = RoundingIntervalsV0Pre163.deserialize(
       getTlv(reader),
@@ -170,7 +181,12 @@ export class NegotiationFieldsV2Pre163
     const instance = new NegotiationFieldsV2Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected NegotiationFieldsV2, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     reader.readBigSize(); // num_disjoint_events
 

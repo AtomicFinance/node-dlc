@@ -1,5 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import BigNumber from 'bignumber.js';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import {
@@ -83,7 +84,12 @@ export class PolynomialPayoutCurvePiece
 
     const instance = new PolynomialPayoutCurvePiece();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected PayoutCurvePieceType.PolynomialPayoutCurvePiece, got type ${type}`,
+    );
+
     const numPoints = reader.readBigSize(); // num_pts
 
     for (let i = 0; i < numPoints; i++) {
@@ -194,7 +200,12 @@ export class HyperbolaPayoutCurvePiece
 
     const instance = new HyperbolaPayoutCurvePiece();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected PayoutCurvePieceType.HyperbolaPayoutCurvePiece, got type ${type}`,
+    );
+
     instance.usePositivePiece = reader.readUInt8() === 1;
 
     const points = HyperbolaPayoutCurvePiece.points;

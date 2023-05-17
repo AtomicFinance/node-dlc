@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
@@ -40,7 +41,9 @@ export class OrderIrcInfoV0Pre163 extends OrderIrcInfoPre163 implements IDlcMess
     const instance = new OrderIrcInfoV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected OrderIrcInfoV0, got type ${type}`);
+
     instance.length = reader.readBigSize();
 
     const nickLength = reader.readBigSize();

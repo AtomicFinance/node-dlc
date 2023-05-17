@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -38,7 +39,8 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
     const instance = new DlcInfoV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcInfoV0, got type ${type}`);
 
     instance.numDlcOffers = reader.readUInt32BE();
     instance.numDlcAccepts = reader.readUInt32BE();

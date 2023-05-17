@@ -1,5 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { sigToDER } from '@node-lightning/crypto';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
@@ -51,7 +52,9 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     const instance = new DlcSignV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcSignV0, got type ${type}`);
+
     instance.protocolVersion = reader.readUInt32BE();
     instance.contractId = reader.readBytes(32);
     instance.cetSignatures = CetAdaptorSignatures.deserialize(reader);

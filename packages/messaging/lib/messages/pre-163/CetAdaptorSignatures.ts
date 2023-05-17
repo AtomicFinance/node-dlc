@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
@@ -18,7 +19,12 @@ export class CetAdaptorSignaturesV0Pre163 implements IDlcMessagePre163 {
     const instance = new CetAdaptorSignaturesV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected CetAdaptorSignaturesV0, got type ${type}`,
+    );
+
     instance.length = reader.readBigSize();
     reader.readBigSize(); // nb_signatures
 

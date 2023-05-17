@@ -4,6 +4,7 @@ import { hash160 } from '@node-lightning/crypto';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -34,7 +35,9 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
     const instance = new DlcOfferV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected DlcOfferV0, got type ${type}`);
+
     instance.contractFlags = reader.readBytes(1);
     instance.chainHash = reader.readBytes(32);
     instance.contractInfo = ContractInfoPre163.deserialize(getTlv(reader));

@@ -2,6 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { BitField } from '@node-lightning/core';
 import * as crypto from '@node-lightning/crypto';
 import { NodeFeatureFlags } from '@node-lightning/wire';
+import assert from 'assert';
 
 import { Address } from '../domain/Address';
 import { MessageType } from '../MessageType';
@@ -21,7 +22,8 @@ export class NodeAnnouncementMessage implements IWireMessage {
     const instance = new NodeAnnouncementMessage();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
-    reader.readUInt16BE(); // read off type
+    const type = reader.readUInt16BE();
+    assert(type === this.type, `Expected NodeAnnouncement, got type ${type}`);
 
     instance.signature = reader.readBytes(64);
 

@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import {
@@ -89,7 +90,12 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 
     const instance = new SingleContractInfo();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected ContractInfoType.Single, got type ${type}`,
+    );
+
     instance.totalCollateral = reader.readUInt64BE();
     instance.contractDescriptor = ContractDescriptor.deserialize(reader);
     instance.oracleInfo = OracleInfo.deserialize(reader);
@@ -239,7 +245,12 @@ export class DisjointContractInfo implements IDlcMessage {
 
     const instance = new DisjointContractInfo();
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(
+      type === this.type,
+      `Expected ContractInfoType.Disjoint, got type ${type}`,
+    );
+
     instance.totalCollateral = reader.readUInt64BE();
 
     const numDisjointEvents = reader.readBigSize(); // read num_disjoint_events

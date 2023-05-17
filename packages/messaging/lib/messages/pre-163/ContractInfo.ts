@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -59,7 +60,9 @@ export class ContractInfoV0Pre163 extends ContractInfoPre163 implements IDlcMess
     const instance = new ContractInfoV0Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected ContractInfoV0, got type ${type}`);
+
     instance.length = reader.readBigSize();
     instance.totalCollateral = reader.readUInt64BE();
     instance.contractDescriptor = ContractDescriptorPre163.deserialize(
@@ -183,7 +186,9 @@ export class ContractInfoV1Pre163 extends ContractInfoPre163 implements IDlcMess
     const instance = new ContractInfoV1Pre163();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
+    const type = Number(reader.readBigSize());
+    assert(type === this.type, `Expected ContractInfoV1, got type ${type}`);
+
     instance.length = reader.readBigSize();
     instance.totalCollateral = reader.readUInt64BE();
 
