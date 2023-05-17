@@ -287,38 +287,13 @@ export class DisjointContractInfo implements IDlcMessage {
    * @throws Will throw an error if validation fails
    */
   public validate(): void {
-    // this.contractOraclePairs.forEach((oraclePair) => {
-    //   oraclePair.oracleInfo.validate();
-    //   switch (oraclePair.contractDescriptor.type) {
-    //     case ContractDescriptorType.Numeric:
-    //       // eslint-disable-next-line no-case-declarations
-    //       const contractDescriptor = oraclePair.contractDescriptor as NumericContractDescriptor;
-    //       contractDescriptor.validate();
-    //       switch (
-    //       oraclePair.oracleInfo.announcement.oracleEvent.eventDescriptor.type
-    //       ) {
-    //         case MessageType.DigitDecompositionEventDescriptorV0:
-    //           // eslint-disable-next-line no-case-declarations
-    //           const eventDescriptor = oraclePair.oracleInfo.announcement
-    //             .oracleEvent
-    //             .eventDescriptor as DigitDecompositionEventDescriptorV0;
-    //           if (eventDescriptor.nbDigits !== contractDescriptor.numDigits)
-    //             throw new Error(
-    //               'DigitDecompositionEventDescriptorV0 and ContractDescriptorV1 must have the same numDigits',
-    //             );
-    //           // eslint-disable-next-line no-case-declarations
-    //           const oracleEvent = oraclePair.oracleInfo.announcement
-    //             .oracleEvent as OracleEvent;
-    //           if (
-    //             oracleEvent.oracleNonces.length !== contractDescriptor.numDigits
-    //           ) {
-    //             throw new Error(
-    //               'oracleEvent.oracleNonces.length and contractDescriptor.numDigits must be the same',
-    //             );
-    //           }
-    //       }
-    //   }
-    // });
+    this.contractOraclePairs.forEach((contractOraclePair) => {
+      const instance = new SingleContractInfo();
+      instance.totalCollateral = this.totalCollateral;
+      instance.oracleInfo = contractOraclePair.oracleInfo;
+      instance.contractDescriptor = contractOraclePair.contractDescriptor;
+      instance.validate();
+    });
   }
 
   /**
