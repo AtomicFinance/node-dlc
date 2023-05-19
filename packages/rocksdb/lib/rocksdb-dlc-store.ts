@@ -9,7 +9,7 @@ import {
   DlcOfferV0,
   DlcSignV0,
   DlcTransactionsV0,
-  FundingInputV0,
+  FundingInput,
 } from '@node-dlc/messaging';
 import { OutPoint, Script } from '@node-lightning/bitcoin';
 import { sha256, xor } from '@node-lightning/crypto';
@@ -216,7 +216,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       contractIds.map(async (contractId) => {
         const dlcAccept = await this.findDlcAccept(contractId, false);
         if (!dlcAccept) return;
-        return [contractId, dlcAccept.tempContractId] as [Buffer, Buffer];
+        return [contractId, dlcAccept.temporaryContractId] as [Buffer, Buffer];
       }),
     );
 
@@ -226,18 +226,18 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {
-    const dlcOffer = await this.findDlcOffer(dlcAccept.tempContractId);
+    const dlcOffer = await this.findDlcOffer(dlcAccept.temporaryContractId);
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
     const fundingTxid = tx.txId.serialize();
-    const contractId = xor(fundingTxid, dlcAccept.tempContractId);
+    const contractId = xor(fundingTxid, dlcAccept.temporaryContractId);
     const value = dlcAccept.serialize();
     const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     await this._db.put(key, value);
 
     // store funding input outpoint reference
     for (let i = 0; i < dlcAccept.fundingInputs.length; i++) {
-      const fundingInput = dlcAccept.fundingInputs[i] as FundingInputV0;
+      const fundingInput = dlcAccept.fundingInputs[i] as FundingInput;
 
       const outpoint = OutPoint.fromString(
         `${fundingInput.prevTx.txId.toString()}:${fundingInput.prevTxVout}`,
@@ -252,7 +252,7 @@ export class RocksdbDlcStore extends RocksdbBase {
 
     const key3 = Buffer.concat([
       Buffer.from([Prefix.TempContractId]),
-      dlcAccept.tempContractId,
+      dlcAccept.temporaryContractId,
     ]);
     await this._db.put(key3, contractId);
   }

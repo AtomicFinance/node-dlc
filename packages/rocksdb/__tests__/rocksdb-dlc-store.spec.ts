@@ -9,7 +9,7 @@ import {
   DlcOfferV0,
   DlcSignV0,
   DlcTransactionsV0,
-  FundingInputV0,
+  FundingInput,
 } from '@node-dlc/messaging';
 import { OutPoint } from '@node-lightning/bitcoin';
 import { sha256, xor } from '@node-lightning/crypto';
@@ -70,7 +70,7 @@ describe('RocksdbDlcStore', () => {
     "0000000005f5e100" + // total_collateral_satoshis
 
     "0001" + // funding_inputs_len
-    
+
     "fda714" + // type funding_input
     "3f" + // length
     "000000000000fa51" + // input_serial_id
@@ -234,8 +234,8 @@ describe('RocksdbDlcStore', () => {
       const tempContractId = sha256(dlcOfferHex);
       const actual = await sut.findDlcOffer(tempContractId);
 
-      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
-      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInputV0[];
+      const actualFundingInputs = actual.fundingInputs as FundingInput[];
+      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInput[];
 
       expect(
         actualFundingInputs[0].prevTx.serialize().toString('hex'),
@@ -314,7 +314,7 @@ describe('RocksdbDlcStore', () => {
   describe('find dlc_accept by temp_contract_id', () => {
     it('should return dlc accept object', async () => {
       const actualContractId = await sut.findContractIdFromTemp(
-        dlcAccept.tempContractId,
+        dlcAccept.temporaryContractId,
       );
       const actual = await sut.findDlcAccept(actualContractId);
 
@@ -338,8 +338,8 @@ describe('RocksdbDlcStore', () => {
 
       const actual = dlcOffers[0];
 
-      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
-      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInputV0[];
+      const actualFundingInputs = actual.fundingInputs as FundingInput[];
+      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInput[];
 
       expect(
         actualFundingInputs[0].prevTx.serialize().toString('hex'),
