@@ -1,9 +1,9 @@
 import { Value } from '@node-dlc/bitcoin';
 import {
-  ContractDescriptorV1,
-  ContractInfoV0,
-  OracleAnnouncementV0,
-  PayoutFunctionV0,
+  NumericContractDescriptor,
+  SingleContractInfo,
+  OracleAnnouncementV0Pre167,
+  PayoutFunction,
 } from '@node-dlc/messaging';
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
@@ -29,7 +29,7 @@ describe('OrderOffer Builder', () => {
       'hex',
     );
 
-    const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+    const oracleAnnouncement = OracleAnnouncementV0Pre167.deserialize(
       oracleAnnouncementBuf,
     );
 
@@ -109,7 +109,7 @@ describe('OrderOffer Builder', () => {
       'hex',
     );
 
-    const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+    const oracleAnnouncement = OracleAnnouncementV0Pre167.deserialize(
       oracleAnnouncementBuf,
     );
 
@@ -137,9 +137,9 @@ describe('OrderOffer Builder', () => {
           network,
         );
 
-        const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
-          .contractDescriptor as ContractDescriptorV1)
-          .payoutFunction as PayoutFunctionV0).pieces;
+        const payoutCurvePieces = (((orderOffer.contractInfo as SingleContractInfo)
+          .contractDescriptor as NumericContractDescriptor)
+          .payoutFunction as PayoutFunction).pieces;
 
         expect(() => orderOffer.validate()).to.not.throw(Error);
         expect(orderOffer.contractInfo.totalCollateral).to.equal(
@@ -148,20 +148,28 @@ describe('OrderOffer Builder', () => {
         expect(orderOffer.offerCollateralSatoshis).to.equal(
           contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
         );
-        expect(payoutCurvePieces[0].endpoint).to.equal(
+        expect(payoutCurvePieces[0].endPoint.eventOutcome).to.equal(0n);
+        expect(payoutCurvePieces[1].endPoint.eventOutcome).to.equal(
           (defaultContractSize.sats - maxLoss.sats) /
             BigInt(UNIT_MULTIPLIER[unit]),
         );
-        expect(payoutCurvePieces[1].endpoint).to.equal(
+        expect(payoutCurvePieces[2].endPoint.eventOutcome).to.equal(
           (defaultContractSize.sats + maxGain.sats) /
             BigInt(UNIT_MULTIPLIER[unit]),
         );
-        expect(payoutCurvePieces[0].endpointPayout).to.equal(
+        expect(payoutCurvePieces[0].endPoint.outcomePayout).to.equal(
           contractSize.sats -
             (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
             (maxGain.sats * contractSize.sats) / BigInt(1e8),
         );
-        expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+        expect(payoutCurvePieces[1].endPoint.outcomePayout).to.equal(
+          contractSize.sats -
+            (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
+            (maxGain.sats * contractSize.sats) / BigInt(1e8),
+        );
+        expect(payoutCurvePieces[2].endPoint.outcomePayout).to.equal(
+          contractSize.sats,
+        );
       });
     }
 

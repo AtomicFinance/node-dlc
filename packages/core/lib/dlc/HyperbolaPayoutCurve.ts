@@ -1,13 +1,13 @@
 import {
   HyperbolaPayoutCurvePiece,
   MessageType,
-  PayoutFunctionV0,
-  RoundingIntervalsV0,
+  PayoutFunction,
+  RoundingIntervals,
 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
+import { toBigInt } from '../utils/BigIntUtils';
 
 import { CETPayout } from '..';
-import { fromPrecision, getPrecision } from '../utils/Precision';
 import { splitIntoRanges } from './CETCalculator';
 import PayoutCurve from './PayoutCurve';
 
@@ -19,7 +19,7 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     private d: BigNumber,
     private translateOutcome: BigNumber,
     private translatePayout: BigNumber,
-    private positive: boolean = true, // TODO: support negative pieces
+    private usePositivePiece: boolean = true, // TODO: support negative pieces
   ) {}
 
   getPayout(_x: bigint): BigNumber {
@@ -86,34 +86,37 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
   }
 
   toPayoutCurvePiece(): HyperbolaPayoutCurvePiece {
-    const { a, b, c, d, translateOutcome, translatePayout, positive } = this;
+    const {
+      a,
+      b,
+      c,
+      d,
+      translateOutcome,
+      translatePayout,
+      usePositivePiece,
+    } = this;
 
     const piece = new HyperbolaPayoutCurvePiece();
-    piece.usePositivePiece = positive;
+    piece.usePositivePiece = usePositivePiece;
 
-    piece.translateOutcomeSign = translateOutcome.isPositive();
-    piece.translateOutcome = BigInt(translateOutcome.abs().toString());
-    piece.translateOutcomeExtraPrecision = getPrecision(translateOutcome);
-
-    piece.translatePayoutSign = translatePayout.isPositive();
-    piece.translatePayout = BigInt(translatePayout.abs().toString());
-    piece.translatePayoutExtraPrecision = getPrecision(translatePayout);
-
-    piece.aSign = a.isPositive();
-    piece.a = BigInt(a.abs().toString());
-    piece.aExtraPrecision = getPrecision(a);
-
-    piece.bSign = b.isPositive();
-    piece.b = BigInt(b.abs().toString());
-    piece.bExtraPrecision = getPrecision(b);
-
-    piece.cSign = c.isPositive();
-    piece.c = BigInt(c.abs().toString());
-    piece.cExtraPrecision = getPrecision(c);
-
-    piece.dSign = d.isPositive();
-    piece.d = BigInt(d.integerValue().toString());
-    piece.dExtraPrecision = getPrecision(d);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    piece.translateOutcome = translateOutcome;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    piece.translatePayout = translatePayout;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    piece.a = a;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    piece.b = b;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    piece.c = c;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    piece.d = d;
 
     return piece;
   }
@@ -126,38 +129,23 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
       this.d.eq(curve.d) &&
       this.translateOutcome.eq(curve.translateOutcome) &&
       this.translatePayout.eq(curve.translatePayout) &&
-      this.positive === curve.positive
+      this.usePositivePiece === curve.usePositivePiece
     );
   }
 
   static fromPayoutCurvePiece(
     piece: HyperbolaPayoutCurvePiece,
   ): HyperbolaPayoutCurve {
-    const a = new BigNumber(piece.a.toString())
-      .times(piece.aSign ? 1 : -1)
-      .plus(fromPrecision(piece.aExtraPrecision));
-
-    const b = new BigNumber(piece.b.toString())
-      .times(piece.bSign ? 1 : -1)
-      .plus(fromPrecision(piece.bExtraPrecision));
-
-    const c = new BigNumber(piece.c.toString())
-      .times(piece.cSign ? 1 : -1)
-      .plus(fromPrecision(piece.cExtraPrecision));
-
-    const d = new BigNumber(piece.d.toString())
-      .times(piece.dSign ? 1 : -1)
-      .plus(fromPrecision(piece.dExtraPrecision));
-
-    const translateOutcome = new BigNumber(piece.translateOutcome.toString())
-      .times(piece.translateOutcomeSign ? 1 : -1)
-      .plus(fromPrecision(piece.translateOutcomeExtraPrecision));
-
-    const translatePayout = new BigNumber(piece.translatePayout.toString())
-      .times(piece.translatePayoutSign ? 1 : -1)
-      .plus(fromPrecision(piece.translatePayoutExtraPrecision));
+    const a = piece.a;
+    const b = piece.b;
+    const c = piece.c;
+    const d = piece.d;
+    const translateOutcome = new BigNumber(piece.translateOutcome);
+    const translatePayout = new BigNumber(piece.translatePayout);
 
     return new HyperbolaPayoutCurve(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       a,
       b,
       c,
@@ -169,33 +157,37 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
   }
 
   static computePayouts(
-    payoutFunction: PayoutFunctionV0,
+    payoutFunction: PayoutFunction,
     totalCollateral: bigint,
-    roundingIntervals: RoundingIntervalsV0,
+    roundingIntervals: RoundingIntervals,
   ): CETPayout[] {
     if (payoutFunction.pieces.length !== 1)
       throw new Error('Must have at least one piece');
-    const {
-      endpoint,
-      endpointPayout,
-      payoutCurvePiece,
-    } = payoutFunction.pieces[0];
+
+    const payoutCurvePiece_0 = payoutFunction.pieces[0];
+    const payoutCurvePiece_1 = payoutFunction.pieces[1];
 
     if (
-      payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
-      payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
+      payoutCurvePiece_0.payoutCurvePiece.type !==
+        MessageType.HyperbolaPayoutCurvePiece &&
+      payoutCurvePiece_0.payoutCurvePiece.type !==
+        MessageType.OldHyperbolaPayoutCurvePiece
     )
       throw new Error('Payout curve piece must be a hyperbola');
 
-    const _payoutCurvePiece = payoutCurvePiece as HyperbolaPayoutCurvePiece;
+    const _payoutCurvePiece = payoutCurvePiece_0.payoutCurvePiece as HyperbolaPayoutCurvePiece;
 
     const curve = this.fromPayoutCurvePiece(_payoutCurvePiece);
 
     return splitIntoRanges(
-      payoutFunction.endpoint0,
-      endpoint,
-      payoutFunction.endpointPayout0,
-      endpointPayout,
+      payoutCurvePiece_0.endPoint.eventOutcome,
+      payoutCurvePiece_1.endPoint.eventOutcome,
+      toBigInt(
+        new BigNumber(payoutCurvePiece_0.endPoint.outcomePayout.toString()),
+      ),
+      toBigInt(
+        new BigNumber(payoutCurvePiece_1.endPoint.outcomePayout.toString()),
+      ),
       totalCollateral,
       curve,
       roundingIntervals.intervals,

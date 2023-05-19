@@ -1,4 +1,5 @@
-import { PayoutFunctionV0 } from '@node-dlc/messaging';
+import { PayoutFunction } from '@node-dlc/messaging';
+import { Value } from '@node-dlc/bitcoin';
 import BN from 'bignumber.js';
 
 import { toBigInt } from '../../utils/BigIntUtils';
@@ -34,6 +35,7 @@ const buildCurve = (
   const maxOutcome = BigInt(
     new BN(oracleBase).pow(oracleDigits).minus(1).toString(10),
   );
+
   const maxOutcomePayout = _tempHyperbolaPayoutCurve
     .getPayout(maxOutcome)
     .integerValue();
@@ -57,7 +59,7 @@ const buildPayoutFunction = (
   contractSize: bigint,
   oracleBase: number,
   oracleDigits: number,
-): { payoutFunction: PayoutFunctionV0; totalCollateral: bigint } => {
+): { payoutFunction: PayoutFunction; totalCollateral: bigint } => {
   const { maxOutcome, totalCollateral, payoutCurve } = buildCurve(
     strikePrice,
     contractSize,
@@ -65,17 +67,23 @@ const buildPayoutFunction = (
     oracleDigits,
   );
 
-  const payoutFunction = new PayoutFunctionV0();
-  payoutFunction.endpoint0 = BigInt(0);
-  payoutFunction.endpointPayout0 = totalCollateral;
-  payoutFunction.extraPrecision0 = 0;
-
+  const payoutFunction = new PayoutFunction();
   payoutFunction.pieces.push({
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
-    endpoint: maxOutcome,
-    endpointPayout: BigInt(0),
-    extraPrecision: 0,
+    endPoint: {
+      eventOutcome: BigInt(0),
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      outcomePayout: Value.fromSats(totalCollateral),
+      extraPrecision: 0,
+    },
   });
+
+  payoutFunction.lastEndpoint.eventOutcome = maxOutcome;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  payoutFunction.lastEndpoint.outcomePayout = Value.zero();
+  payoutFunction.lastEndpoint.extraPrecision = 0;
 
   return {
     payoutFunction,

@@ -1,5 +1,6 @@
-import { PayoutFunctionV0 } from '@node-dlc/messaging';
+import { PayoutFunction } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
+import { Value } from '@node-dlc/bitcoin';
 
 import { HyperbolaPayoutCurve } from '../HyperbolaPayoutCurve';
 
@@ -41,7 +42,7 @@ const buildPayoutFunction = (
   totalCollateral: bigint,
   oracleBase: number,
   oracleDigits: number,
-): { payoutFunction: PayoutFunctionV0 } => {
+): { payoutFunction: PayoutFunction } => {
   const { maxOutcome, payoutCurve } = buildCurve(
     strikePrice,
     contractSize,
@@ -50,17 +51,24 @@ const buildPayoutFunction = (
     oracleDigits,
   );
 
-  const payoutFunction = new PayoutFunctionV0();
-  payoutFunction.endpoint0 = BigInt(0);
-  payoutFunction.endpointPayout0 = BigInt(0);
-  payoutFunction.extraPrecision0 = 0;
+  const payoutFunction = new PayoutFunction();
 
   payoutFunction.pieces.push({
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
-    endpoint: maxOutcome,
-    endpointPayout: totalCollateral,
-    extraPrecision: 0,
+    endPoint: {
+      eventOutcome: BigInt(0),
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      outcomePayout: Value.fromSats(0),
+      extraPrecision: 0,
+    },
   });
+
+  payoutFunction.lastEndpoint.eventOutcome = maxOutcome;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  payoutFunction.lastEndpoint.outcomePayout = Value.fromSats(totalCollateral);
+  payoutFunction.lastEndpoint.extraPrecision = 0;
 
   return {
     payoutFunction,
