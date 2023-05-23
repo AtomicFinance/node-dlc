@@ -5,7 +5,6 @@ import {
   RoundingIntervals,
 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
-import { toBigInt } from '../utils/BigIntUtils';
 
 import { CETPayout } from '..';
 import { splitIntoRanges } from './CETCalculator';
@@ -98,24 +97,11 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
 
     const piece = new HyperbolaPayoutCurvePiece();
     piece.usePositivePiece = usePositivePiece;
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     piece.translateOutcome = translateOutcome;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     piece.translatePayout = translatePayout;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     piece.a = a;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     piece.b = b;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     piece.c = c;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     piece.d = d;
 
     return piece;
@@ -140,12 +126,10 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     const b = piece.b;
     const c = piece.c;
     const d = piece.d;
-    const translateOutcome = new BigNumber(piece.translateOutcome);
-    const translatePayout = new BigNumber(piece.translatePayout);
+    const translateOutcome = piece.translateOutcome;
+    const translatePayout = piece.translatePayout;
 
     return new HyperbolaPayoutCurve(
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       a,
       b,
       c,
@@ -182,12 +166,8 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     return splitIntoRanges(
       payoutCurvePiece_0.endPoint.eventOutcome,
       payoutCurvePiece_1.endPoint.eventOutcome,
-      toBigInt(
-        new BigNumber(payoutCurvePiece_0.endPoint.outcomePayout.toString()),
-      ),
-      toBigInt(
-        new BigNumber(payoutCurvePiece_1.endPoint.outcomePayout.toString()),
-      ),
+      payoutCurvePiece_0.endPoint.outcomePayout.sats,
+      payoutCurvePiece_1.endPoint.outcomePayout.sats,
       totalCollateral,
       curve,
       roundingIntervals.intervals,

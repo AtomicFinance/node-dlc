@@ -28,6 +28,7 @@
   "license": "MIT",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@node-dlc/bitcoin": "0.19.7",
     "@types/bn.js": "^4.11.6",
     "@types/chai": "^4.2.11",
     "@types/chai-as-promised": "7.1.0",

@@ -10,12 +10,10 @@ import {
   MessageType,
   PayoutFunction,
   PolynomialPayoutCurvePiece,
-  PayoutCurvePieceType
+  PayoutCurvePieceType,
 } from "@node-dlc/messaging";
 import assert from 'assert';
-import BigNumber from 'bignumber.js';
 
-import { toBigInt } from '../../utils/BigIntUtils';
 import { UNIT_MULTIPLIER } from './Builder';
 import {
   HasContractInfo,
@@ -81,12 +79,8 @@ export const getCsoInfoFromContractInfo = (
   const midPiece = payoutFunction.pieces[1];
   const finalPiece = payoutFunction.pieces[2];
 
-  const minPayout = toBigInt(
-    new BigNumber(midPiece.endPoint.outcomePayout.toString()),
-  );
-  const maxPayout = toBigInt(
-    new BigNumber(finalPiece.endPoint.outcomePayout.toString()),
-  );
+  const minPayout = midPiece.endPoint.outcomePayout.sats;
+  const maxPayout = finalPiece.endPoint.outcomePayout.sats;
 
   const startOutcome = midPiece.endPoint.eventOutcome;
   const endOutcome = finalPiece.endPoint.eventOutcome;
@@ -226,7 +220,7 @@ export const validateCsoPayoutFunction = (
         'CSO Payout Function point endpoints should be an ascending line',
       );
       assert(
-        points[1].outcomePayout === nextPiece.endPoint.outcomePayout,
+        points[1].outcomePayout === nextPiece.endPoint.outcomePayout.sats,
         'CSO Payout Function point outcome payout should be continuous without gaps',
       );
     }
@@ -235,7 +229,8 @@ export const validateCsoPayoutFunction = (
       case 0:
         // maxLoss should be a flat line
         assert(
-          piece.endPoint.outcomePayout === nextPiece.endPoint.outcomePayout,
+          piece.endPoint.outcomePayout.sats ===
+            nextPiece.endPoint.outcomePayout.sats,
         );
         assert(
           points[0].outcomePayout === points[1].outcomePayout,
@@ -244,7 +239,10 @@ export const validateCsoPayoutFunction = (
         break;
       case 1:
         // maxLoss to maxGain should be an ascending line
-        assert(piece.endPoint.outcomePayout < nextPiece.endPoint.outcomePayout);
+        assert(
+          piece.endPoint.outcomePayout.sats <
+            nextPiece.endPoint.outcomePayout.sats,
+        );
         assert(
           points[0].outcomePayout < points[1].outcomePayout,
           'CSO Payout Function maxLoss to maxGain PayoutCurvePiece point should be an ascending line',
@@ -253,8 +251,8 @@ export const validateCsoPayoutFunction = (
       case 2:
         // maxGain should be a flat line
         assert(
-          piece.endPoint.outcomePayout ===
-            payoutFunction.lastEndpoint.outcomePayout,
+          piece.endPoint.outcomePayout.sats ===
+            payoutFunction.lastEndpoint.outcomePayout.sats,
         );
         assert(
           points[0].outcomePayout === points[1].outcomePayout,

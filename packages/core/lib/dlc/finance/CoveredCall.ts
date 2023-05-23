@@ -35,7 +35,6 @@ const buildCurve = (
   const maxOutcome = BigInt(
     new BN(oracleBase).pow(oracleDigits).minus(1).toString(10),
   );
-
   const maxOutcomePayout = _tempHyperbolaPayoutCurve
     .getPayout(maxOutcome)
     .integerValue();
@@ -72,16 +71,12 @@ const buildPayoutFunction = (
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
     endPoint: {
       eventOutcome: BigInt(0),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       outcomePayout: Value.fromSats(totalCollateral),
       extraPrecision: 0,
     },
   });
 
   payoutFunction.lastEndpoint.eventOutcome = maxOutcome;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   payoutFunction.lastEndpoint.outcomePayout = Value.zero();
   payoutFunction.lastEndpoint.extraPrecision = 0;
 

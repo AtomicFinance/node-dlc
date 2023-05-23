@@ -281,8 +281,6 @@ describe('PolynomialPayoutCurve', () => {
       const payoutFunction = new PayoutFunction();
       payoutFunction.pieces = [];
       payoutFunction.lastEndpoint.eventOutcome = 0n;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       payoutFunction.lastEndpoint.outcomePayout = Value.fromSats(0n);
 
       const intervals = [{ beginInterval: 0n, roundingMod: 1n }];
@@ -322,13 +320,8 @@ describe('PolynomialPayoutCurve', () => {
         },
       ];
       const payoutFunction = new PayoutFunction();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       payoutFunction.pieces = pieces;
-
       payoutFunction.lastEndpoint.eventOutcome = 2n;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       payoutFunction.lastEndpoint.outcomePayout = Value.fromSats(2n);
       payoutFunction.lastEndpoint.extraPrecision = 0;
 

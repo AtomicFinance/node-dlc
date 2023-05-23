@@ -2,7 +2,6 @@ import {
   DlcAcceptWithoutSigs,
   DlcOfferV0,
   FundingInput,
-  MessageType,
 } from '@node-dlc/messaging';
 import {
   LockTime,

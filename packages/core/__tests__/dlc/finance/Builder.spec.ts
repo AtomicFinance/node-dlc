@@ -157,17 +157,17 @@ describe('OrderOffer Builder', () => {
           (defaultContractSize.sats + maxGain.sats) /
             BigInt(UNIT_MULTIPLIER[unit]),
         );
-        expect(payoutCurvePieces[0].endPoint.outcomePayout).to.equal(
+        expect(payoutCurvePieces[0].endPoint.outcomePayout.sats).to.equal(
           contractSize.sats -
             (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
             (maxGain.sats * contractSize.sats) / BigInt(1e8),
         );
-        expect(payoutCurvePieces[1].endPoint.outcomePayout).to.equal(
+        expect(payoutCurvePieces[1].endPoint.outcomePayout.sats).to.equal(
           contractSize.sats -
             (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
             (maxGain.sats * contractSize.sats) / BigInt(1e8),
         );
-        expect(payoutCurvePieces[2].endPoint.outcomePayout).to.equal(
+        expect(payoutCurvePieces[2].endPoint.outcomePayout.sats).to.equal(
           contractSize.sats,
         );
       });

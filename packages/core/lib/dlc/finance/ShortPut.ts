@@ -1,6 +1,6 @@
 import { PayoutFunction } from '@node-dlc/messaging';
-import BN from 'bignumber.js';
 import { Value } from '@node-dlc/bitcoin';
+import BN from 'bignumber.js';
 
 import { HyperbolaPayoutCurve } from '../HyperbolaPayoutCurve';
 
@@ -57,16 +57,12 @@ const buildPayoutFunction = (
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
     endPoint: {
       eventOutcome: BigInt(0),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       outcomePayout: Value.fromSats(0),
       extraPrecision: 0,
     },
   });
 
   payoutFunction.lastEndpoint.eventOutcome = maxOutcome;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   payoutFunction.lastEndpoint.outcomePayout = Value.fromSats(totalCollateral);
   payoutFunction.lastEndpoint.extraPrecision = 0;
 

@@ -5,7 +5,6 @@ import {
   RoundingIntervals
 } from "@node-dlc/messaging";
 import BigNumber from 'bignumber.js';
-import { toBigInt } from '../utils/BigIntUtils';
 
 import { fromPrecision, getPrecision } from '../utils/Precision';
 import { CETPayout, mergePayouts, splitIntoRanges } from './CETCalculator';
@@ -157,16 +156,8 @@ export class PolynomialPayoutCurve {
         ...splitIntoRanges(
           payoutFunction.pieces[i - 1].endPoint.eventOutcome,
           payoutFunction.pieces[i].endPoint.eventOutcome,
-          toBigInt(
-            new BigNumber(
-              payoutFunction.pieces[i - 1].endPoint.outcomePayout.toString(),
-            ),
-          ),
-          toBigInt(
-            new BigNumber(
-              payoutFunction.pieces[i].endPoint.outcomePayout.toString(),
-            ),
-          ),
+          payoutFunction.pieces[i - 1].endPoint.outcomePayout.sats,
+          payoutFunction.pieces[i].endPoint.outcomePayout.sats,
           totalCollateral,
           curve,
           roundingIntervals.intervals,
@@ -188,16 +179,9 @@ export class PolynomialPayoutCurve {
         payoutFunction.pieces[payoutFunction.pieces.length - 1].endPoint
           .eventOutcome,
         payoutFunction.lastEndpoint.eventOutcome,
-        toBigInt(
-          new BigNumber(
-            payoutFunction.pieces[
-              payoutFunction.pieces.length - 1
-            ].endPoint.outcomePayout.toString(),
-          ),
-        ),
-        toBigInt(
-          new BigNumber(payoutFunction.lastEndpoint.outcomePayout.toString()),
-        ),
+        payoutFunction.pieces[payoutFunction.pieces.length - 1].endPoint
+          .outcomePayout.sats,
+        payoutFunction.lastEndpoint.outcomePayout.sats,
         totalCollateral,
         curve,
         roundingIntervals.intervals,

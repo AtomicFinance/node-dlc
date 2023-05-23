@@ -11,6 +11,7 @@ import {
   PayoutFunction,
   SingleOracleInfo,
 } from '@node-dlc/messaging';
+import { Value } from '@node-dlc/bitcoin';
 import BigNumber from 'bignumber.js';
 
 import { toBigInt } from '../../utils/BigIntUtils';
@@ -95,13 +96,10 @@ export function getOptionInfoFromContractInfo(
 
   // if curve is ascending, assume it is a put.
   const contractSize = isAscending
-    ? toBigInt(new BigNumber(payoutCurvePiece.translatePayout.abs())) -
-      totalCollateral
-    : totalCollateral +
-      toBigInt(new BigNumber(payoutCurvePiece.translatePayout.abs()));
+    ? toBigInt(payoutCurvePiece.translatePayout.abs()) - totalCollateral
+    : totalCollateral + toBigInt(payoutCurvePiece.translatePayout.abs());
 
-  const strikePrice =
-    toBigInt(new BigNumber(payoutCurvePiece.d.toString())) / contractSize;
+  const strikePrice = toBigInt(payoutCurvePiece.d) / contractSize;
 
   // rebuild payout curve from option info and perform a sanity check
   const { payoutCurve: sanityCurve } = isAscending

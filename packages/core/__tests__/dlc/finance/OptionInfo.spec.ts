@@ -88,8 +88,6 @@ describe('OptionInfo', () => {
         premium,
       );
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       ((((invalidDlcOffer.contractInfo as SingleContractInfo)
         .contractDescriptor as NumericContractDescriptor)
         .payoutFunction as PayoutFunction).pieces[0]
@@ -172,8 +170,6 @@ describe('OptionInfo', () => {
         premium,
       );
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       ((((invalidDlcOffer.contractInfo as SingleContractInfo)
         .contractDescriptor as NumericContractDescriptor)
         .payoutFunction as PayoutFunction).pieces[0]

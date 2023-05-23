@@ -1,4 +1,4 @@
-import { FundingInput, MessageType } from '@node-dlc/messaging';
+import { FundingInput } from '@node-dlc/messaging';
 
 export class DualFundingTxFinalizer {
   constructor(

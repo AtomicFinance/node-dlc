@@ -1,4 +1,5 @@
 import { PayoutFunction } from '@node-dlc/messaging';
+import { Value } from '@node-dlc/bitcoin';
 import BN from 'bignumber.js';
 
 import { PolynomialPayoutCurve } from '../PolynomialPayoutCurve';
@@ -51,9 +52,8 @@ const buildPayoutFunction = (
     payoutCurvePiece: payoutCurveMaxLoss.toPayoutCurvePiece(),
     endPoint: {
       eventOutcome: BigInt(0),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      outcomePayout: minPayout,
+
+      outcomePayout: Value.fromSats(minPayout),
       extraPrecision: 0,
     },
   });
@@ -62,9 +62,7 @@ const buildPayoutFunction = (
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
     endPoint: {
       eventOutcome: startOutcome,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      outcomePayout: minPayout,
+      outcomePayout: Value.fromSats(minPayout),
       extraPrecision: 0,
     },
   });
@@ -73,17 +71,13 @@ const buildPayoutFunction = (
     payoutCurvePiece: payoutCurveMaxGain.toPayoutCurvePiece(),
     endPoint: {
       eventOutcome: endOutcome,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      outcomePayout: maxPayout,
+      outcomePayout: Value.fromSats(maxPayout),
       extraPrecision: 0,
     },
   });
 
   payoutFunction.lastEndpoint.eventOutcome = maxOutcome;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  payoutFunction.lastEndpoint.outcomePayout = maxPayout;
+  payoutFunction.lastEndpoint.outcomePayout = Value.fromSats(maxPayout);
   payoutFunction.lastEndpoint.extraPrecision = 0;
 
   return {

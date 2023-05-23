@@ -26,7 +26,6 @@
     "@node-dlc/bitcoin": "^0.21.4",
     "@node-dlc/messaging": "^0.21.4",
     "@node-lightning/core": "0.26.1",
-    "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0"
   },
   "devDependencies": {
