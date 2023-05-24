@@ -1,18 +1,18 @@
 import { sha256 } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
-import { DlcAcceptV0, DlcOfferV0, DlcSignV0 } from '../../lib';
-import { DlcAcceptV0Pre163 } from '../../lib/messages/pre-163/DlcAccept';
-import { DlcOfferV0Pre163 } from '../../lib/messages/pre-163/DlcOffer';
-import { DlcSignV0Pre163 } from '../../lib/messages/pre-163/DlcSign';
+import { DlcAcceptV0, DlcOfferV0, DlcSignV0 } from '../../../lib';
+import { DlcAcceptV0Pre163 } from '../../../lib/messages/pre-163/DlcAccept';
+import { DlcOfferV0Pre163 } from '../../../lib/messages/pre-163/DlcOffer';
+import { DlcSignV0Pre163 } from '../../../lib/messages/pre-163/DlcSign';
 import pre163 from './TestVectorsPre163/pre163.json';
 
 const testVectors = {
   pre163,
 };
 
-describe.only('Test Vectors', () => {
-  describe('DlcOffer', () => {
+describe('Test Vectors pre 163', () => {
+  describe('DlcOfferV0Pre163', () => {
     for (const [testName, testVector] of Object.entries(testVectors)) {
       it(`should deserialize ${camelToUnderscore(testName)}`, () => {
         const dlcOfferPre163 = DlcOfferV0Pre163.deserialize(
@@ -36,7 +36,7 @@ describe.only('Test Vectors', () => {
     }
   });
 
-  describe('DlcAccept', () => {
+  describe('DlcAcceptV0Pre163', () => {
     for (const [testName, testVector] of Object.entries(testVectors)) {
       it(`should deserialize ${camelToUnderscore(testName)}`, () => {
         const dlcAcceptPre163 = DlcAcceptV0Pre163.deserialize(
@@ -66,7 +66,7 @@ describe.only('Test Vectors', () => {
     }
   });
 
-  describe('DlcSign', () => {
+  describe('DlcSignV0Pre163', () => {
     for (const [testName, testVector] of Object.entries(testVectors)) {
       it(`should deserialize ${camelToUnderscore(testName)}`, () => {
         const dlcSignPre163 = DlcSignV0Pre163.deserialize(

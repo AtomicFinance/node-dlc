@@ -8,7 +8,7 @@
 // import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
 // import { MessageType } from '../../lib/MessageType';
 
-// describe.only('OrderNegotiationFields', () => {
+// describe('OrderNegotiationFields', () => {
 //   describe('OrderNegotiationFieldsV0', () => {
 //     describe('serialize', () => {
 //       it('serializes', () => {

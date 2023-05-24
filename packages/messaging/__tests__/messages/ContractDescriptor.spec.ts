@@ -4,9 +4,7 @@ import {
   ContractDescriptor,
   ContractDescriptorType,
   EnumeratedContractDescriptor,
-  NumericContractDescriptor,
 } from '../../lib/messages/ContractDescriptor';
-import { MessageType } from '../../lib/MessageType';
 
 describe('EnumeratedContractDescriptor', () => {
   const outcomeOne = '1';
