@@ -7,12 +7,12 @@ import { OrderMetadataV0 } from '../../lib/messages/OrderMetadata';
 import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
 
 describe('OrderOffer', () => {
-  const chainHash = Buffer.from(
+  const chainHashBuf = Buffer.from(
     '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
     'hex',
   );
 
-  const buf = Buffer.from(
+  const orderOfferBuf = Buffer.from(
     "f532" + // type
     "00000001" + // protocol version
     "00" + // contract flags
@@ -57,12 +57,39 @@ describe('OrderOffer', () => {
     , "hex"
   ); // prettier-ignore
 
+  const metadata = new OrderMetadataV0();
+  metadata.offerId = 'strategy-88';
+  metadata.createdAt = 1635868041;
+  metadata.goodTill = 1635868041;
+
+  const metadataHex =
+    'fdf536' + // type OrderMetadataV0
+    '14' + // length
+    '0b' + // offerIdLength
+    Buffer.from(metadata.offerId, 'utf-8').toString('hex') + // offerId
+    '61815d89' + // createdAt
+    '61815d89'; // goodTill
+
+  const ircInfo = new OrderIrcInfoV0();
+  ircInfo.nick = 'A0F5k4H9C56xgbRF';
+  ircInfo.pubKey = Buffer.from(
+    '022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
+    'hex',
+  );
+
+  const ircInfoHex =
+    'fdf538' + // type OrderIrcInfoV0
+    '32' + // length
+    '10' + // nickLength
+    Buffer.from(ircInfo.nick).toString('hex') + // nick
+    ircInfo.pubKey.toString('hex'); // pubKey
+
   describe('serialize', () => {
     const instance = new OrderOfferV0();
 
     instance.protocolVersion = 1;
     instance.contractFlags = 0;
-    instance.chainHash = chainHash;
+    instance.chainHash = chainHashBuf;
 
     instance.contractInfo = ContractInfo.deserialize(
       Buffer.from(
@@ -154,12 +181,7 @@ describe('OrderOffer', () => {
       ); // prettier-ignore
     });
 
-    it('serializes with metadata', () => {
-      const metadata = new OrderMetadataV0();
-      metadata.offerId = 'strategy-88';
-      metadata.createdAt = 1635868041;
-      metadata.goodTill = 1635868041;
-
+    it('serializes with metadata only', () => {
       instance.metadata = metadata;
 
       expect(instance.serialize().toString('hex')).to.equal(
@@ -204,18 +226,11 @@ describe('OrderOffer', () => {
         "0000000000000001" + // fee_rate_per_vb
         "00000064" + // cet_locktime
         "000000c8" + // refund_locktime
-        "fdf536140b73747261746567792d383861815d8961815d89" // order_metadata_v0 tlv
+        metadataHex // order_metadata_v0 tlv
       ); // prettier-ignore
     });
 
-    it('serializes with ircinfo', () => {
-      const ircInfo = new OrderIrcInfoV0();
-      ircInfo.nick = 'A0F5k4H9C56xgbRF';
-      ircInfo.pubKey = Buffer.from(
-        '022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
-        'hex',
-      );
-
+    it('serializes with metadata and ircinfo', () => {
       instance.ircInfo = ircInfo;
 
       expect(instance.serialize().toString('hex')).to.equal(
@@ -260,16 +275,17 @@ describe('OrderOffer', () => {
         "0000000000000001" + // fee_rate_per_vb
         "00000064" + // cet_locktime
         "000000c8" + // refund_locktime
-        "fdf536140b73747261746567792d383861815d8961815d89fdf5383210413046356b3448394335367867625246022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3" // order_irc_info_v0 tlv
+        metadataHex + // order_metadata_v0 tlv
+        ircInfoHex // order_irc_info_v0 tlv
       ); // prettier-ignore
     });
   });
 
   describe('deserialize', () => {
     it('deserializes', () => {
-      const instance = OrderOfferV0.deserialize(buf);
+      const instance = OrderOfferV0.deserialize(orderOfferBuf);
 
-      expect(instance.chainHash).to.deep.equal(chainHash);
+      expect(instance.chainHash).to.deep.equal(chainHashBuf);
       expect(instance.contractInfo.serialize().toString('hex')).to.equal(
         '00' + // type contract_info
           '000000000bebc200' + // total_collateral
@@ -313,7 +329,7 @@ describe('OrderOffer', () => {
 
     it('deserializes with metadata', () => {
       const bufWithMetadata = Buffer.concat([
-        buf,
+        orderOfferBuf,
         Buffer.from('fdf5360c0b73747261746567792d3838', 'hex'),
       ]);
 
@@ -328,7 +344,7 @@ describe('OrderOffer', () => {
   describe('toJSON', () => {
     it('converts to JSON with metadata', async () => {
       const bufWithMetadata = Buffer.concat([
-        buf,
+        orderOfferBuf,
         Buffer.from('fdf5360c0b73747261746567792d3838', 'hex'),
       ]);
 
@@ -351,7 +367,7 @@ describe('OrderOffer', () => {
 
     it('converts to JSON with ircinfo', async () => {
       const bufWithIrcInfo = Buffer.concat([
-        buf,
+        orderOfferBuf,
         Buffer.from(
           'fdf536140b73747261746567792d383861815d8961815d89fdf5383210413046356b3448394335367867625246022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
           'hex',
@@ -370,7 +386,7 @@ describe('OrderOffer', () => {
   describe('validate', () => {
     let instance: OrderOfferV0;
     beforeEach(() => {
-      instance = OrderOfferV0.deserialize(buf);
+      instance = OrderOfferV0.deserialize(orderOfferBuf);
     });
 
     it('should throw if offerCollateralSatoshis is less than 1000', () => {

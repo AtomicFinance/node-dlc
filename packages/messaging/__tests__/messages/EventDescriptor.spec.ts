@@ -6,7 +6,7 @@ import {
   MessageType,
 } from '../../lib';
 
-describe('EventDescriptorV0', () => {
+describe('EventDescriptor', () => {
   const instance = new DigitDecompositionEventDescriptorV0Pre167();
   instance.base = 2;
   instance.isSigned = false;

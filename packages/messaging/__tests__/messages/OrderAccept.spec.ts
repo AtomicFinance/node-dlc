@@ -12,13 +12,15 @@ describe('OrderAccept', () => {
     it('serializes', () => {
       const instance = new OrderAcceptV0();
 
+      instance.protocolVersion = 1;
       instance.tempOrderId = tempOrderId;
       instance.negotiationFields = null;
 
       expect(instance.serialize().toString("hex")).to.equal(
         "f534" + // type order_accept_v0
+        "00000001" + // protocol_version
         "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_order_id
-        "00" // order_negotiation_fields
+        "00" // has_negotiation_fields
       ); // prettier-ignore
     });
   });
@@ -27,13 +29,15 @@ describe('OrderAccept', () => {
     it('deserializes', () => {
       const buf = Buffer.from(
         "f534" + // type order_accept_v0
+        "00000001" + // protocol_version
         "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_order_id
-        "00" // order_negotiation_fields
+        "00" // has_negotiation_fields
         , "hex"
       ); // prettier-ignore
 
       const instance = OrderAcceptV0.deserialize(buf);
 
+      expect(instance.protocolVersion).to.equal(1);
       expect(instance.tempOrderId).to.deep.equal(tempOrderId);
       expect(instance.negotiationFields).to.equal(null);
     });

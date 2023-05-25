@@ -4,7 +4,7 @@ import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnn
 import { OracleAttestationV0Pre167 } from '../../lib/messages/pre-167/OracleAttestation';
 import { OracleEventContainerV0Pre167 } from '../../lib/messages/pre-167/OracleEventContainer';
 
-describe('OracleEventContainerV0', () => {
+describe('OracleEventContainer', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new OracleEventContainerV0Pre167();

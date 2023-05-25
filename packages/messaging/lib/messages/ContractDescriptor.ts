@@ -91,7 +91,7 @@ export class EnumeratedContractDescriptor
       const strBuf = reader.readBytes(Number(strLen));
 
       instance.outcomes.push({
-        outcome: strBuf.toString('utf8'),
+        outcome: strBuf.toString('utf-8'),
         localPayout: reader.readUInt64BE(),
       });
     }
@@ -148,8 +148,9 @@ export class EnumeratedContractDescriptor
     dataWriter.writeBigSize(this.outcomes.length);
 
     for (const outcome of this.outcomes) {
-      dataWriter.writeBigSize(outcome.outcome.length);
-      dataWriter.writeBytes(Buffer.from(outcome.outcome));
+      const outcomeBuf = Buffer.from(outcome.outcome, 'utf-8');
+      dataWriter.writeBigSize(outcomeBuf.length);
+      dataWriter.writeBytes(outcomeBuf);
       dataWriter.writeUInt64BE(outcome.localPayout);
     }
 

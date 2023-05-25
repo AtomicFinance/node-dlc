@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { DlcCancelV0 } from '../../lib/messages/DlcCancel';
 
-describe('DlcCancelV0', () => {
+describe('DlcCancel', () => {
   const contractId = Buffer.from(
     'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269',
     'hex',

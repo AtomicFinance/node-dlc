@@ -1,17 +1,14 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
-import { ContractDescriptor } from './ContractDescriptor';
 import {
   ContractInfo,
   IDisjointContractInfoJSON,
   ISingleContractInfoJSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { IOrderOfferJSON, OrderOffer } from './OrderOffer';
 
 /**
- * OrderNegotiationFields V1 contains preferences of the acceptor of a order
+ * OrderNegotiationFields V1 contains preferences of the acceptor of an order
  * offer which are taken into account during DLC construction.
  */
 export class OrderNegotiationFields implements IDlcMessage {
@@ -35,9 +32,6 @@ export class OrderNegotiationFields implements IDlcMessage {
     return instance;
   }
 
-  /**
-   * The type for order_negotiation_fields_v1 message. order_negotiation_fields_v1 = 65336
-   */
   public contractInfo: ContractInfo;
 
   public offerCollateral: bigint;

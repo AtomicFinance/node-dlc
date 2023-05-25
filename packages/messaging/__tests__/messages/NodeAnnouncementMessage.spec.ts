@@ -1,4 +1,3 @@
-// tslint:disable: no-unused-expression
 import { BitField } from '@node-lightning/core';
 import { expect } from 'chai';
 
@@ -31,7 +30,7 @@ describe('NodeAnnouncementMessage', () => {
       );
     });
 
-    it('should have featuers', () => {
+    it('should have features', () => {
       expect(result.features.toNumber()).to.equal(0);
     });
 
@@ -61,7 +60,7 @@ describe('NodeAnnouncementMessage', () => {
       );
     });
 
-    it('should valid addresses', () => {
+    it('should have valid addresses', () => {
       expect(result.addresses.length).to.equal(1);
       expect(result.addresses[0].type).to.equal(51396);
       expect(result.addresses[0].host).to.equal('mm.test.com');
@@ -100,7 +99,7 @@ describe('NodeAnnouncementMessage', () => {
     });
   });
 
-  describe.skip('.verifySignatures', () => {
+  describe.skip('verifySignatures', () => {
     it('should verify valid sigs', () => {
       const instance = NodeAnnouncementMessage.deserialize(
         Buffer.from(

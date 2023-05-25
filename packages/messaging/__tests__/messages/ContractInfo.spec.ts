@@ -10,7 +10,6 @@ import {
 import {
   ContractInfo,
   ContractInfoType,
-  DisjointContractInfo,
   SingleContractInfo,
 } from '../../lib/messages/ContractInfo';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
@@ -24,7 +23,7 @@ import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe('ContractInfoV0', () => {
+describe('ContractInfo', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new SingleContractInfo();

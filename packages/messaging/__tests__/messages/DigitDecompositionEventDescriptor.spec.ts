@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { DigitDecompositionEventDescriptorV0Pre167 } from '../../lib/messages/pre-167/EventDescriptor';
 
-describe('DigitDecompositionEventDescriptorV0', () => {
+describe('DigitDecompositionEventDescriptorV0Pre167', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new DigitDecompositionEventDescriptorV0Pre167();

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { OracleIdentifierV0 } from '../../lib/messages/OracleIdentifier';
 
-describe('OracleIdentifierV0', () => {
+describe('OracleIdentifier', () => {
   const oraclePubkey = Buffer.from(
     '5d1bcfab252c6dd9edd7aea4c5eeeef138f7ff7346061ea40143a9f5ae80baa9',
     'hex',

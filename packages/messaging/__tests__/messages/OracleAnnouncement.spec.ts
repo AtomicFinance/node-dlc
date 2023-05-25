@@ -4,7 +4,7 @@ import { DigitDecompositionEventDescriptorV0Pre167 } from '../../lib/messages/pr
 import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
 import { OracleEventV0Pre167 } from '../../lib/messages/pre-167/OracleEvent';
 
-describe('OracleAnnouncementV0', () => {
+describe('OracleAnnouncement', () => {
   const announcementSig = Buffer.from(
     'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' +
       '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4',

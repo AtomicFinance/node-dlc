@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { OracleAttestationV0Pre167 } from '../../lib/messages/pre-167/OracleAttestation';
 
-describe('OracleAttestationV0', () => {
+describe('OracleAttestation', () => {
   const attestationSig = Buffer.from(
     '424c11a44c2e522f90bbe4abab6ec1bc8ab44c9b29316ce6e1d0d7d08385a474' +
       'de6b75f1da183a2a4f9ad144b48bf1026cee9687221df58f04128db79ca17e2a',

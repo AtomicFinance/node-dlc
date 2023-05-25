@@ -10,7 +10,7 @@ export abstract class OrderIrcInfo {
 
     const tempReader = new BufferReader(reader.peakBytes());
 
-    const type = Number(tempReader.readUInt16BE());
+    const type = Number(tempReader.readBigSize());
 
     switch (type) {
       case MessageType.OrderIrcInfoV0:
@@ -46,6 +46,7 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
     const type = Number(reader.readBigSize());
     assert(type === this.type, `Expected OrderIrcInfoV0, got type ${type}`);
 
+    reader.readBigSize(); // read off length
     const nickLength = reader.readBigSize();
     const nickBuf = reader.readBytes(Number(nickLength));
     instance.nick = nickBuf.toString();
@@ -80,9 +81,16 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.nick.length);
-    writer.writeBytes(Buffer.from(this.nick));
-    writer.writeBytes(this.pubKey);
+
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeBigSize(this.nick.length);
+    dataWriter.writeBytes(Buffer.from(this.nick));
+    dataWriter.writeBytes(this.pubKey);
+
+    writer.writeBigSize(dataWriter.size);
+
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

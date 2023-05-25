@@ -10,7 +10,7 @@ export abstract class OrderMetadata {
 
     const tempReader = new BufferReader(reader.peakBytes());
 
-    const type = Number(tempReader.readUInt16BE());
+    const type = Number(tempReader.readBigSize());
 
     switch (type) {
       case MessageType.OrderMetadataV0:
@@ -46,6 +46,7 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
     const type = Number(reader.readBigSize());
     assert(type === this.type, `Expected OrderMetadataV0, got type ${type}`);
 
+    reader.readBigSize(); // read off length
     const offerIdLength = reader.readBigSize();
     const offerIdBuf = reader.readBytes(Number(offerIdLength));
     instance.offerId = offerIdBuf.toString();
@@ -98,10 +99,17 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
-    writer.writeBigSize(this.offerId.length);
-    writer.writeBytes(Buffer.from(this.offerId));
-    writer.writeUInt32BE(this.createdAt);
-    writer.writeUInt32BE(this.goodTill);
+
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeBigSize(this.offerId.length);
+    dataWriter.writeBytes(Buffer.from(this.offerId));
+    dataWriter.writeUInt32BE(this.createdAt);
+    dataWriter.writeUInt32BE(this.goodTill);
+
+    writer.writeBigSize(dataWriter.size);
+
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }

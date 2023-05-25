@@ -18,17 +18,13 @@ describe('Test Vectors pre 163', () => {
         const dlcOfferPre163 = DlcOfferV0Pre163.deserialize(
           Buffer.from(testVector.pre_163.offer_message.serialized, 'hex'),
         );
-        const temporaryContractId = sha256(dlcOfferPre163.serialize());
 
+        const temporaryContractId = sha256(dlcOfferPre163.serialize());
         const dlcOffer = DlcOfferV0.fromPre163(
           dlcOfferPre163,
           temporaryContractId,
         );
         const serializedDlcOffer = dlcOffer.serialize();
-        console.log(
-          `serializedDlcOffer.toString('hex')`,
-          serializedDlcOffer.toString('hex'),
-        );
         expect(serializedDlcOffer.toString('hex')).to.equal(
           testVector.post_163.offer_message.serialized,
         );
@@ -45,12 +41,6 @@ describe('Test Vectors pre 163', () => {
 
         const dlcAccept = DlcAcceptV0.fromPre163(dlcAcceptPre163);
         const serializedDlcAccept = dlcAccept.serialize();
-        console.log(
-          `serializedDlcAccept.toString('hex')`,
-          serializedDlcAccept.toString('hex'),
-        );
-        console.log(JSON.stringify(dlcAccept));
-
         const reserializedDlcAccept = DlcAcceptV0.deserialize(
           serializedDlcAccept,
         ).serialize();

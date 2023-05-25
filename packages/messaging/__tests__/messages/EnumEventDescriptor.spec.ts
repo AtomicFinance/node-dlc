@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { EnumEventDescriptorV0Pre167 } from '../../lib/messages/pre-167/EventDescriptor';
 
-describe('EnumEventDescriptorV0', () => {
+describe('EnumEventDescriptor', () => {
   const outcomeOne = Buffer.from('64756d6d7931', 'hex').toString();
 
   const outcomeTwo = Buffer.from('64756d6d7932', 'hex').toString();

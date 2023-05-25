@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
 
-describe('OracleInfoV0', () => {
+describe('OracleInfo', () => {
   describe('serialize', () => {
     it('serializes', () => {
       const instance = new SingleOracleInfo();

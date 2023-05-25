@@ -6,7 +6,7 @@ import {
 } from '../../lib/messages/pre-167/EventDescriptor';
 import { OracleEventV0Pre167 } from '../../lib/messages/pre-167/OracleEvent';
 
-describe('OracleEventV0', () => {
+describe('OracleEvent', () => {
   const oracleNonce = Buffer.from(
     '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b',
     'hex',

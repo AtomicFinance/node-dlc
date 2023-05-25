@@ -1,238 +1,86 @@
-// import { expect } from 'chai';
+import { expect } from 'chai';
 
-// import {
-//   OrderNegotiationFields,
-//   OrderNegotiationFieldsV0,
-//   OrderNegotiationFieldsV1,
-// } from '../../lib/messages/OrderNegotiationFields';
-// import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
-// import { MessageType } from '../../lib/MessageType';
+import { OrderNegotiationFields } from '../../lib/messages/OrderNegotiationFields';
 
-// describe('OrderNegotiationFields', () => {
-//   describe('OrderNegotiationFieldsV0', () => {
-//     describe('serialize', () => {
-//       it('serializes', () => {
-//         const instance = new OrderNegotiationFields();
+const contractDescriptorHex =
+  '00' + // type enumerated_contract_descriptor
+  '03' + // num_outcomes
+  '09' + // outcome_1_length
+  '6f7574636f6d655f31' + // outcome_1 (hex-encoded utf-8 bytes of 'outcome_1' string)
+  '0000000000000000' + // payout_1
+  '09' +
+  '6f7574636f6d655f32' + // outcome_2 (hex-encoded utf-8 bytes of 'outcome_2' string)
+  '00000000092363a3' + // payout_2
+  '09' +
+  '6f7574636f6d655f33' + // outcome_3 (hex-encoded utf-8 bytes of 'outcome_3' string)
+  '000000000bebc200'; // payout_3
 
-//         expect(instance.serialize().toString('hex')).to.equal(
-//           'fdff36' + // type order_negotiation_fields_v0
-//             '00', // length
-//         );
-//       });
-//     });
+const oracleEventDescriptorHex =
+  'fdd806' + // type enum_event_descriptor
+  '10' + // length
+  '0002' + // num_outcomes
+  '06' + // outcome_1_len
+  '64756d6d7931' + // outcome_1
+  '06' + // outcome_2_len
+  '64756d6d7932'; // outcome_2
 
-//     describe('deserialize', () => {
-//       it('deserializes', () => {
-//         const buf = Buffer.from(
-//           "fdff36" + // type order_negotiation_fields_v0
-//           "00" // length
-//           , "hex"
-//         ); // prettier-ignore
+const oracleEventHex =
+  'fdd822' + // type oracle_event
+  '40' + // length
+  '0001' + // nb_nonces
+  '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+  '00000000' + // event_maturity_epoch
+  oracleEventDescriptorHex +
+  '05' + // event_id_length
+  '64756d6d79'; // event_id;
 
-//         const unknownInstance = OrderNegotiationFields.deserialize(buf);
+const oracleAnnouncementHex =
+  'fdd824' + // type oracle_announcement
+  'a4' + // length
+  'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+  '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+  'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+  oracleEventHex;
 
-//         if (unknownInstance.type === MessageType.OrderNegotiationFieldsV0) {
-//           const instance = unknownInstance as OrderNegotiationFieldsV0;
+const oracleInfoHex =
+  '00' + // type single_oracle_info;
+  oracleAnnouncementHex;
 
-//           expect(Number(instance.length)).to.equal(0);
-//         }
-//       });
-//     });
-//   });
+const contractInfoHex =
+  '00' + // type single_contract_info
+  '000000000bebc200' + // total_collateral
+  contractDescriptorHex +
+  oracleInfoHex;
 
-//   describe('OrderNegotiationFieldsV1', () => {
-//     describe('serialize', () => {
-//       it('serializes', () => {
-//         const instance = new OrderNegotiationFieldsV1();
+const orderNegotiationFieldsHex =
+  contractInfoHex +
+  '0000000005f5e100' + // offer_collateral
+  '0000000000000001' + // fee_rate_per_vb
+  '00000064' + // cet_locktime
+  '000000c8'; // refund_locktime
 
-//         instance.length = BigInt(12);
-//         instance.orderOffer = OrderOfferV0.deserialize(
-//           Buffer.from(
-//             'f532' + // type
-//               '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
-//               'fdd82e' + // type contract_info
-//               'fd0131' + // length
-//               '000000000bebc200' + // total_collateral
-//               'fda710' + // type contract_descriptor
-//               '79' + // length
-//               '03' + // num_outcomes
-//               'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
-//               '0000000000000000' + // payout_1
-//               'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
-//               '00000000092363a3' + // payout_2
-//               '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
-//               '000000000bebc200' + // payout_3
-//               'fda712' + // type oracle_info
-//               'a8' + // length
-//               'fdd824' + // type oracle_announcement
-//               'a4' + // length
-//               'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
-//               '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
-//               'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
-//               'fdd822' + // type oracle_event
-//               '40' + // length
-//               '0001' + // nb_nonces
-//               '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
-//               '00000000' + // event_maturity_epoch
-//               'fdd806' + // type enum_event_descriptor
-//               '10' + // length
-//               '0002' + // num_outcomes
-//               '06' + // outcome_1_len
-//               '64756d6d7931' + // outcome_1
-//               '06' + // outcome_2_len
-//               '64756d6d7932' + // outcome_2
-//               '05' + // event_id_length
-//               '64756d6d79' + // event_id
-//               '0000000005f5e100' + // total_collateral_satoshis
-//               '0000000000000001' + // fee_rate_per_vb
-//               '00000064' + // cet_locktime
-//               '000000c8', // refund_locktime
-//             'hex',
-//           ),
-//         );
+describe('OrderNegotiationFields', () => {
+  describe('serialize', () => {
+    it('serializes', () => {
+      const instance = OrderNegotiationFields.deserialize(
+        Buffer.from(orderNegotiationFieldsHex, 'hex'),
+      );
 
-//         expect(instance.serialize().toString('hex')).to.equal(
-//           'fdff38' + // type order_negotiation_fields_v1
-//             'fd0171' + // length
-//             'f532' + // type
-//             '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
-//             'fdd82e' + // type contract_info
-//             'fd0131' + // length
-//             '000000000bebc200' + // total_collateral
-//             'fda710' + // type contract_descriptor
-//             '79' + // length
-//             '03' + // num_outcomes
-//             'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
-//             '0000000000000000' + // payout_1
-//             'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
-//             '00000000092363a3' + // payout_2
-//             '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
-//             '000000000bebc200' + // payout_3
-//             'fda712' + // type oracle_info
-//             'a8' + // length
-//             'fdd824' + // type oracle_announcement
-//             'a4' + // length
-//             'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
-//             '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
-//             'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
-//             'fdd822' + // type oracle_event
-//             '40' + // length
-//             '0001' + // nb_nonces
-//             '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
-//             '00000000' + // event_maturity_epoch
-//             'fdd806' + // type enum_event_descriptor
-//             '10' + // length
-//             '0002' + // num_outcomes
-//             '06' + // outcome_1_len
-//             '64756d6d7931' + // outcome_1
-//             '06' + // outcome_2_len
-//             '64756d6d7932' + // outcome_2
-//             '05' + // event_id_length
-//             '64756d6d79' + // event_id
-//             '0000000005f5e100' + // total_collateral_satoshis
-//             '0000000000000001' + // fee_rate_per_vb
-//             '00000064' + // cet_locktime
-//             '000000c8', // refund_locktime
-//         );
-//       });
-//     });
+      expect(instance.serialize().toString('hex')).to.equal(
+        orderNegotiationFieldsHex,
+      );
+    });
+  });
 
-//     describe('deserialize', () => {
-//       it('deserializes', () => {
-//         const buf = Buffer.from(
-//           'fdff38' + // type order_negotiation_fields_v1
-//             'fd0171' + // length
-//             'f532' + // type
-//             '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
-//             'fdd82e' + // type contract_info
-//             'fd0131' + // length
-//             '000000000bebc200' + // total_collateral
-//             'fda710' + // type contract_descriptor
-//             '79' + // length
-//             '03' + // num_outcomes
-//             'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
-//             '0000000000000000' + // payout_1
-//             'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
-//             '00000000092363a3' + // payout_2
-//             '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
-//             '000000000bebc200' + // payout_3
-//             'fda712' + // type oracle_info
-//             'a8' + // length
-//             'fdd824' + // type oracle_announcement
-//             'a4' + // length
-//             'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
-//             '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
-//             'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
-//             'fdd822' + // type oracle_event
-//             '40' + // length
-//             '0001' + // nb_nonces
-//             '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
-//             '00000000' + // event_maturity_epoch
-//             'fdd806' + // type enum_event_descriptor
-//             '10' + // length
-//             '0002' + // num_outcomes
-//             '06' + // outcome_1_len
-//             '64756d6d7931' + // outcome_1
-//             '06' + // outcome_2_len
-//             '64756d6d7932' + // outcome_2
-//             '05' + // event_id_length
-//             '64756d6d79' + // event_id
-//             '0000000005f5e100' + // total_collateral_satoshis
-//             '0000000000000001' + // fee_rate_per_vb
-//             '00000064' + // cet_locktime
-//             '000000c8', // refund_locktime
-//           "hex"
-//         ); // prettier-ignore
+  describe('deserialize', () => {
+    it('deserializes', () => {
+      const instance = OrderNegotiationFields.deserialize(
+        Buffer.from(orderNegotiationFieldsHex, 'hex'),
+      );
 
-//         const unknownInstance = OrderNegotiationFields.deserialize(buf);
-
-//         if (unknownInstance.type === MessageType.OrderNegotiationFieldsV1) {
-//           const instance = unknownInstance as OrderNegotiationFieldsV1;
-
-//           expect(Number(instance.length)).to.equal(369);
-//           expect(instance.orderOffer.serialize().toString('hex')).to.equal(
-//             'f532' + // type
-//               '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
-//               'fdd82e' + // type contract_info
-//               'fd0131' + // length
-//               '000000000bebc200' + // total_collateral
-//               'fda710' + // type contract_descriptor
-//               '79' + // length
-//               '03' + // num_outcomes
-//               'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
-//               '0000000000000000' + // payout_1
-//               'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
-//               '00000000092363a3' + // payout_2
-//               '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
-//               '000000000bebc200' + // payout_3
-//               'fda712' + // type oracle_info
-//               'a8' + // length
-//               'fdd824' + // type oracle_announcement
-//               'a4' + // length
-//               'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
-//               '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
-//               'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
-//               'fdd822' + // type oracle_event
-//               '40' + // length
-//               '0001' + // nb_nonces
-//               '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
-//               '00000000' + // event_maturity_epoch
-//               'fdd806' + // type enum_event_descriptor
-//               '10' + // length
-//               '0002' + // num_outcomes
-//               '06' + // outcome_1_len
-//               '64756d6d7931' + // outcome_1
-//               '06' + // outcome_2_len
-//               '64756d6d7932' + // outcome_2
-//               '05' + // event_id_length
-//               '64756d6d79' + // event_id
-//               '0000000005f5e100' + // total_collateral_satoshis
-//               '0000000000000001' + // fee_rate_per_vb
-//               '00000064' + // cet_locktime
-//               '000000c8', // refund_locktime
-//           );
-//         }
-//       });
-//     });
-//   });
-// });
+      expect(instance.serialize().toString('hex')).to.equal(
+        orderNegotiationFieldsHex,
+      );
+    });
+  });
+});

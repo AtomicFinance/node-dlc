@@ -68,26 +68,16 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     assert(type === this.type, `Expected DlcAcceptV0, got type ${type}`);
 
     instance.protocolVersion = reader.readUInt32BE();
-    console.log('test1');
     instance.temporaryContractId = reader.readBytes(32);
     instance.acceptCollateral = reader.readUInt64BE();
-    console.log('instance.acceptCollateral', instance.acceptCollateral);
     instance.fundingPubKey = reader.readBytes(33);
-    console.log('instance.fundingPubKey', instance.fundingPubKey);
     const payoutSPKLen = reader.readUInt16BE();
-    console.log('test2');
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
-    console.log('test3');
     instance.payoutSerialId = reader.readUInt64BE();
-    console.log('instance.payoutSerialId', instance.payoutSerialId);
-    console.log('test4');
     const fundingInputsLen = reader.readBigSize();
-    console.log('fundingInputsLen', fundingInputsLen);
-    console.log('test5');
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInput.deserialize(reader));
     }
-    console.log('test6');
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
     instance.changeSerialId = reader.readUInt64BE();

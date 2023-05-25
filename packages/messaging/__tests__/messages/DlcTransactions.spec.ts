@@ -8,7 +8,7 @@ import {
 } from '../../lib/messages/DlcTransactions';
 import { MessageType } from '../../lib/MessageType';
 
-describe('DlcTransactionsV0', () => {
+describe('DlcTransactions', () => {
   const contractId = Buffer.from(
     '6010a7e779c5079493ad06abbcaca06b8a04d501890cd724104d1df6e20968e8',
     'hex',
