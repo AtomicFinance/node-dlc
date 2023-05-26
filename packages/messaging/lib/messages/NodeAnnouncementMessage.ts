@@ -6,9 +6,13 @@ import assert from 'assert';
 
 import { Address } from '../domain/Address';
 import { MessageType } from '../MessageType';
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { IWireMessage } from './IWireMessage';
-import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 
 /**
  * This gossip message allows a node to indicate extra data associated with it,
@@ -34,20 +38,11 @@ export class NodeAnnouncementMessage implements IWireMessage {
     instance.nodeId = reader.readBytes(33);
     instance.rgbColor = reader.readBytes(3);
     instance.alias = reader.readBytes(32);
-    instance.addresses = [];
 
-    const addressBytes = reader.readUInt16BE(); // Read length of the addresses buffer
-    let deserializedBytes = 0;
-    while (deserializedBytes < addressBytes) {
-      const addressTLV = getTlv(reader); // Get next address TLV buffer
-      const tempAddrTLVReader = new BufferReader(addressTLV);
-      tempAddrTLVReader.readBigSize(); // read off type
-      const addrLength = tempAddrTLVReader.readBigSize(); // Read address length
-      deserializedBytes += 4 + Number(addrLength); // Count 2 bytes for type + 2 bytes for length + address length
-      // Deserialize address and push it to instance.addresses array
-      const address = Address.deserialize(addressTLV);
-      instance.addresses.push(address);
-    }
+    instance.addresses = [];
+    const addressBytes = reader.readUInt16BE();
+    const address = Address.deserialize(reader.readBytes(addressBytes));
+    instance.addresses.push(address);
 
     while (!reader.eof) {
       const buf = getTlv(reader);
@@ -66,7 +61,7 @@ export class NodeAnnouncementMessage implements IWireMessage {
    * sha-256 hash of the remaining bytes.
    */
   public static hash(msg: NodeAnnouncementMessage): Buffer {
-    const bytes = msg.serialize().slice(66); // type + signature
+    const bytes = msg.serialize().slice(66); // remove type + signature
     return crypto.hash256(bytes);
   }
 
@@ -142,7 +137,7 @@ export class NodeAnnouncementMessage implements IWireMessage {
       33 + // node_id
       3 + // rgb_color
       32 + // alias
-      2 + // addresses
+      2 + // addressBytes
       addressBytes; // cumulative addr bytes
     const writer = new BufferWriter(Buffer.alloc(len));
 
