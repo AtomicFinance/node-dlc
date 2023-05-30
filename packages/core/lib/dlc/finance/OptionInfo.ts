@@ -27,8 +27,8 @@ export interface OptionInfo {
   expiry: Date;
 }
 
-export type HasOfferCollateralSatoshis = {
-  offerCollateralSatoshis: bigint;
+export type HasOfferCollateral = {
+  offerCollateral: bigint;
 };
 
 export type HasContractInfo = {
@@ -127,7 +127,7 @@ export function getOptionInfoFromContractInfo(
 }
 
 export function getOptionInfoFromOffer(
-  offer: HasOfferCollateralSatoshis & HasContractInfo & HasType,
+  offer: HasOfferCollateral & HasContractInfo & HasType,
 ): OptionInfo {
   if (
     offer.type !== MessageType.DlcOfferV0 &&
@@ -136,7 +136,7 @@ export function getOptionInfoFromOffer(
     throw Error('Only DlcOfferV0 and OrderOfferV0 currently supported');
 
   const premium =
-    offer.contractInfo.totalCollateral - offer.offerCollateralSatoshis;
+    offer.contractInfo.totalCollateral - offer.offerCollateral;
 
   return {
     ...getOptionInfoFromContractInfo(offer.contractInfo),

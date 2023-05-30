@@ -230,7 +230,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     }, BigInt(0));
     if (this.acceptCollateral >= fundingAmount) {
       throw new Error(
-        'fundingAmount must be greater than acceptCollateralSatoshis',
+        'fundingAmount must be greater than acceptCollateral',
       );
     }
   }
@@ -313,8 +313,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
 
 export class DlcAcceptWithoutSigs {
   constructor(
-    readonly tempContractId: Buffer,
-    readonly acceptCollateralSatoshis: bigint,
+    readonly temporaryContractId: Buffer,
+    readonly acceptCollateral: bigint,
     readonly fundingPubKey: Buffer,
     readonly payoutSPK: Buffer,
     readonly payoutSerialId: bigint,

@@ -78,8 +78,7 @@ describe('DlcOffer', () => {
   );
 
   const payoutSerialID = Buffer.from('0000000000b051dc', 'hex');
-  const offerCollateralSatoshis = Buffer.from('0000000005f5e0FF', 'hex'); // 99999999
-
+  const offerCollateral = Buffer.from('0000000005f5e0FF', 'hex'); // 99999999
   const fundingInputsLen = Buffer.from('01', 'hex');
 
   const fundingInput = Buffer.from(
@@ -116,7 +115,7 @@ describe('DlcOffer', () => {
     payoutSPKLen,
     payoutSPK,
     payoutSerialID,
-    offerCollateralSatoshis,
+    offerCollateral,
     fundingInputsLen,
     fundingInput,
     changeSPKLen,
@@ -138,7 +137,7 @@ describe('DlcOffer', () => {
     instance.fundingPubKey = fundingPubKey;
     instance.payoutSPK = payoutSPK;
     instance.payoutSerialId = BigInt(11555292);
-    instance.offerCollateralSatoshis = BigInt(99999999);
+    instance.offerCollateral = BigInt(99999999);
     instance.fundingInputs = [FundingInput.deserialize(fundingInput)];
     instance.changeSPK = changeSPK;
     instance.changeSerialId = BigInt(2008045);
@@ -186,7 +185,7 @@ describe('DlcOffer', () => {
         expect(instance.fundingPubKey).to.deep.equal(fundingPubKey);
         expect(instance.payoutSPK).to.deep.equal(payoutSPK);
         expect(Number(instance.payoutSerialId)).to.equal(11555292);
-        expect(Number(instance.offerCollateralSatoshis)).to.equal(99999999);
+        expect(Number(instance.offerCollateral)).to.equal(99999999);
         expect(instance.fundingInputs[0].serialize().toString('hex')).to.equal(
           fundingInput.toString('hex'),
         );
@@ -228,7 +227,7 @@ describe('DlcOffer', () => {
           Number(instance.payoutSerialId),
         );
         expect(json.message.offerCollateral).to.equal(
-          Number(instance.offerCollateralSatoshis),
+          Number(instance.offerCollateral),
         );
         expect(json.message.fundingInputs[0].inputSerialId).to.equal(
           Number(instance.fundingInputs[0].toJSON().inputSerialId),
@@ -305,14 +304,14 @@ describe('DlcOffer', () => {
           instance.validate();
         }).to.throw(Error);
       });
-      it('should throw if offerCollateralSatoshis is less than 1000', () => {
-        instance.offerCollateralSatoshis = BigInt(999);
+      it('should throw if offerCollateral is less than 1000', () => {
+        instance.offerCollateral = BigInt(999);
         expect(function () {
           instance.validate();
         }).to.throw(Error);
 
         // boundary check
-        instance.offerCollateralSatoshis = BigInt(1000);
+        instance.offerCollateral = BigInt(1000);
         expect(function () {
           instance.validate();
         }).to.not.throw(Error);
@@ -387,20 +386,20 @@ describe('DlcOffer', () => {
 
       it('should throw if totalCollateral <= offerCollateral', () => {
         instance.contractInfo.totalCollateral = BigInt(200000000);
-        instance.offerCollateralSatoshis = BigInt(200000000);
+        instance.offerCollateral = BigInt(200000000);
         expect(function () {
           instance.validate();
         }).to.throw(Error);
 
         instance.contractInfo.totalCollateral = BigInt(200000000);
-        instance.offerCollateralSatoshis = BigInt(200000001);
+        instance.offerCollateral = BigInt(200000001);
         expect(function () {
           instance.validate();
         }).to.throw(Error);
       });
 
       it('should throw if funding amount less than offer collateral satoshis', () => {
-        instance.offerCollateralSatoshis = BigInt(3e8);
+        instance.offerCollateral = BigInt(3e8);
         expect(function () {
           instance.validate();
         }).to.throw(Error);

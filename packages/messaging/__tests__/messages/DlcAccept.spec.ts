@@ -15,12 +15,12 @@ describe('DlcAccept', () => {
 
   const protocolVersion = Buffer.from('00000001', 'hex');
 
-  const tempContractId = Buffer.from(
+  const temporaryContractId = Buffer.from(
     '960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a',
     'hex',
   );
 
-  const acceptCollateralSatoshis = Buffer.from('0000000005f5e100', 'hex');
+  const acceptCollateral = Buffer.from('0000000005f5e100', 'hex');
 
   const fundingPubKey = Buffer.from(
     '026d8bec9093f96ccc42de166cb9a6c576c95fc24ee16b10e87c3baaa4e49684d9',
@@ -76,8 +76,8 @@ describe('DlcAccept', () => {
   const dlcAcceptHex = Buffer.concat([
     type,
     protocolVersion,
-    tempContractId,
-    acceptCollateralSatoshis,
+    temporaryContractId,
+    acceptCollateral,
     fundingPubKey,
     payoutSPKLen,
     payoutSPK,
@@ -95,7 +95,7 @@ describe('DlcAccept', () => {
   beforeEach(() => {
     instance = new DlcAcceptV0();
     instance.protocolVersion = parseInt(protocolVersion.toString('hex'), 16);
-    instance.temporaryContractId = tempContractId;
+    instance.temporaryContractId = temporaryContractId;
     instance.acceptCollateral = BigInt(100000000);
     instance.fundingPubKey = fundingPubKey;
     instance.payoutSPK = payoutSPK;
@@ -158,7 +158,7 @@ describe('DlcAccept', () => {
       it('deserializes', () => {
         const instance = DlcAcceptV0.deserialize(dlcAcceptHex);
 
-        expect(instance.temporaryContractId).to.deep.equal(tempContractId);
+        expect(instance.temporaryContractId).to.deep.equal(temporaryContractId);
         expect(Number(instance.acceptCollateral)).to.equal(100000000);
         expect(instance.fundingPubKey).to.deep.equal(fundingPubKey);
         expect(instance.payoutSPK).to.deep.equal(payoutSPK);
@@ -186,7 +186,7 @@ describe('DlcAccept', () => {
       it('convert to JSON', async () => {
         const json = instance.toJSON();
         expect(json.message.temporaryContractId).to.equal(
-          tempContractId.toString('hex'),
+          temporaryContractId.toString('hex'),
         );
         expect(json.message.fundingPubkey).to.equal(
           fundingPubKey.toString('hex'),

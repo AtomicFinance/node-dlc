@@ -12,7 +12,7 @@ import {
   FundingInput,
 } from '@node-dlc/messaging';
 import { OutPoint, Script } from '@node-lightning/bitcoin';
-import { sha256, xor } from '@node-lightning/crypto';
+import { xor } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
 enum Prefix {
@@ -58,10 +58,10 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
-  public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
+  public async findDlcOffer(temporaryContractId: Buffer): Promise<DlcOfferV0> {
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
+      temporaryContractId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
@@ -72,8 +72,8 @@ export class RocksdbDlcStore extends RocksdbBase {
     tempContractIds: Buffer[],
   ): Promise<DlcOfferV0[]> {
     const dlcOffers = await Promise.all(
-      tempContractIds.map((tempContractId) =>
-        this.findDlcOffer(tempContractId),
+      tempContractIds.map((temporaryContractId) =>
+        this.findDlcOffer(temporaryContractId),
       ),
     );
     return dlcOffers.filter((dlcOffer) => !!dlcOffer);
@@ -117,18 +117,17 @@ export class RocksdbDlcStore extends RocksdbBase {
 
   public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
     const value = dlcOffer.serialize();
-    const tempContractId = sha256(value);
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
+      dlcOffer.temporaryContractId,
     ]);
     await this._db.put(key, value);
   }
 
-  public async deleteDlcOffer(tempContractId: Buffer): Promise<void> {
+  public async deleteDlcOffer(temporaryContractId: Buffer): Promise<void> {
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
+      temporaryContractId,
     ]);
     await this._db.del(key);
   }
@@ -200,10 +199,10 @@ export class RocksdbDlcStore extends RocksdbBase {
     return this.findDlcAccept(contractId);
   }
 
-  public async findContractIdFromTemp(tempContractId: Buffer): Promise<Buffer> {
+  public async findContractIdFromTemp(temporaryContractId: Buffer): Promise<Buffer> {
     const key = Buffer.concat([
       Buffer.from([Prefix.TempContractId]),
-      tempContractId,
+      temporaryContractId,
     ]);
     const contractId = await this._safeGet<Buffer>(key);
     return contractId;

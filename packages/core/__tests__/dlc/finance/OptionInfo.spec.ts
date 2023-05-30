@@ -219,6 +219,6 @@ function buildDlcOfferFixture(
 
   const dlcOffer = new DlcOfferV0();
   dlcOffer.contractInfo = contractInfo;
-  dlcOffer.offerCollateralSatoshis = totalCollateral - premium;
+  dlcOffer.offerCollateral = totalCollateral - premium;
   return dlcOffer;
 }

@@ -42,8 +42,8 @@ export class DlcTxBuilder {
           );
     const witScript = Script.p2wshLock(multisigScript);
 
-    const offerInput = this.dlcOffer.offerCollateralSatoshis;
-    const acceptInput = this.dlcAccept.acceptCollateralSatoshis;
+    const offerInput = this.dlcOffer.offerCollateral;
+    const acceptInput = this.dlcAccept.acceptCollateral;
 
     const totalInput = offerInput + acceptInput;
 

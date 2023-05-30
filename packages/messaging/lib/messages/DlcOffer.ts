@@ -77,7 +77,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     const payoutSPKLen = reader.readUInt16BE();
     instance.payoutSPK = reader.readBytes(payoutSPKLen);
     instance.payoutSerialId = reader.readUInt64BE();
-    instance.offerCollateralSatoshis = reader.readUInt64BE();
+    instance.offerCollateral = reader.readUInt64BE();
     const fundingInputsLen = reader.readBigSize();
 
     for (let i = 0; i < fundingInputsLen; i++) {
@@ -117,7 +117,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     instance.fundingPubKey = offer.fundingPubKey;
     instance.payoutSPK = offer.payoutSPK;
     instance.payoutSerialId = offer.payoutSerialId;
-    instance.offerCollateralSatoshis = offer.offerCollateralSatoshis;
+    instance.offerCollateral = offer.offerCollateralSatoshis;
     instance.fundingInputs = offer.fundingInputs.map((input) =>
       FundingInput.fromPre163(input),
     );
@@ -152,7 +152,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
   public payoutSerialId: bigint;
 
-  public offerCollateralSatoshis: bigint;
+  public offerCollateral: bigint;
 
   public fundingInputs: FundingInput[] = [];
 
@@ -225,7 +225,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     }
 
     // 6. offer_collateral_satoshis must be greater than or equal to 1000
-    if (this.offerCollateralSatoshis < 1000) {
+    if (this.offerCollateral < 1000) {
       throw new Error(
         'offer_collateral_satoshis must be greater than or equal to 1000',
       );
@@ -281,7 +281,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     this.contractInfo.validate();
 
     // totalCollaterial should be > offerCollaterial (logical validation)
-    if (this.contractInfo.totalCollateral <= this.offerCollateralSatoshis) {
+    if (this.contractInfo.totalCollateral <= this.offerCollateral) {
       throw new Error('totalCollateral should be greater than offerCollateral');
     }
 
@@ -290,9 +290,9 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
-    if (this.offerCollateralSatoshis >= fundingAmount) {
+    if (this.offerCollateral >= fundingAmount) {
       throw new Error(
-        'fundingAmount must be greater than offerCollateralSatoshis',
+        'fundingAmount must be greater than offerCollateral',
       );
     }
   }
@@ -311,7 +311,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
         fundingPubkey: this.fundingPubKey.toString('hex'),
         payoutSpk: this.payoutSPK.toString('hex'),
         payoutSerialId: Number(this.payoutSerialId),
-        offerCollateral: Number(this.offerCollateralSatoshis),
+        offerCollateral: Number(this.offerCollateral),
         fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
         changeSpk: this.changeSPK.toString('hex'),
         changeSerialId: Number(this.changeSerialId),
@@ -339,7 +339,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     writer.writeUInt16BE(this.payoutSPK.length);
     writer.writeBytes(this.payoutSPK);
     writer.writeUInt64BE(this.payoutSerialId);
-    writer.writeUInt64BE(this.offerCollateralSatoshis);
+    writer.writeUInt64BE(this.offerCollateral);
     writer.writeBigSize(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {

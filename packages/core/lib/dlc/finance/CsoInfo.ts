@@ -17,7 +17,7 @@ import assert from 'assert';
 import { UNIT_MULTIPLIER } from './Builder';
 import {
   HasContractInfo,
-  HasOfferCollateralSatoshis,
+  HasOfferCollateral,
   HasType,
 } from './OptionInfo';
 
@@ -146,10 +146,7 @@ export const getCsoInfoFromContractInfo = (
  * @returns {CsoInfo}
  */
 export const getCsoInfoFromOffer = (
-  offer: HasContractInfo &
-    HasType &
-    HasOfferCollateralSatoshis &
-    MaybeHasCsoInfo,
+  offer: HasContractInfo & HasType & HasOfferCollateral,
 ): CsoInfo => {
   if (
     offer.type !== MessageType.DlcOfferV0 &&
@@ -171,7 +168,7 @@ export const getCsoInfoFromOffer = (
     fees,
   );
 
-  if (csoInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
+  if (csoInfo.offerCollateral.sats !== offer.offerCollateral)
     throw Error('Offer was not generated with CSO ContractInfo');
 
   return csoInfo;

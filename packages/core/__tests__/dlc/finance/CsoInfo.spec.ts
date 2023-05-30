@@ -60,7 +60,7 @@ const buildCsoDlcOfferFixture = (
 
   const dlcOffer = new DlcOfferV0();
   dlcOffer.contractInfo = contractInfo;
-  dlcOffer.offerCollateralSatoshis = offerCollateral;
+  dlcOffer.offerCollateral = offerCollateral;
 
   return dlcOffer;
 };
@@ -131,7 +131,7 @@ describe('CsoInfo', () => {
       });
     });
 
-    it('should throw if offerCollateralSatoshis does not match calculated offerCollateral', () => {
+    it('should throw if offerCollateral does not match calculated offerCollateral', () => {
       const { payoutFunction } = LinearPayout.buildPayoutFunction(
         minPayout,
         maxPayout,
@@ -149,7 +149,7 @@ describe('CsoInfo', () => {
         offerCollateralValue,
       );
 
-      dlcOffer.offerCollateralSatoshis -= BigInt(10000);
+      dlcOffer.offerCollateral -= BigInt(10000);
 
       expect(() => getCsoInfoFromOffer(dlcOffer)).to.throw(Error);
     });

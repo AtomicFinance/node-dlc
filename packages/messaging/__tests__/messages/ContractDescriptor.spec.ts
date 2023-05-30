@@ -33,13 +33,13 @@ describe('EnumeratedContractDescriptor', () => {
         "00" + // type enumerated_contract_descriptor
         "03" + // num_outcomes
         "01" + // outcome_1_len
-        "31" + // outcome_1
+        "31" + // outcome_1 (utf-8 encoded)
         "0000000000000000" + // payout_1
         "01" + // outcome_2_len
-        "32" + // outcome_2
+        "32" + // outcome_2 (utf-8 encoded)
         "00000000092363a3" + // payout_2
         "01" + // outcome_3_len
-        "33" + // outcome_3
+        "33" + // outcome_3 (utf-8 encoded)
         "000000000bebc200" // payout_3
       ); // prettier-ignore
     });
@@ -51,13 +51,13 @@ describe('EnumeratedContractDescriptor', () => {
         "00" + // type
         "03" + // num_outcomes
         "01" + // outcome_1_len
-        "31" + // outcome_1
+        "31" + // outcome_1 (utf-8 encoded)
         "0000000000000000" + // payout_1
         "01" + // outcome_2_len
-        "32" + // outcome_2
+        "32" + // outcome_2 (utf-8 encoded)
         "00000000092363a3" + // payout_2
         "01" + // outcome_3_len
-        "33" + // outcome_3
+        "33" + // outcome_3 (utf-8 encoded)
         "000000000bebc200" // payout_3
         , "hex"
       ); // prettier-ignore
