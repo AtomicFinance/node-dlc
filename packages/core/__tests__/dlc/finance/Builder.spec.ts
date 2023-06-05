@@ -149,6 +149,100 @@ describe('OrderOffer Builder', () => {
       });
     }
 
+    it('should build a CSO OrderOffer and shift the payout curve correctly for offeror fees', () => {
+      const offerFees = Value.fromSats(10000);
+
+      const contractSize = contractSizes[0];
+
+      const orderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        maxLoss,
+        maxGain,
+        feeRate,
+        rounding,
+        network,
+        'offeror',
+        offerFees,
+      );
+
+      const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
+        .contractDescriptor as ContractDescriptorV1)
+        .payoutFunction as PayoutFunctionV0).pieces;
+
+      expect(() => orderOffer.validate()).to.not.throw(Error);
+      expect(orderOffer.contractInfo.totalCollateral).to.equal(
+        contractSize.sats,
+      );
+      expect(orderOffer.offerCollateralSatoshis).to.equal(
+        contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
+      );
+      expect(payoutCurvePieces[0].endpoint).to.equal(
+        (defaultContractSize.sats - maxLoss.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[1].endpoint).to.equal(
+        (defaultContractSize.sats + maxGain.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[0].endpointPayout).to.equal(
+        contractSize.sats -
+          (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
+          (maxGain.sats * contractSize.sats) / BigInt(1e8) -
+          offerFees.sats,
+      );
+      expect(payoutCurvePieces[1].endpointPayout).to.equal(
+        contractSize.sats - offerFees.sats,
+      );
+    });
+
+    it('should build a CSO OrderOffer and shift the payout curve correctly for acceptor fees', () => {
+      const acceptFees = Value.fromSats(10000);
+
+      const contractSize = contractSizes[0];
+
+      const orderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        maxLoss,
+        maxGain,
+        feeRate,
+        rounding,
+        network,
+        'acceptor',
+        acceptFees,
+      );
+
+      const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
+        .contractDescriptor as ContractDescriptorV1)
+        .payoutFunction as PayoutFunctionV0).pieces;
+
+      expect(() => orderOffer.validate()).to.not.throw(Error);
+      expect(orderOffer.contractInfo.totalCollateral).to.equal(
+        contractSize.sats,
+      );
+      expect(orderOffer.offerCollateralSatoshis).to.equal(
+        contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
+      );
+      expect(payoutCurvePieces[0].endpoint).to.equal(
+        (defaultContractSize.sats - maxLoss.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[1].endpoint).to.equal(
+        (defaultContractSize.sats + maxGain.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[0].endpointPayout).to.equal(
+        contractSize.sats -
+          (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
+          (maxGain.sats * contractSize.sats) / BigInt(1e8) +
+          acceptFees.sats,
+      );
+      expect(payoutCurvePieces[1].endpointPayout).to.equal(
+        contractSize.sats + acceptFees.sats,
+      );
+    });
+
     it('should fail to build a CSO OrderOffer with an invalid oracleAnnouncement', () => {
       oracleAnnouncement.announcementSig = Buffer.from('deadbeef', 'hex');
 

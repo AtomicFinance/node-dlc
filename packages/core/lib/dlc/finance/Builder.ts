@@ -25,6 +25,8 @@ export const UNIT_MULTIPLIER = {
   sats: BigInt(1),
 };
 
+export type DlcParty = 'offeror' | 'acceptor' | 'neither';
+
 /**
  * Compute rounding intervals for a linear or hyperbola payout curve
  *
@@ -296,6 +298,8 @@ export const buildLinearOrderOffer = (
   feePerByte: bigint,
   rounding: Value,
   network: BitcoinNetwork,
+  shiftForFees: DlcParty = 'neither',
+  fees: Value = Value.fromSats(0),
 ): OrderOfferV0 => {
   if (maxPayout.lt(minPayout))
     throw Error('maxPayout must be greater than minPayout');
@@ -308,6 +312,14 @@ export const buildLinearOrderOffer = (
 
   const roundingIntervals = new RoundingIntervalsV0();
   const roundingMod = computeRoundingModulus(rounding, maxPayout);
+
+  if (shiftForFees === 'offeror') {
+    minPayout.sub(fees);
+    maxPayout.sub(fees);
+  } else if (shiftForFees === 'acceptor') {
+    minPayout.add(fees);
+    maxPayout.add(fees);
+  }
 
   const { payoutFunction } = LinearPayout.buildPayoutFunction(
     minPayout.sats,
@@ -346,6 +358,8 @@ export const buildLinearOrderOffer = (
  * @param {bigint} feePerByte sats/vbyte
  * @param {Value} rounding rounding mod for RoundingInterval
  * @param {BitcoinNetwork} network bitcoin, bitcoin_testnet or bitcoin_regtest
+ * @param {DlcParty} [shiftForFees] shift for offerer, acceptor or neither
+ * @param {Value} [fees] fees to shift
  * @returns {OrderOfferV0}
  */
 export const buildCustomStrategyOrderOffer = (
@@ -356,6 +370,8 @@ export const buildCustomStrategyOrderOffer = (
   feePerByte: bigint,
   rounding: Value,
   network: BitcoinNetwork,
+  shiftForFees: DlcParty = 'neither',
+  fees: Value = Value.fromSats(0),
 ): OrderOfferV0 => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
@@ -397,5 +413,7 @@ export const buildCustomStrategyOrderOffer = (
     feePerByte,
     rounding,
     network,
+    shiftForFees,
+    fees,
   );
 };
