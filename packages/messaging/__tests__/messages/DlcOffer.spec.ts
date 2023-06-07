@@ -1,9 +1,11 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
+import { EnumeratedContractDescriptor, SingleOracleInfo } from '../../lib';
 import {
   ContractInfo,
   ISingleContractInfoJSON,
+  SingleContractInfo,
 } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
@@ -11,6 +13,14 @@ import {
   LOCKTIME_THRESHOLD,
 } from '../../lib/messages/DlcOffer';
 import { FundingInput } from '../../lib/messages/FundingInput';
+import {
+  ContractDescriptorPre163,
+  ContractDescriptorV0Pre163,
+} from '../../lib/messages/pre-163/ContractDescriptor';
+import { ContractInfoV0Pre163 } from '../../lib/messages/pre-163/ContractInfo';
+import { DlcOfferV0Pre163 } from '../../lib/messages/pre-163/DlcOffer';
+import { FundingInputV0Pre163 } from '../../lib/messages/pre-163/FundingInput';
+import { OracleInfoV0Pre163 } from '../../lib/messages/pre-163/OracleInfo';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcOffer', () => {
@@ -403,6 +413,261 @@ describe('DlcOffer', () => {
         expect(function () {
           instance.validate();
         }).to.throw(Error);
+      });
+    });
+
+    describe('toPre163', () => {
+      it('returns pre-163 instance', () => {
+        const pre163 = DlcOfferV0.toPre163(instance);
+        expect(pre163).to.be.instanceof(DlcOfferV0Pre163);
+        expect(Number(pre163.contractFlags)).to.equal(instance.contractFlags);
+        expect(pre163.chainHash).to.equal(instance.chainHash);
+        expect(pre163.contractInfo).to.be.instanceof(ContractInfoV0Pre163);
+        expect(pre163.contractInfo.totalCollateral).to.equal(
+          instance.contractInfo.totalCollateral,
+        );
+        expect(
+          (pre163.contractInfo as ContractInfoV0Pre163).contractDescriptor,
+        ).to.be.instanceof(ContractDescriptorV0Pre163);
+        for (
+          let i = 0;
+          i <
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .contractDescriptor as ContractDescriptorV0Pre163).outcomes.length;
+          i++
+        ) {
+          expect(
+            ((pre163.contractInfo as ContractInfoV0Pre163)
+              .contractDescriptor as ContractDescriptorV0Pre163).outcomes[
+              i
+            ].outcome.toString('utf-8'),
+          ).to.equal(
+            ((instance.contractInfo as SingleContractInfo)
+              .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+              .outcome,
+          );
+          expect(
+            ((pre163.contractInfo as ContractInfoV0Pre163)
+              .contractDescriptor as ContractDescriptorV0Pre163).outcomes[i]
+              .localPayout,
+          ).to.equal(
+            ((instance.contractInfo as SingleContractInfo)
+              .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+              .localPayout,
+          );
+        }
+        expect(
+          (pre163.contractInfo as ContractInfoV0Pre163).oracleInfo,
+        ).to.be.instanceof(OracleInfoV0Pre163);
+        expect(
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .oracleInfo as OracleInfoV0Pre163).announcement,
+        ).to.equal(
+          ((instance.contractInfo as SingleContractInfo)
+            .oracleInfo as SingleOracleInfo).announcement,
+        );
+        expect(pre163.fundingPubKey).to.equal(instance.fundingPubKey);
+        expect(pre163.payoutSPK).to.equal(instance.payoutSPK);
+        expect(pre163.payoutSerialId).to.equal(instance.payoutSerialId);
+        expect(pre163.offerCollateralSatoshis).to.equal(
+          instance.offerCollateral,
+        );
+        expect(pre163.fundingInputs.length).to.equal(
+          instance.fundingInputs.length,
+        );
+        for (let i = 0; i < pre163.fundingInputs.length; i++) {
+          expect(pre163.fundingInputs[i].inputSerialId).to.equal(
+            instance.fundingInputs[i].inputSerialId,
+          );
+          expect(pre163.fundingInputs[i].prevTx).to.equal(
+            instance.fundingInputs[i].prevTx,
+          );
+          expect(pre163.fundingInputs[i].prevTxVout).to.equal(
+            instance.fundingInputs[i].prevTxVout,
+          );
+          expect(pre163.fundingInputs[i].sequence).to.equal(
+            instance.fundingInputs[i].sequence,
+          );
+          expect(pre163.fundingInputs[i].maxWitnessLen).to.equal(
+            instance.fundingInputs[i].maxWitnessLen,
+          );
+          expect(pre163.fundingInputs[i].redeemScript).to.equal(
+            instance.fundingInputs[i].redeemScript,
+          );
+        }
+        expect(pre163.changeSPK).to.equal(instance.changeSPK);
+        expect(pre163.changeSerialId).to.equal(instance.changeSerialId);
+        expect(pre163.fundOutputSerialId).to.equal(instance.fundOutputSerialId);
+        expect(pre163.feeRatePerVb).to.equal(instance.feeRatePerVb);
+        expect(pre163.cetLocktime).to.equal(instance.cetLocktime);
+        expect(pre163.refundLocktime).to.equal(instance.refundLocktime);
+      });
+    });
+
+    describe('fromPre163', () => {
+      const fundingInputV0Pre163 = FundingInputV0Pre163.deserialize(
+        Buffer.from(
+          'fda714' + // type
+            '3f' + // length
+            '000000000000dae8' + // inputSerialID
+            '0029' + // prevTxLen
+            '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevTx
+            '00000000' + // prevTxVout
+            'ffffffff' + // sequence
+            '006b' + // maxWitnessLen
+            '0000', // redeemScriptLen
+          'hex',
+        ),
+      );
+      const contractInfoV0Pre163 = new ContractInfoV0Pre163();
+      contractInfoV0Pre163.length = BigInt(305);
+      contractInfoV0Pre163.totalCollateral = BigInt(200000000);
+      contractInfoV0Pre163.contractDescriptor = ContractDescriptorPre163.deserialize(
+        Buffer.from(
+          'fda710' + // type contract_descriptor
+            '79' + // length
+            '03' + // num_outcomes
+            'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
+            '0000000000000000' + // payout_1
+            'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
+            '00000000092363a3' + // payout_2
+            '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
+            '000000000bebc200', // payout_3
+          'hex',
+        ),
+      );
+      contractInfoV0Pre163.oracleInfo = OracleInfoV0Pre163.deserialize(
+        Buffer.from(
+          'fda712' + // type oracle_info
+            'a8' + // length
+            'fdd824' + // type oracle_announcement
+            'a4' + // length
+            'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+            '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+            'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+            'fdd822' + // type oracle_event
+            '40' + // length
+            '0001' + // nb_nonces
+            '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+            '00000000' + // event_maturity_epoch
+            'fdd806' + // type enum_event_descriptor
+            '10' + // length
+            '0002' + // num_outcomes
+            '06' + // outcome_1_len
+            '64756d6d7931' + // outcome_1
+            '06' + // outcome_2_len
+            '64756d6d7932' + // outcome_2
+            '05' + // event_id_length
+            '64756d6d79', // event_id
+          'hex',
+        ),
+      );
+      const pre163 = new DlcOfferV0Pre163();
+
+      before(() => {
+        pre163.contractFlags = contractFlags;
+        pre163.chainHash = chainHash;
+        pre163.contractInfo = contractInfoV0Pre163;
+        pre163.fundingPubKey = fundingPubKey;
+        pre163.payoutSPK = payoutSPK;
+        pre163.payoutSerialId = BigInt(11555292);
+        pre163.offerCollateralSatoshis = BigInt(99999999);
+        pre163.fundingInputs = [fundingInputV0Pre163];
+        pre163.changeSPK = changeSPK;
+        pre163.changeSerialId = BigInt(2008045);
+        pre163.fundOutputSerialId = BigInt(5411962);
+        pre163.feeRatePerVb = BigInt(1);
+        pre163.cetLocktime = 100;
+        pre163.refundLocktime = 200;
+      });
+
+      it('returns post-163 instance', () => {
+        const post163 = DlcOfferV0.fromPre163(pre163, temporaryContractId);
+        expect(post163).to.be.instanceof(DlcOfferV0);
+        expect(post163.contractFlags).to.equal(Number(pre163.contractFlags.toString('hex')));
+        expect(post163.chainHash).to.equal(pre163.chainHash);
+
+        expect(post163.contractInfo).to.be.instanceof(SingleContractInfo);
+
+        expect(post163.contractInfo.totalCollateral).to.equal(
+          pre163.contractInfo.totalCollateral,
+        );
+        expect(
+          (post163.contractInfo as SingleContractInfo).contractDescriptor,
+        ).to.be.instanceof(EnumeratedContractDescriptor);
+        for (
+          let i = 0;
+          i <
+          ((post163.contractInfo as SingleContractInfo)
+            .contractDescriptor as EnumeratedContractDescriptor).outcomes
+            .length;
+          i++
+        ) {
+          expect(
+            ((post163.contractInfo as SingleContractInfo)
+              .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+              .outcome,
+          ).to.equal(
+            ((pre163.contractInfo as ContractInfoV0Pre163)
+              .contractDescriptor as ContractDescriptorV0Pre163).outcomes[
+              i
+            ].outcome.toString('utf-8'),
+          );
+          expect(
+            ((post163.contractInfo as SingleContractInfo)
+              .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+              .localPayout,
+          ).to.equal(
+            ((pre163.contractInfo as ContractInfoV0Pre163)
+              .contractDescriptor as ContractDescriptorV0Pre163).outcomes[i]
+              .localPayout,
+          );
+        }
+        expect(
+          (post163.contractInfo as SingleContractInfo).oracleInfo,
+        ).to.be.instanceof(SingleOracleInfo);
+        expect(
+          ((post163.contractInfo as SingleContractInfo)
+            .oracleInfo as SingleOracleInfo).announcement,
+        ).to.equal(
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .oracleInfo as OracleInfoV0Pre163).announcement,
+        );
+        expect(post163.fundingPubKey).to.equal(pre163.fundingPubKey);
+        expect(post163.payoutSPK).to.equal(pre163.payoutSPK);
+        expect(post163.payoutSerialId).to.equal(pre163.payoutSerialId);
+        expect(post163.offerCollateral).to.equal(
+          pre163.offerCollateralSatoshis,
+        );
+        expect(post163.fundingInputs.length).to.equal(
+          pre163.fundingInputs.length,
+        );
+        for (let i = 0; i < post163.fundingInputs.length; i++) {
+          expect(post163.fundingInputs[i].inputSerialId).to.equal(
+            pre163.fundingInputs[i].inputSerialId,
+          );
+          expect(post163.fundingInputs[i].prevTx).to.equal(
+            pre163.fundingInputs[i].prevTx,
+          );
+          expect(post163.fundingInputs[i].prevTxVout).to.equal(
+            pre163.fundingInputs[i].prevTxVout,
+          );
+          expect(post163.fundingInputs[i].sequence).to.equal(
+            pre163.fundingInputs[i].sequence,
+          );
+          expect(post163.fundingInputs[i].maxWitnessLen).to.equal(
+            pre163.fundingInputs[i].maxWitnessLen,
+          );
+          expect(post163.fundingInputs[i].redeemScript).to.equal(
+            pre163.fundingInputs[i].redeemScript,
+          );
+        }
+        expect(post163.changeSPK).to.equal(pre163.changeSPK);
+        expect(post163.changeSerialId).to.equal(pre163.changeSerialId);
+        expect(post163.fundOutputSerialId).to.equal(pre163.fundOutputSerialId);
+        expect(post163.feeRatePerVb).to.equal(pre163.feeRatePerVb);
+        expect(post163.cetLocktime).to.equal(pre163.cetLocktime);
+        expect(post163.refundLocktime).to.equal(pre163.refundLocktime);
       });
     });
   });

@@ -15,7 +15,6 @@ import {
 } from './ContractInfo';
 import { IDlcMessagePre163 } from './DlcMessage';
 import { FundingInputV0Pre163, IFundingInputV0Pre163JSON } from './FundingInput';
-import {DlcInfoV0Pre163} from "./DlcInfo";
 
 export const LOCKTIME_THRESHOLD = 500000000;
 

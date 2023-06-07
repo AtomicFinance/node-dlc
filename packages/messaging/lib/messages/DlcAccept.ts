@@ -120,9 +120,37 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       accept.cetSignatures,
     );
     instance.refundSignature = accept.refundSignature;
-    instance.negotiationFields = NegotiationFields.fromPre163(
-      accept.negotiationFields,
+    if (accept.negotiationFields) {
+      instance.negotiationFields = NegotiationFields.fromPre163(
+        accept.negotiationFields,
+      );
+    }
+
+    return instance;
+  }
+
+  public static toPre163(accept: DlcAcceptV0): DlcAcceptV0Pre163 {
+    const instance = new DlcAcceptV0Pre163();
+
+    instance.tempContractId = accept.temporaryContractId;
+    instance.acceptCollateralSatoshis = accept.acceptCollateral;
+    instance.fundingPubKey = accept.fundingPubKey;
+    instance.payoutSPK = accept.payoutSPK;
+    instance.payoutSerialId = accept.payoutSerialId;
+    instance.fundingInputs = accept.fundingInputs.map((input) =>
+      FundingInput.toPre163(input),
     );
+    instance.changeSPK = accept.changeSPK;
+    instance.changeSerialId = accept.changeSerialId;
+    instance.cetSignatures = CetAdaptorSignatures.toPre163(
+      accept.cetSignatures,
+    );
+    instance.refundSignature = accept.refundSignature;
+    if (accept.negotiationFields) {
+      instance.negotiationFields = NegotiationFields.toPre163(
+        accept.negotiationFields,
+      );
+    }
 
     return instance;
   }

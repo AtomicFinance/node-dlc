@@ -3,6 +3,7 @@ import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
+import { OracleIdentifierV0Pre163 } from './pre-163/OracleIdentifier';
 
 export class OracleIdentifierV0 implements IDlcMessage {
   public static type = MessageType.OracleIdentifierV0;
@@ -22,6 +23,28 @@ export class OracleIdentifierV0 implements IDlcMessage {
     const oracleNameBuf = reader.readBytes(Number(oracleNameLength));
     instance.oracleName = oracleNameBuf.toString();
     instance.oraclePubkey = reader.readBytes(32);
+
+    return instance;
+  }
+
+  public static fromPre163(
+    oracleId: OracleIdentifierV0Pre163,
+  ): OracleIdentifierV0 {
+    const instance = new OracleIdentifierV0();
+
+    instance.oracleName = oracleId.oracleName;
+    instance.oraclePubkey = oracleId.oraclePubkey;
+
+    return instance;
+  }
+
+  public static toPre163(
+    oracleId: OracleIdentifierV0,
+  ): OracleIdentifierV0Pre163 {
+    const instance = new OracleIdentifierV0Pre163();
+
+    instance.oracleName = oracleId.oracleName;
+    instance.oraclePubkey = oracleId.oraclePubkey;
 
     return instance;
   }

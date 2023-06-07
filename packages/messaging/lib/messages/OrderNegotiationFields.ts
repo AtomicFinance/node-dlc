@@ -6,6 +6,9 @@ import {
   ISingleContractInfoJSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
+import { OrderNegotiationFieldsPre163, OrderNegotiationFieldsV1Pre163 } from "./pre-163/OrderNegotiationFields";
+import { MessageType } from '../MessageType';
+import { OrderOfferV0Pre163 } from "./pre-163/OrderOffer";
 
 /**
  * OrderNegotiationFields V1 contains preferences of the acceptor of an order
@@ -28,6 +31,55 @@ export class OrderNegotiationFields implements IDlcMessage {
     instance.feeRatePerVb = reader.readUInt64BE();
     instance.cetLocktime = reader.readUInt32BE();
     instance.refundLocktime = reader.readUInt32BE();
+
+    return instance;
+  }
+
+  public static fromPre163(
+    orderNegociationFields: OrderNegotiationFieldsPre163,
+  ): OrderNegotiationFields {
+    const instance = new OrderNegotiationFields();
+    switch (orderNegociationFields.type) {
+      case MessageType.OrderNegotiationFieldsV1:
+        instance.contractInfo = ContractInfo.fromPre163(
+          ((orderNegociationFields as OrderNegotiationFieldsV1Pre163)
+            .orderOffer as OrderOfferV0Pre163).contractInfo,
+        );
+        instance.offerCollateral = ((orderNegociationFields as OrderNegotiationFieldsV1Pre163)
+          .orderOffer as OrderOfferV0Pre163).offerCollateralSatoshis;
+        instance.feeRatePerVb = ((orderNegociationFields as OrderNegotiationFieldsV1Pre163)
+          .orderOffer as OrderOfferV0Pre163).feeRatePerVb;
+        instance.cetLocktime = ((orderNegociationFields as OrderNegotiationFieldsV1Pre163)
+          .orderOffer as OrderOfferV0Pre163).cetLocktime;
+        instance.refundLocktime = ((orderNegociationFields as OrderNegotiationFieldsV1Pre163)
+          .orderOffer as OrderOfferV0Pre163).refundLocktime;
+        break;
+      default:
+        throw new Error(
+          `OrderNegotiationFields type must be OrderNegotiationFieldsV1`,
+        );
+    }
+
+    return instance;
+  }
+
+  public static toPre163(
+    orderNegociationFields: OrderNegotiationFields,
+    chainHash: string,
+  ): OrderNegotiationFieldsV1Pre163 {
+    const instance = new OrderNegotiationFieldsV1Pre163();
+
+    const orderOffer = new OrderOfferV0Pre163();
+    orderOffer.chainHash = Buffer.from(chainHash, 'hex');
+    orderOffer.contractInfo = ContractInfo.toPre163(
+      orderNegociationFields.contractInfo,
+    );
+    orderOffer.offerCollateralSatoshis = orderNegociationFields.offerCollateral;
+    orderOffer.feeRatePerVb = orderNegociationFields.feeRatePerVb;
+    orderOffer.cetLocktime = orderNegociationFields.cetLocktime;
+    orderOffer.refundLocktime = orderNegociationFields.refundLocktime;
+
+    instance.orderOffer = orderOffer;
 
     return instance;
   }

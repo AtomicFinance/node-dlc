@@ -3,6 +3,7 @@ import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
+import { OrderIrcInfoV0Pre163 } from './pre-163/OrderIrcInfo';
 
 export abstract class OrderIrcInfo {
   public static deserialize(reader: Buffer | BufferReader): OrderIrcInfo {
@@ -52,6 +53,24 @@ export class OrderIrcInfoV0 extends OrderIrcInfo implements IDlcMessage {
     instance.nick = nickBuf.toString();
 
     instance.pubKey = reader.readBytes(33);
+
+    return instance;
+  }
+
+  public static fromPre163(ircInfo: OrderIrcInfoV0Pre163): OrderIrcInfoV0 {
+    const instance = new OrderIrcInfoV0();
+
+    instance.nick = ircInfo.nick;
+    instance.pubKey = ircInfo.pubKey;
+
+    return instance;
+  }
+
+  public static toPre163(ircInfo: OrderIrcInfoV0): OrderIrcInfoV0Pre163 {
+    const instance = new OrderIrcInfoV0Pre163();
+
+    instance.nick = ircInfo.nick;
+    instance.pubKey = ircInfo.pubKey;
 
     return instance;
   }

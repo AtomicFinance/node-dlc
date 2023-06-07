@@ -52,6 +52,20 @@ export abstract class NegotiationFields {
     }
   }
 
+  public static toPre163(
+    negotiationFields: NegotiationFields,
+  ): NegotiationFieldsPre163 {
+    if (negotiationFields instanceof SingleNegotiationFields) {
+      return SingleNegotiationFields.toPre163(negotiationFields);
+    } else if (negotiationFields instanceof DisjointNegotiationFields) {
+      return DisjointNegotiationFields.toPre163(negotiationFields);
+    } else {
+      throw new Error(
+        'Negotiation fields must be SingleNegotiationFields or DisjointNegotiationFields',
+      );
+    }
+  }
+
   public abstract type: number;
 
   public abstract toJSON():
@@ -94,7 +108,21 @@ export class SingleNegotiationFields
   ): SingleNegotiationFields {
     const instance = new SingleNegotiationFields();
 
-    instance.roundingIntervals = negotiationFields.roundingIntervals;
+    instance.roundingIntervals = RoundingIntervals.fromPre163(
+      negotiationFields.roundingIntervals,
+    );
+
+    return instance;
+  }
+
+  public static toPre163(
+    negotiationFields: SingleNegotiationFields,
+  ): NegotiationFieldsV1Pre163 {
+    const instance = new NegotiationFieldsV1Pre163();
+
+    instance.roundingIntervals = RoundingIntervals.toPre163(
+      negotiationFields.roundingIntervals,
+    );
 
     return instance;
   }
@@ -172,6 +200,18 @@ export class DisjointNegotiationFields
 
     instance.negotiationFieldsList = negotiationFields.negotiationFieldsList.map(
       NegotiationFields.fromPre163,
+    );
+
+    return instance;
+  }
+
+  public static toPre163(
+    negotiationFields: DisjointNegotiationFields,
+  ): NegotiationFieldsV2Pre163 {
+    const instance = new NegotiationFieldsV2Pre163();
+
+    instance.negotiationFieldsList = negotiationFields.negotiationFieldsList.map(
+      NegotiationFields.toPre163,
     );
 
     return instance;

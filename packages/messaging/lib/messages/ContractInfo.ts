@@ -63,6 +63,20 @@ export abstract class ContractInfo implements IDlcMessage {
     }
   }
 
+  public static toPre163(
+    contractInfo: ContractInfo,
+  ): ContractInfoV0Pre163 | ContractInfoV1Pre163 {
+    if (contractInfo instanceof SingleContractInfo) {
+      return SingleContractInfo.toPre163(contractInfo);
+    } else if (contractInfo instanceof DisjointContractInfo) {
+      return DisjointContractInfo.toPre163(contractInfo);
+    } else {
+      throw new Error(
+        'ContractInfo must be SingleContractInfo or DisjointContractInfo',
+      );
+    }
+  }
+
   public abstract type: number;
 
   public abstract totalCollateral: bigint;
@@ -109,10 +123,24 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
     const instance = new SingleContractInfo();
 
     instance.totalCollateral = contractInfo.totalCollateral;
-    instance.contractDescriptor = ContractDescriptor.from163(
+    instance.contractDescriptor = ContractDescriptor.fromPre163(
       contractInfo.contractDescriptor,
     );
     instance.oracleInfo = OracleInfo.fromPre163(contractInfo.oracleInfo);
+
+    return instance;
+  }
+
+  public static toPre163(
+    contractInfo: SingleContractInfo,
+  ): ContractInfoV0Pre163 {
+    const instance = new ContractInfoV0Pre163();
+
+    instance.totalCollateral = contractInfo.totalCollateral;
+    instance.contractDescriptor = ContractDescriptor.toPre163(
+      contractInfo.contractDescriptor,
+    );
+    instance.oracleInfo = OracleInfo.toPre163(contractInfo.oracleInfo);
 
     return instance;
   }
@@ -273,10 +301,29 @@ export class DisjointContractInfo implements IDlcMessage {
 
     contractInfo.contractOraclePairs.forEach((oraclePair) => {
       instance.contractOraclePairs.push({
-        contractDescriptor: ContractDescriptor.from163(
+        contractDescriptor: ContractDescriptor.fromPre163(
           oraclePair.contractDescriptor,
         ),
         oracleInfo: OracleInfo.fromPre163(oraclePair.oracleInfo),
+      });
+    });
+
+    return instance;
+  }
+
+  public static toPre163(
+    contractInfo: DisjointContractInfo,
+  ): ContractInfoV1Pre163 {
+    const instance = new ContractInfoV1Pre163();
+
+    instance.totalCollateral = contractInfo.totalCollateral;
+
+    contractInfo.contractOraclePairs.forEach((oraclePair) => {
+      instance.contractOraclePairs.push({
+        contractDescriptor: ContractDescriptor.toPre163(
+          oraclePair.contractDescriptor,
+        ),
+        oracleInfo: OracleInfo.toPre163(oraclePair.oracleInfo),
       });
     });
 

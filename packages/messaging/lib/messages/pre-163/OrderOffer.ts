@@ -22,7 +22,6 @@ import {
 } from './OrderIrcInfo';
 import { IOrderMetadataV0Pre163JSON} from './OrderMetadata';
 import { OrderMetadataPre163, OrderMetadataV0Pre163 } from './OrderMetadata';
-import {OrderNegotiationFieldsPre163} from "./OrderNegotiationFields";
 
 const LOCKTIME_THRESHOLD = 500000000;
 export abstract class OrderOfferPre163 {

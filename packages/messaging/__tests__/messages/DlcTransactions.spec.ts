@@ -6,6 +6,7 @@ import {
   DlcTransactions,
   DlcTransactionsV0,
 } from '../../lib/messages/DlcTransactions';
+import { DlcTransactionsV0Pre163 } from '../../lib/messages/pre-163/DlcTransactions';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcTransactions', () => {
@@ -155,6 +156,78 @@ describe('DlcTransactions', () => {
         refundTx.serialize().toString('hex'),
       );
       expect(jsonInstance.cets[0]).to.equal(cet0.serialize().toString('hex'));
+    });
+  });
+
+  describe('toPre163', () => {
+    const instance = new DlcTransactionsV0();
+
+    before(() => {
+      instance.contractId = contractId;
+      instance.fundTx = fundTx;
+      instance.fundTxVout = fundTxVout;
+      instance.refundTx = refundTx;
+      instance.cets.push(cet0);
+      instance.cets.push(cet1);
+    });
+
+    it('returns pre-163 instance', () => {
+      const pre163 = DlcTransactionsV0.toPre163(instance);
+      expect(pre163).to.be.instanceof(DlcTransactionsV0Pre163);
+      expect(pre163.contractId).to.equal(instance.contractId);
+      expect(pre163.fundTx).to.deep.equal(instance.fundTx);
+      expect(pre163.fundTxVout).to.equal(instance.fundTxVout);
+      expect(pre163.fundEpoch).to.deep.equal(instance.fundEpoch);
+      expect(pre163.fundBroadcastHeight).to.deep.equal(
+        instance.fundBroadcastHeight,
+      );
+      expect(pre163.refundTx).to.deep.equal(instance.refundTx);
+      expect(pre163.cets.length).to.equal(instance.cets.length);
+      for (let i = 0; i < pre163.cets.length; i++) {
+        expect(pre163.cets[i]).to.deep.equal(instance.cets[i]);
+      }
+      expect(pre163.closeEpoch).to.deep.equal(instance.closeEpoch);
+      expect(pre163.closeTxHash).to.deep.equal(instance.closeTxHash);
+      expect(pre163.closeType).to.deep.equal(instance.closeType);
+      expect(pre163.closeBroadcastHeight).to.deep.equal(
+        instance.closeBroadcastHeight,
+      );
+    });
+  });
+
+  describe('fromPre163', () => {
+    const pre163 = new DlcTransactionsV0Pre163();
+
+    before(() => {
+      pre163.contractId = contractId;
+      pre163.fundTx = fundTx;
+      pre163.fundTxVout = fundTxVout;
+      pre163.refundTx = refundTx;
+      pre163.cets.push(cet0);
+      pre163.cets.push(cet1);
+    });
+
+    it('returns post-163 instance', () => {
+      const post163 = DlcTransactionsV0.fromPre163(pre163);
+      expect(post163).to.be.instanceof(DlcTransactionsV0);
+      expect(post163.contractId).to.equal(pre163.contractId);
+      expect(post163.fundTx).to.deep.equal(pre163.fundTx);
+      expect(post163.fundTxVout).to.equal(pre163.fundTxVout);
+      expect(post163.fundEpoch).to.deep.equal(pre163.fundEpoch);
+      expect(post163.fundBroadcastHeight).to.deep.equal(
+        pre163.fundBroadcastHeight,
+      );
+      expect(post163.refundTx).to.deep.equal(pre163.refundTx);
+      expect(post163.cets.length).to.equal(pre163.cets.length);
+      for (let i = 0; i < post163.cets.length; i++) {
+        expect(post163.cets[i]).to.deep.equal(pre163.cets[i]);
+      }
+      expect(post163.closeEpoch).to.deep.equal(pre163.closeEpoch);
+      expect(post163.closeTxHash).to.deep.equal(pre163.closeTxHash);
+      expect(post163.closeType).to.deep.equal(pre163.closeType);
+      expect(post163.closeBroadcastHeight).to.deep.equal(
+        pre163.closeBroadcastHeight,
+      );
     });
   });
 });

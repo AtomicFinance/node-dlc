@@ -1,6 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import BigNumber from 'bignumber.js';
 import assert from 'assert';
+import BigNumber from 'bignumber.js';
 
 import { MessageType } from '../MessageType';
 import {
@@ -49,6 +49,20 @@ export abstract class PayoutCurvePiece {
       return PolynomialPayoutCurvePiece.fromPre163(payoutCurvePiece);
     } else if (payoutCurvePiece instanceof HyperbolaPayoutCurvePiecePre163) {
       return HyperbolaPayoutCurvePiece.fromPre163(payoutCurvePiece);
+    } else {
+      throw new Error(
+        'Payout Curve Piece must be PolynomialPayoutCurvePiecePre163 or HyperbolaPayoutCurvePiecePre163',
+      );
+    }
+  }
+
+  public static toPre163(
+    payoutCurvePiece: PayoutCurvePiece,
+  ): PolynomialPayoutCurvePiecePre163 | HyperbolaPayoutCurvePiecePre163 {
+    if (payoutCurvePiece instanceof PolynomialPayoutCurvePiece) {
+      return PolynomialPayoutCurvePiece.toPre163(payoutCurvePiece);
+    } else if (payoutCurvePiece instanceof HyperbolaPayoutCurvePiece) {
+      return HyperbolaPayoutCurvePiece.toPre163(payoutCurvePiece);
     } else {
       throw new Error(
         'Payout Curve Piece must be PolynomialPayoutCurvePiece or HyperbolaPayoutCurvePiece',
@@ -111,6 +125,22 @@ export class PolynomialPayoutCurvePiece
     polynomialPayoutCurvePiece: PolynomialPayoutCurvePiecePre163,
   ): PolynomialPayoutCurvePiece {
     const instance = new PolynomialPayoutCurvePiece();
+
+    instance.points = polynomialPayoutCurvePiece.points.map((point) => {
+      return {
+        eventOutcome: point.eventOutcome,
+        outcomePayout: point.outcomePayout,
+        extraPrecision: point.extraPrecision,
+      };
+    });
+
+    return instance;
+  }
+
+  public static toPre163(
+    polynomialPayoutCurvePiece: PolynomialPayoutCurvePiece,
+  ): PolynomialPayoutCurvePiecePre163 {
+    const instance = new PolynomialPayoutCurvePiecePre163();
 
     instance.points = polynomialPayoutCurvePiece.points.map((point) => {
       return {
@@ -241,6 +271,31 @@ export class HyperbolaPayoutCurvePiece
         hyperbolaPayoutCurvePiece[`${point}ExtraPrecision`];
 
       instance[point] = this.computePoint(sign, value, precision);
+    }
+
+    return instance;
+  }
+
+  public static toPre163(
+    hyperbolaPayoutCurvePiece: HyperbolaPayoutCurvePiece,
+  ): HyperbolaPayoutCurvePiecePre163 {
+    const instance = new HyperbolaPayoutCurvePiecePre163();
+
+    instance.usePositivePiece = hyperbolaPayoutCurvePiece.usePositivePiece;
+
+    const points = HyperbolaPayoutCurvePiece.points;
+
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i];
+      instance[`${point}Sign`] = hyperbolaPayoutCurvePiece[point].gte(
+        new BigNumber(0),
+      );
+      instance[point] = BigInt(
+        getIntegerValue(hyperbolaPayoutCurvePiece[point]),
+      );
+      instance[`${point}ExtraPrecision`] = getPrecision(
+        hyperbolaPayoutCurvePiece[point],
+      );
     }
 
     return instance;

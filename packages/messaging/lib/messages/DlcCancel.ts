@@ -3,6 +3,7 @@ import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
+import { DlcCancelV0Pre163 } from './pre-163/DlcCancel';
 
 export abstract class DlcCancel {
   public static deserialize(reader: Buffer | BufferReader): DlcCancelV0 {
@@ -46,6 +47,24 @@ export class DlcCancelV0 extends DlcCancel implements IDlcMessage {
 
     instance.contractId = reader.readBytes(32);
     instance.cancelType = reader.readUInt8();
+
+    return instance;
+  }
+
+  public static fromPre163(cancel: DlcCancelV0Pre163): DlcCancelV0 {
+    const instance = new DlcCancelV0();
+
+    instance.contractId = cancel.contractId;
+    instance.cancelType = cancel.cancelType;
+
+    return instance;
+  }
+
+  public static toPre163(cancel: DlcCancelV0): DlcCancelV0Pre163 {
+    const instance = new DlcCancelV0Pre163();
+
+    instance.contractId = cancel.contractId;
+    instance.cancelType = cancel.cancelType;
 
     return instance;
   }

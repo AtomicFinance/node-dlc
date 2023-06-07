@@ -1,9 +1,14 @@
 import { sigToDER } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
+import { ScriptWitness } from '../../lib';
 import { CetAdaptorSignatures } from '../../lib/messages/CetAdaptorSignatures';
 import { DlcSign, DlcSignV0 } from '../../lib/messages/DlcSign';
 import { FundingSignatures } from '../../lib/messages/FundingSignatures';
+import { CetAdaptorSignaturesV0Pre163 } from '../../lib/messages/pre-163/CetAdaptorSignatures';
+import { DlcSignV0Pre163 } from '../../lib/messages/pre-163/DlcSign';
+import { FundingSignaturesV0Pre163 } from '../../lib/messages/pre-163/FundingSignatures';
+import { ScriptWitnessV0Pre163 } from '../../lib/messages/pre-163/ScriptWitness';
 
 describe('DlcSign', () => {
   let instance: DlcSignV0;
@@ -114,6 +119,127 @@ describe('DlcSign', () => {
         expect(json.message.refundSignature).to.equal(
           sigToDER(refundSignature).toString('hex'),
         );
+      });
+    });
+
+    describe('toPre163', () => {
+      it('returns pre-163 instance', () => {
+        const pre163 = DlcSignV0.toPre163(instance);
+        expect(pre163).to.be.instanceof(DlcSignV0Pre163);
+        expect(pre163.contractId).to.equal(instance.contractId);
+        expect(pre163.cetSignatures).to.be.instanceof(
+          CetAdaptorSignaturesV0Pre163,
+        );
+        expect(pre163.cetSignatures.sigs).to.deep.equal(
+          instance.cetSignatures.sigs,
+        );
+        expect(pre163.refundSignature).to.equal(instance.refundSignature);
+        expect(pre163.fundingSignatures).to.be.instanceof(
+          FundingSignaturesV0Pre163,
+        );
+        expect(pre163.fundingSignatures.witnessElements.length).to.equal(
+          instance.fundingSignatures.witnessElements.length,
+        );
+        for (
+          let i = 0;
+          i < pre163.fundingSignatures.witnessElements.length;
+          i++
+        ) {
+          expect(pre163.fundingSignatures.witnessElements[i].length).to.equal(
+            instance.fundingSignatures.witnessElements[i].length,
+          );
+          for (
+            let j = 0;
+            j < pre163.fundingSignatures.witnessElements[i].length;
+            j++
+          ) {
+            expect(
+              pre163.fundingSignatures.witnessElements[i][j],
+            ).to.be.instanceof(ScriptWitnessV0Pre163);
+            expect(
+              pre163.fundingSignatures.witnessElements[i][j],
+            ).to.deep.equal(instance.fundingSignatures.witnessElements[i][j]);
+          }
+        }
+      });
+    });
+
+    describe('fromPre163', () => {
+      const cetAdaptorSignaturesV0Pre163 = Buffer.concat([
+        Buffer.from(
+          'fda716' + // type
+            'fd01e7', // length
+          'hex',
+        ),
+        cetAdaptorSignatures,
+      ]);
+      const firstWitness =
+        '304402203812d7d194d44ec68f244cc3fd68507c563ec8c729fdfa3f4a79395b98abe84f0220704ab3f3ffd9c50c2488e59f90a90465fccc2d924d67a1e98a133676bf52f37201';
+      const firstWitnessElement =
+        '0047' + // witness_element_len
+        firstWitness;
+      const secondWitness =
+        '02dde41aa1f21671a2e28ad92155d2d66e0b5428de15d18db4cbcf216bf00de919';
+      const secondWitnessElement =
+        '0021' + // witness_element_len
+        secondWitness;
+      const fundingSignaturesV0Pre163 = Buffer.from(
+        'fda718' + // type funding_signatures_v0
+          '70' + // length
+          '0001' + // num_witnesses
+          '0002' + // num_witness_elements
+          firstWitnessElement +
+          secondWitnessElement,
+        'hex',
+      );
+
+      const pre163 = new DlcSignV0Pre163();
+
+      before(() => {
+        pre163.contractId = contractId;
+        pre163.cetSignatures = CetAdaptorSignaturesV0Pre163.deserialize(
+          cetAdaptorSignaturesV0Pre163,
+        );
+        pre163.refundSignature = refundSignature;
+        pre163.fundingSignatures = FundingSignaturesV0Pre163.deserialize(
+          fundingSignaturesV0Pre163,
+        );
+      });
+
+      it('returns post-163 instance', () => {
+        const post163 = DlcSignV0.fromPre163(pre163);
+        expect(post163).to.be.instanceof(DlcSignV0);
+        expect(post163.contractId).to.equal(pre163.contractId);
+        expect(post163.cetSignatures).to.be.instanceof(CetAdaptorSignatures);
+        expect(post163.cetSignatures.sigs).to.deep.equal(
+          pre163.cetSignatures.sigs,
+        );
+        expect(post163.refundSignature).to.equal(pre163.refundSignature);
+        expect(post163.fundingSignatures).to.be.instanceof(FundingSignatures);
+        expect(post163.fundingSignatures.witnessElements.length).to.equal(
+          pre163.fundingSignatures.witnessElements.length,
+        );
+        for (
+          let i = 0;
+          i < post163.fundingSignatures.witnessElements.length;
+          i++
+        ) {
+          expect(post163.fundingSignatures.witnessElements[i].length).to.equal(
+            pre163.fundingSignatures.witnessElements[i].length,
+          );
+          for (
+            let j = 0;
+            j < post163.fundingSignatures.witnessElements[i].length;
+            j++
+          ) {
+            expect(
+              post163.fundingSignatures.witnessElements[i][j],
+            ).to.be.instanceof(ScriptWitness);
+            expect(
+              post163.fundingSignatures.witnessElements[i][j],
+            ).to.deep.equal(pre163.fundingSignatures.witnessElements[i][j]);
+          }
+        }
       });
     });
   });

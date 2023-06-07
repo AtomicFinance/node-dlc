@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { RoundingIntervals } from '../../lib';
+import { RoundingIntervalsV0Pre163 } from '../../lib/messages/pre-163/RoundingIntervals';
 
 describe('RoundingIntervals', () => {
   describe('serialize', () => {
@@ -69,6 +70,50 @@ describe('RoundingIntervals', () => {
       expect(() => instance.validate()).to.throw(
         'Intervals must be strictly increasing',
       );
+    });
+  });
+
+  describe('toPre163', () => {
+    const instance = new RoundingIntervals();
+
+    before(() => {
+      const intervals = [
+        { beginInterval: 1n, roundingMod: 2n },
+        { beginInterval: 3n, roundingMod: 4n },
+      ];
+      instance.intervals = intervals;
+    });
+
+    it('returns pre-163 instance', () => {
+      const pre163 = RoundingIntervals.toPre163(instance);
+      expect(pre163).to.be.instanceof(RoundingIntervalsV0Pre163);
+      expect(pre163.intervals.length).to.eq(2);
+      expect(pre163.intervals[0].beginInterval).to.eq(1n);
+      expect(pre163.intervals[0].roundingMod).to.eq(2n);
+      expect(pre163.intervals[1].beginInterval).to.eq(3n);
+      expect(pre163.intervals[1].roundingMod).to.eq(4n);
+    });
+  });
+
+  describe('fromPre163', () => {
+    const pre163 = new RoundingIntervalsV0Pre163();
+
+    before(() => {
+      const intervals = [
+        { beginInterval: 1n, roundingMod: 2n },
+        { beginInterval: 3n, roundingMod: 4n },
+      ];
+      pre163.intervals = intervals;
+    });
+
+    it('returns post-163 instance', () => {
+      const post163 = RoundingIntervals.fromPre163(pre163);
+      expect(post163).to.be.instanceof(RoundingIntervals);
+      expect(post163.intervals.length).to.eq(2);
+      expect(post163.intervals[0].beginInterval).to.eq(1n);
+      expect(post163.intervals[0].roundingMod).to.eq(2n);
+      expect(post163.intervals[1].beginInterval).to.eq(3n);
+      expect(post163.intervals[1].roundingMod).to.eq(4n);
     });
   });
 });

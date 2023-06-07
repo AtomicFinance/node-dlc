@@ -5,6 +5,7 @@ import {
   ContractDescriptorType,
   EnumeratedContractDescriptor,
 } from '../../lib/messages/ContractDescriptor';
+import { ContractDescriptorV0Pre163 } from "../../lib/messages/pre-163/ContractDescriptor";
 
 describe('EnumeratedContractDescriptor', () => {
   const outcomeOne = '1';
@@ -74,6 +75,69 @@ describe('EnumeratedContractDescriptor', () => {
         expect(instance.outcomes[1].localPayout).to.equal(payoutTwo);
         expect(instance.outcomes[2].outcome).to.deep.equal(outcomeThree);
         expect(instance.outcomes[2].localPayout).to.equal(payoutThree);
+      }
+    });
+  });
+
+  describe('toPre163', () => {
+    const post163 = new EnumeratedContractDescriptor();
+
+    before(() => {
+      post163.outcomes = [
+        { outcome: outcomeOne, localPayout: payoutOne },
+        { outcome: outcomeTwo, localPayout: payoutTwo },
+        { outcome: outcomeThree, localPayout: payoutThree },
+      ];
+    });
+
+    it('returns pre-163 instance', () => {
+      const pre163 = ContractDescriptor.toPre163(post163);
+      expect(pre163).to.be.instanceof(ContractDescriptorV0Pre163);
+      for (
+        let i = 0;
+        i < (pre163 as ContractDescriptorV0Pre163).outcomes.length;
+        i++
+      ) {
+        expect(
+          (pre163 as ContractDescriptorV0Pre163).outcomes[i].outcome.toString(
+            'utf-8',
+          ),
+        ).to.equal(post163.outcomes[i].outcome);
+        expect(
+          (pre163 as ContractDescriptorV0Pre163).outcomes[i].localPayout,
+        ).to.equal(post163.outcomes[i].localPayout);
+      }
+    });
+  });
+
+  describe('fromPre163', () => {
+    const pre163 = new ContractDescriptorV0Pre163();
+
+    before(() => {
+      pre163.outcomes = [
+        { outcome: Buffer.from(outcomeOne, 'utf-8'), localPayout: payoutOne },
+        { outcome: Buffer.from(outcomeTwo, 'utf-8'), localPayout: payoutTwo },
+        {
+          outcome: Buffer.from(outcomeThree, 'utf-8'),
+          localPayout: payoutThree,
+        },
+      ];
+    });
+
+    it('returns post-163 instance', () => {
+      const post163 = ContractDescriptor.fromPre163(pre163);
+      expect(post163).to.be.instanceof(EnumeratedContractDescriptor);
+      for (
+        let i = 0;
+        i < (post163 as EnumeratedContractDescriptor).outcomes.length;
+        i++
+      ) {
+        expect(
+          (post163 as EnumeratedContractDescriptor).outcomes[i].outcome,
+        ).to.equal(pre163.outcomes[i].outcome.toString('utf-8'));
+        expect(
+          (post163 as EnumeratedContractDescriptor).outcomes[i].localPayout,
+        ).to.equal(pre163.outcomes[i].localPayout);
       }
     });
   });

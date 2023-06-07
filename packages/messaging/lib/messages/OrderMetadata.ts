@@ -3,6 +3,7 @@ import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
+import { OrderMetadataV0Pre163 } from "./pre-163/OrderMetadata";
 
 export abstract class OrderMetadata {
   public static deserialize(reader: Buffer | BufferReader): OrderMetadata {
@@ -55,6 +56,26 @@ export class OrderMetadataV0 extends OrderMetadata implements IDlcMessage {
       instance.createdAt = reader.readUInt32BE();
       instance.goodTill = reader.readUInt32BE();
     }
+
+    return instance;
+  }
+
+  public static fromPre163(metadata: OrderMetadataV0Pre163): OrderMetadataV0 {
+    const instance = new OrderMetadataV0();
+
+    instance.offerId = metadata.offerId;
+    instance.createdAt = metadata.createdAt;
+    instance.goodTill = metadata.goodTill;
+
+    return instance;
+  }
+
+  public static toPre163(metadata: OrderMetadataV0): OrderMetadataV0Pre163 {
+    const instance = new OrderMetadataV0Pre163();
+
+    instance.offerId = metadata.offerId;
+    instance.createdAt = metadata.createdAt;
+    instance.goodTill = metadata.goodTill;
 
     return instance;
   }

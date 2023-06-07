@@ -1,10 +1,21 @@
 import { expect } from 'chai';
 
 import { LOCKTIME_THRESHOLD } from '../../lib';
-import { ContractInfo } from '../../lib/messages/ContractInfo';
+import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
+import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
+import {
+  ContractInfo,
+  SingleContractInfo,
+} from '../../lib/messages/ContractInfo';
 import { OrderIrcInfoV0 } from '../../lib/messages/OrderIrcInfo';
 import { OrderMetadataV0 } from '../../lib/messages/OrderMetadata';
 import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
+import { ContractDescriptorV0Pre163 } from '../../lib/messages/pre-163/ContractDescriptor';
+import { ContractInfoV0Pre163 } from '../../lib/messages/pre-163/ContractInfo';
+import { OracleInfoV0Pre163 } from '../../lib/messages/pre-163/OracleInfo';
+import { OrderIrcInfoV0Pre163 } from '../../lib/messages/pre-163/OrderIrcInfo';
+import { OrderMetadataV0Pre163 } from '../../lib/messages/pre-163/OrderMetadata';
+import { OrderOfferV0Pre163 } from '../../lib/messages/pre-163/OrderOffer';
 
 describe('OrderOffer', () => {
   const chainHashBuf = Buffer.from(
@@ -466,6 +477,261 @@ describe('OrderOffer', () => {
       expect(function () {
         instance.validate();
       }).to.throw(Error);
+    });
+  });
+
+  describe('toPre163', () => {
+    const instance = new OrderOfferV0();
+
+    before(() => {
+      instance.protocolVersion = 1;
+      instance.contractFlags = 0;
+      instance.chainHash = chainHashBuf;
+      instance.contractInfo = ContractInfo.deserialize(
+        Buffer.from(
+          '00' + // type contract_info
+            '000000000bebc200' + // total_collateral
+            '00' + // type contract_descriptor
+            '03' + // num_outcomes
+            '01' + // outcome_1_len
+            '31' + // outcome_1
+            '0000000000000000' + // payout_1
+            '01' + // outcome_2_len
+            '32' + // outcome_2
+            '00000000092363a3' + // payout_2
+            '01' + // outcome_3_len
+            '33' + // outcome_3
+            '000000000bebc200' + // payout_3
+            '00' + // type oracle_info
+            'fdd824' + // type oracle_announcement
+            'a4' + // length
+            'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+            '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+            'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+            'fdd822' + // type oracle_event
+            '40' + // length
+            '0001' + // nb_nonces
+            '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+            '00000000' + // event_maturity_epoch
+            'fdd806' + // type enum_event_descriptor
+            '10' + // length
+            '0002' + // num_outcomes
+            '06' + // outcome_1_len
+            '64756d6d7931' + // outcome_1
+            '06' + // outcome_2_len
+            '64756d6d7932' + // outcome_2
+            '05' + // event_id_length
+            '64756d6d79', // event_id
+          'hex',
+        ),
+      );
+      instance.offerCollateralSatoshis = BigInt(100000000);
+      instance.feeRatePerVb = BigInt(1);
+      instance.cetLocktime = 100;
+      instance.refundLocktime = 200;
+    });
+
+    it('returns pre-163 instance', () => {
+      const pre163 = OrderOfferV0.toPre163(instance);
+      expect(pre163).to.be.instanceof(OrderOfferV0Pre163);
+      expect(pre163.chainHash).to.equal(instance.chainHash);
+      expect(pre163.contractInfo).to.be.instanceof(ContractInfoV0Pre163);
+      expect(pre163.contractInfo.totalCollateral).to.equal(
+        instance.contractInfo.totalCollateral,
+      );
+      expect(
+        (pre163.contractInfo as ContractInfoV0Pre163).contractDescriptor,
+      ).to.be.instanceof(ContractDescriptorV0Pre163);
+      for (
+        let i = 0;
+        i <
+        ((pre163.contractInfo as ContractInfoV0Pre163)
+          .contractDescriptor as ContractDescriptorV0Pre163).outcomes.length;
+        i++
+      ) {
+        expect(
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .contractDescriptor as ContractDescriptorV0Pre163).outcomes[
+            i
+          ].outcome.toString('utf-8'),
+        ).to.equal(
+          ((instance.contractInfo as SingleContractInfo)
+            .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+            .outcome,
+        );
+        expect(
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .contractDescriptor as ContractDescriptorV0Pre163).outcomes[i]
+            .localPayout,
+        ).to.equal(
+          ((instance.contractInfo as SingleContractInfo)
+            .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+            .localPayout,
+        );
+      }
+      expect(
+        (pre163.contractInfo as ContractInfoV0Pre163).oracleInfo,
+      ).to.be.instanceof(OracleInfoV0Pre163);
+      expect(
+        (pre163.contractInfo as ContractInfoV0Pre163).oracleInfo.announcement,
+      ).to.equal(
+        ((instance.contractInfo as SingleContractInfo)
+          .oracleInfo as SingleOracleInfo).announcement,
+      );
+      expect(pre163.offerCollateralSatoshis).to.equal(
+        instance.offerCollateralSatoshis,
+      );
+      expect(pre163.feeRatePerVb).to.equal(instance.feeRatePerVb);
+      expect(pre163.cetLocktime).to.equal(instance.cetLocktime);
+      expect(pre163.refundLocktime).to.equal(instance.refundLocktime);
+      if (instance.metadata) {
+        expect(pre163.metadata).to.be.instanceof(OrderMetadataV0Pre163);
+        expect((pre163.metadata as OrderMetadataV0Pre163)?.offerId).to.equal(
+          (instance.metadata as OrderMetadataV0)?.offerId,
+        );
+        expect((pre163.metadata as OrderMetadataV0Pre163)?.createdAt).to.equal(
+          (instance.metadata as OrderMetadataV0)?.createdAt,
+        );
+        expect((pre163.metadata as OrderMetadataV0Pre163)?.goodTill).to.equal(
+          (instance.metadata as OrderMetadataV0)?.goodTill,
+        );
+      }
+      if (instance.ircInfo) {
+        expect(pre163.ircInfo).to.be.instanceof(OrderIrcInfoV0Pre163);
+        expect((pre163.ircInfo as OrderIrcInfoV0Pre163)?.nick).to.equal(
+          (instance.ircInfo as OrderIrcInfoV0)?.nick,
+        );
+        expect((pre163.ircInfo as OrderIrcInfoV0Pre163)?.pubKey).to.equal(
+          (instance.ircInfo as OrderIrcInfoV0)?.pubKey,
+        );
+      }
+    });
+  });
+
+  describe('fromPre163', () => {
+    const pre163 = new OrderOfferV0Pre163();
+
+    before(() => {
+      pre163.chainHash = chainHashBuf;
+      pre163.contractInfo = ContractInfoV0Pre163.deserialize(
+        Buffer.from(
+          'fdd82e' + // type contract_info
+            'fd0131' + // length
+            '000000000bebc200' + // total_collateral
+            'fda710' + // type contract_descriptor
+            '79' + // length
+            '03' + // num_outcomes
+            'c5a7affd51901bc7a51829b320d588dc7af0ad1f3d56f20a1d3c60c9ba7c6722' + // outcome_1
+            '0000000000000000' + // payout_1
+            'adf1c23fbeed6611efa5caa0e9ed4c440c450a18bc010a6c867e05873ac08ead' + // outcome_2
+            '00000000092363a3' + // payout_2
+            '6922250552ad6bb10ab3ddd6981b530aa9a6fd05725bf85b59e3e51163905288' + // outcome_3
+            '000000000bebc200' + // payout_3
+            'fda712' + // type oracle_info
+            'a8' + // length
+            'fdd824' + // type oracle_announcement
+            'a4' + // length
+            'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+            '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+            'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+            'fdd822' + // type oracle_event
+            '40' + // length
+            '0001' + // nb_nonces
+            '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+            '00000000' + // event_maturity_epoch
+            'fdd806' + // type enum_event_descriptor
+            '10' + // length
+            '0002' + // num_outcomes
+            '06' + // outcome_1_len
+            '64756d6d7931' + // outcome_1
+            '06' + // outcome_2_len
+            '64756d6d7932' + // outcome_2
+            '05' + // event_id_length
+            '64756d6d79', // event_id
+          'hex',
+        ),
+      );
+      pre163.offerCollateralSatoshis = BigInt(100000000);
+      pre163.feeRatePerVb = BigInt(1);
+      pre163.cetLocktime = 100;
+      pre163.refundLocktime = 200;
+    });
+
+    it('returns post-163 instance', () => {
+      const post163 = OrderOfferV0.fromPre163(pre163, 0);
+      expect(post163).to.be.instanceof(OrderOfferV0);
+      expect(post163.chainHash).to.equal(pre163.chainHash);
+      expect(post163.contractInfo).to.be.instanceof(SingleContractInfo);
+      expect(post163.contractInfo.totalCollateral).to.equal(
+        pre163.contractInfo.totalCollateral,
+      );
+      expect(
+        (post163.contractInfo as SingleContractInfo).contractDescriptor,
+      ).to.be.instanceof(EnumeratedContractDescriptor);
+      for (
+        let i = 0;
+        i <
+        ((post163.contractInfo as SingleContractInfo)
+          .contractDescriptor as EnumeratedContractDescriptor).outcomes.length;
+        i++
+      ) {
+        expect(
+          ((post163.contractInfo as SingleContractInfo)
+            .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+            .outcome,
+        ).to.equal(
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .contractDescriptor as ContractDescriptorV0Pre163).outcomes[
+            i
+          ].outcome.toString('utf-8'),
+        );
+        expect(
+          ((post163.contractInfo as SingleContractInfo)
+            .contractDescriptor as EnumeratedContractDescriptor).outcomes[i]
+            .localPayout,
+        ).to.equal(
+          ((pre163.contractInfo as ContractInfoV0Pre163)
+            .contractDescriptor as ContractDescriptorV0Pre163).outcomes[i]
+            .localPayout,
+        );
+      }
+      expect(
+        (post163.contractInfo as SingleContractInfo).oracleInfo,
+      ).to.be.instanceof(SingleOracleInfo);
+      expect(
+        ((post163.contractInfo as SingleContractInfo)
+          .oracleInfo as SingleOracleInfo).announcement,
+      ).to.equal(
+        ((pre163.contractInfo as ContractInfoV0Pre163)
+          .oracleInfo as OracleInfoV0Pre163).announcement,
+      );
+      expect(post163.offerCollateralSatoshis).to.equal(
+        pre163.offerCollateralSatoshis,
+      );
+      expect(post163.feeRatePerVb).to.equal(pre163.feeRatePerVb);
+      expect(post163.cetLocktime).to.equal(pre163.cetLocktime);
+      expect(post163.refundLocktime).to.equal(pre163.refundLocktime);
+      if (pre163.metadata) {
+        expect(post163.metadata).to.be.instanceof(OrderMetadataV0);
+        expect((post163.metadata as OrderMetadataV0)?.offerId).to.equal(
+          (pre163.metadata as OrderMetadataV0Pre163)?.offerId,
+        );
+        expect((post163.metadata as OrderMetadataV0)?.createdAt).to.equal(
+          (pre163.metadata as OrderMetadataV0Pre163)?.createdAt,
+        );
+        expect((post163.metadata as OrderMetadataV0)?.goodTill).to.equal(
+          (pre163.metadata as OrderMetadataV0Pre163)?.goodTill,
+        );
+      }
+      if (pre163.ircInfo) {
+        expect(post163.ircInfo).to.be.instanceof(OrderIrcInfoV0);
+        expect((post163.ircInfo as OrderIrcInfoV0)?.nick).to.equal(
+          (pre163.ircInfo as OrderIrcInfoV0Pre163)?.nick,
+        );
+        expect((post163.ircInfo as OrderIrcInfoV0)?.pubKey).to.equal(
+          (pre163.ircInfo as OrderIrcInfoV0Pre163)?.pubKey,
+        );
+      }
     });
   });
 });

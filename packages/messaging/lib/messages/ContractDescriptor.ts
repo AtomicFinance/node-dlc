@@ -35,7 +35,7 @@ export abstract class ContractDescriptor {
     }
   }
 
-  public static from163(
+  public static fromPre163(
     contractDescriptor: ContractDescriptorPre163,
   ): ContractDescriptor {
     if (contractDescriptor instanceof ContractDescriptorV0Pre163) {
@@ -45,6 +45,20 @@ export abstract class ContractDescriptor {
     } else {
       throw new Error(
         'Contract Descriptor must be ContractDescriptorV0 or ContractDescriptorV1',
+      );
+    }
+  }
+
+  public static toPre163(
+    contractDescriptor: ContractDescriptor,
+  ): ContractDescriptorPre163 {
+    if (contractDescriptor instanceof EnumeratedContractDescriptor) {
+      return EnumeratedContractDescriptor.toPre163(contractDescriptor);
+    } else if (contractDescriptor instanceof NumericContractDescriptor) {
+      return NumericContractDescriptor.toPre163(contractDescriptor);
+    } else {
+      throw new Error(
+        'Contract Descriptor must be EnumeratedContractDescriptor or NumericContractDescriptor',
       );
     }
   }
@@ -107,6 +121,21 @@ export class EnumeratedContractDescriptor
     instance.outcomes = contractDescriptor.outcomes.map((outcome) => {
       return {
         outcome: outcome.outcome.toString('utf8'),
+        localPayout: outcome.localPayout,
+      };
+    });
+
+    return instance;
+  }
+
+  public static toPre163(
+    contractDescriptor: EnumeratedContractDescriptor,
+  ): ContractDescriptorV0Pre163 {
+    const instance = new ContractDescriptorV0Pre163();
+
+    instance.outcomes = contractDescriptor.outcomes.map((outcome) => {
+      return {
+        outcome: Buffer.from(outcome.outcome, 'utf-8'),
         localPayout: outcome.localPayout,
       };
     });
@@ -201,7 +230,23 @@ export class NumericContractDescriptor
     instance.payoutFunction = PayoutFunction.fromPre163(
       contractDescriptor.payoutFunction,
     );
-    instance.roundingIntervals = RoundingIntervals.from163(
+    instance.roundingIntervals = RoundingIntervals.fromPre163(
+      contractDescriptor.roundingIntervals,
+    );
+
+    return instance;
+  }
+
+  public static toPre163(
+    contractDescriptor: NumericContractDescriptor,
+  ): ContractDescriptorV1Pre163 {
+    const instance = new ContractDescriptorV1Pre163();
+
+    instance.numDigits = contractDescriptor.numDigits;
+    instance.payoutFunction = PayoutFunction.toPre163(
+      contractDescriptor.payoutFunction,
+    );
+    instance.roundingIntervals = RoundingIntervals.toPre163(
       contractDescriptor.roundingIntervals,
     );
 

@@ -6,8 +6,8 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import {
   IHyperbolaPayoutCurvePieceJSON,
-  PayoutCurvePiece,
   IPolynomialPayoutCurvePieceJSON,
+  PayoutCurvePiece,
 } from './PayoutCurvePiece';
 import { PayoutFunctionV0Pre163 } from './pre-163/PayoutFunction';
 
@@ -50,7 +50,9 @@ export class PayoutFunction implements IDlcMessage {
     return instance;
   }
 
-  public static fromPre163(payoutFunction: PayoutFunctionV0Pre163): PayoutFunction {
+  public static fromPre163(
+    payoutFunction: PayoutFunctionV0Pre163,
+  ): PayoutFunction {
     const instance = new PayoutFunction();
 
     const pieces = payoutFunction.pieces;
@@ -86,6 +88,44 @@ export class PayoutFunction implements IDlcMessage {
       lastPiece.endpointPayout,
     );
     instance.lastEndpoint.extraPrecision = lastPiece.extraPrecision;
+
+    return instance;
+  }
+
+  public static toPre163(
+    payoutFunction: PayoutFunction,
+  ): PayoutFunctionV0Pre163 {
+    const instance = new PayoutFunctionV0Pre163();
+
+    const pieces = payoutFunction.pieces;
+
+    for (let i = 0; i < pieces.length; i++) {
+      if (i === 0) {
+        instance.endpoint0 = pieces[i].endPoint.eventOutcome;
+        instance.endpointPayout0 = pieces[i].endPoint.outcomePayout.sats;
+        instance.extraPrecision0 = pieces[i].endPoint.extraPrecision;
+      } else {
+        instance.pieces.push({
+          payoutCurvePiece: PayoutCurvePiece.toPre163(
+            pieces[i - 1].payoutCurvePiece,
+          ),
+          endpoint: pieces[i].endPoint.eventOutcome,
+          endpointPayout: pieces[i].endPoint.outcomePayout.sats,
+          extraPrecision: pieces[i].endPoint.extraPrecision,
+        });
+      }
+    }
+
+    const lastPiece = pieces[pieces.length - 1];
+
+    instance.pieces.push({
+      payoutCurvePiece: PayoutCurvePiece.toPre163(
+        lastPiece.payoutCurvePiece,
+      ),
+      endpoint: payoutFunction.lastEndpoint.eventOutcome,
+      endpointPayout: payoutFunction.lastEndpoint.outcomePayout.sats,
+      extraPrecision: payoutFunction.lastEndpoint.extraPrecision,
+    });
 
     return instance;
   }

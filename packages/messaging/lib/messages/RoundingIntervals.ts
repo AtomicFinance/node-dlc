@@ -27,10 +27,20 @@ export class RoundingIntervals implements IDlcMessage {
     return instance;
   }
 
-  public static from163(
+  public static fromPre163(
     roundingIntervals: RoundingIntervalsV0Pre163,
   ): RoundingIntervals {
     const instance = new RoundingIntervals();
+
+    instance.intervals = roundingIntervals.intervals;
+
+    return instance;
+  }
+
+  public static toPre163(
+    roundingIntervals: RoundingIntervals,
+  ): RoundingIntervalsV0Pre163 {
+    const instance = new RoundingIntervalsV0Pre163();
 
     instance.intervals = roundingIntervals.intervals;
 

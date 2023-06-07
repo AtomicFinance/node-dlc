@@ -49,6 +49,19 @@ export class FundingInput implements IDlcMessage {
     return instance;
   }
 
+  public static toPre163(fundingInput: FundingInput): FundingInputV0Pre163 {
+    const instance = new FundingInputV0Pre163();
+
+    instance.inputSerialId = fundingInput.inputSerialId;
+    instance.prevTx = fundingInput.prevTx;
+    instance.prevTxVout = fundingInput.prevTxVout;
+    instance.sequence = fundingInput.sequence;
+    instance.maxWitnessLen = fundingInput.maxWitnessLen;
+    instance.redeemScript = fundingInput.redeemScript;
+
+    return instance;
+  }
+
   /**
    * The type for funding_input_v0 message. funding_input_v0 = 42772
    */

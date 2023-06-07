@@ -120,6 +120,24 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
     return instance;
   }
 
+  public static toPre163(dlcTxs: DlcTransactionsV0): DlcTransactionsV0Pre163 {
+    const instance = new DlcTransactionsV0Pre163();
+
+    instance.contractId = dlcTxs.contractId;
+    instance.fundTx = dlcTxs.fundTx;
+    instance.fundTxVout = dlcTxs.fundTxVout;
+    instance.fundEpoch = dlcTxs.fundEpoch;
+    instance.fundBroadcastHeight = dlcTxs.fundBroadcastHeight;
+    instance.refundTx = dlcTxs.refundTx;
+    instance.cets = dlcTxs.cets;
+    instance.closeEpoch = dlcTxs.closeEpoch;
+    instance.closeTxHash = dlcTxs.closeTxHash;
+    instance.closeType = dlcTxs.closeType;
+    instance.closeBroadcastHeight = dlcTxs.closeBroadcastHeight;
+
+    return instance;
+  }
+
   /**
    * The type for offer_dlc_v0 message. offer_dlc_v0 = 42778
    */

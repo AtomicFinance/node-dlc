@@ -48,6 +48,16 @@ export class CetAdaptorSignatures implements IDlcMessage {
     return instance;
   }
 
+  public static toPre163(
+    cetSignatures: CetAdaptorSignatures,
+  ): CetAdaptorSignaturesV0Pre163 {
+    const instance = new CetAdaptorSignaturesV0Pre163();
+
+    instance.sigs = cetSignatures.sigs;
+
+    return instance;
+  }
+
   /**
    * The type for cet_adaptor_signature message. cet_adaptor_signature = 42774
    */

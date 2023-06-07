@@ -9,6 +9,8 @@ import {
 } from './OrderNegotiationFields';
 import { getTlv } from "../serialize/getTlv";
 import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
+import { OrderAcceptV0Pre163 } from './pre-163/OrderAccept';
+import { OrderNegotiationFieldsV0Pre163 } from './pre-163/OrderNegotiationFields';
 
 export abstract class OrderAccept {
   public static deserialize(reader: Buffer | BufferReader): OrderAccept {
@@ -65,6 +67,41 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
       const { type, length, body } = deserializeTlv(tlvReader);
 
       instance.tlvs.push({ type, length, body });
+    }
+
+    return instance;
+  }
+
+  public static fromPre163(accept: OrderAcceptV0Pre163): OrderAcceptV0 {
+    const instance = new OrderAcceptV0();
+
+    instance.protocolVersion = 1;
+    instance.tempOrderId = accept.tempOrderId;
+    if (accept.negotiationFields) {
+      instance.negotiationFields = OrderNegotiationFields.fromPre163(
+        accept.negotiationFields,
+      );
+    } else {
+      instance.negotiationFields = new OrderNegotiationFields();
+    }
+
+    return instance;
+  }
+
+  public static toPre163(
+    accept: OrderAcceptV0,
+    chainHash: string,
+  ): OrderAcceptV0Pre163 {
+    const instance = new OrderAcceptV0Pre163();
+
+    instance.tempOrderId = accept.tempOrderId;
+    if (accept.negotiationFields) {
+      instance.negotiationFields = OrderNegotiationFields.toPre163(
+        accept.negotiationFields,
+        chainHash,
+      );
+    } else {
+      instance.negotiationFields = new OrderNegotiationFieldsV0Pre163();
     }
 
     return instance;

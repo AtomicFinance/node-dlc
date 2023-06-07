@@ -88,6 +88,21 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     return instance;
   }
 
+  public static toPre163(sign: DlcSignV0): DlcSignV0Pre163 {
+    const instance = new DlcSignV0Pre163();
+
+    instance.contractId = sign.contractId;
+    instance.cetSignatures = CetAdaptorSignatures.toPre163(
+      sign.cetSignatures,
+    );
+    instance.refundSignature = sign.refundSignature;
+    instance.fundingSignatures = FundingSignatures.toPre163(
+      sign.fundingSignatures,
+    );
+
+    return instance;
+  }
+
   /**
    * The type for sign_dlc_v0 message. sign_dlc_v0 = 42782
    */

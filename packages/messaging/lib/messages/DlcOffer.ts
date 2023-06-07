@@ -131,6 +131,29 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     return instance;
   }
 
+  public static toPre163(offer: DlcOfferV0): DlcOfferV0Pre163 {
+    const instance = new DlcOfferV0Pre163();
+
+    instance.contractFlags = Buffer.from(offer.contractFlags.toString(), 'hex');
+    instance.chainHash = offer.chainHash;
+    instance.contractInfo = ContractInfo.toPre163(offer.contractInfo);
+    instance.fundingPubKey = offer.fundingPubKey;
+    instance.payoutSPK = offer.payoutSPK;
+    instance.payoutSerialId = offer.payoutSerialId;
+    instance.offerCollateralSatoshis = offer.offerCollateral;
+    instance.fundingInputs = offer.fundingInputs.map((input) =>
+      FundingInput.toPre163(input),
+    );
+    instance.changeSPK = offer.changeSPK;
+    instance.changeSerialId = offer.changeSerialId;
+    instance.fundOutputSerialId = offer.fundOutputSerialId;
+    instance.feeRatePerVb = offer.feeRatePerVb;
+    instance.cetLocktime = offer.cetLocktime;
+    instance.refundLocktime = offer.refundLocktime;
+
+    return instance;
+  }
+
   /**
    * The type for offer_dlc_v0 message. offer_dlc_v0 = 42778
    */

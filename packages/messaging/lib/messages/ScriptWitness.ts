@@ -1,5 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
+import { ScriptWitnessV0Pre163 } from './pre-163/ScriptWitness';
+
 /**
  * ScriptWitness is the data for a witness element in a witness stack.
  * An empty witness_stack is an error, as every input must be Segwit.
@@ -17,6 +19,22 @@ export class ScriptWitness {
 
     instance.length = Number(reader.readBigSize());
     instance.witness = reader.readBytes(instance.length);
+
+    return instance;
+  }
+
+  public static fromPre163(witness: ScriptWitnessV0Pre163): ScriptWitness {
+    const instance = new ScriptWitness();
+
+    instance.witness = witness.witness;
+
+    return instance;
+  }
+
+  public static toPre163(witness: ScriptWitness): ScriptWitnessV0Pre163 {
+    const instance = new ScriptWitnessV0Pre163();
+
+    instance.witness = witness.witness;
 
     return instance;
   }
@@ -51,6 +69,7 @@ export class ScriptWitness {
   public serialize(): Buffer {
     const writer = new BufferWriter();
 
+    // writer.writeUInt16BE(this.witness.length);
     writer.writeBigSize(this.witness.length);
     writer.writeBytes(this.witness);
 

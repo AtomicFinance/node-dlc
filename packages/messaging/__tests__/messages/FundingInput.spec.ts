@@ -3,6 +3,7 @@ import { StreamReader } from '@node-lightning/bufio';
 import { expect } from 'chai';
 
 import { FundingInput } from '../../lib/messages/FundingInput';
+import { FundingInputV0Pre163 } from '../../lib/messages/pre-163/FundingInput';
 
 describe('FundingInput', () => {
   let instance: FundingInput;
@@ -73,6 +74,47 @@ describe('FundingInput', () => {
       expect(function () {
         instance.validate();
       }).to.throw(Error);
+    });
+  });
+
+  describe('toPre163', () => {
+    it('returns pre-163 instance', () => {
+      const pre163 = FundingInput.toPre163(instance);
+      expect(pre163).to.be.instanceof(FundingInputV0Pre163);
+      expect(Number(pre163.inputSerialId)).to.equal(
+        Number(instance.inputSerialId),
+      );
+      expect(pre163.prevTx).to.deep.equal(instance.prevTx);
+      expect(pre163.prevTxVout).to.equal(instance.prevTxVout);
+      expect(pre163.sequence).to.deep.equal(instance.sequence);
+      expect(pre163.maxWitnessLen).to.equal(instance.maxWitnessLen);
+      expect(pre163.redeemScript).to.deep.equal(instance.redeemScript);
+    });
+  });
+
+  describe('fromPre163', () => {
+    const pre163 = new FundingInputV0Pre163();
+
+    before(() => {
+      pre163.inputSerialId = BigInt(56040);
+      pre163.prevTx = Tx.decode(StreamReader.fromBuffer(prevTx));
+      pre163.prevTxVout = 0;
+      pre163.sequence = Sequence.default();
+      pre163.maxWitnessLen = 107;
+      pre163.redeemScript = Buffer.from('', 'hex');
+    });
+
+    it('returns post-163 instance', () => {
+      const post163 = FundingInput.fromPre163(pre163);
+      expect(post163).to.be.instanceof(FundingInput);
+      expect(Number(post163.inputSerialId)).to.equal(
+        Number(pre163.inputSerialId),
+      );
+      expect(post163.prevTx).to.deep.equal(pre163.prevTx);
+      expect(post163.prevTxVout).to.equal(pre163.prevTxVout);
+      expect(post163.sequence).to.deep.equal(pre163.sequence);
+      expect(post163.maxWitnessLen).to.equal(pre163.maxWitnessLen);
+      expect(post163.redeemScript).to.deep.equal(pre163.redeemScript);
     });
   });
 });

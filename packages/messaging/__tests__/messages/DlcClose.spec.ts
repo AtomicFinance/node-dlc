@@ -3,6 +3,9 @@ import { expect } from 'chai';
 import { DlcClose, DlcCloseV0 } from '../../lib/messages/DlcClose';
 import { FundingInput } from '../../lib/messages/FundingInput';
 import { FundingSignatures } from '../../lib/messages/FundingSignatures';
+import { DlcCloseV0Pre163 } from '../../lib/messages/pre-163/DlcClose';
+import { FundingInputV0Pre163 } from '../../lib/messages/pre-163/FundingInput';
+import { FundingSignaturesV0Pre163 } from '../../lib/messages/pre-163/FundingSignatures';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcClose', () => {
@@ -122,7 +125,9 @@ describe('DlcClose', () => {
       it('convert to JSON', async () => {
         const json = instance.toJSON();
         expect(json.message.contractId).to.equal(contractId.toString('hex'));
-        expect(json.message.closeSignature).to.equal(closeSignature.toString('hex'));
+        expect(json.message.closeSignature).to.equal(
+          closeSignature.toString('hex'),
+        );
         expect(json.message.fundInputSerialId).to.equal(
           Number(fundInputSerialId.readBigInt64BE()),
         );
@@ -147,6 +152,151 @@ describe('DlcClose', () => {
         expect(function () {
           instance.validate();
         }).to.throw(Error);
+      });
+    });
+
+    describe('toPre163', () => {
+      it('returns pre-163 instance', () => {
+        const pre163 = DlcCloseV0.toPre163(instance);
+        expect(pre163).to.be.instanceof(DlcCloseV0Pre163);
+        expect(pre163.contractId).to.equal(instance.contractId);
+        expect(pre163.closeSignature).to.equal(instance.closeSignature);
+        expect(pre163.offerPayoutSatoshis).to.equal(
+          instance.offerPayoutSatoshis,
+        );
+        expect(pre163.acceptPayoutSatoshis).to.equal(
+          instance.acceptPayoutSatoshis,
+        );
+        expect(pre163.fundInputSerialId).to.equal(
+          instance.fundInputSerialId,
+        );
+        expect(pre163.fundingInputs.length).to.equal(
+          instance.fundingInputs.length,
+        );
+        for (let i = 0; i < pre163.fundingInputs.length; i++) {
+          expect(pre163.fundingInputs[i].inputSerialId).to.equal(
+            instance.fundingInputs[i].inputSerialId,
+          );
+          expect(pre163.fundingInputs[i].prevTx).to.equal(
+            instance.fundingInputs[i].prevTx,
+          );
+          expect(pre163.fundingInputs[i].prevTxVout).to.equal(
+            instance.fundingInputs[i].prevTxVout,
+          );
+          expect(pre163.fundingInputs[i].sequence).to.equal(
+            instance.fundingInputs[i].sequence,
+          );
+          expect(pre163.fundingInputs[i].maxWitnessLen).to.equal(
+            instance.fundingInputs[i].maxWitnessLen,
+          );
+          expect(pre163.fundingInputs[i].redeemScript).to.equal(
+            instance.fundingInputs[i].redeemScript,
+          );
+        }
+        expect(pre163.fundingSignatures.witnessElements.length).to.equal(
+          instance.fundingSignatures.witnessElements.length,
+        );
+        for (
+          let i = 0;
+          i < pre163.fundingSignatures.witnessElements.length;
+          i++
+        ) {
+          expect(pre163.fundingSignatures.witnessElements[i]).to.deep.equal(
+            instance.fundingSignatures.witnessElements[i],
+          );
+        }
+      });
+    });
+
+    describe('fromPre163', () => {
+      const fundingInputV0Pre163 = FundingInputV0Pre163.deserialize(
+        Buffer.from(
+          'fda714' + // type
+            '3f' + // length
+            '000000000000dae8' + // inputSerialID
+            '0029' + // prevTxLen
+            '02000000000100c2eb0b000000001600149ea3bf2d6eb9c2ffa35e36f41e117403ed7fafe900000000' + // prevTx
+            '00000000' + // prevTxVout
+            'ffffffff' + // sequence
+            '006b' + // maxWitnessLen
+            '0000', // redeemScriptLen
+          'hex',
+        ),
+      );
+      const fundingSignaturesV0Pre163 = FundingSignaturesV0Pre163.deserialize(
+        Buffer.from(
+          'fda718' + // type funding_signatures_v0
+            '70' + // length
+            '0001' + // num_witnesses
+            '0002' + // stack_len
+            '0047' + // stack_element_len
+            '304402203812d7d194d44ec68f244cc3fd68507c563ec8c729fdfa3f4a79395b98abe84f0220704ab3f3ffd9c50c2488e59f90a90465fccc2d924d67a1e98a133676bf52f37201' + // stack_element
+            '0021' + // stack_element_len
+            '02dde41aa1f21671a2e28ad92155d2d66e0b5428de15d18db4cbcf216bf00de919', // stack_element
+          'hex',
+        ),
+      );
+      const pre163 = new DlcCloseV0Pre163();
+
+      before(() => {
+        pre163.contractId = contractId;
+        pre163.closeSignature = closeSignature;
+        pre163.offerPayoutSatoshis = BigInt(100000000);
+        pre163.acceptPayoutSatoshis = BigInt(100000000);
+        pre163.fundInputSerialId = BigInt(123456789);
+        pre163.fundingInputs = [fundingInputV0Pre163];
+        pre163.fundingSignatures = fundingSignaturesV0Pre163;
+      });
+
+      it('returns post-163 instance', () => {
+        const post163 = DlcCloseV0.fromPre163(pre163);
+        expect(post163).to.be.instanceof(DlcCloseV0);
+        expect(post163.contractId).to.equal(pre163.contractId);
+        expect(post163.closeSignature).to.equal(pre163.closeSignature);
+        expect(post163.offerPayoutSatoshis).to.equal(
+          pre163.offerPayoutSatoshis,
+        );
+        expect(post163.acceptPayoutSatoshis).to.equal(
+          pre163.acceptPayoutSatoshis,
+        );
+        expect(post163.fundInputSerialId).to.equal(
+          pre163.fundInputSerialId,
+        );
+        expect(post163.fundingInputs.length).to.equal(
+          pre163.fundingInputs.length,
+        );
+        for (let i = 0; i < post163.fundingInputs.length; i++) {
+          expect(post163.fundingInputs[i].inputSerialId).to.equal(
+            pre163.fundingInputs[i].inputSerialId,
+          );
+          expect(post163.fundingInputs[i].prevTx).to.equal(
+            pre163.fundingInputs[i].prevTx,
+          );
+          expect(post163.fundingInputs[i].prevTxVout).to.equal(
+            pre163.fundingInputs[i].prevTxVout,
+          );
+          expect(post163.fundingInputs[i].sequence).to.equal(
+            pre163.fundingInputs[i].sequence,
+          );
+          expect(post163.fundingInputs[i].maxWitnessLen).to.equal(
+            pre163.fundingInputs[i].maxWitnessLen,
+          );
+          expect(post163.fundingInputs[i].redeemScript).to.equal(
+            pre163.fundingInputs[i].redeemScript,
+          );
+        }
+        expect(post163.fundingSignatures.witnessElements.length).to.equal(
+          pre163.fundingSignatures.witnessElements.length,
+        );
+        for (
+          let i = 0;
+          i < post163.fundingSignatures.witnessElements.length;
+          i++
+        ) {
+          expect(post163.fundingSignatures.witnessElements[i]).to.deep.equal(
+            pre163.fundingSignatures.witnessElements[i],
+          );
+        }
       });
     });
   });

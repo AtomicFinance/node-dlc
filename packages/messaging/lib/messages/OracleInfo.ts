@@ -38,9 +38,17 @@ export abstract class OracleInfo implements IDlcMessage {
 
   public static fromPre163(oracleInfo: OracleInfoV0Pre163): OracleInfo {
     if (oracleInfo instanceof OracleInfoV0Pre163) {
-      return SingleOracleInfo.from163(oracleInfo);
+      return SingleOracleInfo.fromPre163(oracleInfo);
     } else {
-      throw new Error('fromPre163 only suports OracleInfoV0');
+      throw new Error('fromPre163 only supports OracleInfoV0');
+    }
+  }
+
+  public static toPre163(oracleInfo: OracleInfo): OracleInfoV0Pre163 {
+    if (oracleInfo instanceof SingleOracleInfo) {
+      return SingleOracleInfo.toPre163(oracleInfo);
+    } else {
+      throw new Error('toPre163 only supports SingleOracleInfo');
     }
   }
 
@@ -80,8 +88,16 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
     return instance;
   }
 
-  public static from163(oracleInfo: OracleInfoV0Pre163): SingleOracleInfo {
+  public static fromPre163(oracleInfo: OracleInfoV0Pre163): SingleOracleInfo {
     const instance = new SingleOracleInfo();
+
+    instance.announcement = oracleInfo.announcement;
+
+    return instance;
+  }
+
+  public static toPre163(oracleInfo: SingleOracleInfo): OracleInfoV0Pre163 {
+    const instance = new OracleInfoV0Pre163();
 
     instance.announcement = oracleInfo.announcement;
 

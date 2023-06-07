@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { CetAdaptorSignatures } from '../../lib/messages/CetAdaptorSignatures';
+import { CetAdaptorSignaturesV0Pre163 } from '../../lib/messages/pre-163/CetAdaptorSignatures';
 
 describe('CetAdaptorSignatures', () => {
   let instance: CetAdaptorSignatures;
@@ -75,6 +76,32 @@ describe('CetAdaptorSignatures', () => {
       expect(instance.sigs[1].dleqProof).to.deep.equal(dleqProofTwo);
       expect(instance.sigs[2].encryptedSig).to.deep.equal(encryptedSigThree);
       expect(instance.sigs[2].dleqProof).to.deep.equal(dleqProofThree);
+    });
+  });
+
+  describe('toPre163', () => {
+    it('returns pre-163 instance', () => {
+      const pre163 = CetAdaptorSignatures.toPre163(instance);
+      expect(pre163).to.be.instanceof(CetAdaptorSignaturesV0Pre163);
+      expect(pre163.sigs).to.deep.equal(instance.sigs);
+    });
+  });
+
+  describe('fromPre163', () => {
+    const pre163 = new CetAdaptorSignaturesV0Pre163();
+
+    before(() => {
+      pre163.sigs = [
+        { encryptedSig: encryptedSigOne, dleqProof: dleqProofOne },
+        { encryptedSig: encryptedSigTwo, dleqProof: dleqProofTwo },
+        { encryptedSig: encryptedSigThree, dleqProof: dleqProofThree },
+      ];
+    });
+
+    it('returns post-163 instance', () => {
+      const post163 = CetAdaptorSignatures.fromPre163(pre163);
+      expect(post163).to.be.instanceof(CetAdaptorSignatures);
+      expect(post163.sigs).to.deep.equal(pre163.sigs);
     });
   });
 });

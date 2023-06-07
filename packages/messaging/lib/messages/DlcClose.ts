@@ -7,6 +7,7 @@ import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
 import { getTlv } from "../serialize/getTlv";
 import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
+import { DlcCloseV0Pre163 } from "./pre-163/DlcClose";
 
 export abstract class DlcClose {
   public static deserialize(reader: Buffer | BufferReader): DlcCloseV0 {
@@ -67,6 +68,42 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
       instance.tlvs.push({ type, length, body });
     }
+
+    return instance;
+  }
+
+  public static fromPre163(close: DlcCloseV0Pre163): DlcCloseV0 {
+    const instance = new DlcCloseV0();
+
+    instance.contractId = close.contractId;
+    instance.closeSignature = close.closeSignature;
+    instance.offerPayoutSatoshis = close.offerPayoutSatoshis;
+    instance.acceptPayoutSatoshis = close.acceptPayoutSatoshis;
+    instance.fundInputSerialId = close.fundInputSerialId;
+    close.fundingInputs.forEach((fundingInput) => {
+      instance.fundingInputs.push(FundingInput.fromPre163(fundingInput));
+    });
+    instance.fundingSignatures = FundingSignatures.fromPre163(
+      close.fundingSignatures,
+    );
+
+    return instance;
+  }
+
+  public static toPre163(close: DlcCloseV0): DlcCloseV0Pre163 {
+    const instance = new DlcCloseV0Pre163();
+
+    instance.contractId = close.contractId;
+    instance.closeSignature = close.closeSignature;
+    instance.offerPayoutSatoshis = close.offerPayoutSatoshis;
+    instance.acceptPayoutSatoshis = close.acceptPayoutSatoshis;
+    instance.fundInputSerialId = close.fundInputSerialId;
+    close.fundingInputs.forEach((fundingInput) => {
+      instance.fundingInputs.push(FundingInput.toPre163(fundingInput));
+    });
+    instance.fundingSignatures = FundingSignatures.toPre163(
+      close.fundingSignatures,
+    );
 
     return instance;
   }

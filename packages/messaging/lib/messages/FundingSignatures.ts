@@ -3,6 +3,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { IDlcMessage } from './DlcMessage';
 import { FundingSignaturesV0Pre163 } from './pre-163/FundingSignatures';
 import { IScriptWitnessJSON, ScriptWitness } from './ScriptWitness';
+import { ScriptWitnessV0Pre163 } from './pre-163/ScriptWitness';
 
 /**
  * FundingSignatures V0 contains signatures of the funding transaction
@@ -37,8 +38,32 @@ export class FundingSignatures implements IDlcMessage {
     fundingSignatures: FundingSignaturesV0Pre163,
   ): FundingSignatures {
     const instance = new FundingSignatures();
+    for (let i = 0; i < fundingSignatures.witnessElements.length; i++) {
+      instance.witnessElements.push([]);
+      fundingSignatures.witnessElements[i].forEach((witnessElementPre163) => {
+        const witnessElement = new ScriptWitness();
+        witnessElement.length = witnessElementPre163.length;
+        witnessElement.witness = witnessElementPre163.witness;
+        instance.witnessElements[i].push(witnessElement);
+      });
+    }
 
-    instance.witnessElements = fundingSignatures.witnessElements;
+    return instance;
+  }
+
+  public static toPre163(
+    fundingSignatures: FundingSignatures,
+  ): FundingSignaturesV0Pre163 {
+    const instance = new FundingSignaturesV0Pre163();
+    for (let i = 0; i < fundingSignatures.witnessElements.length; i++) {
+      instance.witnessElements.push([]);
+      fundingSignatures.witnessElements[i].forEach((witnessElement) => {
+        const witnessElementPre163 = new ScriptWitnessV0Pre163();
+        witnessElementPre163.length = witnessElement.length;
+        witnessElementPre163.witness = witnessElement.witness;
+        instance.witnessElements[i].push(witnessElementPre163);
+      });
+    }
 
     return instance;
   }

@@ -3,6 +3,7 @@ import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
+import { DlcInfoV0Pre163 } from './pre-163/DlcInfo';
 
 export abstract class DlcInfo {
   public static deserialize(reader: Buffer | BufferReader): DlcInfoV0 {
@@ -48,6 +49,32 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
     instance.numDlcCancels = reader.readUInt32BE();
     instance.numDlcCloses = reader.readUInt32BE();
     instance.numDlcTransactions = reader.readUInt32BE();
+
+    return instance;
+  }
+
+  public static fromPre163(cancel: DlcInfoV0Pre163): DlcInfoV0 {
+    const instance = new DlcInfoV0();
+
+    instance.numDlcOffers = cancel.numDlcOffers;
+    instance.numDlcAccepts = cancel.numDlcAccepts;
+    instance.numDlcSigns = cancel.numDlcSigns;
+    instance.numDlcCancels = cancel.numDlcCancels;
+    instance.numDlcCloses = cancel.numDlcCloses;
+    instance.numDlcTransactions = cancel.numDlcTransactions;
+
+    return instance;
+  }
+
+  public static toPre163(cancel: DlcInfoV0): DlcInfoV0Pre163 {
+    const instance = new DlcInfoV0Pre163();
+
+    instance.numDlcOffers = cancel.numDlcOffers;
+    instance.numDlcAccepts = cancel.numDlcAccepts;
+    instance.numDlcSigns = cancel.numDlcSigns;
+    instance.numDlcCancels = cancel.numDlcCancels;
+    instance.numDlcCloses = cancel.numDlcCloses;
+    instance.numDlcTransactions = cancel.numDlcTransactions;
 
     return instance;
   }

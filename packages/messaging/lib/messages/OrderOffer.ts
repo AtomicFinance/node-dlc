@@ -3,7 +3,11 @@ import assert from 'assert';
 
 import { IOrderMetadataJSON } from '..';
 import { MessageType } from '../MessageType';
-import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import {
   validateBigInt,
@@ -23,6 +27,9 @@ import {
   OrderIrcInfoV0,
 } from './OrderIrcInfo';
 import { OrderMetadata, OrderMetadataV0 } from './OrderMetadata';
+import { OrderIrcInfoV0Pre163 } from './pre-163/OrderIrcInfo';
+import { OrderMetadataV0Pre163 } from './pre-163/OrderMetadata';
+import { OrderOfferV0Pre163 } from './pre-163/OrderOffer';
 
 const LOCKTIME_THRESHOLD = 500000000;
 export abstract class OrderOffer {
@@ -98,6 +105,55 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
         default:
           break;
       }
+    }
+
+    return instance;
+  }
+
+  public static fromPre163(
+    offer: OrderOfferV0Pre163,
+    contractFlags: number,
+  ): OrderOfferV0 {
+    const instance = new OrderOfferV0();
+    instance.protocolVersion = 1;
+    instance.contractFlags = contractFlags;
+    instance.chainHash = offer.chainHash;
+    instance.contractInfo = ContractInfo.fromPre163(offer.contractInfo);
+    instance.offerCollateralSatoshis = offer.offerCollateralSatoshis;
+    instance.feeRatePerVb = offer.feeRatePerVb;
+    instance.cetLocktime = offer.cetLocktime;
+    instance.refundLocktime = offer.refundLocktime;
+    if (offer.metadata) {
+      instance.metadata = OrderMetadataV0.fromPre163(
+        offer.metadata as OrderMetadataV0Pre163,
+      );
+    }
+    if (offer.ircInfo) {
+      instance.ircInfo = OrderIrcInfoV0.fromPre163(
+        offer.ircInfo as OrderIrcInfoV0Pre163,
+      );
+    }
+
+    return instance;
+  }
+
+  public static toPre163(offer: OrderOfferV0): OrderOfferV0Pre163 {
+    const instance = new OrderOfferV0Pre163();
+    instance.chainHash = offer.chainHash;
+    instance.contractInfo = ContractInfo.toPre163(offer.contractInfo);
+    instance.offerCollateralSatoshis = offer.offerCollateralSatoshis;
+    instance.feeRatePerVb = offer.feeRatePerVb;
+    instance.cetLocktime = offer.cetLocktime;
+    instance.refundLocktime = offer.refundLocktime;
+    if (offer.metadata) {
+      instance.metadata = OrderMetadataV0.toPre163(
+        offer.metadata as OrderMetadataV0Pre163,
+      );
+    }
+    if (offer.ircInfo) {
+      instance.ircInfo = OrderIrcInfoV0.toPre163(
+        offer.ircInfo as OrderIrcInfoV0Pre163,
+      );
     }
 
     return instance;
