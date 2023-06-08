@@ -30,7 +30,9 @@ export abstract class OrderMetadataPre163 {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderMetadataV0Pre163 extends OrderMetadataPre163 implements IDlcMessagePre163 {
+export class OrderMetadataV0Pre163
+  extends OrderMetadataPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.OrderMetadataV0;
 
   /**

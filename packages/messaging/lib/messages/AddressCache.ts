@@ -1,7 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import assert from 'assert';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
-import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 

@@ -2,13 +2,17 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import assert from 'assert';
 
 import { MessageType } from '../MessageType';
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../serialize/deserializeTlv';
+import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
   IOrderNegotiationFieldsJSON,
   OrderNegotiationFields,
 } from './OrderNegotiationFields';
-import { getTlv } from "../serialize/getTlv";
-import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
 import { OrderAcceptV0Pre163 } from './pre-163/OrderAccept';
 import { OrderNegotiationFieldsV0Pre163 } from './pre-163/OrderNegotiationFields';
 

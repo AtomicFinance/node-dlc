@@ -1,14 +1,17 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
+import { MessageType } from '../MessageType';
 import {
   ContractInfo,
   IDisjointContractInfoJSON,
   ISingleContractInfoJSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { OrderNegotiationFieldsPre163, OrderNegotiationFieldsV1Pre163 } from "./pre-163/OrderNegotiationFields";
-import { MessageType } from '../MessageType';
-import { OrderOfferV0Pre163 } from "./pre-163/OrderOffer";
+import {
+  OrderNegotiationFieldsPre163,
+  OrderNegotiationFieldsV1Pre163,
+} from './pre-163/OrderNegotiationFields';
+import { OrderOfferV0Pre163 } from './pre-163/OrderOffer';
 
 /**
  * OrderNegotiationFields V1 contains preferences of the acceptor of an order

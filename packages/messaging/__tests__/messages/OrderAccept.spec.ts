@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 
 import { OrderAcceptV0 } from '../../lib/messages/OrderAccept';
+import { OrderNegotiationFields } from '../../lib/messages/OrderNegotiationFields';
 import { OrderAcceptV0Pre163 } from '../../lib/messages/pre-163/OrderAccept';
 import { OrderNegotiationFieldsV0Pre163 } from '../../lib/messages/pre-163/OrderNegotiationFields';
-import { OrderNegotiationFields } from '../../lib/messages/OrderNegotiationFields';
 
 describe('OrderAccept', () => {
   const tempOrderId = Buffer.from(

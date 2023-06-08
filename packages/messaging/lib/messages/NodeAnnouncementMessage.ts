@@ -22,7 +22,9 @@ import { IWireMessage } from './IWireMessage';
 export class NodeAnnouncementMessage implements IWireMessage {
   public static type = MessageType.NodeAnnouncement;
 
-  public static deserialize(reader: Buffer | BufferReader) {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): NodeAnnouncementMessage {
     const instance = new NodeAnnouncementMessage();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
@@ -114,7 +116,7 @@ export class NodeAnnouncementMessage implements IWireMessage {
 
   public tlvs: ITlv[] = [];
 
-  public serialize() {
+  public serialize(): Buffer {
     const featuresBuffer = this.features.toBuffer();
     const featuresLen = featuresBuffer.length;
 

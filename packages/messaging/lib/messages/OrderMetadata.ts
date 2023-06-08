@@ -3,7 +3,7 @@ import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { OrderMetadataV0Pre163 } from "./pre-163/OrderMetadata";
+import { OrderMetadataV0Pre163 } from './pre-163/OrderMetadata';
 
 export abstract class OrderMetadata {
   public static deserialize(reader: Buffer | BufferReader): OrderMetadata {

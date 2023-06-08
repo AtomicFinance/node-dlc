@@ -96,7 +96,10 @@ export class SingleNegotiationFields
     const instance = new SingleNegotiationFields();
 
     const type = Number(reader.readBigSize());
-    assert(type === this.type, `Expected NegotiationFieldsType.Single, got type ${type}`);
+    assert(
+      type === this.type,
+      `Expected NegotiationFieldsType.Single, got type ${type}`,
+    );
 
     instance.roundingIntervals = RoundingIntervals.deserialize(reader);
 
@@ -180,7 +183,10 @@ export class DisjointNegotiationFields
     const instance = new DisjointNegotiationFields();
 
     const type = Number(reader.readBigSize());
-    assert(type === this.type, `Expected NegotiationFieldsType.Disjoint, got type ${type}`);
+    assert(
+      type === this.type,
+      `Expected NegotiationFieldsType.Disjoint, got type ${type}`,
+    );
 
     const numDisjointEvents = reader.readBigSize(); // num_disjoint_events
 

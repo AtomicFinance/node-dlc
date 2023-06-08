@@ -1,10 +1,10 @@
 import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160 } from '@node-lightning/crypto';
+import assert from 'assert';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
-import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
@@ -14,7 +14,10 @@ import {
   IContractInfoV1Pre163JSON,
 } from './ContractInfo';
 import { IDlcMessagePre163 } from './DlcMessage';
-import { FundingInputV0Pre163, IFundingInputV0Pre163JSON } from './FundingInput';
+import {
+  FundingInputV0Pre163,
+  IFundingInputV0Pre163JSON,
+} from './FundingInput';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 
@@ -48,7 +51,9 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
     const fundingInputsLen = reader.readUInt16BE();
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0Pre163.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(
+        FundingInputV0Pre163.deserialize(getTlv(reader)),
+      );
     }
 
     const changeSPKLen = reader.readUInt16BE();

@@ -1,4 +1,3 @@
-// tslint:disable: no-unused-expression
 import { expect } from 'chai';
 import sinon from 'sinon';
 
@@ -9,7 +8,6 @@ import {
   CloseType,
   DlcTransactionsV0,
 } from '../../lib/messages/DlcTransactions';
-import { DlcTransactionsV0Pre163 } from '../../lib/messages/pre-163/DlcTransactions';
 import { createFakeLogger } from '../_test-utils';
 
 const fundBlock = {

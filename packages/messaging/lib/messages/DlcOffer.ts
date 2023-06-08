@@ -1,10 +1,10 @@
 import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160 } from '@node-lightning/crypto';
+import assert from 'assert';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
-import assert from 'assert';
 
 import { MessageType } from '../MessageType';
 import {
@@ -314,9 +314,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.offerCollateral >= fundingAmount) {
-      throw new Error(
-        'fundingAmount must be greater than offerCollateral',
-      );
+      throw new Error('fundingAmount must be greater than offerCollateral');
     }
   }
 

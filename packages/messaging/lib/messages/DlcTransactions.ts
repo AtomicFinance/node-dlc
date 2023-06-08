@@ -11,7 +11,10 @@ import { IDlcMessage } from './DlcMessage';
 import { DlcTransactionsV0Pre163 } from './pre-163/DlcTransactions';
 
 export abstract class DlcTransactions {
-  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcTransactionsV0 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+    parseCets = true,
+  ): DlcTransactionsV0 {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     const tempReader = new BufferReader(reader.peakBytes());
@@ -44,7 +47,10 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
    * Deserializes an offer_dlc_v0 message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcTransactionsV0 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+    parseCets = true,
+  ): DlcTransactionsV0 {
     const instance = new DlcTransactionsV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 

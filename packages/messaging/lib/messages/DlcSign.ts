@@ -3,7 +3,11 @@ import { sigToDER } from '@node-lightning/crypto';
 import assert from 'assert';
 
 import { MessageType } from '../MessageType';
-import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignatures,
@@ -92,9 +96,7 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     const instance = new DlcSignV0Pre163();
 
     instance.contractId = sign.contractId;
-    instance.cetSignatures = CetAdaptorSignatures.toPre163(
-      sign.cetSignatures,
-    );
+    instance.cetSignatures = CetAdaptorSignatures.toPre163(sign.cetSignatures);
     instance.refundSignature = sign.refundSignature;
     instance.fundingSignatures = FundingSignatures.toPre163(
       sign.fundingSignatures,

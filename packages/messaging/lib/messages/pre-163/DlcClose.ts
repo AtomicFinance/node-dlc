@@ -38,7 +38,9 @@ export abstract class DlcClosePre163 {
  * DlcClose message contains information about a node and indicates its
  * desire to close an existing contract.
  */
-export class DlcCloseV0Pre163 extends DlcClosePre163 implements IDlcMessagePre163 {
+export class DlcCloseV0Pre163
+  extends DlcClosePre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.DlcCloseV0;
 
   /**
@@ -127,7 +129,9 @@ export class DlcCloseV0Pre163 extends DlcClosePre163 implements IDlcMessagePre16
     }
 
     // Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0Pre163) => input.validate());
+    this.fundingInputs.forEach((input: FundingInputV0Pre163) =>
+      input.validate(),
+    );
   }
 
   /**

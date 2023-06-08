@@ -2,7 +2,6 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import assert from 'assert';
 import BigNumber from 'bignumber.js';
 
-import { MessageType } from '../MessageType';
 import {
   fromPrecision,
   getIntegerValue,

@@ -5,12 +5,15 @@ import { expect } from 'chai';
 import { CetAdaptorSignatures } from '../../lib/messages/CetAdaptorSignatures';
 import { DlcAccept, DlcAcceptV0 } from '../../lib/messages/DlcAccept';
 import { FundingInput } from '../../lib/messages/FundingInput';
+import { SingleNegotiationFields } from '../../lib/messages/NegotiationFields';
 import { CetAdaptorSignaturesV0Pre163 } from '../../lib/messages/pre-163/CetAdaptorSignatures';
 import { DlcAcceptV0Pre163 } from '../../lib/messages/pre-163/DlcAccept';
 import { FundingInputV0Pre163 } from '../../lib/messages/pre-163/FundingInput';
-import { NegotiationFieldsPre163, NegotiationFieldsV1Pre163 } from "../../lib/messages/pre-163/NegotiationFields";
+import {
+  NegotiationFieldsPre163,
+  NegotiationFieldsV1Pre163,
+} from '../../lib/messages/pre-163/NegotiationFields';
 import { MessageType } from '../../lib/MessageType';
-import { SingleNegotiationFields } from '../../lib/messages/NegotiationFields';
 
 describe('DlcAccept', () => {
   const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;

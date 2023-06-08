@@ -5,9 +5,9 @@ import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessagePre163 } from './DlcMessage';
 import {
+  IPayoutFunctionV0Pre163JSON,
   PayoutFunctionPre163,
   PayoutFunctionV0Pre163,
-  IPayoutFunctionV0Pre163JSON,
 } from './PayoutFunction';
 import {
   IRoundingIntervalsV0Pre163JSON,
@@ -38,7 +38,9 @@ export abstract class ContractDescriptorPre163 {
 
   public abstract length: bigint;
 
-  public abstract toJSON(): IContractDescriptorV0Pre163JSON | IContractDescriptorV1Pre163JSON;
+  public abstract toJSON():
+    | IContractDescriptorV0Pre163JSON
+    | IContractDescriptorV1Pre163JSON;
 
   public abstract serialize(): Buffer;
 }

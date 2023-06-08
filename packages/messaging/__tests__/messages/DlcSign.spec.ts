@@ -1,7 +1,6 @@
 import { sigToDER } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
-import { ScriptWitness } from '../../lib';
 import { CetAdaptorSignatures } from '../../lib/messages/CetAdaptorSignatures';
 import { DlcSign, DlcSignV0 } from '../../lib/messages/DlcSign';
 import { FundingSignatures } from '../../lib/messages/FundingSignatures';
@@ -9,6 +8,7 @@ import { CetAdaptorSignaturesV0Pre163 } from '../../lib/messages/pre-163/CetAdap
 import { DlcSignV0Pre163 } from '../../lib/messages/pre-163/DlcSign';
 import { FundingSignaturesV0Pre163 } from '../../lib/messages/pre-163/FundingSignatures';
 import { ScriptWitnessV0Pre163 } from '../../lib/messages/pre-163/ScriptWitness';
+import { ScriptWitness } from '../../lib/messages/ScriptWitness';
 
 describe('DlcSign', () => {
   let instance: DlcSignV0;

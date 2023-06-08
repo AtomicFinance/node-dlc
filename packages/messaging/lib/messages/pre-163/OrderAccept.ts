@@ -9,7 +9,6 @@ import {
   IOrderNegotiationFieldsV1Pre163JSON,
   OrderNegotiationFieldsPre163,
 } from './OrderNegotiationFields';
-import {NegotiationFieldsPre163} from "./NegotiationFields";
 
 export abstract class OrderAcceptPre163 {
   public static deserialize(buf: Buffer): OrderAcceptPre163 {
@@ -37,7 +36,9 @@ export abstract class OrderAcceptPre163 {
  * acceptance of the new order offer. This is the second step towards
  * order negotiation.
  */
-export class OrderAcceptV0Pre163 extends OrderAcceptPre163 implements IDlcMessagePre163 {
+export class OrderAcceptV0Pre163
+  extends OrderAcceptPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.OrderAcceptV0;
 
   /**

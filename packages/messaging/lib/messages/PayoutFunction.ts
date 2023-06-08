@@ -119,9 +119,7 @@ export class PayoutFunction implements IDlcMessage {
     const lastPiece = pieces[pieces.length - 1];
 
     instance.pieces.push({
-      payoutCurvePiece: PayoutCurvePiece.toPre163(
-        lastPiece.payoutCurvePiece,
-      ),
+      payoutCurvePiece: PayoutCurvePiece.toPre163(lastPiece.payoutCurvePiece),
       endpoint: payoutFunction.lastEndpoint.eventOutcome,
       endpointPayout: payoutFunction.lastEndpoint.outcomePayout.sats,
       extraPrecision: payoutFunction.lastEndpoint.extraPrecision,

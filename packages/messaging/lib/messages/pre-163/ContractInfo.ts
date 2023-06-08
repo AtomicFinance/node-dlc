@@ -7,15 +7,17 @@ import { DigitDecompositionEventDescriptorV0Pre167 } from '../pre-167/EventDescr
 import { OracleEventV0Pre167 } from '../pre-167/OracleEvent';
 import {
   ContractDescriptorPre163,
-  IContractDescriptorV0Pre163JSON,
   ContractDescriptorV1Pre163,
+  IContractDescriptorV0Pre163JSON,
   IContractDescriptorV1Pre163JSON,
 } from './ContractDescriptor';
 import { DlcMessagePre163, IDlcMessagePre163 } from './DlcMessage';
-import { OracleInfoV0Pre163, IOracleInfoV0Pre163JSON } from './OracleInfo';
+import { IOracleInfoV0Pre163JSON, OracleInfoV0Pre163 } from './OracleInfo';
 
 export abstract class ContractInfoPre163 extends DlcMessagePre163 {
-  public static deserialize(buf: Buffer): ContractInfoV0Pre163 | ContractInfoV1Pre163 {
+  public static deserialize(
+    buf: Buffer,
+  ): ContractInfoV0Pre163 | ContractInfoV1Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
@@ -40,7 +42,9 @@ export abstract class ContractInfoPre163 extends DlcMessagePre163 {
 
   public abstract validate(): void;
 
-  public abstract toJSON(): IContractInfoV0Pre163JSON | IContractInfoV1Pre163JSON;
+  public abstract toJSON():
+    | IContractInfoV0Pre163JSON
+    | IContractInfoV1Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -49,7 +53,9 @@ export abstract class ContractInfoPre163 extends DlcMessagePre163 {
  * ContractInfo V0 contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
-export class ContractInfoV0Pre163 extends ContractInfoPre163 implements IDlcMessagePre163 {
+export class ContractInfoV0Pre163
+  extends ContractInfoPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.ContractInfoV0;
 
   /**
@@ -175,7 +181,9 @@ export class ContractInfoV0Pre163 extends ContractInfoPre163 implements IDlcMess
  * ContractInfo V1 contains information about a contract's outcomes,
  * their corresponding payouts, and the oracles to be used.
  */
-export class ContractInfoV1Pre163 extends ContractInfoPre163 implements IDlcMessagePre163 {
+export class ContractInfoV1Pre163
+  extends ContractInfoPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.ContractInfoV1;
 
   /**
@@ -303,14 +311,18 @@ interface IContractOraclePair {
 }
 
 interface IContractOraclePairJSON {
-  contractDescriptor: IContractDescriptorV0Pre163JSON | IContractDescriptorV1Pre163JSON;
+  contractDescriptor:
+    | IContractDescriptorV0Pre163JSON
+    | IContractDescriptorV1Pre163JSON;
   oracleInfo: IOracleInfoV0Pre163JSON;
 }
 
 export interface IContractInfoV0Pre163JSON {
   type: number;
   totalCollateral: number;
-  contractDescriptor: IContractDescriptorV0Pre163JSON | IContractDescriptorV1Pre163JSON;
+  contractDescriptor:
+    | IContractDescriptorV0Pre163JSON
+    | IContractDescriptorV1Pre163JSON;
   oracleInfo: IOracleInfoV0Pre163JSON;
 }
 

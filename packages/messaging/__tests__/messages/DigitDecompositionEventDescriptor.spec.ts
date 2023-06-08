@@ -46,7 +46,9 @@ describe('DigitDecompositionEventDescriptorV0Pre167', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = DigitDecompositionEventDescriptorV0Pre167.deserialize(buf);
+      const instance = DigitDecompositionEventDescriptorV0Pre167.deserialize(
+        buf,
+      );
 
       expect(Number(instance.length)).to.equal(17);
       expect(instance.base).to.equal(2); // (Switch to Number(instance.base) with oracle_announcement_v1)

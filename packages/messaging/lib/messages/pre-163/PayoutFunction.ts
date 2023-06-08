@@ -6,8 +6,8 @@ import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessagePre163 } from './DlcMessage';
 import {
   IHyperbolaPayoutCurvePiecePre163JSON,
-  PayoutCurvePiecePre163,
   IPolynomialPayoutCurvePiecePre163JSON,
+  PayoutCurvePiecePre163,
 } from './PayoutCurvePiece';
 
 export abstract class PayoutFunctionPre163 {
@@ -36,7 +36,9 @@ export abstract class PayoutFunctionPre163 {
 /**
  * PayoutFunction V0
  */
-export class PayoutFunctionV0Pre163 extends PayoutFunctionPre163 implements IDlcMessagePre163 {
+export class PayoutFunctionV0Pre163
+  extends PayoutFunctionPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.PayoutFunctionV0;
 
   /**

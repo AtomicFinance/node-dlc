@@ -5,8 +5,8 @@ import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { OracleInfoV0Pre163 } from './pre-163/OracleInfo';
 import {
-  OracleAnnouncementV0Pre167,
   IOracleAnnouncementV0Pre167JSON,
+  OracleAnnouncementV0Pre167,
 } from './pre-167/OracleAnnouncement';
 
 export enum OracleInfoType {
@@ -83,7 +83,9 @@ export class SingleOracleInfo extends OracleInfo implements IDlcMessage {
       `Expected OracleInfoType.Single, got type ${type}`,
     );
 
-    instance.announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncementV0Pre167.deserialize(
+      getTlv(reader),
+    );
 
     return instance;
   }
@@ -167,7 +169,9 @@ export class MultiOracleInfo extends OracleInfo implements IDlcMessage {
     instance.threshold = reader.readUInt16BE();
     const numOracles = reader.readBigSize();
     for (let i = 0; i < numOracles; i++) {
-      const announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
+      const announcement = OracleAnnouncementV0Pre167.deserialize(
+        getTlv(reader),
+      );
       instance.announcements.push(announcement);
     }
     instance.hasOracleParams = reader.readUInt8() === 1;

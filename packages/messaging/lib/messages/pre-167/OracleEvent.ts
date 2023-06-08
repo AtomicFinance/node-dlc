@@ -30,15 +30,14 @@ export class OracleEventV0Pre167 implements IDlcMessage {
    * Deserializes an oracle_event message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader): OracleEventV0Pre167 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): OracleEventV0Pre167 {
     const instance = new OracleEventV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     const type = Number(reader.readBigSize());
-    assert(
-      type === this.type,
-      `Expected OracleEventV0, got type ${type}`,
-    );
+    assert(type === this.type, `Expected OracleEventV0, got type ${type}`);
 
     instance.length = reader.readBigSize();
     const nonceCount = reader.readUInt16BE();
@@ -48,7 +47,9 @@ export class OracleEventV0Pre167 implements IDlcMessage {
     }
 
     instance.eventMaturityEpoch = reader.readUInt32BE();
-    instance.eventDescriptor = EventDescriptorPre167.deserialize(getTlv(reader));
+    instance.eventDescriptor = EventDescriptorPre167.deserialize(
+      getTlv(reader),
+    );
     const eventIdLength = reader.readBigSize();
     const eventIdBuf = reader.readBytes(Number(eventIdLength));
     instance.eventId = eventIdBuf.toString();
@@ -82,7 +83,8 @@ export class OracleEventV0Pre167 implements IDlcMessage {
     }
 
     if (
-      this.eventDescriptor.type === DigitDecompositionEventDescriptorV0Pre167.type
+      this.eventDescriptor.type ===
+      DigitDecompositionEventDescriptorV0Pre167.type
     ) {
       const eventDescriptor = this
         .eventDescriptor as DigitDecompositionEventDescriptorV0Pre167;

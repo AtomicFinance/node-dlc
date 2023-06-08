@@ -3,11 +3,9 @@ import { expect } from 'chai';
 import {
   DisjointNegotiationFields,
   NegotiationFields,
-  NegotiationFieldsType,
   SingleNegotiationFields,
 } from '../../lib/messages/NegotiationFields';
 import {
-  NegotiationFieldsPre163,
   NegotiationFieldsV1Pre163,
   NegotiationFieldsV2Pre163,
 } from '../../lib/messages/pre-163/NegotiationFields';

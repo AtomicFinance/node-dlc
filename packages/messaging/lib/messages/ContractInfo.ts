@@ -6,8 +6,8 @@ import {
   ContractDescriptor,
   ContractDescriptorType,
   IEnumContractDescriptorJSON,
-  NumericContractDescriptor,
   INumericContractDescriptorJSON,
+  NumericContractDescriptor,
 } from './ContractDescriptor';
 import { IDlcMessage } from './DlcMessage';
 import {

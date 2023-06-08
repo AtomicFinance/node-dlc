@@ -10,7 +10,10 @@ import { IRoundingIntervalsV0Pre163JSON } from './RoundingIntervals';
 export abstract class NegotiationFieldsPre163 {
   public static deserialize(
     buf: Buffer,
-  ): NegotiationFieldsV0Pre163 | NegotiationFieldsV1Pre163 | NegotiationFieldsV2Pre163 {
+  ):
+    | NegotiationFieldsV0Pre163
+    | NegotiationFieldsV1Pre163
+    | NegotiationFieldsV2Pre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());

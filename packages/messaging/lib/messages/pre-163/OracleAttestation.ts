@@ -1,6 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import { math, verify } from 'bip-schnorr';
 import assert from 'assert';
+import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessage } from '../DlcMessage';

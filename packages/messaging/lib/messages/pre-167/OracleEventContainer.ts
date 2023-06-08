@@ -18,7 +18,9 @@ export class OracleEventContainerV0Pre167 implements IDlcMessage {
    * Deserializes an oracle_info_v0 message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader): OracleEventContainerV0Pre167 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): OracleEventContainerV0Pre167 {
     const instance = new OracleEventContainerV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
@@ -38,9 +40,13 @@ export class OracleEventContainerV0Pre167 implements IDlcMessage {
     const uriBuf = reader.readBytes(Number(uriLength));
     instance.uri = uriBuf.toString();
 
-    instance.announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncementV0Pre167.deserialize(
+      getTlv(reader),
+    );
 
-    instance.attestation = OracleAttestationV0Pre167.deserialize(getTlv(reader));
+    instance.attestation = OracleAttestationV0Pre167.deserialize(
+      getTlv(reader),
+    );
 
     const outcomeLength = reader.readBigSize();
     const outcomeBuf = reader.readBytes(Number(outcomeLength));

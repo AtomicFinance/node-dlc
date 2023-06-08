@@ -7,7 +7,7 @@ export enum AddressType {
 export class Address {
   public static type = AddressType.IpV4;
 
-  public static deserialize(buf: Buffer) {
+  public static deserialize(buf: Buffer): Address {
     const reader = new BufferReader(buf);
     const type = reader.readBigSize(); // read off type
 
@@ -49,7 +49,7 @@ export class Address {
     this.port = port;
   }
 
-  public toString() {
+  public toString(): string {
     return `${this.host}:${this.port}`;
   }
 

@@ -2,11 +2,11 @@ import { expect } from 'chai';
 
 import { LOCKTIME_THRESHOLD } from '../../lib';
 import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
-import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import {
   ContractInfo,
   SingleContractInfo,
 } from '../../lib/messages/ContractInfo';
+import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { OrderIrcInfoV0 } from '../../lib/messages/OrderIrcInfo';
 import { OrderMetadataV0 } from '../../lib/messages/OrderMetadata';
 import { OrderOfferV0 } from '../../lib/messages/OrderOffer';

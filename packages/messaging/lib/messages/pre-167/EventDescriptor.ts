@@ -49,7 +49,9 @@ export class EnumEventDescriptorV0Pre167
    * Deserializes an enum_event_descriptor_v0 message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader): EnumEventDescriptorV0Pre167 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): EnumEventDescriptorV0Pre167 {
     const instance = new EnumEventDescriptorV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
@@ -125,7 +127,9 @@ export class DigitDecompositionEventDescriptorV0Pre167
    * Deserializes an digit_decomposition_event_descriptor_v0 message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader): DigitDecompositionEventDescriptorV0Pre167 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): DigitDecompositionEventDescriptorV0Pre167 {
     const instance = new DigitDecompositionEventDescriptorV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 

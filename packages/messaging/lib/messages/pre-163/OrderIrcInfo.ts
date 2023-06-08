@@ -30,7 +30,9 @@ export abstract class OrderIrcInfoPre163 {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderIrcInfoV0Pre163 extends OrderIrcInfoPre163 implements IDlcMessagePre163 {
+export class OrderIrcInfoV0Pre163
+  extends OrderIrcInfoPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.OrderIrcInfoV0;
 
   /**

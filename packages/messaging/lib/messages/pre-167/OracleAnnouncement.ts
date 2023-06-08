@@ -1,12 +1,16 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import { math, verify } from 'bip-schnorr';
 import assert from 'assert';
+import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../../MessageType';
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../../serialize/deserializeTlv';
 import { getTlv } from '../../serialize/getTlv';
 import { IDlcMessage } from '../DlcMessage';
 import { IOracleEventV0Pre167JSON, OracleEventV0Pre167 } from './OracleEvent';
-import { deserializeTlv, ITlv, serializeTlv } from "../../serialize/deserializeTlv";
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -27,7 +31,9 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
    * Deserializes an oracle_announcement_v0 message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader): OracleAnnouncementV0Pre167 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+  ): OracleAnnouncementV0Pre167 {
     const instance = new OracleAnnouncementV0Pre167();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
@@ -84,9 +90,9 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
    */
   public toJSON(): IOracleAnnouncementV0Pre167JSON {
     return {
-        announcementSignature: this.announcementSig.toString('hex'),
-        oraclePublicKey: this.oraclePubkey.toString('hex'),
-        oracleEvent: this.oracleEvent.toJSON(),
+      announcementSignature: this.announcementSig.toString('hex'),
+      oraclePublicKey: this.oraclePubkey.toString('hex'),
+      oracleEvent: this.oracleEvent.toJSON(),
     };
   }
 
@@ -114,7 +120,7 @@ export class OracleAnnouncementV0Pre167 implements IDlcMessage {
 }
 
 export interface IOracleAnnouncementV0Pre167JSON {
-    announcementSignature: string;
-    oraclePublicKey: string;
-    oracleEvent: IOracleEventV0Pre167JSON;
+  announcementSignature: string;
+  oraclePublicKey: string;
+  oracleEvent: IOracleEventV0Pre167JSON;
 }

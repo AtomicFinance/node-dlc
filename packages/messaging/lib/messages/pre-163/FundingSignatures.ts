@@ -3,7 +3,10 @@ import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
-import { IScriptWitnessV0Pre163JSON, ScriptWitnessV0Pre163 } from './ScriptWitness';
+import {
+  IScriptWitnessV0Pre163JSON,
+  ScriptWitnessV0Pre163,
+} from './ScriptWitness';
 
 /**
  * FundingSignatures V0 contains signatures of the funding transaction

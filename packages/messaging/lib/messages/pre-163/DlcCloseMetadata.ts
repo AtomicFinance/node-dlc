@@ -3,7 +3,6 @@ import { Tx } from '@node-lightning/core';
 import { DlcAcceptV0Pre163 } from './DlcAccept';
 import { DlcOfferV0Pre163 } from './DlcOffer';
 import { DlcTransactionsV0Pre163 } from './DlcTransactions';
-import {DlcCloseV0Pre163} from "./DlcClose";
 
 /**
  * DlcClose Metadata object contains information required for verifying DlcClose
@@ -14,7 +13,9 @@ export class DlcCloseMetadataV0Pre163 {
    * Convert JSON to DlcCloseMetadata
    * @param json
    */
-  public static fromJSON(json: IDlcCloseMetadataV0Pre163JSON): DlcCloseMetadataV0Pre163 {
+  public static fromJSON(
+    json: IDlcCloseMetadataV0Pre163JSON,
+  ): DlcCloseMetadataV0Pre163 {
     const instance = new DlcCloseMetadataV0Pre163();
 
     instance.offerFundingPubKey = Buffer.from(json.offerFundingPubKey, 'hex');

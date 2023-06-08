@@ -28,7 +28,9 @@ export abstract class DlcCancelPre163 {
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class DlcCancelV0Pre163 extends DlcCancelPre163 implements IDlcMessagePre163 {
+export class DlcCancelV0Pre163
+  extends DlcCancelPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.DlcCancelV0;
 
   /**

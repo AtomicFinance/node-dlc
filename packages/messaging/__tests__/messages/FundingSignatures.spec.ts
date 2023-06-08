@@ -1,5 +1,3 @@
-import { Sequence, Tx } from '@node-lightning/bitcoin';
-import { StreamReader } from '@node-lightning/bufio';
 import { expect } from 'chai';
 
 import { FundingSignatures } from '../../lib/messages/FundingSignatures';

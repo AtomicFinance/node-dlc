@@ -2,12 +2,16 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import assert from 'assert';
 
 import { MessageType } from '../MessageType';
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../serialize/deserializeTlv';
+import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
-import { getTlv } from "../serialize/getTlv";
-import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
-import { DlcCloseV0Pre163 } from "./pre-163/DlcClose";
+import { DlcCloseV0Pre163 } from './pre-163/DlcClose';
 
 export abstract class DlcClose {
   public static deserialize(reader: Buffer | BufferReader): DlcCloseV0 {

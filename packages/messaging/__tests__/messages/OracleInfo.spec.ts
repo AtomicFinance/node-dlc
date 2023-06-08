@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 
-import { EnumEventDescriptorV0Pre167, OracleEventV0Pre167 } from '../../lib';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { OracleInfoV0Pre163 } from '../../lib/messages/pre-163/OracleInfo';
+import { EnumEventDescriptorV0Pre167 } from '../../lib/messages/pre-167/EventDescriptor';
 import { OracleAnnouncementV0Pre167 } from '../../lib/messages/pre-167/OracleAnnouncement';
+import { OracleEventV0Pre167 } from '../../lib/messages/pre-167/OracleEvent';
 
 describe('OracleInfo', () => {
   const oracleAnnouncementHex =

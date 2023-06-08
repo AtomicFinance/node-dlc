@@ -167,9 +167,7 @@ describe('DlcClose', () => {
         expect(pre163.acceptPayoutSatoshis).to.equal(
           instance.acceptPayoutSatoshis,
         );
-        expect(pre163.fundInputSerialId).to.equal(
-          instance.fundInputSerialId,
-        );
+        expect(pre163.fundInputSerialId).to.equal(instance.fundInputSerialId);
         expect(pre163.fundingInputs.length).to.equal(
           instance.fundingInputs.length,
         );
@@ -259,9 +257,7 @@ describe('DlcClose', () => {
         expect(post163.acceptPayoutSatoshis).to.equal(
           pre163.acceptPayoutSatoshis,
         );
-        expect(post163.fundInputSerialId).to.equal(
-          pre163.fundInputSerialId,
-        );
+        expect(post163.fundInputSerialId).to.equal(pre163.fundInputSerialId);
         expect(post163.fundingInputs.length).to.equal(
           pre163.fundingInputs.length,
         );

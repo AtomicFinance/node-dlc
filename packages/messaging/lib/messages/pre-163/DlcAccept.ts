@@ -1,10 +1,10 @@
 import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160 } from '@node-lightning/crypto';
+import assert from 'assert';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
-import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { getTlv, skipTlv } from '../../serialize/getTlv';
@@ -13,7 +13,10 @@ import {
   ICetAdaptorSignaturesV0Pre163JSON,
 } from './CetAdaptorSignatures';
 import { IDlcMessagePre163 } from './DlcMessage';
-import { FundingInputV0Pre163, IFundingInputV0Pre163JSON } from './FundingInput';
+import {
+  FundingInputV0Pre163,
+  IFundingInputV0Pre163JSON,
+} from './FundingInput';
 import {
   INegotiationFieldsV0Pre163JSON,
   INegotiationFieldsV1Pre163JSON,
@@ -49,7 +52,9 @@ export class DlcAcceptV0Pre163 implements IDlcMessagePre163 {
     instance.payoutSerialId = reader.readUInt64BE();
     const fundingInputsLen = reader.readUInt16BE();
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0Pre163.deserialize(getTlv(reader)));
+      instance.fundingInputs.push(
+        FundingInputV0Pre163.deserialize(getTlv(reader)),
+      );
     }
     const changeSPKLen = reader.readUInt16BE();
     instance.changeSPK = reader.readBytes(changeSPKLen);
@@ -160,7 +165,9 @@ export class DlcAcceptV0Pre163 implements IDlcMessagePre163 {
     }
 
     // 5. Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0Pre163) => input.validate());
+    this.fundingInputs.forEach((input: FundingInputV0Pre163) =>
+      input.validate(),
+    );
 
     // validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
-import { RoundingIntervals } from '../../lib';
 import { RoundingIntervalsV0Pre163 } from '../../lib/messages/pre-163/RoundingIntervals';
+import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
 
 describe('RoundingIntervals', () => {
   describe('serialize', () => {

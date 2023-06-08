@@ -1,7 +1,7 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
-import { EnumeratedContractDescriptor, SingleOracleInfo } from '../../lib';
+import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
 import {
   ContractInfo,
   ISingleContractInfoJSON,
@@ -13,6 +13,7 @@ import {
   LOCKTIME_THRESHOLD,
 } from '../../lib/messages/DlcOffer';
 import { FundingInput } from '../../lib/messages/FundingInput';
+import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import {
   ContractDescriptorPre163,
   ContractDescriptorV0Pre163,
@@ -584,7 +585,9 @@ describe('DlcOffer', () => {
       it('returns post-163 instance', () => {
         const post163 = DlcOfferV0.fromPre163(pre163, temporaryContractId);
         expect(post163).to.be.instanceof(DlcOfferV0);
-        expect(post163.contractFlags).to.equal(Number(pre163.contractFlags.toString('hex')));
+        expect(post163.contractFlags).to.equal(
+          Number(pre163.contractFlags.toString('hex')),
+        );
         expect(post163.chainHash).to.equal(pre163.chainHash);
 
         expect(post163.contractInfo).to.be.instanceof(SingleContractInfo);

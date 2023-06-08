@@ -3,7 +3,6 @@ import assert from 'assert';
 
 import { MessageType } from '../../MessageType';
 import { IDlcMessagePre163 } from './DlcMessage';
-import {DlcCloseMetadataV0Pre163} from "./DlcCloseMetadata";
 
 export abstract class DlcInfoPre163 {
   public static deserialize(buf: Buffer): DlcInfoV0Pre163 {
@@ -27,7 +26,9 @@ export abstract class DlcInfoPre163 {
 /**
  * DlcInfo message contains list of buffers
  */
-export class DlcInfoV0Pre163 extends DlcInfoPre163 implements IDlcMessagePre163 {
+export class DlcInfoV0Pre163
+  extends DlcInfoPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.DlcInfoV0;
 
   /**

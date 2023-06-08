@@ -1,13 +1,17 @@
 import { Script } from '@node-lightning/bitcoin';
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { hash160, sigToDER } from '@node-lightning/crypto';
+import assert from 'assert';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
-import assert from 'assert';
 
 import { MessageType } from '../MessageType';
-import { deserializeTlv, ITlv, serializeTlv } from "../serialize/deserializeTlv";
+import {
+  deserializeTlv,
+  ITlv,
+  serializeTlv,
+} from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import {
   CetAdaptorSignatures,
@@ -23,7 +27,10 @@ import {
 import { DlcAcceptV0Pre163 } from './pre-163/DlcAccept';
 
 export abstract class DlcAccept implements IDlcMessage {
-  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcAcceptV0 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+    parseCets = true,
+  ): DlcAcceptV0 {
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
     const tempReader = new BufferReader(reader.peakBytes());
@@ -60,7 +67,10 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * Deserializes an oracle_info message
    * @param reader
    */
-  public static deserialize(reader: Buffer | BufferReader, parseCets = true): DlcAcceptV0 {
+  public static deserialize(
+    reader: Buffer | BufferReader,
+    parseCets = true,
+  ): DlcAcceptV0 {
     const instance = new DlcAcceptV0();
     if (reader instanceof Buffer) reader = new BufferReader(reader);
 
@@ -257,9 +267,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.acceptCollateral >= fundingAmount) {
-      throw new Error(
-        'fundingAmount must be greater than acceptCollateral',
-      );
+      throw new Error('fundingAmount must be greater than acceptCollateral');
     }
   }
 

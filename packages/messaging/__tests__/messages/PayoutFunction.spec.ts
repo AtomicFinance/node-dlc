@@ -3,8 +3,8 @@ import { expect } from 'chai';
 
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunction } from '../../lib/messages/PayoutFunction';
-import { PayoutFunctionV0Pre163 } from '../../lib/messages/pre-163/PayoutFunction';
 import { HyperbolaPayoutCurvePiecePre163 } from '../../lib/messages/pre-163/PayoutCurvePiece';
+import { PayoutFunctionV0Pre163 } from '../../lib/messages/pre-163/PayoutFunction';
 
 describe('PayoutFunction', () => {
   describe('serialize', () => {

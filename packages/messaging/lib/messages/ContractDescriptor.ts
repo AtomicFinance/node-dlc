@@ -2,7 +2,7 @@ import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import assert from 'assert';
 
 import { IDlcMessage } from './DlcMessage';
-import { PayoutFunction, IPayoutFunctionJSON } from './PayoutFunction';
+import { IPayoutFunctionJSON, PayoutFunction } from './PayoutFunction';
 import {
   ContractDescriptorPre163,
   ContractDescriptorV0Pre163,

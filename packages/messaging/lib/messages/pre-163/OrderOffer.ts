@@ -20,7 +20,7 @@ import {
   OrderIrcInfoPre163,
   OrderIrcInfoV0Pre163,
 } from './OrderIrcInfo';
-import { IOrderMetadataV0Pre163JSON} from './OrderMetadata';
+import { IOrderMetadataV0Pre163JSON } from './OrderMetadata';
 import { OrderMetadataPre163, OrderMetadataV0Pre163 } from './OrderMetadata';
 
 const LOCKTIME_THRESHOLD = 500000000;
@@ -52,7 +52,9 @@ export abstract class OrderOfferPre163 {
  * desire to enter into a new contract. This is the first step toward
  * order negotiation.
  */
-export class OrderOfferV0Pre163 extends OrderOfferPre163 implements IDlcMessagePre163 {
+export class OrderOfferV0Pre163
+  extends OrderOfferPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.OrderOfferV0;
 
   /**

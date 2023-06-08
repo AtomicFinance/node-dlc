@@ -4,8 +4,8 @@ import assert from 'assert';
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
 import {
-  OracleAnnouncementV0Pre167,
   IOracleAnnouncementV0Pre167JSON,
+  OracleAnnouncementV0Pre167,
 } from '../pre-167/OracleAnnouncement';
 import { IDlcMessagePre163 } from './DlcMessage';
 
@@ -28,7 +28,9 @@ export class OracleInfoV0Pre163 implements IDlcMessagePre163 {
     assert(type === this.type, `Expected OracleInfoV0, got type ${type}`);
 
     instance.length = reader.readBigSize();
-    instance.announcement = OracleAnnouncementV0Pre167.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncementV0Pre167.deserialize(
+      getTlv(reader),
+    );
 
     return instance;
   }
