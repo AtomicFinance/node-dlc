@@ -5,12 +5,14 @@ import {
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   MessageType,
+  OrderCsoInfo,
+  OrderCsoInfoV0,
   PayoutFunctionV0,
   PolynomialPayoutCurvePiece,
 } from '@node-dlc/messaging';
 import assert from 'assert';
 
-import { UNIT_MULTIPLIER } from './Builder';
+import { DlcParty, UNIT_MULTIPLIER } from './Builder';
 import {
   HasContractInfo,
   HasOfferCollateralSatoshis,
@@ -29,6 +31,10 @@ export interface CsoInfo {
 
 const ONE_BTC_CONTRACT = Value.fromBitcoin(1);
 
+export type MaybeHasCsoInfo = {
+  csoInfo?: OrderCsoInfo;
+};
+
 /**
  * Get CsoInfo from Contract Info and validate
 
@@ -37,6 +43,8 @@ const ONE_BTC_CONTRACT = Value.fromBitcoin(1);
  */
 export const getCsoInfoFromContractInfo = (
   _contractInfo: ContractInfo,
+  shiftForFees: DlcParty = 'neither',
+  fees: Value = Value.fromSats(0),
 ): CsoInfo => {
   if (_contractInfo.type !== MessageType.ContractInfoV0)
     throw Error('Only ContractInfoV0 currently supported');
@@ -77,14 +85,46 @@ export const getCsoInfoFromContractInfo = (
 
   const unit = eventDescriptor.unit;
 
-  const maxGain = Value.fromSats(
-    endOutcome * UNIT_MULTIPLIER[unit.toLowerCase()] - ONE_BTC_CONTRACT.sats,
+  const startOutcomeValue = Value.fromSats(
+    startOutcome * UNIT_MULTIPLIER[unit.toLowerCase()],
   );
-  const maxLoss = Value.fromSats(
-    ONE_BTC_CONTRACT.sats - startOutcome * UNIT_MULTIPLIER[unit.toLowerCase()],
+  const endOutcomeValue = Value.fromSats(
+    endOutcome * UNIT_MULTIPLIER[unit.toLowerCase()],
   );
 
   const contractSize = Value.fromSats(contractInfo.totalCollateral);
+  const defaultContractSize = Value.fromBitcoin(1);
+
+  if (shiftForFees === 'offeror') {
+    startOutcomeValue.sub(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+    endOutcomeValue.sub(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+  } else if (shiftForFees === 'acceptor') {
+    startOutcomeValue.add(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+    endOutcomeValue.add(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+  }
+
+  const maxGain = endOutcomeValue.clone();
+  maxGain.sub(ONE_BTC_CONTRACT);
+
+  const maxLoss = ONE_BTC_CONTRACT.clone();
+  maxLoss.sub(startOutcomeValue);
+
   const offerCollateral = contractSize.clone();
   offerCollateral.sub(
     Value.fromSats((maxGain.sats * contractSize.sats) / BigInt(1e8)),
@@ -110,7 +150,10 @@ export const getCsoInfoFromContractInfo = (
  * @returns {CsoInfo}
  */
 export const getCsoInfoFromOffer = (
-  offer: HasContractInfo & HasType & HasOfferCollateralSatoshis,
+  offer: HasContractInfo &
+    HasType &
+    HasOfferCollateralSatoshis &
+    MaybeHasCsoInfo,
 ): CsoInfo => {
   if (
     offer.type !== MessageType.DlcOfferV0 &&
@@ -118,7 +161,19 @@ export const getCsoInfoFromOffer = (
   )
     throw Error('Only DlcOfferV0 and OrderOfferV0 currently supported');
 
-  const csoInfo = getCsoInfoFromContractInfo(offer.contractInfo);
+  let shiftForFees: DlcParty = 'neither';
+  const fees = Value.zero();
+
+  if (offer.csoInfo) {
+    shiftForFees = (offer.csoInfo as OrderCsoInfoV0).shiftForFees;
+    fees.add(Value.fromSats((offer.csoInfo as OrderCsoInfoV0).fees));
+  }
+
+  const csoInfo = getCsoInfoFromContractInfo(
+    offer.contractInfo,
+    shiftForFees,
+    fees,
+  );
 
   if (csoInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
     throw Error('Offer was not generated with CSO ContractInfo');

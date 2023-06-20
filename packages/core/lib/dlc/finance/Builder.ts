@@ -6,6 +6,7 @@ import {
   MessageType,
   OracleAnnouncementV0,
   OracleInfoV0,
+  OrderCsoInfoV0,
   OrderOfferV0,
   PayoutFunctionV0,
   RoundingIntervalsV0,
@@ -24,6 +25,8 @@ export const UNIT_MULTIPLIER = {
   bits: BigInt(1e2),
   sats: BigInt(1),
 };
+
+export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
 /**
  * Compute rounding intervals for a linear or hyperbola payout curve
@@ -284,6 +287,8 @@ export const buildShortPutOrderOffer = (
  * @param {bigint} feePerByte sats/vbyte
  * @param {Value} rounding rounding mod for RoundingInterval
  * @param {BitcoinNetwork} network bitcoin, bitcoin_testnet or bitcoin_regtest
+ * @param {DlcParty} [shiftForFees] shift for offerer, acceptor or neither (who should pay fees)
+ * @param {Value} [fees] fees to shift
  * @returns {OrderOfferV0}
  */
 export const buildLinearOrderOffer = (
@@ -294,8 +299,10 @@ export const buildLinearOrderOffer = (
   startOutcome: bigint,
   endOutcome: bigint,
   feePerByte: bigint,
-  rounding: Value,
+  roundingIntervals: RoundingIntervalsV0,
   network: BitcoinNetwork,
+  shiftForFees: DlcParty = 'neither',
+  fees: Value = Value.fromSats(0),
 ): OrderOfferV0 => {
   if (maxPayout.lt(minPayout))
     throw Error('maxPayout must be greater than minPayout');
@@ -306,9 +313,6 @@ export const buildLinearOrderOffer = (
 
   const totalCollateral = maxPayout.sats;
 
-  const roundingIntervals = new RoundingIntervalsV0();
-  const roundingMod = computeRoundingModulus(rounding, maxPayout);
-
   const { payoutFunction } = LinearPayout.buildPayoutFunction(
     minPayout.sats,
     maxPayout.sats,
@@ -318,14 +322,7 @@ export const buildLinearOrderOffer = (
     eventDescriptor.nbDigits,
   );
 
-  roundingIntervals.intervals = [
-    {
-      beginInterval: BigInt(0),
-      roundingMod,
-    },
-  ];
-
-  return buildOrderOffer(
+  const orderOffer = buildOrderOffer(
     announcement,
     totalCollateral,
     offerCollateral.sats,
@@ -334,6 +331,15 @@ export const buildLinearOrderOffer = (
     feePerByte,
     network.name,
   );
+
+  if (shiftForFees !== 'neither') {
+    const csoInfo = new OrderCsoInfoV0();
+    csoInfo.shiftForFees = shiftForFees;
+    csoInfo.fees = fees.sats;
+    orderOffer.csoInfo = csoInfo;
+  }
+
+  return orderOffer;
 };
 
 /**
@@ -346,6 +352,8 @@ export const buildLinearOrderOffer = (
  * @param {bigint} feePerByte sats/vbyte
  * @param {Value} rounding rounding mod for RoundingInterval
  * @param {BitcoinNetwork} network bitcoin, bitcoin_testnet or bitcoin_regtest
+ * @param {DlcParty} [shiftForFees] shift for offerer, acceptor or neither
+ * @param {Value} [fees] fees to shift
  * @returns {OrderOfferV0}
  */
 export const buildCustomStrategyOrderOffer = (
@@ -354,8 +362,10 @@ export const buildCustomStrategyOrderOffer = (
   maxLoss: Value,
   maxGain: Value,
   feePerByte: bigint,
-  rounding: Value,
+  roundingIntervals: RoundingIntervalsV0,
   network: BitcoinNetwork,
+  shiftForFees: DlcParty = 'neither',
+  fees: Value = Value.fromSats(0),
 ): OrderOfferV0 => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
@@ -377,6 +387,32 @@ export const buildCustomStrategyOrderOffer = (
   const endOutcomeValue = Value.fromBitcoin(1);
   endOutcomeValue.add(maxGain);
 
+  const defaultContractSize = Value.fromBitcoin(1);
+
+  if (shiftForFees === 'offeror') {
+    startOutcomeValue.add(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+    endOutcomeValue.add(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+  } else if (shiftForFees === 'acceptor') {
+    startOutcomeValue.sub(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+    endOutcomeValue.sub(
+      Value.fromSats(
+        (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      ),
+    );
+  }
+
   const startOutcome =
     startOutcomeValue.sats / BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]);
   const endOutcome =
@@ -395,7 +431,32 @@ export const buildCustomStrategyOrderOffer = (
     startOutcome,
     endOutcome,
     feePerByte,
-    rounding,
+    roundingIntervals,
     network,
+    shiftForFees,
+    fees,
   );
+};
+
+interface IInterval {
+  beginInterval: bigint;
+  rounding: number | bigint | Value;
+}
+
+export const buildRoundingIntervalsFromIntervals = (
+  contractSize: Value,
+  intervals: IInterval[],
+): RoundingIntervalsV0 => {
+  const roundingIntervals = new RoundingIntervalsV0();
+
+  roundingIntervals.intervals = intervals.map((interval) => {
+    const roundingMod = computeRoundingModulus(interval.rounding, contractSize);
+
+    return {
+      beginInterval: interval.beginInterval,
+      roundingMod,
+    };
+  });
+
+  return roundingIntervals;
 };
