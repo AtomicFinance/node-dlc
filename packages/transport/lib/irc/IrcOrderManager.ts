@@ -86,6 +86,7 @@ export class IrcOrderManager extends IrcManager {
           throw Error('DlcMessage type not supported');
       }
     } catch (e) {
+      this.logger.debug('error parsing message', e);
       this.emit('message', from, to, msg);
       this.logger.debug('message', from, to, msg);
     }
