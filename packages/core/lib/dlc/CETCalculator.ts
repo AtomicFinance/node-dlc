@@ -213,7 +213,7 @@ export function splitIntoRanges(
 
   const reversedIntervals = [...roundingIntervals].reverse();
 
-  const getRoundingForOutcome = (outcome: BigInt): [bigint, number] => {
+  const getRoundingForOutcome = (outcome: bigint): [bigint, number] => {
     const roundingIndex = reversedIntervals.findIndex(
       (interval) => interval.beginInterval <= outcome,
     );
