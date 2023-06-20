@@ -7,7 +7,7 @@ export abstract class OrderMetadata {
   public static deserialize(buf: Buffer): OrderMetadata {
     const reader = new BufferReader(buf);
 
-    const type = Number(reader.readUInt16BE());
+    const type = Number(reader.readBigSize());
 
     switch (type) {
       case MessageType.OrderMetadataV0:

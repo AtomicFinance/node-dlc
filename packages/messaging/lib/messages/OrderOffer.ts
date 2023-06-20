@@ -15,6 +15,7 @@ import {
   IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
+import { IOrderCsoInfoJSON, OrderCsoInfo } from './OrderCsoInfo';
 import {
   IOrderIrcInfoJSON,
   OrderIrcInfo,
@@ -82,6 +83,9 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
         case MessageType.OrderIrcInfoV0:
           instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
           break;
+        case MessageType.OrderCsoInfoV0:
+          instance.csoInfo = OrderCsoInfo.deserialize(buf);
+          break;
         default:
           break;
       }
@@ -110,6 +114,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public metadata?: OrderMetadata;
 
   public ircInfo?: OrderIrcInfo;
+
+  public csoInfo?: OrderCsoInfo;
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
@@ -178,6 +184,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
     if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
+    if (this.csoInfo) tlvs.push(this.csoInfo.toJSON());
 
     return {
       type: this.type,
@@ -206,6 +213,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
+    if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
 
     return writer.toBuffer();
   }
@@ -219,5 +227,5 @@ export interface IOrderOfferJSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON)[];
+  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderCsoInfoJSON)[];
 }
