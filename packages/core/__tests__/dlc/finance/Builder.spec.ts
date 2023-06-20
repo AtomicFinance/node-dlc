@@ -12,6 +12,7 @@ import sinon from 'sinon';
 import {
   buildCoveredCallOrderOffer,
   buildCustomStrategyOrderOffer,
+  buildRoundingIntervalsFromIntervals,
   buildShortPutOrderOffer,
   computeRoundingModulus,
   UNIT_MULTIPLIER,
@@ -95,7 +96,12 @@ describe('OrderOffer Builder', () => {
     const maxLoss = Value.fromBitcoin(0.2);
     const maxGain = Value.fromBitcoin(0.04);
     const feeRate = 2n;
-    const rounding = Value.fromSats(25000);
+
+    const highestPrecisionRounding = Value.fromSats(10000);
+    const highPrecisionRounding = Value.fromSats(25000);
+    const mediumPrecisionRounding = Value.fromSats(100000);
+    const lowPrecisionRounding = Value.fromSats(200000);
+
     const network = BitcoinNetworks.bitcoin;
 
     const oracleAnnouncementBuf = Buffer.from(
@@ -111,13 +117,23 @@ describe('OrderOffer Builder', () => {
 
     for (const contractSize of contractSizes) {
       it(`should build a CSO OrderOffer with contract size ${contractSize.bitcoin} BTC correctly`, () => {
+        const roundingIntervals = buildRoundingIntervalsFromIntervals(
+          contractSize,
+          [
+            { beginInterval: 0n, rounding: lowPrecisionRounding },
+            { beginInterval: 750000n, rounding: mediumPrecisionRounding },
+            { beginInterval: 850000n, rounding: highPrecisionRounding },
+            { beginInterval: 950000n, rounding: highestPrecisionRounding },
+          ],
+        );
+
         const orderOffer = buildCustomStrategyOrderOffer(
           oracleAnnouncement,
           contractSize,
           maxLoss,
           maxGain,
           feeRate,
-          rounding,
+          roundingIntervals,
           network,
         );
 
@@ -149,16 +165,136 @@ describe('OrderOffer Builder', () => {
       });
     }
 
+    it('should build a CSO OrderOffer and shift the payout curve correctly for offeror fees', () => {
+      const contractSize = contractSizes[0];
+
+      const roundingIntervals = buildRoundingIntervalsFromIntervals(
+        contractSize,
+        [
+          { beginInterval: 0n, rounding: lowPrecisionRounding },
+          { beginInterval: 750000n, rounding: mediumPrecisionRounding },
+          { beginInterval: 850000n, rounding: highPrecisionRounding },
+          { beginInterval: 950000n, rounding: highestPrecisionRounding },
+        ],
+      );
+
+      const offerFees = Value.fromSats(10000);
+
+      const orderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        maxLoss,
+        maxGain,
+        feeRate,
+        roundingIntervals,
+        network,
+        'offeror',
+        offerFees,
+      );
+
+      const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
+        .contractDescriptor as ContractDescriptorV1)
+        .payoutFunction as PayoutFunctionV0).pieces;
+
+      expect(() => orderOffer.validate()).to.not.throw(Error);
+      expect(orderOffer.contractInfo.totalCollateral).to.equal(
+        contractSize.sats,
+      );
+      expect(orderOffer.offerCollateralSatoshis).to.equal(
+        contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
+      );
+      expect(payoutCurvePieces[0].endpoint).to.equal(
+        (defaultContractSize.sats - maxLoss.sats + offerFees.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[1].endpoint).to.equal(
+        (defaultContractSize.sats + maxGain.sats + offerFees.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[0].endpointPayout).to.equal(
+        contractSize.sats -
+          (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
+          (maxGain.sats * contractSize.sats) / BigInt(1e8),
+      );
+      expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+    });
+
+    it('should build a CSO OrderOffer and shift the payout curve correctly for acceptor fees', () => {
+      const acceptFees = Value.fromSats(10000);
+
+      const contractSize = contractSizes[0];
+
+      const roundingIntervals = buildRoundingIntervalsFromIntervals(
+        contractSize,
+        [
+          { beginInterval: 0n, rounding: lowPrecisionRounding },
+          { beginInterval: 750000n, rounding: mediumPrecisionRounding },
+          { beginInterval: 850000n, rounding: highPrecisionRounding },
+          { beginInterval: 950000n, rounding: highestPrecisionRounding },
+        ],
+      );
+
+      const orderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        maxLoss,
+        maxGain,
+        feeRate,
+        roundingIntervals,
+        network,
+        'acceptor',
+        acceptFees,
+      );
+
+      const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
+        .contractDescriptor as ContractDescriptorV1)
+        .payoutFunction as PayoutFunctionV0).pieces;
+
+      expect(() => orderOffer.validate()).to.not.throw(Error);
+      expect(orderOffer.contractInfo.totalCollateral).to.equal(
+        contractSize.sats,
+      );
+      expect(orderOffer.offerCollateralSatoshis).to.equal(
+        contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
+      );
+      expect(payoutCurvePieces[0].endpoint).to.equal(
+        (defaultContractSize.sats - maxLoss.sats - acceptFees.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[1].endpoint).to.equal(
+        (defaultContractSize.sats + maxGain.sats - acceptFees.sats) /
+          BigInt(UNIT_MULTIPLIER[unit]),
+      );
+      expect(payoutCurvePieces[0].endpointPayout).to.equal(
+        contractSize.sats -
+          (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
+          (maxGain.sats * contractSize.sats) / BigInt(1e8),
+      );
+      expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+    });
+
     it('should fail to build a CSO OrderOffer with an invalid oracleAnnouncement', () => {
+      const contractSize = contractSizes[0];
+
+      const roundingIntervals = buildRoundingIntervalsFromIntervals(
+        contractSize,
+        [
+          { beginInterval: 0n, rounding: lowPrecisionRounding },
+          { beginInterval: 750000n, rounding: mediumPrecisionRounding },
+          { beginInterval: 850000n, rounding: highPrecisionRounding },
+          { beginInterval: 950000n, rounding: highestPrecisionRounding },
+        ],
+      );
+
       oracleAnnouncement.announcementSig = Buffer.from('deadbeef', 'hex');
 
       const orderOffer = buildCustomStrategyOrderOffer(
         oracleAnnouncement,
-        contractSizes[0],
+        contractSize,
         maxLoss,
         maxGain,
         feeRate,
-        rounding,
+        roundingIntervals,
         network,
       );
 
