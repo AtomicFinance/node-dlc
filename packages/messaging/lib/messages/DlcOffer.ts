@@ -6,6 +6,7 @@ import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
 import { MessageType } from '../MessageType';
+import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import {
   ContractInfo,
@@ -18,6 +19,17 @@ import {
   FundingInputV0,
   IFundingInputV0JSON,
 } from './FundingInput';
+import { IOrderCsoInfoJSON, OrderCsoInfo } from './OrderCsoInfo';
+import {
+  IOrderIrcInfoJSON,
+  OrderIrcInfo,
+  OrderIrcInfoV0,
+} from './OrderIrcInfo';
+import {
+  IOrderMetadataJSON,
+  OrderMetadata,
+  OrderMetadataV0,
+} from './OrderMetadata';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 export abstract class DlcOffer {
@@ -84,6 +96,26 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     instance.cetLocktime = reader.readUInt32BE();
     instance.refundLocktime = reader.readUInt32BE();
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type } = deserializeTlv(tlvReader);
+
+      switch (Number(type)) {
+        case MessageType.OrderMetadataV0:
+          instance.metadata = OrderMetadataV0.deserialize(buf);
+          break;
+        case MessageType.OrderIrcInfoV0:
+          instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
+          break;
+        case MessageType.OrderCsoInfoV0:
+          instance.csoInfo = OrderCsoInfo.deserialize(buf);
+          break;
+        default:
+          break;
+      }
+    }
+
     return instance;
   }
 
@@ -119,6 +151,12 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   public cetLocktime: number;
 
   public refundLocktime: number;
+
+  public metadata?: OrderMetadata;
+
+  public ircInfo?: OrderIrcInfo;
+
+  public csoInfo?: OrderCsoInfo;
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -251,6 +289,12 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
    * Converts dlc_offer_v0 to JSON
    */
   public toJSON(): IDlcOfferV0JSON {
+    const tlvs = [];
+
+    if (this.metadata) tlvs.push(this.metadata.toJSON());
+    if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
+    if (this.csoInfo) tlvs.push(this.csoInfo.toJSON());
+
     return {
       type: this.type,
       contractFlags: this.contractFlags.toString('hex'),
@@ -267,6 +311,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       feeRatePerVb: Number(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
+      tlvs,
     };
   }
 
@@ -298,6 +343,10 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     writer.writeUInt32BE(this.cetLocktime);
     writer.writeUInt32BE(this.refundLocktime);
 
+    if (this.metadata) writer.writeBytes(this.metadata.serialize());
+    if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
+    if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
+
     return writer.toBuffer();
   }
 }
@@ -318,6 +367,7 @@ export interface IDlcOfferV0JSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
+  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderCsoInfoJSON)[];
 }
 
 export interface IDlcOfferV0Addresses {

@@ -1,6 +1,7 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
+import { OrderCsoInfoV0 } from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
@@ -158,6 +159,17 @@ describe('DlcOffer', () => {
           dlcOfferHex.toString('hex'),
         );
       });
+
+      it('serializes with csoinfo', () => {
+        const csoInfo = new OrderCsoInfoV0();
+        csoInfo.shiftForFees = 'acceptor';
+        csoInfo.fees = BigInt(1000);
+
+        instance.csoInfo = csoInfo;
+        expect(instance.serialize().toString('hex')).to.equal(
+          Buffer.concat([dlcOfferHex, csoInfo.serialize()]).toString('hex'),
+        );
+      });
     });
 
     describe('deserialize', () => {
@@ -188,6 +200,17 @@ describe('DlcOffer', () => {
         expect(DlcOfferV0.deserialize(dlcOfferHex).type).to.equal(
           MessageType.DlcOfferV0,
         );
+      });
+
+      it('deserializes with csoinfo', () => {
+        const csoInfo = new OrderCsoInfoV0();
+        csoInfo.shiftForFees = 'acceptor';
+        csoInfo.fees = BigInt(1000);
+
+        instance.csoInfo = csoInfo;
+        expect(
+          DlcOfferV0.deserialize(instance.serialize()).csoInfo.serialize(),
+        ).to.deep.equal(csoInfo.serialize());
       });
     });
 
