@@ -12,7 +12,7 @@ import {
 } from '@node-dlc/messaging';
 import assert from 'assert';
 
-import { DlcParty, UNIT_MULTIPLIER } from './Builder';
+import { DlcParty, roundToNearestMultiplier, UNIT_MULTIPLIER } from './Builder';
 import {
   HasContractInfo,
   HasOfferCollateralSatoshis,
@@ -95,28 +95,19 @@ export const getCsoInfoFromContractInfo = (
   const contractSize = Value.fromSats(contractInfo.totalCollateral);
   const defaultContractSize = Value.fromBitcoin(1);
 
+  const shiftValue = Value.fromSats(
+    roundToNearestMultiplier(
+      (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      UNIT_MULTIPLIER[unit.toLowerCase()],
+    ),
+  );
+
   if (shiftForFees === 'offeror') {
-    startOutcomeValue.sub(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
-    endOutcomeValue.sub(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
+    startOutcomeValue.sub(shiftValue);
+    endOutcomeValue.sub(shiftValue);
   } else if (shiftForFees === 'acceptor') {
-    startOutcomeValue.add(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
-    endOutcomeValue.add(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
+    startOutcomeValue.add(shiftValue);
+    endOutcomeValue.add(shiftValue);
   }
 
   const maxGain = endOutcomeValue.clone();
