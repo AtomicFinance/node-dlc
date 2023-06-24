@@ -17,7 +17,6 @@ import {
   buildCustomStrategyOrderOffer,
   buildRoundingIntervalsFromIntervals,
   DlcParty,
-  getOptionInfoFromOffer,
   LinearPayout,
 } from '../../../lib';
 import {
@@ -291,127 +290,70 @@ describe('CsoInfo', () => {
       expect(csoInfoFromOffer.maxLoss.sats).to.equal(maxLoss.sats);
     });
 
-    const fees = [0, 1116, 29384, 34, 245, 11293, 2223];
+    const fees = [0, 1116, 29384, 34, 245, 11293, 2223, 10410];
+    const contractSizes = [0.01, 0.1, 0.5, 1, 2, 5, 10, 50];
 
-    fees.forEach((fee) => {
-      it(`should get correct CsoInfo from ContractInfo with fees shifted contract size 0.01 and fee ${fee}`, () => {
-        const eventDescriptor = new DigitDecompositionEventDescriptorV0();
-        eventDescriptor.base = 2;
-        eventDescriptor.isSigned = false;
-        eventDescriptor.unit = 'bits';
-        eventDescriptor.precision = 0;
-        eventDescriptor.nbDigits = oracleDigits;
+    contractSizes.forEach((contractSizeNum) => {
+      fees.forEach((fee) => {
+        it(`should get correct CsoInfo from ContractInfo with fees shifted contract size ${contractSizeNum} and fee ${fee}`, () => {
+          const contractSize = Value.fromBitcoin(contractSizeNum);
 
-        const oracleEvent = new OracleEventV0();
-        oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
-        oracleEvent.eventDescriptor = eventDescriptor;
+          const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+          eventDescriptor.base = 2;
+          eventDescriptor.isSigned = false;
+          eventDescriptor.unit = 'bits';
+          eventDescriptor.precision = 0;
+          eventDescriptor.nbDigits = oracleDigits;
 
-        const oracleAnnouncement = new OracleAnnouncementV0();
-        oracleAnnouncement.oracleEvent = oracleEvent;
+          const oracleEvent = new OracleEventV0();
+          oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
+          oracleEvent.eventDescriptor = eventDescriptor;
 
-        const contractSize = Value.fromBitcoin(0.01);
+          const oracleAnnouncement = new OracleAnnouncementV0();
+          oracleAnnouncement.oracleEvent = oracleEvent;
 
-        const maxLoss = Value.fromBitcoin(0.2);
-        const maxGain = Value.fromBitcoin(0.04);
+          const maxLoss = Value.fromBitcoin(0.2);
+          const maxGain = Value.fromBitcoin(0.04);
 
-        const feeRate = 4n;
+          const feeRate = 4n;
 
-        const highestPrecisionRounding = Value.fromSats(10000);
-        const highPrecisionRounding = Value.fromSats(25000);
-        const mediumPrecisionRounding = Value.fromSats(100000);
-        const lowPrecisionRounding = Value.fromSats(200000);
+          const highestPrecisionRounding = Value.fromSats(10000);
+          const highPrecisionRounding = Value.fromSats(25000);
+          const mediumPrecisionRounding = Value.fromSats(100000);
+          const lowPrecisionRounding = Value.fromSats(200000);
 
-        const roundingIntervals = buildRoundingIntervalsFromIntervals(
-          contractSize,
-          [
-            { beginInterval: 0n, rounding: lowPrecisionRounding },
-            { beginInterval: 750000n, rounding: mediumPrecisionRounding },
-            { beginInterval: 850000n, rounding: highPrecisionRounding },
-            { beginInterval: 950000n, rounding: highestPrecisionRounding },
-          ],
-        );
+          const roundingIntervals = buildRoundingIntervalsFromIntervals(
+            contractSize,
+            [
+              { beginInterval: 0n, rounding: lowPrecisionRounding },
+              { beginInterval: 750000n, rounding: mediumPrecisionRounding },
+              { beginInterval: 850000n, rounding: highPrecisionRounding },
+              { beginInterval: 950000n, rounding: highestPrecisionRounding },
+            ],
+          );
 
-        const network = BitcoinNetworks.bitcoin;
+          const network = BitcoinNetworks.bitcoin;
 
-        const shiftForFees: DlcParty = 'acceptor';
-        const fees = Value.fromSats(fee);
+          const shiftForFees: DlcParty = 'acceptor';
+          const fees = Value.fromSats(fee);
 
-        const csoOrderOffer = buildCustomStrategyOrderOffer(
-          oracleAnnouncement,
-          contractSize,
-          maxLoss,
-          maxGain,
-          feeRate,
-          roundingIntervals,
-          network,
-          shiftForFees,
-          fees,
-        );
+          const csoOrderOffer = buildCustomStrategyOrderOffer(
+            oracleAnnouncement,
+            contractSize,
+            maxLoss,
+            maxGain,
+            feeRate,
+            roundingIntervals,
+            network,
+            shiftForFees,
+            fees,
+          );
 
-        const csoInfo = getCsoInfoFromOffer(csoOrderOffer);
+          const csoInfo = getCsoInfoFromOffer(csoOrderOffer);
 
-        expect(csoInfo.maxGain.sats).to.equal(maxGain.sats);
-        expect(csoInfo.maxLoss.sats).to.equal(maxLoss.sats);
-      });
-
-      it(`should get correct CsoInfo from ContractInfo with fees shifted contract size 1 and fee ${fee}`, () => {
-        const eventDescriptor = new DigitDecompositionEventDescriptorV0();
-        eventDescriptor.base = 2;
-        eventDescriptor.isSigned = false;
-        eventDescriptor.unit = 'bits';
-        eventDescriptor.precision = 0;
-        eventDescriptor.nbDigits = oracleDigits;
-
-        const oracleEvent = new OracleEventV0();
-        oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
-        oracleEvent.eventDescriptor = eventDescriptor;
-
-        const oracleAnnouncement = new OracleAnnouncementV0();
-        oracleAnnouncement.oracleEvent = oracleEvent;
-
-        const contractSize = Value.fromBitcoin(0.01);
-
-        const maxLoss = Value.fromBitcoin(0.2);
-        const maxGain = Value.fromBitcoin(0.04);
-
-        const feeRate = 4n;
-
-        const highestPrecisionRounding = Value.fromSats(10000);
-        const highPrecisionRounding = Value.fromSats(25000);
-        const mediumPrecisionRounding = Value.fromSats(100000);
-        const lowPrecisionRounding = Value.fromSats(200000);
-
-        const roundingIntervals = buildRoundingIntervalsFromIntervals(
-          contractSize,
-          [
-            { beginInterval: 0n, rounding: lowPrecisionRounding },
-            { beginInterval: 750000n, rounding: mediumPrecisionRounding },
-            { beginInterval: 850000n, rounding: highPrecisionRounding },
-            { beginInterval: 950000n, rounding: highestPrecisionRounding },
-          ],
-        );
-
-        const network = BitcoinNetworks.bitcoin;
-
-        const shiftForFees: DlcParty = 'offeror';
-        const fees = Value.fromSats(fee);
-
-        const csoOrderOffer = buildCustomStrategyOrderOffer(
-          oracleAnnouncement,
-          contractSize,
-          maxLoss,
-          maxGain,
-          feeRate,
-          roundingIntervals,
-          network,
-          shiftForFees,
-          fees,
-        );
-
-        const csoInfo = getCsoInfoFromOffer(csoOrderOffer);
-
-        expect(csoInfo.maxGain.sats).to.equal(maxGain.sats);
-        expect(csoInfo.maxLoss.sats).to.equal(maxLoss.sats);
+          expect(csoInfo.maxGain.sats).to.equal(maxGain.sats);
+          expect(csoInfo.maxLoss.sats).to.equal(maxLoss.sats);
+        });
       });
     });
   });

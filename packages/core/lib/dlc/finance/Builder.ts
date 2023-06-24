@@ -26,6 +26,27 @@ export const UNIT_MULTIPLIER = {
   sats: BigInt(1),
 };
 
+/**
+ * Round a number to the nearest multiple of a given multiplier.
+ *
+ * @param num - The number to be rounded.
+ * @param multiplier - The multiplier to round to.
+ * @returns The number rounded to the nearest multiple of the multiplier.
+ *
+ * @example
+ * ```typescript
+ * // Example: rounding to nearest 100
+ * const number = BigInt(354);
+ * const multiplier = BigInt(100);
+ * const roundedNumber = roundToNearestMultiplier(number, multiplier);
+ * console.log(roundedNumber); // Output: 300
+ * ```
+ */
+export const roundToNearestMultiplier = (
+  num: bigint,
+  multiplier: bigint,
+): bigint => (num / multiplier) * multiplier;
+
 export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
 /**
@@ -389,28 +410,19 @@ export const buildCustomStrategyOrderOffer = (
 
   const defaultContractSize = Value.fromBitcoin(1);
 
+  const shiftValue = Value.fromSats(
+    roundToNearestMultiplier(
+      (fees.sats * defaultContractSize.sats) / contractSize.sats,
+      UNIT_MULTIPLIER[unit.toLowerCase()],
+    ),
+  );
+
   if (shiftForFees === 'offeror') {
-    startOutcomeValue.add(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
-    endOutcomeValue.add(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
+    startOutcomeValue.add(shiftValue);
+    endOutcomeValue.add(shiftValue);
   } else if (shiftForFees === 'acceptor') {
-    startOutcomeValue.sub(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
-    endOutcomeValue.sub(
-      Value.fromSats(
-        (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      ),
-    );
+    startOutcomeValue.sub(shiftValue);
+    endOutcomeValue.sub(shiftValue);
   }
 
   const startOutcome =
