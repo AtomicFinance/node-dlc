@@ -68,7 +68,7 @@ export class OrderCsoInfoV0 extends OrderCsoInfo implements IDlcMessage {
 
   public shiftForFees: DlcParty = 'neither';
 
-  public fees = 0n;
+  public fees = BigInt(0);
 
   /**
    * Converts order_metadata_v0 to JSON
