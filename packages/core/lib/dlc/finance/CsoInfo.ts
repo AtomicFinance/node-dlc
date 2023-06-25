@@ -95,12 +95,15 @@ export const getCsoInfoFromContractInfo = (
   const contractSize = Value.fromSats(contractInfo.totalCollateral);
   const defaultContractSize = Value.fromBitcoin(1);
 
-  const shiftValue = Value.fromSats(
-    roundToNearestMultiplier(
-      (fees.sats * defaultContractSize.sats) / contractSize.sats,
-      UNIT_MULTIPLIER[unit.toLowerCase()],
-    ),
-  );
+  const shiftValue =
+    contractSize.sats > 0
+      ? Value.fromSats(
+          roundToNearestMultiplier(
+            (fees.sats * defaultContractSize.sats) / contractSize.sats,
+            UNIT_MULTIPLIER[unit.toLowerCase()],
+          ),
+        )
+      : Value.zero();
 
   if (shiftForFees === 'offeror') {
     startOutcomeValue.sub(shiftValue);
