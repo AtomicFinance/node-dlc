@@ -273,6 +273,34 @@ describe('OrderOffer Builder', () => {
       expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
     });
 
+    it('should build a CSO OrderOffer with contractSize 0', () => {
+      const contractSize = Value.zero();
+
+      const roundingIntervals = buildRoundingIntervalsFromIntervals(
+        contractSize,
+        [
+          { beginInterval: 0n, rounding: lowPrecisionRounding },
+          { beginInterval: 750000n, rounding: mediumPrecisionRounding },
+          { beginInterval: 850000n, rounding: highPrecisionRounding },
+          { beginInterval: 950000n, rounding: highestPrecisionRounding },
+        ],
+      );
+
+      const orderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        maxLoss,
+        maxGain,
+        feeRate,
+        roundingIntervals,
+        network,
+      );
+
+      expect(orderOffer.contractInfo.totalCollateral).to.equal(
+        contractSize.sats,
+      );
+    });
+
     it('should fail to build a CSO OrderOffer with an invalid oracleAnnouncement', () => {
       const contractSize = contractSizes[0];
 
