@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { ContractInfoPre163 } from '../../../lib/messages/pre-163/ContractInfo';
 import {
   DlcOfferV0Pre163,
-  LOCKTIME_THRESHOLD,
+  LOCKTIME_THRESHOLD_PRE_163,
 } from '../../../lib/messages/pre-163/DlcOffer';
 import { FundingInputV0Pre163 } from '../../../lib/messages/pre-163/FundingInput';
 import { MessageType } from '../../../lib/MessageType';
@@ -312,7 +312,7 @@ describe('DlcOfferV0Pre163', () => {
 
       it('should throw if cet_locktime and refund_locktime are not in same units', () => {
         instance.cetLocktime = 100;
-        instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
+        instance.refundLocktime = LOCKTIME_THRESHOLD_PRE_163 + 200;
         expect(function () {
           instance.validate();
         }).to.throw(Error);
@@ -325,8 +325,8 @@ describe('DlcOfferV0Pre163', () => {
           instance.validate();
         }).to.not.throw(Error);
 
-        instance.cetLocktime = LOCKTIME_THRESHOLD + 100;
-        instance.refundLocktime = LOCKTIME_THRESHOLD + 200;
+        instance.cetLocktime = LOCKTIME_THRESHOLD_PRE_163 + 100;
+        instance.refundLocktime = LOCKTIME_THRESHOLD_PRE_163 + 200;
         expect(function () {
           instance.validate();
         }).to.not.throw(Error);

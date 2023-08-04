@@ -1,8 +1,8 @@
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
-  ContractInfo,
-  ContractInfoV0,
-  ContractInfoV1,
+  SingleContractInfo,
+  DisjointContractInfo,
+  SingleOracleInfo,
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,
@@ -86,18 +86,20 @@ export class RocksdbDlcStore extends RocksdbBase {
       stream.on('data', (data) => {
         if (data.key[0] === Prefix.DlcOfferV0) {
           const dlcOffer = DlcOfferV0.deserialize(data.value);
-          if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
+          if (dlcOffer.contractInfo.type === SingleContractInfo.type) {
             if (
-              (dlcOffer.contractInfo as ContractInfoV0).oracleInfo.announcement
-                .oracleEvent.eventId === eventId
+              ((dlcOffer.contractInfo as SingleContractInfo)
+                .oracleInfo as SingleOracleInfo).announcement.oracleEvent
+                .eventId === eventId
             ) {
               results.push(dlcOffer);
             }
-          } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
-            (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
+          } else if (dlcOffer.contractInfo.type === DisjointContractInfo.type) {
+            (dlcOffer.contractInfo as DisjointContractInfo).contractOraclePairs.some(
               (pair) => {
                 if (
-                  pair.oracleInfo.announcement.oracleEvent.eventId === eventId
+                  (pair.oracleInfo as SingleOracleInfo).announcement.oracleEvent
+                    .eventId === eventId
                 ) {
                   results.push(dlcOffer);
                   return true; // Returning true will stop the iteration since we've found a match

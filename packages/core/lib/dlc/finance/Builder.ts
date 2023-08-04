@@ -6,6 +6,7 @@ import {
   MessageType,
   OracleAnnouncementV0Pre167,
   SingleOracleInfo,
+  OrderCsoInfoV0,
   OrderOfferV0,
   PayoutFunction,
   RoundingIntervals,
@@ -129,7 +130,7 @@ export const buildOrderOffer = (
 
   orderOffer.chainHash = chainHashFromNetwork(BitcoinNetworks[network]);
   orderOffer.contractInfo = contractInfo;
-  orderOffer.offerCollateralSatoshis = offerCollateral;
+  orderOffer.offerCollateral = offerCollateral;
   orderOffer.feeRatePerVb = feePerByte;
   orderOffer.cetLocktime = Math.floor(new Date().getTime() / 1000); // set to current time
   orderOffer.refundLocktime =
@@ -319,7 +320,7 @@ export const buildLinearOrderOffer = (
   startOutcome: bigint,
   endOutcome: bigint,
   feePerByte: bigint,
-  roundingIntervals: RoundingIntervalsV0,
+  roundingIntervals: RoundingIntervals,
   network: BitcoinNetwork,
   shiftForFees: DlcParty = 'neither',
   fees: Value = Value.fromSats(0),
@@ -332,9 +333,6 @@ export const buildLinearOrderOffer = (
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
   const totalCollateral = maxPayout.sats;
-
-  const roundingIntervals = new RoundingIntervals();
-  const roundingMod = computeRoundingModulus(rounding, maxPayout);
 
   const { payoutFunction } = LinearPayout.buildPayoutFunction(
     minPayout.sats,
@@ -385,7 +383,7 @@ export const buildCustomStrategyOrderOffer = (
   maxLoss: Value,
   maxGain: Value,
   feePerByte: bigint,
-  roundingIntervals: RoundingIntervalsV0,
+  roundingIntervals: RoundingIntervals,
   network: BitcoinNetwork,
   shiftForFees: DlcParty = 'neither',
   fees: Value = Value.fromSats(0),
@@ -463,8 +461,8 @@ interface IInterval {
 export const buildRoundingIntervalsFromIntervals = (
   contractSize: Value,
   intervals: IInterval[],
-): RoundingIntervalsV0 => {
-  const roundingIntervals = new RoundingIntervalsV0();
+): RoundingIntervals => {
+  const roundingIntervals = new RoundingIntervals();
 
   roundingIntervals.intervals = intervals.map((interval) => {
     const roundingMod = computeRoundingModulus(interval.rounding, contractSize);

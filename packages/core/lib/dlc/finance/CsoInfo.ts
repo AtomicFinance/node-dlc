@@ -8,18 +8,16 @@ import {
   SingleOracleInfo,
   DigitDecompositionEventDescriptorV0Pre167,
   MessageType,
+  OrderCsoInfo,
+  OrderCsoInfoV0,
   PayoutFunction,
   PolynomialPayoutCurvePiece,
   PayoutCurvePieceType,
-} from "@node-dlc/messaging";
+} from '@node-dlc/messaging';
 import assert from 'assert';
 
-import { UNIT_MULTIPLIER } from './Builder';
-import {
-  HasContractInfo,
-  HasOfferCollateral,
-  HasType,
-} from './OptionInfo';
+import { DlcParty, roundToNearestMultiplier, UNIT_MULTIPLIER } from './Builder';
+import { HasContractInfo, HasOfferCollateral, HasType } from './OptionInfo';
 
 export interface CsoInfo {
   maxLoss: Value;
@@ -146,7 +144,7 @@ export const getCsoInfoFromContractInfo = (
  * @returns {CsoInfo}
  */
 export const getCsoInfoFromOffer = (
-  offer: HasContractInfo & HasType & HasOfferCollateral,
+  offer: HasContractInfo & HasType & HasOfferCollateral & MaybeHasCsoInfo,
 ): CsoInfo => {
   if (
     offer.type !== MessageType.DlcOfferV0 &&
@@ -182,7 +180,7 @@ export const getCsoInfoFromOffer = (
  *
  * All PayoutCurvePieces should be type PolynomialPayoutCurvePieces
  *
- * @param {PayoutFunctionV0} payoutFunction
+ * @param {PayoutFunction} payoutFunction
  */
 export const validateCsoPayoutFunction = (
   payoutFunction: PayoutFunction,
@@ -217,7 +215,7 @@ export const validateCsoPayoutFunction = (
         'CSO Payout Function point endpoints should be an ascending line',
       );
       assert(
-        points[1].outcomePayout === nextPiece.endPoint.outcomePayout.sats,
+        points[1].outcomePayout === nextPoints[0].outcomePayout,
         'CSO Payout Function point outcome payout should be continuous without gaps',
       );
     }
@@ -225,12 +223,9 @@ export const validateCsoPayoutFunction = (
     switch (i) {
       case 0:
         // maxLoss should be a flat line
-        assert(
-          piece.endPoint.outcomePayout.sats ===
-            nextPiece.endPoint.outcomePayout.sats,
-        );
-        assert(
-          points[0].outcomePayout === points[1].outcomePayout,
+        assert.equal(
+          points[0].outcomePayout,
+          points[1].outcomePayout,
           'CSO Payout Function maxLoss PayoutCurvePiece point should be a flat line',
         );
         break;
@@ -247,12 +242,13 @@ export const validateCsoPayoutFunction = (
         break;
       case 2:
         // maxGain should be a flat line
-        assert(
-          piece.endPoint.outcomePayout.sats ===
-            payoutFunction.lastEndpoint.outcomePayout.sats,
+        assert.equal(
+          piece.endPoint.outcomePayout.sats,
+          payoutFunction.lastEndpoint.outcomePayout.sats,
         );
-        assert(
-          points[0].outcomePayout === points[1].outcomePayout,
+        assert.equal(
+          points[0].outcomePayout,
+          points[1].outcomePayout,
           'CSO Payout Function maxGain PayoutCurvePiece point should be a flat line',
         );
         // endpoints should always be ascending

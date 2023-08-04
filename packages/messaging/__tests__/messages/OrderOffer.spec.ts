@@ -1,14 +1,26 @@
 import { expect } from 'chai';
+import { BufferReader, BufferWriter } from "@node-lightning/bufio";
 
-import { LOCKTIME_THRESHOLD } from '../../lib';
+import { deserializeTlv, serializeTlv } from "../../lib/serialize/deserializeTlv";
+import { LOCKTIME_THRESHOLD } from '../../lib/messages/DlcOffer';
 import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
 import {
   ContractInfo,
   SingleContractInfo,
 } from '../../lib/messages/ContractInfo';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
-import { OrderIrcInfoV0 } from '../../lib/messages/OrderIrcInfo';
-import { OrderMetadataV0 } from '../../lib/messages/OrderMetadata';
+import {
+  OrderIrcInfoV0,
+  IOrderIrcInfoJSON,
+} from '../../lib/messages/OrderIrcInfo';
+import {
+  OrderCsoInfoV0,
+  IOrderCsoInfoJSON,
+} from '../../lib/messages/OrderCsoInfo';
+import {
+  OrderMetadataV0,
+  IOrderMetadataJSON,
+} from '../../lib/messages/OrderMetadata';
 import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
 import { ContractDescriptorV0Pre163 } from '../../lib/messages/pre-163/ContractDescriptor';
 import { ContractInfoV0Pre163 } from '../../lib/messages/pre-163/ContractInfo';
@@ -24,54 +36,55 @@ describe('OrderOffer', () => {
   );
 
   const orderOfferBuf = Buffer.from(
-    "f532" + // type
-    "00000001" + // protocol version
-    "00" + // contract flags
-    "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-    "00" + // type contract_info
-    "000000000bebc200" + // total_collateral
-    "00" + // type contract_descriptor
-    "03" + // num_outcomes
-    "01" + // outcome_1_len
-    "31" + // outcome_1
-    "0000000000000000" + // payout_1
-    "01" + // outcome_2_len
-    "32" + // outcome_2
-    "00000000092363a3" + // payout_2
-    "01" + // outcome_3_len
-    "33" + // outcome_3
-    "000000000bebc200" + // payout_3
-    "00" + // type oracle_info
-    "fdd824" + // type oracle_announcement
-    "a4" + // length
-    "fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9" + // announcement_signature_r
-    "494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4" + // announcement_signature_s
-    "da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b" + // oracle_public_key
-    "fdd822" + // type oracle_event
-    "40" + // length
-    "0001" + // nb_nonces
-    "3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b" + // oracle_nonces
-    "00000000" + // event_maturity_epoch
-    "fdd806" + // type enum_event_descriptor
-    "10" + // length
-    "0002" + // num_outcomes
-    "06" + // outcome_1_len
-    "64756d6d7931" + // outcome_1
-    "06" + // outcome_2_len
-    "64756d6d7932" + // outcome_2
-    "05" + // event_id_length
-    "64756d6d79" + // event_id
-    "0000000005f5e100" + // total_collateral_satoshis
-    "0000000000000001" + // fee_rate_per_vb
-    "00000064" + // cet_locktime
-    "000000c8" // refund_locktime
-    , "hex"
+    'f532' + // type
+    '00000001' + // protocol version
+    '00' + // contract flags
+    '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
+    '00' + // type contract_info
+    '000000000bebc200' + // total_collateral
+    '00' + // type contract_descriptor
+    '03' + // num_outcomes
+    '01' + // outcome_1_len
+    '31' + // outcome_1
+    '0000000000000000' + // payout_1
+    '01' + // outcome_2_len
+    '32' + // outcome_2
+    '00000000092363a3' + // payout_2
+    '01' + // outcome_3_len
+    '33' + // outcome_3
+    '000000000bebc200' + // payout_3
+    '00' + // type oracle_info
+    'fdd824' + // type oracle_announcement
+    'a4' + // length
+    'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+    '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+    'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+    'fdd822' + // type oracle_event
+    '40' + // length
+    '0001' + // nb_nonces
+    '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+    '00000000' + // event_maturity_epoch
+    'fdd806' + // type enum_event_descriptor
+    '10' + // length
+    '0002' + // num_outcomes
+    '06' + // outcome_1_len
+    '64756d6d7931' + // outcome_1
+    '06' + // outcome_2_len
+    '64756d6d7932' + // outcome_2
+    '05' + // event_id_length
+    '64756d6d79' + // event_id
+    '0000000005f5e100' + // total_collateral_satoshis
+    '0000000000000001' + // fee_rate_per_vb
+    '00000064' + // cet_locktime
+    '000000c8' // refund_locktime
+    , 'hex'
   ); // prettier-ignore
 
   const metadata = new OrderMetadataV0();
   metadata.offerId = 'strategy-88';
   metadata.createdAt = 1635868041;
   metadata.goodTill = 1635868041;
+
 
   const metadataHex =
     'fdf536' + // type OrderMetadataV0
@@ -94,6 +107,16 @@ describe('OrderOffer', () => {
     '10' + // nickLength
     Buffer.from(ircInfo.nick).toString('hex') + // nick
     ircInfo.pubKey.toString('hex'); // pubKey
+
+  const csoInfo = new OrderCsoInfoV0();
+  csoInfo.shiftForFees = 'offeror';
+  csoInfo.fees = BigInt(10000);
+
+  const csoInfoHex =
+    'fdf53a' + // type OrderCsoInfoV0
+    '09' + // length
+    '01' + // shiftForFees === 'offeror'
+    '0000000000002710'; // fees
 
   describe('serialize', () => {
     const instance = new OrderOfferV0();
@@ -141,153 +164,270 @@ describe('OrderOffer', () => {
       ),
     );
 
-    instance.offerCollateralSatoshis = BigInt(100000000);
+    instance.offerCollateral = BigInt(100000000);
     instance.feeRatePerVb = BigInt(1);
     instance.cetLocktime = 100;
     instance.refundLocktime = 200;
 
     it('serializes', () => {
-      expect(instance.serialize().toString("hex")).to.equal(
-        "f532" + // type
-        "00000001" + // protocol version
-        "00" + // contract flags
-        "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-        "00" + // type contract_info
-        "000000000bebc200" + // total_collateral
-        "00" + // type contract_descriptor
-        "03" + // num_outcomes
-        "01" + // outcome_1_len
-        "31" + // outcome_1
-        "0000000000000000" + // payout_1
-        "01" + // outcome_2_len
-        "32" + // outcome_2
-        "00000000092363a3" + // payout_2
-        "01" + // outcome_3_len
-        "33" + // outcome_3
-        "000000000bebc200" + // payout_3
-        "00" + // type oracle_info
-        "fdd824" + // type oracle_announcement
-        "a4" + // length
-        "fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9" + // announcement_signature_r
-        "494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4" + // announcement_signature_s
-        "da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b" + // oracle_public_key
-        "fdd822" + // type oracle_event
-        "40" + // length
-        "0001" + // nb_nonces
-        "3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b" + // oracle_nonces
-        "00000000" + // event_maturity_epoch
-        "fdd806" + // type enum_event_descriptor
-        "10" + // length
-        "0002" + // num_outcomes
-        "06" + // outcome_1_len
-        "64756d6d7931" + // outcome_1
-        "06" + // outcome_2_len
-        "64756d6d7932" + // outcome_2
-        "05" + // event_id_length
-        "64756d6d79" + // event_id
-        "0000000005f5e100" + // total_collateral_satoshis
-        "0000000000000001" + // fee_rate_per_vb
-        "00000064" + // cet_locktime
-        "000000c8" // refund_locktime
+      expect(instance.serialize().toString('hex')).to.equal(
+        'f532' + // type
+        '00000001' + // protocol version
+        '00' + // contract flags
+        '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
+        '00' + // type contract_info
+        '000000000bebc200' + // total_collateral
+        '00' + // type contract_descriptor
+        '03' + // num_outcomes
+        '01' + // outcome_1_len
+        '31' + // outcome_1
+        '0000000000000000' + // payout_1
+        '01' + // outcome_2_len
+        '32' + // outcome_2
+        '00000000092363a3' + // payout_2
+        '01' + // outcome_3_len
+        '33' + // outcome_3
+        '000000000bebc200' + // payout_3
+        '00' + // type oracle_info
+        'fdd824' + // type oracle_announcement
+        'a4' + // length
+        'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+        '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+        'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+        'fdd822' + // type oracle_event
+        '40' + // length
+        '0001' + // nb_nonces
+        '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+        '00000000' + // event_maturity_epoch
+        'fdd806' + // type enum_event_descriptor
+        '10' + // length
+        '0002' + // num_outcomes
+        '06' + // outcome_1_len
+        '64756d6d7931' + // outcome_1
+        '06' + // outcome_2_len
+        '64756d6d7932' + // outcome_2
+        '05' + // event_id_length
+        '64756d6d79' + // event_id
+        '0000000005f5e100' + // total_collateral_satoshis
+        '0000000000000001' + // fee_rate_per_vb
+        '00000064' + // cet_locktime
+        '000000c8' // refund_locktime
       ); // prettier-ignore
     });
 
     it('serializes with metadata only', () => {
-      instance.metadata = metadata;
+      instance.tlvs = [];
+      instance.tlvs.push(deserializeTlv(
+        new BufferReader(Buffer.from(metadataHex, 'hex'))
+      ));
 
       expect(instance.serialize().toString('hex')).to.equal(
-        "f532" + // type
-        "00000001" + // protocol version
-        "00" + // contract flags
-        "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-        "00" + // type contract_info
-        "000000000bebc200" + // total_collateral
-        "00" + // type contract_descriptor
-        "03" + // num_outcomes
-        "01" + // outcome_1_len
-        "31" + // outcome_1
-        "0000000000000000" + // payout_1
-        "01" + // outcome_2_len
-        "32" + // outcome_2
-        "00000000092363a3" + // payout_2
-        "01" + // outcome_3_len
-        "33" + // outcome_3
-        "000000000bebc200" + // payout_3
-        "00" + // type oracle_info
-        "fdd824" + // type oracle_announcement
-        "a4" + // length
-        "fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9" + // announcement_signature_r
-        "494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4" + // announcement_signature_s
-        "da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b" + // oracle_public_key
-        "fdd822" + // type oracle_event
-        "40" + // length
-        "0001" + // nb_nonces
-        "3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b" + // oracle_nonces
-        "00000000" + // event_maturity_epoch
-        "fdd806" + // type enum_event_descriptor
-        "10" + // length
-        "0002" + // num_outcomes
-        "06" + // outcome_1_len
-        "64756d6d7931" + // outcome_1
-        "06" + // outcome_2_len
-        "64756d6d7932" + // outcome_2
-        "05" + // event_id_length
-        "64756d6d79" + // event_id
-        "0000000005f5e100" + // total_collateral_satoshis
-        "0000000000000001" + // fee_rate_per_vb
-        "00000064" + // cet_locktime
-        "000000c8" + // refund_locktime
+        'f532' + // type
+        '00000001' + // protocol version
+        '00' + // contract flags
+        '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
+        '00' + // type contract_info
+        '000000000bebc200' + // total_collateral
+        '00' + // type contract_descriptor
+        '03' + // num_outcomes
+        '01' + // outcome_1_len
+        '31' + // outcome_1
+        '0000000000000000' + // payout_1
+        '01' + // outcome_2_len
+        '32' + // outcome_2
+        '00000000092363a3' + // payout_2
+        '01' + // outcome_3_len
+        '33' + // outcome_3
+        '000000000bebc200' + // payout_3
+        '00' + // type oracle_info
+        'fdd824' + // type oracle_announcement
+        'a4' + // length
+        'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+        '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+        'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+        'fdd822' + // type oracle_event
+        '40' + // length
+        '0001' + // nb_nonces
+        '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+        '00000000' + // event_maturity_epoch
+        'fdd806' + // type enum_event_descriptor
+        '10' + // length
+        '0002' + // num_outcomes
+        '06' + // outcome_1_len
+        '64756d6d7931' + // outcome_1
+        '06' + // outcome_2_len
+        '64756d6d7932' + // outcome_2
+        '05' + // event_id_length
+        '64756d6d79' + // event_id
+        '0000000005f5e100' + // total_collateral_satoshis
+        '0000000000000001' + // fee_rate_per_vb
+        '00000064' + // cet_locktime
+        '000000c8' + // refund_locktime
         metadataHex // order_metadata_v0 tlv
       ); // prettier-ignore
     });
 
-    it('serializes with metadata and ircinfo', () => {
-      instance.ircInfo = ircInfo;
+    it('serializes with ircInfo only', () => {
+      instance.tlvs = [];
+      instance.tlvs.push(deserializeTlv(
+        new BufferReader(Buffer.from(ircInfoHex, 'hex'))
+      ));
 
       expect(instance.serialize().toString('hex')).to.equal(
-        "f532" + // type
-        "00000001" + // protocol version
-        "00" + // contract flags
-        "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-        "00" + // type contract_info
-        "000000000bebc200" + // total_collateral
-        "00" + // type contract_descriptor
-        "03" + // num_outcomes
-        "01" + // outcome_1_len
-        "31" + // outcome_1
-        "0000000000000000" + // payout_1
-        "01" + // outcome_2_len
-        "32" + // outcome_2
-        "00000000092363a3" + // payout_2
-        "01" + // outcome_3_len
-        "33" + // outcome_3
-        "000000000bebc200" + // payout_3
-        "00" + // type oracle_info
-        "fdd824" + // type oracle_announcement
-        "a4" + // length
-        "fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9" + // announcement_signature_r
-        "494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4" + // announcement_signature_s
-        "da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b" + // oracle_public_key
-        "fdd822" + // type oracle_event
-        "40" + // length
-        "0001" + // nb_nonces
-        "3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b" + // oracle_nonces
-        "00000000" + // event_maturity_epoch
-        "fdd806" + // type enum_event_descriptor
-        "10" + // length
-        "0002" + // num_outcomes
-        "06" + // outcome_1_len
-        "64756d6d7931" + // outcome_1
-        "06" + // outcome_2_len
-        "64756d6d7932" + // outcome_2
-        "05" + // event_id_length
-        "64756d6d79" + // event_id
-        "0000000005f5e100" + // total_collateral_satoshis
-        "0000000000000001" + // fee_rate_per_vb
-        "00000064" + // cet_locktime
-        "000000c8" + // refund_locktime
-        metadataHex + // order_metadata_v0 tlv
+        'f532' + // type
+        '00000001' + // protocol version
+        '00' + // contract flags
+        '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
+        '00' + // type contract_info
+        '000000000bebc200' + // total_collateral
+        '00' + // type contract_descriptor
+        '03' + // num_outcomes
+        '01' + // outcome_1_len
+        '31' + // outcome_1
+        '0000000000000000' + // payout_1
+        '01' + // outcome_2_len
+        '32' + // outcome_2
+        '00000000092363a3' + // payout_2
+        '01' + // outcome_3_len
+        '33' + // outcome_3
+        '000000000bebc200' + // payout_3
+        '00' + // type oracle_info
+        'fdd824' + // type oracle_announcement
+        'a4' + // length
+        'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+        '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+        'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+        'fdd822' + // type oracle_event
+        '40' + // length
+        '0001' + // nb_nonces
+        '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+        '00000000' + // event_maturity_epoch
+        'fdd806' + // type enum_event_descriptor
+        '10' + // length
+        '0002' + // num_outcomes
+        '06' + // outcome_1_len
+        '64756d6d7931' + // outcome_1
+        '06' + // outcome_2_len
+        '64756d6d7932' + // outcome_2
+        '05' + // event_id_length
+        '64756d6d79' + // event_id
+        '0000000005f5e100' + // total_collateral_satoshis
+        '0000000000000001' + // fee_rate_per_vb
+        '00000064' + // cet_locktime
+        '000000c8' + // refund_locktime
         ircInfoHex // order_irc_info_v0 tlv
+      ); // prettier-ignore
+    });
+
+    it('serializes with cso info only', () => {
+      instance.tlvs = [];
+      instance.tlvs.push(deserializeTlv(
+        new BufferReader(Buffer.from(csoInfoHex, 'hex'))
+      ));
+
+      expect(instance.serialize().toString('hex')).to.equal(
+        'f532' + // type
+          '00000001' + // protocol version
+          '00' + // contract flags
+          '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
+          '00' + // type contract_info
+          '000000000bebc200' + // total_collateral
+          '00' + // type contract_descriptor
+          '03' + // num_outcomes
+          '01' + // outcome_1_len
+          '31' + // outcome_1
+          '0000000000000000' + // payout_1
+          '01' + // outcome_2_len
+          '32' + // outcome_2
+          '00000000092363a3' + // payout_2
+          '01' + // outcome_3_len
+          '33' + // outcome_3
+          '000000000bebc200' + // payout_3
+          '00' + // type oracle_info
+          'fdd824' + // type oracle_announcement
+          'a4' + // length
+          'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+          '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+          'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+          'fdd822' + // type oracle_event
+          '40' + // length
+          '0001' + // nb_nonces
+          '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+          '00000000' + // event_maturity_epoch
+          'fdd806' + // type enum_event_descriptor
+          '10' + // length
+          '0002' + // num_outcomes
+          '06' + // outcome_1_len
+          '64756d6d7931' + // outcome_1
+          '06' + // outcome_2_len
+          '64756d6d7932' + // outcome_2
+          '05' + // event_id_length
+          '64756d6d79' + // event_id
+          '0000000005f5e100' + // total_collateral_satoshis
+          '0000000000000001' + // fee_rate_per_vb
+          '00000064' + // cet_locktime
+          '000000c8' + // refund_locktime
+          csoInfoHex, // order_cso_info_v0 tlv
+      );
+    });
+
+    it('serializes with metadata, ircInfo and csoInfo', () => {
+      instance.tlvs = [];
+      instance.tlvs.push(deserializeTlv(
+        new BufferReader(Buffer.from(metadataHex, 'hex'))
+      ));
+      instance.tlvs.push(deserializeTlv(
+        new BufferReader(Buffer.from(ircInfoHex, 'hex'))
+      ));
+      instance.tlvs.push(deserializeTlv(
+        new BufferReader(Buffer.from(csoInfoHex, 'hex'))
+      ));
+
+      expect(instance.serialize().toString('hex')).to.equal(
+          'f532' + // type
+          '00000001' + // protocol version
+          '00' + // contract flags
+          '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f' + // chain_hash
+          '00' + // type contract_info
+          '000000000bebc200' + // total_collateral
+          '00' + // type contract_descriptor
+          '03' + // num_outcomes
+          '01' + // outcome_1_len
+          '31' + // outcome_1
+          '0000000000000000' + // payout_1
+          '01' + // outcome_2_len
+          '32' + // outcome_2
+          '00000000092363a3' + // payout_2
+          '01' + // outcome_3_len
+          '33' + // outcome_3
+          '000000000bebc200' + // payout_3
+          '00' + // type oracle_info
+          'fdd824' + // type oracle_announcement
+          'a4' + // length
+          'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' + // announcement_signature_r
+          '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4' + // announcement_signature_s
+          'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b' + // oracle_public_key
+          'fdd822' + // type oracle_event
+          '40' + // length
+          '0001' + // nb_nonces
+          '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b' + // oracle_nonces
+          '00000000' + // event_maturity_epoch
+          'fdd806' + // type enum_event_descriptor
+          '10' + // length
+          '0002' + // num_outcomes
+          '06' + // outcome_1_len
+          '64756d6d7931' + // outcome_1
+          '06' + // outcome_2_len
+          '64756d6d7932' + // outcome_2
+          '05' + // event_id_length
+          '64756d6d79' + // event_id
+          '0000000005f5e100' + // total_collateral_satoshis
+          '0000000000000001' + // fee_rate_per_vb
+          '00000064' + // cet_locktime
+          '000000c8' + // refund_locktime
+          metadataHex + // order_metadata_v0 tlv
+          ircInfoHex + // order_irc_info_v0 tlv
+          csoInfoHex, // order_cso_info_v0 tlv
       ); // prettier-ignore
     });
   });
@@ -332,7 +472,7 @@ describe('OrderOffer', () => {
           '05' + // event_id_length
           '64756d6d79', // event_id
       );
-      expect(Number(instance.offerCollateralSatoshis)).to.equal(100000000);
+      expect(Number(instance.offerCollateral)).to.equal(100000000);
       expect(Number(instance.feeRatePerVb)).to.equal(1);
       expect(instance.cetLocktime).to.equal(100);
       expect(instance.refundLocktime).to.equal(200);
@@ -341,7 +481,7 @@ describe('OrderOffer', () => {
     it('deserializes with metadata', () => {
       const bufWithMetadata = Buffer.concat([
         orderOfferBuf,
-        Buffer.from('fdf5360c0b73747261746567792d3838', 'hex'),
+        Buffer.from(metadataHex, 'hex'),
       ]);
 
       const instance = OrderOfferV0.deserialize(bufWithMetadata);
@@ -350,13 +490,72 @@ describe('OrderOffer', () => {
         'strategy-88',
       );
     });
+
+    it('deserializes with ircInfo', () => {
+      const bufWithIrcInfo = Buffer.concat([
+        orderOfferBuf,
+        Buffer.from(ircInfoHex, 'hex'),
+      ]);
+
+      const instance = OrderOfferV0.deserialize(bufWithIrcInfo);
+
+      expect((instance.ircInfo as OrderIrcInfoV0).nick).to.equal(
+        'A0F5k4H9C56xgbRF',
+      );
+      expect(
+        (instance.ircInfo as OrderIrcInfoV0).pubKey.toString('hex'),
+      ).to.equal(
+        '022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
+      );
+    });
+
+    it('deserializes with csoinfo', () => {
+      const bufWithCsoInfo = Buffer.concat([
+        orderOfferBuf,
+        Buffer.from(csoInfoHex, 'hex'),
+      ]);
+
+      const instance = OrderOfferV0.deserialize(bufWithCsoInfo);
+
+      expect((instance.csoInfo as OrderCsoInfoV0).shiftForFees).to.equal(
+        'offeror',
+      );
+      expect((instance.csoInfo as OrderCsoInfoV0).fees).to.equal(BigInt(10000));
+    });
+
+    it('deserializes with metadata, ircinfo and csoInfo', () => {
+      const buf = Buffer.concat([
+        orderOfferBuf,
+        Buffer.from(metadataHex, 'hex'),
+        Buffer.from(ircInfoHex, 'hex'),
+        Buffer.from(csoInfoHex, 'hex'),
+      ]);
+
+      const instance = OrderOfferV0.deserialize(buf);
+
+      expect((instance.metadata as OrderMetadataV0).offerId).to.equal(
+        'strategy-88',
+      );
+      expect((instance.ircInfo as OrderIrcInfoV0).nick).to.equal(
+        'A0F5k4H9C56xgbRF',
+      );
+      expect(
+        (instance.ircInfo as OrderIrcInfoV0).pubKey.toString('hex'),
+      ).to.equal(
+        '022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
+      );
+      expect((instance.csoInfo as OrderCsoInfoV0).shiftForFees).to.equal(
+        'offeror',
+      );
+      expect((instance.csoInfo as OrderCsoInfoV0).fees).to.equal(BigInt(10000));
+    });
   });
 
   describe('toJSON', () => {
     it('converts to JSON with metadata', async () => {
       const bufWithMetadata = Buffer.concat([
         orderOfferBuf,
-        Buffer.from('fdf5360c0b73747261746567792d3838', 'hex'),
+        Buffer.from(metadataHex, 'hex'),
       ]);
 
       const instance = OrderOfferV0.deserialize(bufWithMetadata);
@@ -371,25 +570,89 @@ describe('OrderOffer', () => {
       expect(json.message.feeRatePerVb).to.equal(Number(instance.feeRatePerVb));
       expect(json.message.cetLocktime).to.equal(instance.cetLocktime);
       expect(json.message.refundLocktime).to.equal(instance.refundLocktime);
-      expect(json.message.metadata.offerId).to.equal(
+
+      const writer = new BufferWriter();
+      serializeTlv(json.message.tlvs[0], writer)
+      expect(OrderMetadataV0.deserialize(writer.toBuffer()).offerId).to.equal(
         (instance.metadata as OrderMetadataV0).offerId,
       );
     });
 
-    it('converts to JSON with ircinfo', async () => {
+    it('converts to JSON with ircInfo', async () => {
       const bufWithIrcInfo = Buffer.concat([
         orderOfferBuf,
-        Buffer.from(
-          'fdf536140b73747261746567792d383861815d8961815d89fdf5383210413046356b3448394335367867625246022d40fdc0db01b85bb4de6fe181c093b69c3a4558b7fc98a22e289b9d8da1d6f3',
-          'hex',
-        ),
+        Buffer.from(ircInfoHex, 'hex'),
       ]);
 
       const instance = OrderOfferV0.deserialize(bufWithIrcInfo);
 
       const json = instance.toJSON();
-      expect(json.message.ircInfo.nick).to.equal(
+
+      const writer = new BufferWriter();
+      serializeTlv(json.message.tlvs[0], writer)
+      expect(OrderIrcInfoV0.deserialize(writer.toBuffer()).nick).to.equal(
         (instance.ircInfo as OrderIrcInfoV0).nick,
+      );
+    });
+
+    it('converts to JSON with csoInfo', async () => {
+      const bufWithCsoInfo = Buffer.concat([
+        orderOfferBuf,
+        Buffer.from(csoInfoHex, 'hex'),
+      ]);
+
+      const instance = OrderOfferV0.deserialize(bufWithCsoInfo);
+
+      const json = instance.toJSON();
+
+      const writer = new BufferWriter();
+      serializeTlv(json.message.tlvs[0], writer)
+      expect(OrderCsoInfoV0.deserialize(writer.toBuffer()).shiftForFees).to.equal(
+        (instance.csoInfo as OrderCsoInfoV0).shiftForFees,
+      );
+      expect(OrderCsoInfoV0.deserialize(writer.toBuffer()).fees).to.equal(
+        (instance.csoInfo as OrderCsoInfoV0).fees,
+      );
+    });
+
+    it('converts to JSON with metadata, ircInfo and csoInfo', async () => {
+      const buf = Buffer.concat([
+        orderOfferBuf,
+        Buffer.from(metadataHex, 'hex'),
+        Buffer.from(ircInfoHex, 'hex'),
+        Buffer.from(csoInfoHex, 'hex'),
+      ]);
+
+      const instance = OrderOfferV0.deserialize(buf);
+
+      const json = instance.toJSON();
+      expect(json.message.chainHash).to.equal(
+        instance.chainHash.toString('hex'),
+      );
+      expect(json.message.contractInfo).to.deep.equal(
+        instance.contractInfo.toJSON(),
+      );
+      expect(json.message.feeRatePerVb).to.equal(Number(instance.feeRatePerVb));
+      expect(json.message.cetLocktime).to.equal(instance.cetLocktime);
+      expect(json.message.refundLocktime).to.equal(instance.refundLocktime);
+
+      const metadataWriter = new BufferWriter();
+      serializeTlv(json.message.tlvs[0], metadataWriter)
+      expect(OrderMetadataV0.deserialize(metadataWriter.toBuffer()).offerId).to.equal(
+        (instance.metadata as OrderMetadataV0).offerId,
+      );
+      const ircInfoWriter = new BufferWriter();
+      serializeTlv(json.message.tlvs[1], ircInfoWriter)
+      expect(OrderIrcInfoV0.deserialize(ircInfoWriter.toBuffer()).nick).to.equal(
+        (instance.ircInfo as OrderIrcInfoV0).nick,
+      );
+      const csoInfoWriter = new BufferWriter();
+      serializeTlv(json.message.tlvs[2], csoInfoWriter)
+      expect(OrderCsoInfoV0.deserialize(csoInfoWriter.toBuffer()).shiftForFees).to.equal(
+        (instance.csoInfo as OrderCsoInfoV0).shiftForFees,
+      );
+      expect(OrderCsoInfoV0.deserialize(csoInfoWriter.toBuffer()).fees).to.equal(
+        (instance.csoInfo as OrderCsoInfoV0).fees,
       );
     });
   });
@@ -400,16 +663,16 @@ describe('OrderOffer', () => {
       instance = OrderOfferV0.deserialize(orderOfferBuf);
     });
 
-    it('should throw if offerCollateralSatoshis is less than 1000', () => {
-      instance.offerCollateralSatoshis = BigInt(999);
+    it('should throw if offerCollateral is less than 1000', () => {
+      instance.offerCollateral = BigInt(999);
       expect(function () {
         instance.validate();
       }).to.throw(
-        'offer_collateral_satoshis must be greater than or equal to 1000',
+        'offer_collateral must be greater than or equal to 1000',
       );
 
       // boundary check
-      instance.offerCollateralSatoshis = BigInt(1000);
+      instance.offerCollateral = BigInt(1000);
       expect(function () {
         instance.validate();
       }).to.not.throw();
@@ -467,13 +730,13 @@ describe('OrderOffer', () => {
 
     it('should throw if totalCollateral <= offerCollateral', () => {
       instance.contractInfo.totalCollateral = BigInt(200000000);
-      instance.offerCollateralSatoshis = BigInt(200000000);
+      instance.offerCollateral = BigInt(200000000);
       expect(function () {
         instance.validate();
       }).to.throw(Error);
 
       instance.contractInfo.totalCollateral = BigInt(200000000);
-      instance.offerCollateralSatoshis = BigInt(200000001);
+      instance.offerCollateral = BigInt(200000001);
       expect(function () {
         instance.validate();
       }).to.throw(Error);
@@ -525,7 +788,7 @@ describe('OrderOffer', () => {
           'hex',
         ),
       );
-      instance.offerCollateralSatoshis = BigInt(100000000);
+      instance.offerCollateral = BigInt(100000000);
       instance.feeRatePerVb = BigInt(1);
       instance.cetLocktime = 100;
       instance.refundLocktime = 200;
@@ -579,7 +842,7 @@ describe('OrderOffer', () => {
           .oracleInfo as SingleOracleInfo).announcement,
       );
       expect(pre163.offerCollateralSatoshis).to.equal(
-        instance.offerCollateralSatoshis,
+        instance.offerCollateral,
       );
       expect(pre163.feeRatePerVb).to.equal(instance.feeRatePerVb);
       expect(pre163.cetLocktime).to.equal(instance.cetLocktime);
@@ -705,9 +968,7 @@ describe('OrderOffer', () => {
         ((pre163.contractInfo as ContractInfoV0Pre163)
           .oracleInfo as OracleInfoV0Pre163).announcement,
       );
-      expect(post163.offerCollateralSatoshis).to.equal(
-        pre163.offerCollateralSatoshis,
-      );
+      expect(post163.offerCollateral).to.equal(pre163.offerCollateralSatoshis);
       expect(post163.feeRatePerVb).to.equal(pre163.feeRatePerVb);
       expect(post163.cetLocktime).to.equal(pre163.cetLocktime);
       expect(post163.refundLocktime).to.equal(pre163.refundLocktime);

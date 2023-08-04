@@ -20,8 +20,16 @@ import {
   OrderIrcInfoPre163,
   OrderIrcInfoV0Pre163,
 } from './OrderIrcInfo';
-import { IOrderMetadataV0Pre163JSON } from './OrderMetadata';
-import { OrderMetadataPre163, OrderMetadataV0Pre163 } from './OrderMetadata';
+import {
+  IOrderMetadataV0Pre163JSON,
+  OrderMetadataPre163,
+  OrderMetadataV0Pre163,
+} from './OrderMetadata';
+import {
+  IOrderCsoInfoV0Pre163JSON,
+  OrderCsoInfoPre163,
+  OrderCsoInfoV0Pre163,
+} from './OrderCsoInfo';
 
 const LOCKTIME_THRESHOLD = 500000000;
 export abstract class OrderOfferPre163 {
@@ -87,6 +95,9 @@ export class OrderOfferV0Pre163
         case MessageType.OrderIrcInfoV0:
           instance.ircInfo = OrderIrcInfoV0Pre163.deserialize(buf);
           break;
+        case MessageType.OrderCsoInfoV0:
+          instance.csoInfo = OrderCsoInfoV0Pre163.deserialize(buf);
+          break;
         default:
           break;
       }
@@ -115,6 +126,8 @@ export class OrderOfferV0Pre163
   public metadata?: OrderMetadataPre163;
 
   public ircInfo?: OrderIrcInfoPre163;
+
+  public csoInfo?: OrderCsoInfoPre163;
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0Pre163.name, 32);
@@ -187,6 +200,7 @@ export class OrderOfferV0Pre163
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
     if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
+    if (this.csoInfo) tlvs.push(this.csoInfo.toJSON());
 
     return {
       type: this.type,
@@ -215,6 +229,7 @@ export class OrderOfferV0Pre163
 
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
+    if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
 
     return writer.toBuffer();
   }
@@ -228,5 +243,9 @@ export interface IOrderOfferV0Pre163JSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataV0Pre163JSON | IOrderIrcInfoV0Pre163JSON)[];
+  tlvs: (
+    | IOrderMetadataV0Pre163JSON
+    | IOrderIrcInfoV0Pre163JSON
+    | IOrderCsoInfoV0Pre163JSON
+  )[];
 }

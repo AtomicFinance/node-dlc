@@ -60,7 +60,7 @@ export class ContractInfoV0Pre163
 
   /**
    * Deserializes an contract_info_v0 message
-   * @param buf
+   * @param bufContractInfo must be V0 or V1
    */
   public static deserialize(buf: Buffer): ContractInfoV0Pre163 {
     const instance = new ContractInfoV0Pre163();

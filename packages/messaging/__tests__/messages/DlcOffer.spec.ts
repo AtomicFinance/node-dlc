@@ -35,7 +35,6 @@ describe('DlcOffer', () => {
     '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
     'hex',
   );
-
   const temporaryContractId = Buffer.from(
     '2005f76575d3f0ff0fc32a7b8da3a4833d380f32eae5658704dd7ed945b6281a',
     'hex',

@@ -23,8 +23,9 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^0.21.4",
-    "@node-dlc/messaging": "^0.21.4",
+
+    "@node-dlc/bitcoin": "^0.21.3",
+    "@node-dlc/messaging": "^0.21.3",
     "@node-lightning/core": "0.26.1",
     "bitcoin-networks": "^1.0.0"
   },

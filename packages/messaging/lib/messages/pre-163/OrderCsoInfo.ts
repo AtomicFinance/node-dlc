@@ -1,21 +1,19 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
-import { MessageType } from '../MessageType';
-import { IDlcMessage } from './DlcMessage';
-import { OrderMetadataV0Pre163 } from "./pre-163/OrderMetadata";
-import { OrderCsoInfoV0Pre163 } from "./pre-163/OrderCsoInfo";
+import { MessageType } from '../../MessageType';
+import { IDlcMessagePre163 } from './DlcMessage';
 
 export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
-export abstract class OrderCsoInfo {
-  public static deserialize(buf: Buffer): OrderCsoInfo {
+export abstract class OrderCsoInfoPre163 {
+  public static deserialize(buf: Buffer): OrderCsoInfoPre163 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
       case MessageType.OrderCsoInfoV0:
-        return OrderCsoInfoV0.deserialize(buf);
+        return OrderCsoInfoV0Pre163.deserialize(buf);
       default:
         throw new Error(`Order cso info TLV type must be OrderCsoInfoV0`);
     }
@@ -23,7 +21,7 @@ export abstract class OrderCsoInfo {
 
   public abstract type: number;
 
-  public abstract toJSON(): IOrderCsoInfoJSON;
+  public abstract toJSON(): IOrderCsoInfoV0Pre163JSON;
 
   public abstract serialize(): Buffer;
 }
@@ -31,15 +29,17 @@ export abstract class OrderCsoInfo {
 /**
  * OrderCsoInfo message
  */
-export class OrderCsoInfoV0 extends OrderCsoInfo implements IDlcMessage {
+export class OrderCsoInfoV0Pre163
+  extends OrderCsoInfoPre163
+  implements IDlcMessagePre163 {
   public static type = MessageType.OrderCsoInfoV0;
 
   /**
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OrderCsoInfoV0 {
-    const instance = new OrderCsoInfoV0();
+  public static deserialize(buf: Buffer): OrderCsoInfoV0Pre163 {
+    const instance = new OrderCsoInfoV0Pre163();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -61,41 +61,21 @@ export class OrderCsoInfoV0 extends OrderCsoInfo implements IDlcMessage {
     return instance;
   }
 
-  public static fromPre163(csoInfo: OrderCsoInfoV0Pre163): OrderCsoInfoV0 {
-    const instance = new OrderCsoInfoV0();
-
-    instance.length = csoInfo.length;
-    instance.shiftForFees = csoInfo.shiftForFees;
-    instance.fees = csoInfo.fees;
-
-    return instance;
-  }
-
-  public static toPre163(csoInfo: OrderCsoInfoV0): OrderCsoInfoV0Pre163 {
-    const instance = new OrderCsoInfoV0Pre163();
-
-    instance.length = csoInfo.length;
-    instance.shiftForFees = csoInfo.shiftForFees;
-    instance.fees = csoInfo.fees;
-
-    return instance;
-  }
-
   /**
    * The type for order_metadata_v0 message. order_metadata_v0 = 62774
    */
-  public type = OrderCsoInfoV0.type;
+  public type = OrderCsoInfoV0Pre163.type;
 
   public length: bigint;
 
   public shiftForFees: DlcParty = 'neither';
 
-  public fees = BigInt(0);
+  public fees = 0n;
 
   /**
    * Converts order_metadata_v0 to JSON
    */
-  public toJSON(): IOrderCsoInfoJSON {
+  public toJSON(): IOrderCsoInfoV0Pre163JSON {
     return {
       type: this.type,
       shiftForFees: this.shiftForFees,
@@ -127,7 +107,7 @@ export class OrderCsoInfoV0 extends OrderCsoInfo implements IDlcMessage {
   }
 }
 
-export interface IOrderCsoInfoJSON {
+export interface IOrderCsoInfoV0Pre163JSON {
   type: number;
   shiftForFees: string;
   fees: number;

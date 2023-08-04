@@ -21,6 +21,15 @@ import {
 import { IDlcMessage } from './DlcMessage';
 import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { DlcOfferV0Pre163, IDlcOfferV0Pre163JSON } from './pre-163/DlcOffer';
+import { OrderCsoInfo, OrderCsoInfoV0 } from './OrderCsoInfo';
+import {
+  OrderIrcInfo,
+  OrderIrcInfoV0,
+} from './OrderIrcInfo';
+import {
+  OrderMetadata,
+  OrderMetadataV0,
+} from './OrderMetadata';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 
@@ -98,6 +107,20 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       const { type, length, body } = deserializeTlv(tlvReader);
 
       instance.tlvs.push({ type, length, body });
+
+      switch (Number(type)) {
+        case MessageType.OrderMetadataV0:
+          instance.metadata = OrderMetadataV0.deserialize(buf);
+          break;
+        case MessageType.OrderIrcInfoV0:
+          instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
+          break;
+        case MessageType.OrderCsoInfoV0:
+          instance.csoInfo = OrderCsoInfo.deserialize(buf);
+          break;
+        default:
+          break;
+      }
     }
 
     return instance;
@@ -127,6 +150,15 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     instance.feeRatePerVb = offer.feeRatePerVb;
     instance.cetLocktime = offer.cetLocktime;
     instance.refundLocktime = offer.refundLocktime;
+    if (offer.metadata) {
+      instance.metadata = OrderMetadataV0.fromPre163(offer.metadata);
+    }
+    if (offer.ircInfo) {
+      instance.ircInfo = OrderIrcInfoV0.fromPre163(offer.ircInfo);
+    }
+    if (offer.csoInfo) {
+      instance.csoInfo = OrderCsoInfoV0.fromPre163(offer.csoInfo);
+    }
 
     return instance;
   }
@@ -150,7 +182,15 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     instance.feeRatePerVb = offer.feeRatePerVb;
     instance.cetLocktime = offer.cetLocktime;
     instance.refundLocktime = offer.refundLocktime;
-
+    if (offer.metadata) {
+      instance.metadata = OrderMetadataV0.toPre163(offer.metadata as OrderMetadataV0);
+    }
+    if (offer.ircInfo) {
+      instance.ircInfo = OrderIrcInfoV0.toPre163(offer.ircInfo as OrderIrcInfoV0);
+    }
+    if (offer.csoInfo) {
+      instance.csoInfo = OrderCsoInfoV0.toPre163(offer.csoInfo as OrderCsoInfoV0);
+    }
     return instance;
   }
 
@@ -190,6 +230,12 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   public cetLocktime: number;
 
   public refundLocktime: number;
+
+  public metadata?: OrderMetadata;
+
+  public ircInfo?: OrderIrcInfo;
+
+  public csoInfo?: OrderCsoInfo;
 
   public tlvs: ITlv[] = [];
 
@@ -340,6 +386,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
         feeRatePerVb: Number(this.feeRatePerVb),
         cetLocktime: this.cetLocktime,
         refundLocktime: this.refundLocktime,
+        tlvs: this.tlvs,
       },
       serialized: this.serialize().toString('hex'),
     };
@@ -401,6 +448,7 @@ export interface IDlcOfferV0JSON {
     feeRatePerVb: number;
     cetLocktime: number;
     refundLocktime: number;
+    tlvs: ITlv[];
   };
   serialized: string;
 }

@@ -52,7 +52,6 @@ const buildPayoutFunction = (
     payoutCurvePiece: payoutCurveMaxLoss.toPayoutCurvePiece(),
     endPoint: {
       eventOutcome: BigInt(0),
-
       outcomePayout: Value.fromSats(minPayout),
       extraPrecision: 0,
     },

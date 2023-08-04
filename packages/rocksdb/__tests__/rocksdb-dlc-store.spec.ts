@@ -1,6 +1,5 @@
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
-  ContractInfoV0,
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,
@@ -294,8 +293,8 @@ describe('RocksdbDlcStore', () => {
 
       const actual = response[0];
 
-      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
-      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInputV0[];
+      const actualFundingInputs = actual.fundingInputs as FundingInput[];
+      const expectedFundingInputs = dlcOffer.fundingInputs as FundingInput[];
 
       expect(
         actualFundingInputs[0].prevTx.serialize().toString('hex'),

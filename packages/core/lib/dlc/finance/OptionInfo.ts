@@ -11,7 +11,6 @@ import {
   PayoutFunction,
   SingleOracleInfo,
 } from '@node-dlc/messaging';
-import { Value } from '@node-dlc/bitcoin';
 import BigNumber from 'bignumber.js';
 
 import { toBigInt } from '../../utils/BigIntUtils';

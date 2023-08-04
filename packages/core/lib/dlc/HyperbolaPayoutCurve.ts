@@ -1,6 +1,6 @@
 import {
   HyperbolaPayoutCurvePiece,
-  MessageType,
+  PayoutCurvePieceType,
   PayoutFunction,
   RoundingIntervals,
 } from '@node-dlc/messaging';
@@ -148,26 +148,23 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     if (payoutFunction.pieces.length !== 1)
       throw new Error('Must have at least one piece');
 
-    const payoutCurvePiece_0 = payoutFunction.pieces[0];
-    const payoutCurvePiece_1 = payoutFunction.pieces[1];
+    const { endPoint, payoutCurvePiece } = payoutFunction.pieces[0];
 
     if (
-      payoutCurvePiece_0.payoutCurvePiece.type !==
-        MessageType.HyperbolaPayoutCurvePiece &&
-      payoutCurvePiece_0.payoutCurvePiece.type !==
-        MessageType.OldHyperbolaPayoutCurvePiece
-    )
+      payoutCurvePiece.type !== PayoutCurvePieceType.HyperbolaPayoutCurvePiece
+    ) {
       throw new Error('Payout curve piece must be a hyperbola');
+    }
 
-    const _payoutCurvePiece = payoutCurvePiece_0.payoutCurvePiece as HyperbolaPayoutCurvePiece;
+    const _payoutCurvePiece = payoutCurvePiece as HyperbolaPayoutCurvePiece;
 
     const curve = this.fromPayoutCurvePiece(_payoutCurvePiece);
 
     return splitIntoRanges(
-      payoutCurvePiece_0.endPoint.eventOutcome,
-      payoutCurvePiece_1.endPoint.eventOutcome,
-      payoutCurvePiece_0.endPoint.outcomePayout.sats,
-      payoutCurvePiece_1.endPoint.outcomePayout.sats,
+      endPoint.eventOutcome,
+      payoutFunction.lastEndpoint.eventOutcome,
+      endPoint.outcomePayout.sats,
+      payoutFunction.lastEndpoint.outcomePayout.sats,
       totalCollateral,
       curve,
       roundingIntervals.intervals,

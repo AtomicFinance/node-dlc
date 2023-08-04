@@ -8,6 +8,7 @@ import secp256k1 from 'secp256k1';
 
 import { MessageType } from '../../MessageType';
 import { getTlv } from '../../serialize/getTlv';
+import { deserializeTlv } from '../../serialize/deserializeTlv';
 import {
   ContractInfoPre163,
   IContractInfoV0Pre163JSON,
@@ -18,8 +19,20 @@ import {
   FundingInputV0Pre163,
   IFundingInputV0Pre163JSON,
 } from './FundingInput';
+import {
+  IOrderMetadataV0Pre163JSON,
+  OrderMetadataV0Pre163,
+} from './OrderMetadata';
+import {
+  IOrderIrcInfoV0Pre163JSON,
+  OrderIrcInfoV0Pre163,
+} from './OrderIrcInfo';
+import {
+  IOrderCsoInfoV0Pre163JSON,
+  OrderCsoInfoV0Pre163,
+} from './OrderCsoInfo';
 
-export const LOCKTIME_THRESHOLD = 500000000;
+export const LOCKTIME_THRESHOLD_PRE_163 = 500000000;
 
 /**
  * DlcOffer message contains information about a node and indicates its
@@ -64,6 +77,26 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
     instance.cetLocktime = reader.readUInt32BE();
     instance.refundLocktime = reader.readUInt32BE();
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type } = deserializeTlv(tlvReader);
+
+      switch (Number(type)) {
+        case MessageType.OrderMetadataV0:
+          instance.metadata = OrderMetadataV0Pre163.deserialize(buf);
+          break;
+        case MessageType.OrderIrcInfoV0:
+          instance.ircInfo = OrderIrcInfoV0Pre163.deserialize(buf);
+          break;
+        case MessageType.OrderCsoInfoV0:
+          instance.csoInfo = OrderCsoInfoV0Pre163.deserialize(buf);
+          break;
+        default:
+          break;
+      }
+    }
+
     return instance;
   }
 
@@ -99,6 +132,12 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
   public cetLocktime: number;
 
   public refundLocktime: number;
+
+  public metadata?: OrderMetadataV0Pre163;
+
+  public ircInfo?: OrderIrcInfoV0Pre163;
+
+  public csoInfo?: OrderCsoInfoV0Pre163;
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -175,10 +214,10 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
     // https://github.com/bitcoin/bitcoin/blob/master/src/script/script.h#L39
     if (
       !(
-        (this.cetLocktime < LOCKTIME_THRESHOLD &&
-          this.refundLocktime < LOCKTIME_THRESHOLD) ||
-        (this.cetLocktime >= LOCKTIME_THRESHOLD &&
-          this.refundLocktime >= LOCKTIME_THRESHOLD)
+        (this.cetLocktime < LOCKTIME_THRESHOLD_PRE_163 &&
+          this.refundLocktime < LOCKTIME_THRESHOLD_PRE_163) ||
+        (this.cetLocktime >= LOCKTIME_THRESHOLD_PRE_163 &&
+          this.refundLocktime >= LOCKTIME_THRESHOLD_PRE_163)
       )
     ) {
       throw new Error('cetLocktime and refundLocktime must be in same units');
@@ -231,6 +270,12 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
    * Converts dlc_offer_v0 to JSON
    */
   public toJSON(): IDlcOfferV0Pre163JSON {
+    const tlvs = [];
+
+    if (this.metadata) tlvs.push(this.metadata.toJSON());
+    if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
+    if (this.csoInfo) tlvs.push(this.csoInfo.toJSON());
+
     return {
       type: this.type,
       contractFlags: this.contractFlags.toString('hex'),
@@ -247,6 +292,7 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
       feeRatePerVb: Number(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
+      tlvs,
     };
   }
 
@@ -278,6 +324,10 @@ export class DlcOfferV0Pre163 implements IDlcMessagePre163 {
     writer.writeUInt32BE(this.cetLocktime);
     writer.writeUInt32BE(this.refundLocktime);
 
+    if (this.metadata) writer.writeBytes(this.metadata.serialize());
+    if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
+    if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
+
     return writer.toBuffer();
   }
 }
@@ -298,6 +348,11 @@ export interface IDlcOfferV0Pre163JSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
+  tlvs: (
+    | IOrderMetadataV0Pre163JSON
+    | IOrderIrcInfoV0Pre163JSON
+    | IOrderCsoInfoV0Pre163JSON
+  )[];
 }
 
 export interface IDlcOfferV0Pre163Addresses {

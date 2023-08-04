@@ -155,18 +155,18 @@ describe('CsoInfo', () => {
     });
 
     it('should get correct CsoInfo from ContractInfo with fees shifted', () => {
-      const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+      const eventDescriptor = new DigitDecompositionEventDescriptorV0Pre167();
       eventDescriptor.base = 2;
       eventDescriptor.isSigned = false;
       eventDescriptor.unit = 'bits';
       eventDescriptor.precision = 0;
       eventDescriptor.nbDigits = oracleDigits;
 
-      const oracleEvent = new OracleEventV0();
+      const oracleEvent = new OracleEventV0Pre167();
       oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
       oracleEvent.eventDescriptor = eventDescriptor;
 
-      const oracleAnnouncement = new OracleAnnouncementV0();
+      const oracleAnnouncement = new OracleAnnouncementV0Pre167();
       oracleAnnouncement.oracleEvent = oracleEvent;
 
       const contractSize = Value.fromBitcoin(1);
@@ -223,18 +223,18 @@ describe('CsoInfo', () => {
     });
 
     it('should get correct CsoInfo from ContractInfo with fees shifted contract size 0.01', () => {
-      const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+      const eventDescriptor = new DigitDecompositionEventDescriptorV0Pre167();
       eventDescriptor.base = 2;
       eventDescriptor.isSigned = false;
       eventDescriptor.unit = 'bits';
       eventDescriptor.precision = 0;
       eventDescriptor.nbDigits = oracleDigits;
 
-      const oracleEvent = new OracleEventV0();
+      const oracleEvent = new OracleEventV0Pre167();
       oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
       oracleEvent.eventDescriptor = eventDescriptor;
 
-      const oracleAnnouncement = new OracleAnnouncementV0();
+      const oracleAnnouncement = new OracleAnnouncementV0Pre167();
       oracleAnnouncement.oracleEvent = oracleEvent;
 
       const contractSize = Value.fromBitcoin(0.01);
@@ -298,18 +298,18 @@ describe('CsoInfo', () => {
         it(`should get correct CsoInfo from ContractInfo with fees shifted contract size ${contractSizeNum} and fee ${fee}`, () => {
           const contractSize = Value.fromBitcoin(contractSizeNum);
 
-          const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+          const eventDescriptor = new DigitDecompositionEventDescriptorV0Pre167();
           eventDescriptor.base = 2;
           eventDescriptor.isSigned = false;
           eventDescriptor.unit = 'bits';
           eventDescriptor.precision = 0;
           eventDescriptor.nbDigits = oracleDigits;
 
-          const oracleEvent = new OracleEventV0();
+          const oracleEvent = new OracleEventV0Pre167();
           oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
           oracleEvent.eventDescriptor = eventDescriptor;
 
-          const oracleAnnouncement = new OracleAnnouncementV0();
+          const oracleAnnouncement = new OracleAnnouncementV0Pre167();
           oracleAnnouncement.oracleEvent = oracleEvent;
 
           const maxLoss = Value.fromBitcoin(0.2);
