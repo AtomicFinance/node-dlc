@@ -58,7 +58,7 @@ export class ChainManager extends EventEmitter {
    * from the chain store, determine when the last information
    * was obtained, validate the existing messages
    */
-  public async start(): Promise<void> {
+  public async start(blockHeight = 0): Promise<void> {
     this.logger.info('starting dlc state manager');
 
     // wait for chain sync to complete
@@ -68,7 +68,7 @@ export class ChainManager extends EventEmitter {
       this.logger.info('chain sync complete');
     }
 
-    await this._restoreState();
+    await this._restoreState(blockHeight);
     this.syncState = SyncState.Synced;
 
     // flag that the manager has now started
@@ -150,20 +150,23 @@ export class ChainManager extends EventEmitter {
     );
   }
 
-  private async _restoreState() {
+  private async _restoreState(blockHeight = 0): Promise<void> {
     this.logger.info('retrieving dlc state from store');
-    this.blockHeight = 0;
+    this.blockHeight = blockHeight;
     this.syncState = SyncState.Syncing;
     this.dlcTxsList = await this.dlcStore.findDlcTransactionsList();
     this.logger.info('found %d dlcs', this.dlcTxsList.length);
 
-    // find best block height
-    for (const dlcTxs of this.dlcTxsList) {
-      this.blockHeight = Math.max(
-        Math.max(this.blockHeight, dlcTxs.fundEpoch.height),
-        dlcTxs.closeEpoch.height,
-      );
+    if (blockHeight === 0) {
+      // find best block height
+      for (const dlcTxs of this.dlcTxsList) {
+        this.blockHeight = Math.max(
+          Math.max(this.blockHeight, dlcTxs.fundEpoch.height),
+          dlcTxs.closeEpoch.height,
+        );
+      }
     }
+
     this.logger.info("highest block %d found from %d dlcs", this.blockHeight, this.dlcTxsList.length); // prettier-ignore
 
     // validate all utxos
