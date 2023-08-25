@@ -3,13 +3,14 @@ import assert from 'assert';
 import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../../MessageType';
+import { IDlcMessage } from '../DlcMessage';
 import {
   deserializeTlv,
   ITlv,
   serializeTlv,
 } from '../../serialize/deserializeTlv';
 import { getTlv } from '../../serialize/getTlv';
-import { IDlcMessage } from '../DlcMessage';
+import { getBigSizeBytesLength } from '../../utils/bigSize';
 
 /**
  * In order to make it possible to hold oracles accountable in cases where
@@ -58,13 +59,19 @@ export class OracleAttestationV0Pre167 implements IDlcMessage {
     }
 
     let deserializedBytes =
-      2 + Number(eventIdLength) + 32 + 2 + numSignatures * 64; // Count 2 bytes for eventIdLength + eventIdLength
-    // + 32 bytes for oraclePubkey + 2 bytes for numSignatures + 64 bytes per signature
+      getBigSizeBytesLength(eventIdLength) + // bytes length of eventIdLength
+      Number(eventIdLength) + // bytes length of eventId
+      32 + // oraclePubKey is 32 bytes
+      2 + // numSignatures is a uint16 (2 bytes)
+      numSignatures * 64; // each signature is 64 bytes
+
     while (deserializedBytes < instance.length) {
       const outcomeLen = reader.readBigSize();
       const outcomeBuf = reader.readBytes(Number(outcomeLen));
       instance.outcomes.push(outcomeBuf.toString());
-      deserializedBytes += 2 + Number(outcomeLen); // Count 2 bytes for outcomeLen + outcomeLen
+      deserializedBytes +=
+        getBigSizeBytesLength(outcomeLen) + // bytes length of outcomeLen
+        Number(outcomeLen); // bytes length of outcomeBuf
     }
 
     while (!reader.eof) {
