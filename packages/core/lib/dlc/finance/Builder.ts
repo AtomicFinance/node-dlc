@@ -19,6 +19,8 @@ import {
 
 import { CoveredCall } from './CoveredCall';
 import { LinearPayout } from './LinearPayout';
+import { LongCall } from './LongCall';
+import { LongPut } from './LongPut';
 import { ShortPut } from './ShortPut';
 
 export const UNIT_MULTIPLIER = {
@@ -162,6 +164,7 @@ export const buildOptionOrderOffer = (
   rounding: number,
   network: string,
   type: 'call' | 'put',
+  direction: 'long' | 'short',
   _totalCollateral?: number,
 ): OrderOfferV0 => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
@@ -171,50 +174,98 @@ export const buildOptionOrderOffer = (
     payoutFunction: PayoutFunctionV0;
     totalCollateral?: bigint;
   };
+
   const roundingIntervals = new RoundingIntervalsV0();
   const roundingMod = computeRoundingModulus(rounding, contractSize);
 
-  if (type === 'call') {
-    payoutFunctionInfo = CoveredCall.buildPayoutFunction(
-      BigInt(strikePrice),
-      BigInt(contractSize),
-      eventDescriptor.base,
-      eventDescriptor.nbDigits,
-    );
+  if (direction === 'short') {
+    if (type === 'call') {
+      payoutFunctionInfo = CoveredCall.buildPayoutFunction(
+        BigInt(strikePrice),
+        BigInt(contractSize),
+        eventDescriptor.base,
+        eventDescriptor.nbDigits,
+      );
 
-    totalCollateral = payoutFunctionInfo.totalCollateral;
-    roundingIntervals.intervals = [
-      {
-        beginInterval: BigInt(0),
-        roundingMod: BigInt(1),
-      },
-      {
-        beginInterval: BigInt(strikePrice),
-        roundingMod,
-      },
-    ];
+      totalCollateral = payoutFunctionInfo.totalCollateral;
+      roundingIntervals.intervals = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(1),
+        },
+        {
+          beginInterval: BigInt(strikePrice),
+          roundingMod,
+        },
+      ];
+    } else {
+      payoutFunctionInfo = ShortPut.buildPayoutFunction(
+        BigInt(strikePrice),
+        BigInt(contractSize),
+        BigInt(_totalCollateral),
+        eventDescriptor.base,
+        eventDescriptor.nbDigits,
+      );
+      totalCollateral = BigInt(_totalCollateral);
+      roundingIntervals.intervals = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod,
+        },
+        {
+          beginInterval: BigInt(strikePrice),
+          roundingMod: BigInt(1),
+        },
+      ];
+    }
   } else {
-    payoutFunctionInfo = ShortPut.buildPayoutFunction(
-      BigInt(strikePrice),
-      BigInt(contractSize),
-      BigInt(_totalCollateral),
-      eventDescriptor.base,
-      eventDescriptor.nbDigits,
-    );
     totalCollateral = BigInt(_totalCollateral);
-    roundingIntervals.intervals = [
-      {
-        beginInterval: BigInt(0),
-        roundingMod,
-      },
-      {
-        beginInterval: BigInt(strikePrice),
-        roundingMod: BigInt(1),
-      },
-    ];
+
+    if (type === 'call') {
+      payoutFunctionInfo = LongCall.buildPayoutFunction(
+        BigInt(strikePrice),
+        BigInt(contractSize),
+        totalCollateral,
+        eventDescriptor.base,
+        eventDescriptor.nbDigits,
+      );
+
+      roundingIntervals.intervals = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod: BigInt(1),
+        },
+        {
+          beginInterval: BigInt(strikePrice),
+          roundingMod,
+        },
+      ];
+    } else {
+      payoutFunctionInfo = LongPut.buildPayoutFunction(
+        BigInt(strikePrice),
+        BigInt(contractSize),
+        totalCollateral,
+        eventDescriptor.base,
+        eventDescriptor.nbDigits,
+      );
+
+      roundingIntervals.intervals = [
+        {
+          beginInterval: BigInt(0),
+          roundingMod,
+        },
+        {
+          beginInterval: BigInt(strikePrice),
+          roundingMod: BigInt(1),
+        },
+      ];
+    }
   }
+
   const payoutFunction = payoutFunctionInfo.payoutFunction;
-  const offerCollateral = totalCollateral - BigInt(premium);
+
+  const offerCollateral =
+    direction === 'short' ? totalCollateral - BigInt(premium) : BigInt(premium);
 
   return buildOrderOffer(
     announcement,
@@ -257,6 +308,7 @@ export const buildCoveredCallOrderOffer = (
     rounding,
     network,
     'call',
+    'short',
   );
 };
 
@@ -292,7 +344,82 @@ export const buildShortPutOrderOffer = (
     rounding,
     network,
     'put',
+    'short',
     totalCollateral,
+  );
+};
+
+/**
+ * Builds an order offer for a long call
+ *
+ * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {number} contractSize contract size in satoshis
+ * @param {number} strikePrice strike price of contract
+ * @param {number} maxGain maximum amount that can be gained (totalCollateral)
+ * @param {number} premium premium of contract in satoshis
+ * @param {number} feePerByte sats/vbyte
+ * @param {number} rounding rounding interval
+ * @param {string} network bitcoin network type
+ * @returns {OrderOfferV0} Returns order offer
+ */
+export const buildLongCallOrderOffer = (
+  announcement: OracleAnnouncementV0,
+  contractSize: number,
+  strikePrice: number,
+  maxGain: number,
+  premium: number,
+  feePerByte: number,
+  rounding: number,
+  network: string,
+): OrderOfferV0 => {
+  return buildOptionOrderOffer(
+    announcement,
+    contractSize,
+    strikePrice,
+    premium,
+    feePerByte,
+    rounding,
+    network,
+    'call',
+    'long',
+    maxGain,
+  );
+};
+
+/**
+ * Builds an order offer for a long put
+ *
+ * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {number} contractSize contract size in satoshis
+ * @param {number} strikePrice strike price of contract
+ * @param {number} maxGain maximum amount that can be gained (totalCollateral)
+ * @param {number} premium premium of contract in satoshis
+ * @param {number} feePerByte sats/vbyte
+ * @param {number} rounding rounding interval
+ * @param {string} network bitcoin network type
+ * @returns {OrderOfferV0} Returns order offer
+ */
+export const buildLongPutOrderOffer = (
+  announcement: OracleAnnouncementV0,
+  contractSize: number,
+  strikePrice: number,
+  maxGain: number,
+  premium: number,
+  feePerByte: number,
+  rounding: number,
+  network: string,
+): OrderOfferV0 => {
+  return buildOptionOrderOffer(
+    announcement,
+    contractSize,
+    strikePrice,
+    premium,
+    feePerByte,
+    rounding,
+    network,
+    'put',
+    'long',
+    maxGain,
   );
 };
 
