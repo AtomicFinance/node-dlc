@@ -12,6 +12,8 @@ import sinon from 'sinon';
 import {
   buildCoveredCallOrderOffer,
   buildCustomStrategyOrderOffer,
+  buildLongCallOrderOffer,
+  buildLongPutOrderOffer,
   buildRoundingIntervalsFromIntervals,
   buildShortPutOrderOffer,
   computeRoundingModulus,
@@ -55,6 +57,36 @@ describe('OrderOffer Builder', () => {
         contractSize,
         strikePrice,
         totalCollateral,
+        premium,
+        12,
+        10000,
+        'bitcoin',
+      );
+
+      expect(() => orderOffer.validate()).to.not.throw(Error);
+    });
+
+    it('should build a long call OrderOffer correctly', () => {
+      const orderOffer = buildLongCallOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        strikePrice,
+        premium * 3,
+        premium,
+        12,
+        10000,
+        'bitcoin',
+      );
+
+      expect(() => orderOffer.validate()).to.not.throw(Error);
+    });
+
+    it('should build a long put OrderOffer correctly', () => {
+      const orderOffer = buildLongPutOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        strikePrice,
+        premium * 3,
         premium,
         12,
         10000,
