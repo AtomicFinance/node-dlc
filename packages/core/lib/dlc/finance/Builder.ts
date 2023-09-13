@@ -157,15 +157,15 @@ export const buildOrderOffer = (
  */
 export const buildOptionOrderOffer = (
   announcement: OracleAnnouncementV0,
-  contractSize: number,
+  contractSize: Value,
   strikePrice: number,
-  premium: number,
+  premium: Value,
   feePerByte: number | bigint,
   rounding: number,
   network: string,
   type: 'call' | 'put',
   direction: 'long' | 'short',
-  _totalCollateral?: number,
+  _totalCollateral?: Value,
 ): OrderOfferV0 => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
@@ -182,7 +182,7 @@ export const buildOptionOrderOffer = (
     if (type === 'call') {
       payoutFunctionInfo = CoveredCall.buildPayoutFunction(
         BigInt(strikePrice),
-        BigInt(contractSize),
+        contractSize.sats,
         eventDescriptor.base,
         eventDescriptor.nbDigits,
       );
@@ -201,12 +201,12 @@ export const buildOptionOrderOffer = (
     } else {
       payoutFunctionInfo = ShortPut.buildPayoutFunction(
         BigInt(strikePrice),
-        BigInt(contractSize),
-        BigInt(_totalCollateral),
+        contractSize.sats,
+        _totalCollateral.sats,
         eventDescriptor.base,
         eventDescriptor.nbDigits,
       );
-      totalCollateral = BigInt(_totalCollateral);
+      totalCollateral = _totalCollateral.sats;
       roundingIntervals.intervals = [
         {
           beginInterval: BigInt(0),
@@ -219,12 +219,12 @@ export const buildOptionOrderOffer = (
       ];
     }
   } else {
-    totalCollateral = BigInt(_totalCollateral);
+    totalCollateral = _totalCollateral.sats;
 
     if (type === 'call') {
       payoutFunctionInfo = LongCall.buildPayoutFunction(
         BigInt(strikePrice),
-        BigInt(contractSize),
+        contractSize.sats,
         totalCollateral,
         eventDescriptor.base,
         eventDescriptor.nbDigits,
@@ -243,7 +243,7 @@ export const buildOptionOrderOffer = (
     } else {
       payoutFunctionInfo = LongPut.buildPayoutFunction(
         BigInt(strikePrice),
-        BigInt(contractSize),
+        contractSize.sats,
         totalCollateral,
         eventDescriptor.base,
         eventDescriptor.nbDigits,
@@ -265,7 +265,7 @@ export const buildOptionOrderOffer = (
   const payoutFunction = payoutFunctionInfo.payoutFunction;
 
   const offerCollateral =
-    direction === 'short' ? totalCollateral - BigInt(premium) : BigInt(premium);
+    direction === 'short' ? totalCollateral - premium.sats : premium.sats;
 
   return buildOrderOffer(
     announcement,
@@ -292,9 +292,9 @@ export const buildOptionOrderOffer = (
  */
 export const buildCoveredCallOrderOffer = (
   announcement: OracleAnnouncementV0,
-  contractSize: number,
+  contractSize: Value,
   strikePrice: number,
-  premium: number,
+  premium: Value,
   feePerByte: number,
   rounding: number,
   network: string,
@@ -327,10 +327,10 @@ export const buildCoveredCallOrderOffer = (
  */
 export const buildShortPutOrderOffer = (
   announcement: OracleAnnouncementV0,
-  contractSize: number,
+  contractSize: Value,
   strikePrice: number,
-  totalCollateral: number,
-  premium: number,
+  totalCollateral: Value,
+  premium: Value,
   feePerByte: number,
   rounding: number,
   network: string,
@@ -364,10 +364,10 @@ export const buildShortPutOrderOffer = (
  */
 export const buildLongCallOrderOffer = (
   announcement: OracleAnnouncementV0,
-  contractSize: number,
+  contractSize: Value,
   strikePrice: number,
-  maxGain: number,
-  premium: number,
+  maxGain: Value,
+  premium: Value,
   feePerByte: number,
   rounding: number,
   network: string,
@@ -401,10 +401,10 @@ export const buildLongCallOrderOffer = (
  */
 export const buildLongPutOrderOffer = (
   announcement: OracleAnnouncementV0,
-  contractSize: number,
+  contractSize: Value,
   strikePrice: number,
-  maxGain: number,
-  premium: number,
+  maxGain: Value,
+  premium: Value,
   feePerByte: number,
   rounding: number,
   network: string,
