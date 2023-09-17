@@ -193,7 +193,7 @@ export class ChainManager extends EventEmitter {
 
     const dlcTxsToVerify: DlcTransactionsV0[] = [];
 
-    const oct = Math.trunc(dlcTxsCount / 8);
+    const oct = Math.trunc(dlcTxsCount / 16);
     for (let i = 0; i < dlcTxsList.length; i++) {
       const dlcTxs = dlcTxsList[i];
       if ((i + 1) % oct === 0) {
@@ -253,16 +253,24 @@ export class ChainManager extends EventEmitter {
 
     let numBlocksToSync = Math.max(info.blocks - this.blockHeight, 0);
     this.logger.info('validating %d blocks for closing utxos', numBlocksToSync);
-    const oct = Math.trunc(numBlocksToSync / 8);
+    const oct = Math.trunc(numBlocksToSync / 16);
     let i = 0;
     while (info.blocks > this.blockHeight) {
-      await sleep(50);
+      await sleep(10);
 
       if ((i + 1) % oct === 0) {
         this.logger.info(
           'validating block %s, closing utxos %s% complete',
           this.blockHeight,
           (((i + 1) / numBlocksToSync) * 100).toFixed(2),
+        );
+      }
+
+      // Log every 10 blocks
+      if (this.blockHeight % 10 === 0) {
+        this.logger.info(
+          'Validating block %s for closing utxos',
+          this.blockHeight,
         );
       }
 
