@@ -1,7 +1,7 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
-import { OrderCsoInfoV0 } from '../../lib';
+import { OrderPositionInfoV0 } from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
@@ -160,14 +160,16 @@ describe('DlcOffer', () => {
         );
       });
 
-      it('serializes with csoinfo', () => {
-        const csoInfo = new OrderCsoInfoV0();
-        csoInfo.shiftForFees = 'acceptor';
-        csoInfo.fees = BigInt(1000);
+      it('serializes with positioninfo', () => {
+        const positionInfo = new OrderPositionInfoV0();
+        positionInfo.shiftForFees = 'acceptor';
+        positionInfo.fees = BigInt(1000);
 
-        instance.csoInfo = csoInfo;
+        instance.positionInfo = positionInfo;
         expect(instance.serialize().toString('hex')).to.equal(
-          Buffer.concat([dlcOfferHex, csoInfo.serialize()]).toString('hex'),
+          Buffer.concat([dlcOfferHex, positionInfo.serialize()]).toString(
+            'hex',
+          ),
         );
       });
     });
@@ -202,15 +204,15 @@ describe('DlcOffer', () => {
         );
       });
 
-      it('deserializes with csoinfo', () => {
-        const csoInfo = new OrderCsoInfoV0();
-        csoInfo.shiftForFees = 'acceptor';
-        csoInfo.fees = BigInt(1000);
+      it('deserializes with positioninfo', () => {
+        const positionInfo = new OrderPositionInfoV0();
+        positionInfo.shiftForFees = 'acceptor';
+        positionInfo.fees = BigInt(1000);
 
-        instance.csoInfo = csoInfo;
+        instance.positionInfo = positionInfo;
         expect(
-          DlcOfferV0.deserialize(instance.serialize()).csoInfo.serialize(),
-        ).to.deep.equal(csoInfo.serialize());
+          DlcOfferV0.deserialize(instance.serialize()).positionInfo.serialize(),
+        ).to.deep.equal(positionInfo.serialize());
       });
     });
 

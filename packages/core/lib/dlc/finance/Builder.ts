@@ -6,8 +6,8 @@ import {
   MessageType,
   OracleAnnouncementV0,
   OracleInfoV0,
-  OrderCsoInfoV0,
   OrderOfferV0,
+  OrderPositionInfoV0,
   PayoutFunctionV0,
   RoundingIntervalsV0,
 } from '@node-dlc/messaging';
@@ -481,10 +481,10 @@ export const buildLinearOrderOffer = (
   );
 
   if (shiftForFees !== 'neither') {
-    const csoInfo = new OrderCsoInfoV0();
-    csoInfo.shiftForFees = shiftForFees;
-    csoInfo.fees = fees.sats;
-    orderOffer.csoInfo = csoInfo;
+    const positionInfo = new OrderPositionInfoV0();
+    positionInfo.shiftForFees = shiftForFees;
+    positionInfo.fees = fees.sats;
+    orderOffer.positionInfo = positionInfo;
   }
 
   return orderOffer;

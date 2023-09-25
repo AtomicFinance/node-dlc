@@ -15,13 +15,13 @@ import {
   IContractInfoV1JSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { IOrderCsoInfoJSON, OrderCsoInfo } from './OrderCsoInfo';
 import {
   IOrderIrcInfoJSON,
   OrderIrcInfo,
   OrderIrcInfoV0,
 } from './OrderIrcInfo';
 import { OrderMetadata, OrderMetadataV0 } from './OrderMetadata';
+import { IOrderPositionInfoJSON, OrderPositionInfo } from './OrderPositionInfo';
 
 const LOCKTIME_THRESHOLD = 500000000;
 export abstract class OrderOffer {
@@ -83,8 +83,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
         case MessageType.OrderIrcInfoV0:
           instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
           break;
-        case MessageType.OrderCsoInfoV0:
-          instance.csoInfo = OrderCsoInfo.deserialize(buf);
+        case MessageType.OrderPositionInfoV0:
+          instance.positionInfo = OrderPositionInfo.deserialize(buf);
           break;
         default:
           break;
@@ -115,7 +115,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
   public ircInfo?: OrderIrcInfo;
 
-  public csoInfo?: OrderCsoInfo;
+  public positionInfo?: OrderPositionInfo;
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
@@ -184,7 +184,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
     if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
-    if (this.csoInfo) tlvs.push(this.csoInfo.toJSON());
+    if (this.positionInfo) tlvs.push(this.positionInfo.toJSON());
 
     return {
       type: this.type,
@@ -213,7 +213,7 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
-    if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
+    if (this.positionInfo) writer.writeBytes(this.positionInfo.serialize());
 
     return writer.toBuffer();
   }
@@ -227,5 +227,5 @@ export interface IOrderOfferJSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderCsoInfoJSON)[];
+  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderPositionInfoJSON)[];
 }

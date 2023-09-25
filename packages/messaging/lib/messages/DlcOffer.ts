@@ -19,7 +19,6 @@ import {
   FundingInputV0,
   IFundingInputV0JSON,
 } from './FundingInput';
-import { IOrderCsoInfoJSON, OrderCsoInfo } from './OrderCsoInfo';
 import {
   IOrderIrcInfoJSON,
   OrderIrcInfo,
@@ -30,6 +29,7 @@ import {
   OrderMetadata,
   OrderMetadataV0,
 } from './OrderMetadata';
+import { IOrderPositionInfoJSON, OrderPositionInfo } from './OrderPositionInfo';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 export abstract class DlcOffer {
@@ -108,8 +108,8 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
         case MessageType.OrderIrcInfoV0:
           instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
           break;
-        case MessageType.OrderCsoInfoV0:
-          instance.csoInfo = OrderCsoInfo.deserialize(buf);
+        case MessageType.OrderPositionInfoV0:
+          instance.positionInfo = OrderPositionInfo.deserialize(buf);
           break;
         default:
           break;
@@ -156,7 +156,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
   public ircInfo?: OrderIrcInfo;
 
-  public csoInfo?: OrderCsoInfo;
+  public positionInfo?: OrderPositionInfo;
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -293,7 +293,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
     if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
-    if (this.csoInfo) tlvs.push(this.csoInfo.toJSON());
+    if (this.positionInfo) tlvs.push(this.positionInfo.toJSON());
 
     return {
       type: this.type,
@@ -345,7 +345,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
 
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
-    if (this.csoInfo) writer.writeBytes(this.csoInfo.serialize());
+    if (this.positionInfo) writer.writeBytes(this.positionInfo.serialize());
 
     return writer.toBuffer();
   }
@@ -367,7 +367,7 @@ export interface IDlcOfferV0JSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderCsoInfoJSON)[];
+  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderPositionInfoJSON)[];
 }
 
 export interface IDlcOfferV0Addresses {
