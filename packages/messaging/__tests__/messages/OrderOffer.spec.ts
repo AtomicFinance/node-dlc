@@ -1,6 +1,10 @@
 import { expect } from 'chai';
 
-import { LOCKTIME_THRESHOLD, MessageType, OrderCsoInfoV0 } from '../../lib';
+import {
+  LOCKTIME_THRESHOLD,
+  MessageType,
+  OrderPositionInfoV0,
+} from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import {
   IOrderIrcInfoJSON,
@@ -261,11 +265,11 @@ describe('OrderOffer', () => {
     });
 
     it('serializes with cso info', () => {
-      const csoInfo = new OrderCsoInfoV0();
-      csoInfo.shiftForFees = 'offeror';
-      csoInfo.fees = BigInt(10000);
+      const positionInfo = new OrderPositionInfoV0();
+      positionInfo.shiftForFees = 'offeror';
+      positionInfo.fees = BigInt(10000);
 
-      instance.csoInfo = csoInfo;
+      instance.positionInfo = positionInfo;
 
       expect(instance.serialize().toString('hex')).to.equal(
         'f532' + // type
@@ -373,18 +377,20 @@ describe('OrderOffer', () => {
       );
     });
 
-    it('deserializes with csoinfo', () => {
-      const bufWithCsoInfo = Buffer.concat([
+    it('deserializes with positioninfo', () => {
+      const bufWithPositionInfo = Buffer.concat([
         buf,
         Buffer.from('fdf53a09010000000000002710', 'hex'),
       ]);
 
-      const instance = OrderOfferV0.deserialize(bufWithCsoInfo);
+      const instance = OrderOfferV0.deserialize(bufWithPositionInfo);
 
-      expect((instance.csoInfo as OrderCsoInfoV0).shiftForFees).to.equal(
-        'offeror',
+      expect(
+        (instance.positionInfo as OrderPositionInfoV0).shiftForFees,
+      ).to.equal('offeror');
+      expect((instance.positionInfo as OrderPositionInfoV0).fees).to.equal(
+        BigInt(10000),
       );
-      expect((instance.csoInfo as OrderCsoInfoV0).fees).to.equal(BigInt(10000));
     });
   });
 

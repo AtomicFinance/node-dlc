@@ -31,7 +31,7 @@ export * from './messages/OracleInfoV0';
 export * from './messages/OrderAccept';
 export * from './messages/OrderNegotiationFields';
 export * from './messages/OrderOffer';
-export * from './messages/OrderCsoInfo';
+export * from './messages/OrderPositionInfo';
 export * from './messages/OrderIrcInfo';
 export * from './messages/OrderMetadata';
 export * from './messages/PayoutCurvePiece';

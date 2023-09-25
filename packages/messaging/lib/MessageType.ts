@@ -68,7 +68,7 @@ export enum MessageType {
   OrderAcceptV0 = 62772,
   OrderMetadataV0 = 62774,
   OrderIrcInfoV0 = 62776,
-  OrderCsoInfoV0 = 62778,
+  OrderPositionInfoV0 = 62778,
 
   OrderNegotiationFieldsV0 = 65334,
   OrderNegotiationFieldsV1 = 65336,

@@ -5,8 +5,8 @@ import {
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   MessageType,
-  OrderCsoInfo,
-  OrderCsoInfoV0,
+  OrderPositionInfo,
+  OrderPositionInfoV0,
   PayoutFunctionV0,
   PolynomialPayoutCurvePiece,
 } from '@node-dlc/messaging';
@@ -31,8 +31,8 @@ export interface CsoInfo {
 
 const ONE_BTC_CONTRACT = Value.fromBitcoin(1);
 
-export type MaybeHasCsoInfo = {
-  csoInfo?: OrderCsoInfo;
+export type MaybeHasPositionInfo = {
+  positionInfo?: OrderPositionInfo;
 };
 
 /**
@@ -147,7 +147,7 @@ export const getCsoInfoFromOffer = (
   offer: HasContractInfo &
     HasType &
     HasOfferCollateralSatoshis &
-    MaybeHasCsoInfo,
+    MaybeHasPositionInfo,
 ): CsoInfo => {
   if (
     offer.type !== MessageType.DlcOfferV0 &&
@@ -158,21 +158,21 @@ export const getCsoInfoFromOffer = (
   let shiftForFees: DlcParty = 'neither';
   const fees = Value.zero();
 
-  if (offer.csoInfo) {
-    shiftForFees = (offer.csoInfo as OrderCsoInfoV0).shiftForFees;
-    fees.add(Value.fromSats((offer.csoInfo as OrderCsoInfoV0).fees));
+  if (offer.positionInfo) {
+    shiftForFees = (offer.positionInfo as OrderPositionInfoV0).shiftForFees;
+    fees.add(Value.fromSats((offer.positionInfo as OrderPositionInfoV0).fees));
   }
 
-  const csoInfo = getCsoInfoFromContractInfo(
+  const positionInfo = getCsoInfoFromContractInfo(
     offer.contractInfo,
     shiftForFees,
     fees,
   );
 
-  if (csoInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
+  if (positionInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
     throw Error('Offer was not generated with CSO ContractInfo');
 
-  return csoInfo;
+  return positionInfo;
 };
 
 /**
