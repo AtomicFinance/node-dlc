@@ -96,7 +96,7 @@ export class TxWatcher extends EventEmitter {
       this._checkOutpoints(tx);
       this._checkScriptPubkeys(tx);
     } catch (e) {
-      console.log('Failed to deserialize tx', buf.toString('hex'));
+      console.error('Failed to deserialize tx', buf.toString('hex'));
     }
   }
 }

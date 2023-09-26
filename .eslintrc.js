@@ -18,6 +18,7 @@ module.exports = {
   rules: {
     'prettier/prettier': 'error',
     'simple-import-sort/imports': 'error',
+    'no-console': ['error', { allow: ['error'] }],
   },
   overrides: [
     {

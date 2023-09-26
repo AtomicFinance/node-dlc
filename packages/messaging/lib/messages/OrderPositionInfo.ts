@@ -137,10 +137,7 @@ export class OrderPositionInfoV0
     );
     dataWriter.writeUInt64BE(this.fees);
 
-    console.log('test1');
-
     if (this.instrumentName) {
-      console.log('test2');
       dataWriter.writeBigSize(this.instrumentName.length);
       dataWriter.writeBytes(Buffer.from(this.instrumentName));
 
