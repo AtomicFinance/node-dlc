@@ -154,7 +154,7 @@ export class BlockWatcher extends EventEmitter {
         this._checkOutpoints(blockSummary, tx);
         this._checkScriptPubkeys(blockSummary, tx);
       } catch (e) {
-        console.log(
+        console.error(
           'Failed to deserialize tx',
           transaction.toBuffer().toString('hex'),
         );
