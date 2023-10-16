@@ -118,6 +118,7 @@ describe('OrderOffer Builder', () => {
   describe('buildCustomStrategyOrderOffer', () => {
     const contractSizes: Value[] = [
       Value.fromBitcoin(1),
+      Value.fromBitcoin(0.0099559),
       Value.fromBitcoin(0.1),
       Value.fromBitcoin(0.5),
       Value.fromBitcoin(1.5),

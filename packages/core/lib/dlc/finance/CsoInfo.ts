@@ -169,6 +169,12 @@ export const getCsoInfoFromOffer = (
     fees,
   );
 
+  console.log(
+    'positionInfo.offerCollateral.sats',
+    positionInfo.offerCollateral.sats,
+  );
+  console.log('offer.offerCollateralSatoshis', offer.offerCollateralSatoshis);
+
   if (positionInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
     throw Error('Offer was not generated with CSO ContractInfo');
 
