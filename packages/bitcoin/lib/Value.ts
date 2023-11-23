@@ -63,7 +63,7 @@ export class Value implements ICloneable<Value> {
     return new Value(BigInt(0));
   }
 
-  private _picoSats: bigint;
+  protected _picoSats: bigint;
 
   /**
    * Gets the value in picosatoshis (1/1e12 satoshis)
@@ -100,7 +100,7 @@ export class Value implements ICloneable<Value> {
     return Math.max(0, Number(this.sats) / 1e8);
   }
 
-  private constructor(picoSats: bigint) {
+  protected constructor(picoSats: bigint) {
     this._picoSats = picoSats;
   }
 
