@@ -11,7 +11,7 @@ export class Value implements ICloneable<Value> {
    * @param num
    */
   public static fromBitcoin(num: number): Value {
-    return Value.fromSats(Math.trunc(num * 1e8));
+    return Value.fromSats(Math.round(num * 1e8));
   }
 
   /**
@@ -179,8 +179,9 @@ export class Value implements ICloneable<Value> {
    * existing value.
    * @param other
    */
-  public add(other: Value): void {
+  public add(other: Value): this {
     this._picoSats += other._picoSats;
+    return this;
   }
 
   /**
@@ -189,10 +190,33 @@ export class Value implements ICloneable<Value> {
    * if subtraction results in a value that is less than zero.
    * @param other
    */
-  public sub(other: Value): void {
+  public sub(other: Value): this {
     if (this._picoSats - other._picoSats < 0) {
       throw new BitcoinError(BitcoinErrorCode.ValueUnderflow);
     }
     this._picoSats -= other._picoSats;
+    return this;
+  }
+
+  /**
+   * Adding the other value to the existing value and returns a new
+   * instance of Value.
+   * @param other
+   */
+  public addn(other: Value): Value {
+    return new Value(this._picoSats + other._picoSats);
+  }
+
+  /**
+   * Subtracts supplied value from the current value and returns a new
+   * value instance. Since Value is unsigned, this throws if
+   * subtraction results in a value that is less than zero.
+   * @param other
+   */
+  public subn(other: Value): Value {
+    if (this._picoSats - other._picoSats < 0) {
+      throw new BitcoinError(BitcoinErrorCode.ValueUnderflow);
+    }
+    return new Value(this._picoSats - other._picoSats);
   }
 }
