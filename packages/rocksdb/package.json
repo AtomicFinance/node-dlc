@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/rocksdb",
-  "version": "0.22.5",
+  "version": "0.22.6",
   "description": "DLC RocksDB",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -23,8 +23,8 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/core": "^0.22.5",
-    "@node-dlc/messaging": "^0.22.5",
+    "@node-dlc/core": "^0.22.6",
+    "@node-dlc/messaging": "^0.22.6",
     "@node-lightning/bitcoin": "0.26.1",
     "@node-lightning/bufio": "0.26.1",
     "@node-lightning/core": "0.26.1",
