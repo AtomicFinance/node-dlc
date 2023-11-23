@@ -8,6 +8,9 @@ describe('Value', () => {
     expect(Value.fromBitcoin(0.12345678).bitcoin).to.equal(0.12345678);
     expect(Value.fromBitcoin(1).bitcoin).to.equal(1);
     expect(Value.fromBitcoin(1.23).bitcoin).to.equal(1.23);
+    expect(Value.fromBitcoin(20000000.00000008).bitcoin).to.equal(
+      20000000.00000008,
+    );
   });
 
   it('#fromSats()', () => {
@@ -232,6 +235,12 @@ describe('Value', () => {
       a.add(b);
       expect(a.bitcoin).to.equal(1.00000001);
     });
+    it('is fluent', () => {
+      const sut = Value.zero()
+        .add(Value.fromSats(1000))
+        .add(Value.fromSats(400));
+      expect(sut.sats).to.equal(1400n);
+    });
   });
 
   describe('.sub()', () => {
@@ -246,6 +255,48 @@ describe('Value', () => {
       const a = Value.fromBitcoin(1);
       const b = Value.fromBitcoin(1.1);
       expect(() => a.sub(b)).to.throw('Value underflow');
+    });
+
+    it('is fluent', () => {
+      const sut = Value.fromSats(1000).sub(Value.fromSats(400));
+      expect(sut.sats).to.equal(600n);
+    });
+  });
+
+  describe('.addn()', () => {
+    it('adds the supplied value', () => {
+      const a = Value.fromBitcoin(1);
+      const b = Value.fromSats(1);
+      const c = a.addn(b);
+      expect(c.bitcoin).to.equal(1.00000001);
+      expect(c).to.not.equal(a);
+    });
+    it('is fluent', () => {
+      const sut = Value.zero()
+        .addn(Value.fromSats(1000))
+        .addn(Value.fromSats(400));
+      expect(sut.sats).to.equal(1400n);
+    });
+  });
+
+  describe('.subn()', () => {
+    it('subtracts the suplied value', () => {
+      const a = Value.fromBitcoin(1.000000001);
+      const b = Value.fromBitcoin(0.000000001);
+      const c = a.subn(b);
+      expect(c.bitcoin).to.equal(1);
+      expect(c).to.not.equal(a);
+    });
+
+    it('throws when underflow', () => {
+      const a = Value.fromBitcoin(1);
+      const b = Value.fromBitcoin(1.1);
+      expect(() => a.subn(b)).to.throw('Value underflow');
+    });
+
+    it('is fluent', () => {
+      const sut = Value.fromSats(1000).subn(Value.fromSats(400));
+      expect(sut.sats).to.equal(600n);
     });
   });
 
