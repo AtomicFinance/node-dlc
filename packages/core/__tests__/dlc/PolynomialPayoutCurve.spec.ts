@@ -7,7 +7,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { expect } from 'chai';
 
-import { HyperbolaPayoutCurve } from '../../lib';
+import { BinaryPayout, HyperbolaPayoutCurve } from '../../lib';
 import { LinearPayout } from '../../lib/dlc/finance/LinearPayout';
 import { PolynomialPayoutCurve } from '../../lib/dlc/PolynomialPayoutCurve';
 import { fromPrecision } from '../../lib/utils/Precision';
@@ -272,6 +272,44 @@ describe('PolynomialPayoutCurve', () => {
       expect(payouts[n].indexFrom).to.eq(endOutcome - 1n);
       expect(payouts[n].indexTo).to.eq(maxOutcome);
       expect(payouts[n].payout).to.eq(maxPayout);
+    });
+
+    it.only('should compute the correct payouts for binary payout function', () => {
+      const numDigits = 18;
+      const oracleBase = 2;
+      const minPayout = 40n;
+      const maxPayout = 60n;
+      const thresholdOutcome = 60n;
+
+      const { payoutFunction } = BinaryPayout.buildPayoutFunction(
+        minPayout,
+        maxPayout,
+        thresholdOutcome,
+        oracleBase,
+        numDigits,
+      );
+
+      console.log('payoutFunction', payoutFunction.toJSON());
+
+      const intervals = [{ beginInterval: 0n, roundingMod: 2n }];
+      const roundingIntervals = new RoundingIntervalsV0();
+      roundingIntervals.intervals = intervals;
+
+      const payouts = PolynomialPayoutCurve.computePayouts(
+        payoutFunction,
+        maxPayout,
+        roundingIntervals,
+      );
+
+      console.log('payouts', payouts);
+
+      const n = payouts.length - 1;
+
+      const maxOutcome = BigInt(
+        new BigNumber(oracleBase).pow(numDigits).minus(1).toString(10),
+      );
+
+      expect(n).to.eq(10);
     });
 
     it('should fail if < 1 payout function pieces', () => {

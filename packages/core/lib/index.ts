@@ -6,6 +6,7 @@ export * from './dlc/finance/LongCall';
 export * from './dlc/finance/LongPut';
 export * from './dlc/finance/CsoInfo';
 export * from './dlc/finance/LinearPayout';
+export * from './dlc/finance/BinaryPayout';
 export * from './dlc/finance/OptionInfo';
 export * from './dlc/HyperbolaPayoutCurve';
 export * from './dlc/PayoutCurve';
