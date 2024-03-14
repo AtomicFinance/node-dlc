@@ -4,6 +4,7 @@ export * from './chain/IChainFilterChainClient';
 export * from './domain/Address';
 export * from './irc/IrcMessage';
 export * from './messages/AddressCache';
+export * from './messages/BatchFundingGroup';
 export * from './messages/CetAdaptorSignaturesV0';
 export * from './messages/ContractDescriptor';
 export * from './messages/ContractInfo';

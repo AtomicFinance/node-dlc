@@ -9,6 +9,7 @@ import {
   validateBuffer,
   validateNumber,
 } from '../validation/validate';
+import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
 import {
   ContractInfo,
   IContractInfoV0JSON,
@@ -86,6 +87,12 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
         case MessageType.OrderPositionInfoV0:
           instance.positionInfo = OrderPositionInfo.deserialize(buf);
           break;
+        case MessageType.BatchFundingGroup:
+          if (!instance.batchFundingGroups) {
+            instance.batchFundingGroups = [];
+          }
+          instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
+          break;
         default:
           break;
       }
@@ -116,6 +123,8 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
   public ircInfo?: OrderIrcInfo;
 
   public positionInfo?: OrderPositionInfo;
+
+  public batchFundingGroups?: BatchFundingGroup[];
 
   public validate(): void {
     validateBuffer(this.chainHash, 'chainHash', OrderOfferV0.name, 32);
@@ -185,6 +194,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     if (this.metadata) tlvs.push(this.metadata.toJSON());
     if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
     if (this.positionInfo) tlvs.push(this.positionInfo.toJSON());
+    if (this.batchFundingGroups)
+      this.batchFundingGroups.forEach((fundingInfo) =>
+        tlvs.push(fundingInfo.toJSON()),
+      );
 
     return {
       type: this.type,
@@ -214,6 +227,10 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
     if (this.positionInfo) writer.writeBytes(this.positionInfo.serialize());
+    if (this.batchFundingGroups)
+      this.batchFundingGroups.forEach((fundingInfo) =>
+        writer.writeBytes(fundingInfo.serialize()),
+      );
 
     return writer.toBuffer();
   }
@@ -227,5 +244,10 @@ export interface IOrderOfferJSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderPositionInfoJSON)[];
+  tlvs: (
+    | IOrderMetadataJSON
+    | IOrderIrcInfoJSON
+    | IOrderPositionInfoJSON
+    | IBatchFundingGroupJSON
+  )[];
 }

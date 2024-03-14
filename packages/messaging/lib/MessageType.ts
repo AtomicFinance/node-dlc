@@ -75,6 +75,8 @@ export enum MessageType {
 
   AddressCache = 65132,
 
+  BatchFundingGroup = 65430,
+
   IrcMessageV0 = 59314,
 
   NodeAnnouncement = 51394,

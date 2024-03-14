@@ -6,7 +6,9 @@ import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
 import { MessageType } from '../MessageType';
+import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv, skipTlv } from '../serialize/getTlv';
+import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
 import {
   CetAdaptorSignaturesV0,
   ICetAdaptorSignaturesV0JSON,
@@ -85,6 +87,23 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     instance.refundSignature = reader.readBytes(64);
     instance.negotiationFields = NegotiationFields.deserialize(getTlv(reader));
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type } = deserializeTlv(tlvReader);
+
+      switch (Number(type)) {
+        case MessageType.BatchFundingGroup:
+          if (!instance.batchFundingGroups) {
+            instance.batchFundingGroups = [];
+          }
+          instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
+          break;
+        default:
+          break;
+      }
+    }
+
     return instance;
   }
 
@@ -114,6 +133,8 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   public refundSignature: Buffer;
 
   public negotiationFields: NegotiationFields;
+
+  public batchFundingGroups?: BatchFundingGroup[];
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -196,6 +217,14 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
    * Converts dlc_accept_v0 to JSON
    */
   public toJSON(): IDlcAcceptV0JSON {
+    const tlvs = [];
+
+    if (this.batchFundingGroups) {
+      this.batchFundingGroups.forEach((group) => {
+        tlvs.push(group.serialize());
+      });
+    }
+
     return {
       type: this.type,
       tempContractId: this.tempContractId.toString('hex'),
@@ -209,6 +238,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       cetSignatures: this.cetSignatures.toJSON(),
       refundSignature: this.refundSignature.toString('hex'),
       negotiationFields: this.negotiationFields.toJSON(),
+      tlvs,
     };
   }
 
@@ -237,6 +267,11 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
     writer.writeBytes(this.refundSignature);
     writer.writeBytes(this.negotiationFields.serialize());
 
+    if (this.batchFundingGroups)
+      this.batchFundingGroups.forEach((fundingInfo) =>
+        writer.writeBytes(fundingInfo.serialize()),
+      );
+
     return writer.toBuffer();
   }
 
@@ -251,6 +286,7 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
       this.changeSPK,
       this.changeSerialId,
       this.negotiationFields,
+      this.batchFundingGroups,
     );
   }
 }
@@ -266,6 +302,7 @@ export class DlcAcceptWithoutSigs {
     readonly changeSPK: Buffer,
     readonly changeSerialId: bigint,
     readonly negotiationFields: NegotiationFields,
+    readonly batchFundingGroups?: BatchFundingGroup[],
   ) {}
 }
 
@@ -285,6 +322,7 @@ export interface IDlcAcceptV0JSON {
     | INegotiationFieldsV0JSON
     | INegotiationFieldsV1JSON
     | INegotiationFieldsV2JSON;
+  tlvs: IBatchFundingGroupJSON[];
 }
 
 export interface IDlcAcceptV0Addresses {
