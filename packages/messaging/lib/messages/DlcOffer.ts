@@ -8,6 +8,7 @@ import secp256k1 from 'secp256k1';
 import { MessageType } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
+import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
 import {
   ContractInfo,
   IContractInfoV0JSON,
@@ -111,6 +112,12 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
         case MessageType.OrderPositionInfoV0:
           instance.positionInfo = OrderPositionInfo.deserialize(buf);
           break;
+        case MessageType.BatchFundingGroup:
+          if (!instance.batchFundingGroups) {
+            instance.batchFundingGroups = [];
+          }
+          instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
+          break;
         default:
           break;
       }
@@ -157,6 +164,8 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   public ircInfo?: OrderIrcInfo;
 
   public positionInfo?: OrderPositionInfo;
+
+  public batchFundingGroups?: BatchFundingGroup[];
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -294,6 +303,10 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     if (this.metadata) tlvs.push(this.metadata.toJSON());
     if (this.ircInfo) tlvs.push(this.ircInfo.toJSON());
     if (this.positionInfo) tlvs.push(this.positionInfo.toJSON());
+    if (this.batchFundingGroups)
+      this.batchFundingGroups.forEach((fundingInfo) =>
+        tlvs.push(fundingInfo.toJSON()),
+      );
 
     return {
       type: this.type,
@@ -346,6 +359,10 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
     if (this.metadata) writer.writeBytes(this.metadata.serialize());
     if (this.ircInfo) writer.writeBytes(this.ircInfo.serialize());
     if (this.positionInfo) writer.writeBytes(this.positionInfo.serialize());
+    if (this.batchFundingGroups)
+      this.batchFundingGroups.forEach((fundingInfo) =>
+        writer.writeBytes(fundingInfo.serialize()),
+      );
 
     return writer.toBuffer();
   }
@@ -367,7 +384,12 @@ export interface IDlcOfferV0JSON {
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (IOrderMetadataJSON | IOrderIrcInfoJSON | IOrderPositionInfoJSON)[];
+  tlvs: (
+    | IOrderMetadataJSON
+    | IOrderIrcInfoJSON
+    | IOrderPositionInfoJSON
+    | IBatchFundingGroupJSON
+  )[];
 }
 
 export interface IDlcOfferV0Addresses {
