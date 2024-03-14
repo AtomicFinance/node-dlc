@@ -16,7 +16,10 @@ import {
   BitcoinNetworks,
   chainHashFromNetwork,
 } from 'bitcoin-networks';
+import Decimal from 'decimal.js';
 
+import { dustThreshold } from '../CoinSelect';
+import { getFinalizerByCount } from '../TxFinalizer';
 import { CoveredCall } from './CoveredCall';
 import { LinearPayout } from './LinearPayout';
 import { LongCall } from './LongCall';
@@ -48,6 +51,27 @@ export const roundToNearestMultiplier = (
   num: bigint,
   multiplier: bigint,
 ): bigint => (num / multiplier) * multiplier;
+
+/**
+ * Round a number up to the nearest multiple of a given multiplier.
+ *
+ * @param num - The number to be rounded.
+ * @param multiplier - The multiplier to round to.
+ * @returns The number rounded up to the nearest multiple of the multiplier.
+ *
+ * @example
+ * ```typescript
+ * // Example: rounding up to nearest 100
+ * const number = BigInt(354);
+ * const multiplier = BigInt(100);
+ * const roundedNumber = roundToNearestMultiplier(number, multiplier);
+ * console.log(roundedNumber); // Output: 400
+ * ```
+ */
+export const roundUpToNearestMultiplier = (
+  num: bigint,
+  multiplier: bigint,
+): bigint => ((num + multiplier - BigInt(1)) / multiplier) * multiplier;
 
 export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
@@ -136,7 +160,7 @@ export const buildOrderOffer = (
   orderOffer.feeRatePerVb = feePerByte;
   orderOffer.cetLocktime = Math.floor(new Date().getTime() / 1000); // set to current time
   orderOffer.refundLocktime =
-    announcement.oracleEvent.eventMaturityEpoch + 604800; // 1 week after maturity
+    announcement.oracleEvent.eventMaturityEpoch + 2419200; // 4 weeks after maturity
 
   return orderOffer;
 };
@@ -480,12 +504,10 @@ export const buildLinearOrderOffer = (
     network.name,
   );
 
-  if (shiftForFees !== 'neither') {
-    const positionInfo = new OrderPositionInfoV0();
-    positionInfo.shiftForFees = shiftForFees;
-    positionInfo.fees = fees.sats;
-    orderOffer.positionInfo = positionInfo;
-  }
+  const positionInfo = new OrderPositionInfoV0();
+  positionInfo.shiftForFees = shiftForFees;
+  positionInfo.fees = shiftForFees === 'neither' ? BigInt(0) : fees.sats;
+  orderOffer.positionInfo = positionInfo;
 
   return orderOffer;
 };
@@ -493,66 +515,138 @@ export const buildLinearOrderOffer = (
 /**
  * Builds a custom strategy order offer
  *
+ * Calculates offer fees
+ * calculates the minimum max gain
+ * maxLoss and maxGain are normalized to 1 BTC contracts
+ *
+ * shiftForFees 'offeror' means 'offeror' pays network fees
+ * shiftForFees 'acceptor' means 'acceptor' pays network fees
+ *
+ * numContracts refers to the number of DLCs in the funding transaction
+ * if it's not a batch dlc funding transaction, then this is not relevant
+ *
  * @param {OracleAnnouncementV0} announcement oracle announcement
  * @param {Value} contractSize contract size
- * @param {Value} maxLoss maximum amount that can be lost based on 1 BTC contract
- * @param {Value} maxGain maximum amount that can be gained based on 1 BTC contract
+ * @param {Value} normalizedMaxLoss maximum amount that can be lost based on 1 BTC contract
+ * @param {Value} normalizedMaxGain maximum amount that can be gained based on 1 BTC contract
  * @param {bigint} feePerByte sats/vbyte
- * @param {Value} rounding rounding mod for RoundingInterval
+ * @param {Value} roundingIntervals rounding mod for RoundingInterval
  * @param {BitcoinNetwork} network bitcoin, bitcoin_testnet or bitcoin_regtest
  * @param {DlcParty} [shiftForFees] shift for offerer, acceptor or neither
- * @param {Value} [fees] fees to shift
+ * @param {Value} [fees_] fees to shift
+ * @param {Value} [collateral] collateral to use
+ * @param {number} [numOfferInputs] number of inputs to use
+ * @param {number} [numContracts] number of DLCs in the funding transaction
+ *
  * @returns {OrderOfferV0}
  */
 export const buildCustomStrategyOrderOffer = (
   announcement: OracleAnnouncementV0,
   contractSize: Value,
-  maxLoss: Value,
-  maxGain: Value,
+  normalizedMaxLoss: Value,
+  normalizedMaxGain: Value,
   feePerByte: bigint,
   roundingIntervals: RoundingIntervalsV0,
   network: BitcoinNetwork,
   shiftForFees: DlcParty = 'neither',
-  fees: Value = Value.fromSats(0),
+  fees_: Value = Value.fromSats(0), // NOTE: fees should be divided before doing batch transaction
+  collateral: Value = Value.fromSats(0),
+  numOfferInputs = 1,
+  numContracts = 1,
+  skipValidation = false,
 ): OrderOfferV0 => {
+  if (contractSize.eq(Value.zero())) {
+    throw Error('contractSize must be greater than 0');
+  }
+
+  if (collateral.eq(Value.zero())) {
+    collateral = contractSize.clone();
+  }
+
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
   const unit = eventDescriptor.unit;
 
-  const minPayout = contractSize.clone();
-  minPayout.sub(
-    Value.fromSats((contractSize.sats * maxLoss.sats) / BigInt(1e8)),
-  );
-  minPayout.sub(
-    Value.fromSats((contractSize.sats * maxGain.sats) / BigInt(1e8)),
+  const fees = Value.fromSats(
+    Number(new Decimal(Number(fees_.sats)).dividedBy(numContracts).toFixed(0)),
   );
 
-  const maxPayout = contractSize.clone();
+  const finalizer = getFinalizerByCount(
+    feePerByte,
+    numOfferInputs,
+    1,
+    numContracts,
+  );
+  const offerFees = Value.fromSats(finalizer.offerFees);
+
+  // Use offerFees + dustThreshold for min max gain, to ensure in the case of
+  // 0 PnL the acceptor payout is not dust
+  const minMaxGainForContractSize_ = offerFees.addn(
+    Value.fromSats(dustThreshold(BigInt(feePerByte))),
+  );
+  const minMaxGainForContractSize = Value.fromSats(
+    roundUpToNearestMultiplier(
+      minMaxGainForContractSize_.sats,
+      BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]),
+    ),
+  );
+
+  const maxLossForContractSize = Value.fromSats(
+    roundUpToNearestMultiplier(
+      (normalizedMaxLoss.sats * contractSize.sats) / BigInt(1e8),
+      BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]),
+    ),
+  );
+  const tempMaxGainForContractSize = Value.fromSats(
+    roundUpToNearestMultiplier(
+      (normalizedMaxGain.sats * contractSize.sats) / BigInt(1e8),
+      BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]),
+    ),
+  );
+
+  const maxGainForContractSize = Value.zero();
+
+  if (tempMaxGainForContractSize.lt(minMaxGainForContractSize)) {
+    maxGainForContractSize.add(minMaxGainForContractSize);
+  } else {
+    maxGainForContractSize.add(tempMaxGainForContractSize);
+  }
+
+  const maxGainAdjusted = Value.fromSats(
+    roundToNearestMultiplier(
+      (maxGainForContractSize.sats * BigInt(1e8)) / contractSize.sats,
+      BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]),
+    ),
+  );
+
+  const feesAdjusted = Value.fromSats(
+    roundToNearestMultiplier(
+      (fees.sats * BigInt(1e8)) / contractSize.sats,
+      BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]),
+    ),
+  );
+
+  const minPayout = collateral.clone();
+  if (minPayout.lt(maxLossForContractSize.addn(maxGainForContractSize))) {
+    throw new Error(
+      'Subtraction would result in a negative value for minPayout.',
+    );
+  }
+  minPayout.sub(maxLossForContractSize);
+  minPayout.sub(maxGainForContractSize);
+  const maxPayout = collateral.clone();
 
   const startOutcomeValue = Value.fromBitcoin(1);
-  startOutcomeValue.sub(maxLoss);
-
+  startOutcomeValue.sub(normalizedMaxLoss);
   const endOutcomeValue = Value.fromBitcoin(1);
-  endOutcomeValue.add(maxGain);
-
-  const defaultContractSize = Value.fromBitcoin(1);
-
-  const shiftValue =
-    contractSize.sats > 0
-      ? Value.fromSats(
-          roundToNearestMultiplier(
-            (fees.sats * defaultContractSize.sats) / contractSize.sats,
-            UNIT_MULTIPLIER[unit.toLowerCase()],
-          ),
-        )
-      : Value.zero();
+  endOutcomeValue.add(maxGainAdjusted);
 
   if (shiftForFees === 'offeror') {
-    startOutcomeValue.add(shiftValue);
-    endOutcomeValue.add(shiftValue);
+    startOutcomeValue.add(feesAdjusted);
+    endOutcomeValue.add(feesAdjusted);
   } else if (shiftForFees === 'acceptor') {
-    startOutcomeValue.sub(shiftValue);
-    endOutcomeValue.sub(shiftValue);
+    startOutcomeValue.sub(feesAdjusted);
+    endOutcomeValue.sub(feesAdjusted);
   }
 
   const startOutcome =
@@ -560,12 +654,15 @@ export const buildCustomStrategyOrderOffer = (
   const endOutcome =
     endOutcomeValue.sats / BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]);
 
-  const offerCollateral = contractSize.clone();
-  offerCollateral.sub(
-    Value.fromSats((contractSize.sats * maxGain.sats) / BigInt(1e8)),
-  );
+  const offerCollateral = collateral.clone();
+  if (offerCollateral.lt(maxGainForContractSize)) {
+    throw new Error(
+      'Subtraction would result in a negative value for offerCollateral.',
+    );
+  }
+  offerCollateral.sub(maxGainForContractSize);
 
-  return buildLinearOrderOffer(
+  const orderOffer = buildLinearOrderOffer(
     announcement,
     offerCollateral,
     minPayout,
@@ -578,6 +675,16 @@ export const buildCustomStrategyOrderOffer = (
     shiftForFees,
     fees,
   );
+
+  (orderOffer.positionInfo as OrderPositionInfoV0).contractSize =
+    contractSize.sats;
+
+  (orderOffer.positionInfo as OrderPositionInfoV0).instrumentName = ((orderOffer.contractInfo as ContractInfoV0)
+    .oracleInfo as OracleInfoV0).announcement.oracleEvent.eventId;
+
+  if (!skipValidation) orderOffer.validate();
+
+  return orderOffer;
 };
 
 interface IInterval {

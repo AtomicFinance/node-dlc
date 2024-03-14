@@ -1,5 +1,8 @@
 import { FundingInput, FundingInputV0, MessageType } from '@node-dlc/messaging';
 
+const BATCH_FUND_TX_BASE_WEIGHT = 42;
+const FUNDING_OUTPUT_SIZE = 43;
+
 export class DualFundingTxFinalizer {
   constructor(
     readonly offerInputs: FundingInput[],
@@ -9,12 +12,14 @@ export class DualFundingTxFinalizer {
     readonly acceptPayoutSPK: Buffer,
     readonly acceptChangeSPK: Buffer,
     readonly feeRate: bigint,
+    readonly numContracts = 1,
   ) {}
 
   private computeFees(
     _inputs: FundingInput[],
     payoutSPK: Buffer,
     changeSPK: Buffer,
+    numContracts: number,
   ): IFees {
     _inputs.forEach((input) => {
       if (input.type !== MessageType.FundingInputV0)
@@ -26,14 +31,17 @@ export class DualFundingTxFinalizer {
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
     const futureFeeWeight = 249 + 4 * payoutSPK.length;
     const futureFeeVBytes = Math.ceil(futureFeeWeight / 4);
-    const futureFee = this.feeRate * BigInt(futureFeeVBytes);
+    const futureFee =
+      this.feeRate * BigInt(futureFeeVBytes) * BigInt(numContracts);
 
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-funding-transaction
     const inputWeight = inputs.reduce((total, input) => {
       return total + 164 + input.maxWitnessLen + input.scriptSigLength();
     }, 0);
-    const outputWeight = 36 + 4 * changeSPK.length;
-    const weight = 107 + outputWeight + inputWeight;
+    const contractWeight =
+      (BATCH_FUND_TX_BASE_WEIGHT + FUNDING_OUTPUT_SIZE * numContracts * 4) / 2;
+    const outputWeight = 36 + 4 * changeSPK.length + contractWeight;
+    const weight = outputWeight + inputWeight;
     const vbytes = Math.ceil(weight / 4);
     const fundingFee = this.feeRate * BigInt(vbytes);
 
@@ -45,6 +53,7 @@ export class DualFundingTxFinalizer {
       this.offerInputs,
       this.offerPayoutSPK,
       this.offerChangeSPK,
+      this.numContracts,
     );
   }
 
@@ -53,6 +62,7 @@ export class DualFundingTxFinalizer {
       this.acceptInputs,
       this.acceptPayoutSPK,
       this.acceptChangeSPK,
+      this.numContracts,
     );
   }
 
@@ -148,3 +158,49 @@ interface IFees {
   futureFee: bigint;
   fundingFee: bigint;
 }
+
+export const getFinalizer = (
+  feeRate: bigint,
+  offerInputs?: FundingInputV0[],
+  acceptInputs?: FundingInputV0[],
+  numContracts?: number,
+): DualFundingTxFinalizer => {
+  const input = new FundingInputV0();
+  input.maxWitnessLen = 108;
+  input.redeemScript = Buffer.from('', 'hex');
+
+  const fakeSPK = Buffer.from(
+    '0014663117d27e78eb432505180654e603acb30e8a4a',
+    'hex',
+  );
+
+  offerInputs = offerInputs || Array.from({ length: 1 }, () => input);
+
+  acceptInputs = acceptInputs || Array.from({ length: 1 }, () => input);
+
+  return new DualFundingTxFinalizer(
+    offerInputs,
+    fakeSPK,
+    fakeSPK,
+    acceptInputs,
+    fakeSPK,
+    fakeSPK,
+    feeRate,
+    numContracts,
+  );
+};
+
+export const getFinalizerByCount = (
+  feeRate: bigint,
+  numOfferInputs: number,
+  numAcceptInputs: number,
+  numContracts: number,
+): DualFundingTxFinalizer => {
+  const input = new FundingInputV0();
+  input.maxWitnessLen = 108;
+  input.redeemScript = Buffer.from('', 'hex');
+
+  const offerInputs = Array.from({ length: numOfferInputs }, () => input);
+  const acceptInputs = Array.from({ length: numAcceptInputs }, () => input);
+  return getFinalizer(feeRate, offerInputs, acceptInputs, numContracts);
+};

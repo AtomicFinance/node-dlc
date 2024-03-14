@@ -12,3 +12,4 @@ export * from './dlc/PayoutCurve';
 export * from './dlc/PolynomialPayoutCurve';
 export * from './dlc/TxBuilder';
 export * from './dlc/TxFinalizer';
+export * from './dlc/CoinSelect';
