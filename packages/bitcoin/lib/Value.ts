@@ -120,6 +120,15 @@ export class Value implements ICloneable<Value> {
   }
 
   /**
+   * Converts the value to a standard JavaScript number. This is safe
+   * for values that are within the Number.MAX_SAFE_INTEGER range.
+   * @returns {number} The value as a number.
+   */
+  public toNumber(): number {
+    return Number(this._picoSats / BigInt(1e12)); // Convert picosatoshis to satoshis and then to a number
+  }
+
+  /**
    * Returns true if the current value is equal to the other value
    * @param other
    * @returns

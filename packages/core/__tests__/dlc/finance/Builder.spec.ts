@@ -306,7 +306,7 @@ describe('OrderOffer Builder', () => {
       expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
     });
 
-    it('should build a CSO OrderOffer with contractSize 0', () => {
+    it('should fail to build a CSO OrderOffer with contractSize 0', () => {
       const contractSize = Value.zero();
 
       const roundingIntervals = buildRoundingIntervalsFromIntervals(
@@ -319,19 +319,24 @@ describe('OrderOffer Builder', () => {
         ],
       );
 
-      const orderOffer = buildCustomStrategyOrderOffer(
-        oracleAnnouncement,
-        contractSize,
-        maxLoss,
-        maxGain,
-        feeRate,
-        roundingIntervals,
-        network,
-      );
-
-      expect(orderOffer.contractInfo.totalCollateral).to.equal(
-        contractSize.sats,
-      );
+      try {
+        buildCustomStrategyOrderOffer(
+          oracleAnnouncement,
+          contractSize,
+          maxLoss,
+          maxGain,
+          feeRate,
+          roundingIntervals,
+          network,
+        );
+        // If the function call does not throw, fail the test
+        expect.fail(
+          'Expected buildCustomStrategyOrderOffer to throw an error due to contractSize being 0',
+        );
+      } catch (error) {
+        // Assert that the error message is as expected
+        expect(error.message).to.equal('contractSize must be greater than 0');
+      }
     });
 
     it('should fail to build a CSO OrderOffer with an invalid oracleAnnouncement', () => {
@@ -347,7 +352,12 @@ describe('OrderOffer Builder', () => {
         ],
       );
 
-      oracleAnnouncement.announcementSig = Buffer.from('deadbeef', 'hex');
+      oracleAnnouncement.announcementSig = Buffer.from(
+        'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+        'hex',
+      );
+
+      const skipValidation = true;
 
       const orderOffer = buildCustomStrategyOrderOffer(
         oracleAnnouncement,
@@ -357,6 +367,12 @@ describe('OrderOffer Builder', () => {
         feeRate,
         roundingIntervals,
         network,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        skipValidation,
       );
 
       expect(() => orderOffer.validate()).to.throw(Error);

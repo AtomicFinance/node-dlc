@@ -15,7 +15,9 @@
     "publish:all": "lerna publish from-package",
     "prepublishOnly": "npm run build"
   },
-  "pre-commit": [ "lint" ],
+  "pre-commit": [
+    "lint"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -27,6 +29,7 @@
   "author": "Atomic Finance <info@atomic.finance>",
   "license": "MIT",
   "devDependencies": {
+    "@babel/runtime": "^7.24.0",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/bn.js": "^4.11.6",
     "@types/chai": "^4.2.11",
