@@ -196,13 +196,11 @@ export const getCsoInfoParamsFromContractInfoV1 = (
   const normalizedMaxLoss = ONE_BTC_CONTRACT.clone();
   normalizedMaxLoss.sub(startOutcomeValue);
 
-  const maxGainForContractSize = Value.fromBitcoin(
-    new Decimal(normalizedMaxGain.bitcoin)
-      .times(contractSize.bitcoin)
-      .toDecimalPlaces(
-        8 - Math.log10(Number(UNIT_MULTIPLIER[unit.toLowerCase()])),
-      )
-      .toNumber(),
+  const maxGainForContractSize = Value.fromSats(
+    roundUpToNearestMultiplier(
+      (normalizedMaxGain.sats * contractSize.sats) / BigInt(1e8),
+      BigInt(UNIT_MULTIPLIER[unit.toLowerCase()]),
+    ),
   );
 
   const maxLossForContractSize = Value.fromSats(
