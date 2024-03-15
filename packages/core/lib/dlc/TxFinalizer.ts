@@ -1,4 +1,5 @@
 import { FundingInput, FundingInputV0, MessageType } from '@node-dlc/messaging';
+import { Decimal } from 'decimal.js';
 
 const BATCH_FUND_TX_BASE_WEIGHT = 42;
 const FUNDING_OUTPUT_SIZE = 43;
@@ -30,9 +31,12 @@ export class DualFundingTxFinalizer {
     );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
     const futureFeeWeight = 249 + 4 * payoutSPK.length;
-    const futureFeeVBytes = Math.ceil(futureFeeWeight / 4);
-    const futureFee =
-      this.feeRate * BigInt(futureFeeVBytes) * BigInt(numContracts);
+    const futureFeeVBytes = new Decimal(futureFeeWeight)
+      .times(numContracts)
+      .div(4)
+      .ceil()
+      .toNumber();
+    const futureFee = this.feeRate * BigInt(futureFeeVBytes);
 
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-funding-transaction
     const inputWeight = inputs.reduce((total, input) => {
@@ -42,7 +46,7 @@ export class DualFundingTxFinalizer {
       (BATCH_FUND_TX_BASE_WEIGHT + FUNDING_OUTPUT_SIZE * numContracts * 4) / 2;
     const outputWeight = 36 + 4 * changeSPK.length + contractWeight;
     const weight = outputWeight + inputWeight;
-    const vbytes = Math.ceil(weight / 4);
+    const vbytes = new Decimal(weight).div(4).ceil().toNumber();
     const fundingFee = this.feeRate * BigInt(vbytes);
 
     return { futureFee, fundingFee };
@@ -115,7 +119,7 @@ export class DualClosingTxFinalizer {
     }, 0);
     const outputWeight = 36 + 4 * payoutSPK.length;
     const weight = 213 + outputWeight + inputWeight;
-    const vbytes = Math.ceil(weight / 4);
+    const vbytes = new Decimal(weight).div(4).ceil().toNumber();
     const fee = this.feeRate * BigInt(vbytes);
 
     return fee;
