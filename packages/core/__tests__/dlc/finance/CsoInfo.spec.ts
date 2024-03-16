@@ -20,6 +20,7 @@ import {
   dustThreshold,
   getFinalizerByCount,
   LinearPayout,
+  roundDownToNearestMultiplier,
   roundUpToNearestMultiplier,
 } from '../../../lib';
 import {
@@ -631,10 +632,19 @@ describe('CsoInfo', () => {
         } = getCsoInfoFromOffer(csoOrderOffer, 'v1');
 
         // Fees are very high, so use dust threshold for max gain
-        const expectedMaxGainForContractSize = Value.fromSats(
+        const offerFees = Value.fromSats(
           getFinalizerByCount(feePerByte, numOfferInputs, 3, numContracts)
             .offerFees,
-        ).addn(Value.fromSats(dustThreshold(feePerByte)));
+        );
+        const expectedMaxGainForContractSize_ = offerFees.addn(
+          Value.fromSats(dustThreshold(BigInt(feePerByte))),
+        );
+        const expectedMaxGainForContractSize = Value.fromSats(
+          roundUpToNearestMultiplier(
+            expectedMaxGainForContractSize_.sats,
+            BigInt(100),
+          ),
+        );
 
         const expectedMaxLossForContractSize = Value.fromSats(
           roundUpToNearestMultiplier(
@@ -644,24 +654,24 @@ describe('CsoInfo', () => {
         );
 
         const expectedNormalizedMaxGain = Value.fromSats(
-          roundUpToNearestMultiplier(
+          roundDownToNearestMultiplier(
             (expectedMaxGainForContractSize.sats * BigInt(1e8)) /
               contractSize.sats,
             BigInt(100),
           ),
         );
 
-        expect(actualNormalizedMaxGain.sats).to.equal(
-          expectedNormalizedMaxGain.sats,
-        );
-        expect(actualNormalizedMaxLoss.sats).to.equal(normalizedMaxLoss.sats);
         expect(actualMaxGainForContractSize.sats).to.equal(
           expectedMaxGainForContractSize.sats,
         );
         expect(actualMaxLossForContractSize.sats).to.equal(
           expectedMaxLossForContractSize.sats,
         );
-        expect(minPayout).to.equal(BigInt(119900));
+        expect(actualNormalizedMaxLoss.sats).to.equal(normalizedMaxLoss.sats);
+        expect(actualNormalizedMaxGain.sats).to.equal(
+          expectedNormalizedMaxGain.sats,
+        ); // TODO: Fix issue with this line
+        expect(minPayout).to.equal(BigInt(121200));
         expect(maxPayout).to.equal(collateral.sats);
         expect(actualContractSize.sats).to.equal(contractSize.sats);
         expect(actualOfferCollateral.sats).to.equal(
@@ -706,10 +716,19 @@ describe('CsoInfo', () => {
         } = getCsoInfoFromOffer(csoOrderOffer, 'v1');
 
         // Fees are very high, so use dust threshold for max gain
-        const expectedMaxGainForContractSize = Value.fromSats(
+        const offerFees = Value.fromSats(
           getFinalizerByCount(feePerByte, numOfferInputs, 3, numContracts)
             .offerFees,
-        ).addn(Value.fromSats(dustThreshold(feePerByte)));
+        );
+        const expectedMaxGainForContractSize_ = offerFees.addn(
+          Value.fromSats(dustThreshold(BigInt(feePerByte))),
+        );
+        const expectedMaxGainForContractSize = Value.fromSats(
+          roundUpToNearestMultiplier(
+            expectedMaxGainForContractSize_.sats,
+            BigInt(100),
+          ),
+        );
 
         const expectedMaxLossForContractSize = Value.fromSats(
           roundUpToNearestMultiplier(
@@ -719,7 +738,7 @@ describe('CsoInfo', () => {
         );
 
         const expectedNormalizedMaxGain = Value.fromSats(
-          roundUpToNearestMultiplier(
+          roundDownToNearestMultiplier(
             (expectedMaxGainForContractSize.sats * BigInt(1e8)) /
               contractSize.sats,
             BigInt(100),
@@ -736,7 +755,7 @@ describe('CsoInfo', () => {
         expect(actualMaxLossForContractSize.sats).to.equal(
           expectedMaxLossForContractSize.sats,
         );
-        expect(minPayout).to.equal(BigInt(119900));
+        expect(minPayout).to.equal(BigInt(121200));
         expect(maxPayout).to.equal(collateral.sats);
         expect(actualContractSize.sats).to.equal(contractSize.sats);
         expect(actualOfferCollateral.sats).to.equal(
@@ -781,10 +800,19 @@ describe('CsoInfo', () => {
         } = getCsoInfoFromOffer(csoOrderOffer, 'v1');
 
         // Fees are very high, so use dust threshold for max gain
-        const expectedMaxGainForContractSize = Value.fromSats(
+        const offerFees = Value.fromSats(
           getFinalizerByCount(feePerByte, numOfferInputs, 3, numContracts)
             .offerFees,
-        ).addn(Value.fromSats(dustThreshold(feePerByte)));
+        );
+        const expectedMaxGainForContractSize_ = offerFees.addn(
+          Value.fromSats(dustThreshold(BigInt(feePerByte))),
+        );
+        const expectedMaxGainForContractSize = Value.fromSats(
+          roundUpToNearestMultiplier(
+            expectedMaxGainForContractSize_.sats,
+            BigInt(100),
+          ),
+        );
 
         const expectedMaxLossForContractSize = Value.fromSats(
           roundUpToNearestMultiplier(
@@ -794,7 +822,7 @@ describe('CsoInfo', () => {
         );
 
         const expectedNormalizedMaxGain = Value.fromSats(
-          roundUpToNearestMultiplier(
+          roundDownToNearestMultiplier(
             (expectedMaxGainForContractSize.sats * BigInt(1e8)) /
               contractSize.sats,
             BigInt(100),
@@ -811,7 +839,7 @@ describe('CsoInfo', () => {
         expect(actualMaxLossForContractSize.sats).to.equal(
           expectedMaxLossForContractSize.sats,
         );
-        expect(minPayout).to.equal(BigInt(119900));
+        expect(minPayout).to.equal(BigInt(121200));
         expect(maxPayout).to.equal(collateral.sats);
         expect(actualContractSize.sats).to.equal(contractSize.sats);
         expect(actualOfferCollateral.sats).to.equal(

@@ -2,7 +2,6 @@
 
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
-  ContractInfoV0,
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,

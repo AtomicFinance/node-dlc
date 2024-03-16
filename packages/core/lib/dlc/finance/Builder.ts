@@ -73,6 +73,11 @@ export const roundUpToNearestMultiplier = (
   multiplier: bigint,
 ): bigint => ((num + multiplier - BigInt(1)) / multiplier) * multiplier;
 
+export const roundDownToNearestMultiplier = (
+  num: bigint,
+  multiplier: bigint,
+): bigint => num - (num % multiplier);
+
 export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
 /**
