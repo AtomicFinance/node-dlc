@@ -1,6 +1,5 @@
-import { DlcTxBuilder } from '@node-dlc/core';
+import { BatchDlcTxBuilder, DlcTxBuilder } from '@node-dlc/core';
 import {
-  ContractInfo,
   ContractInfoV0,
   ContractInfoV1,
   DlcAcceptV0,
@@ -255,6 +254,50 @@ export class RocksdbDlcStore extends RocksdbBase {
       dlcAccept.tempContractId,
     ]);
     await this._db.put(key3, contractId);
+  }
+
+  // NOTE: ONLY USE FOR BATCH FUNDED DLCs
+  public async saveDlcAccepts(dlcAccepts: DlcAcceptV0[]): Promise<void> {
+    const dlcOffers: DlcOfferV0[] = [];
+    for (let i = 0; i < dlcAccepts.length; i++) {
+      const dlcOffer = await this.findDlcOffer(dlcAccepts[i].tempContractId);
+      dlcOffers.push(dlcOffer);
+    }
+    const txBuilder = new BatchDlcTxBuilder(dlcOffers, dlcAccepts);
+    const tx = txBuilder.buildFundingTransaction();
+    const fundingTxId = tx.txId.serialize();
+    const contractIds = dlcAccepts.map((dlcAccepts) =>
+      xor(fundingTxId, dlcAccepts.tempContractId),
+    );
+    for (let i = 0; i < dlcAccepts.length; i++) {
+      const value = dlcAccepts[i].serialize();
+      const key = Buffer.concat([
+        Buffer.from([Prefix.DlcAcceptV0]),
+        contractIds[i],
+      ]);
+      await this._db.put(key, value);
+
+      // store funding input outpoint reference
+      for (let i = 0; i < dlcAccepts[i].fundingInputs.length; i++) {
+        const fundingInput = dlcAccepts[i].fundingInputs[i] as FundingInputV0;
+
+        const outpoint = OutPoint.fromString(
+          `${fundingInput.prevTx.txId.toString()}:${fundingInput.prevTxVout}`,
+        );
+
+        const key2 = Buffer.concat([
+          Buffer.from([Prefix.Outpoint]),
+          Buffer.from(outpoint.toString()),
+        ]);
+        await this._db.put(key2, contractIds[i]);
+      }
+
+      const key3 = Buffer.concat([
+        Buffer.from([Prefix.TempContractId]),
+        dlcAccepts[i].tempContractId,
+      ]);
+      await this._db.put(key3, contractIds[i]);
+    }
   }
 
   public async deleteDlcAccept(contractId: Buffer): Promise<void> {
