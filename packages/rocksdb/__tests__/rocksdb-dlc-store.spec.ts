@@ -10,7 +10,7 @@ import {
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
-import { OutPoint } from '@node-lightning/bitcoin';
+import { OutPoint, Value } from '@node-lightning/bitcoin';
 import { sha256, xor } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
@@ -211,6 +211,23 @@ describe('RocksdbDlcStore', () => {
 
   const dlcClose = DlcCloseV0.deserialize(dlcCloseHex);
 
+  // Batch Dlc Messages
+
+  // Increase funding input amount to match minimum collateral for batch
+  const dlcOfferForBatch = DlcOfferV0.deserialize(dlcOffer.serialize());
+  (dlcOfferForBatch
+    .fundingInputs[0] as FundingInputV0).prevTx.outputs[0].value = Value.fromBitcoin(
+    4,
+  );
+
+  // Increase funding input amount to match minimum collateral for batch
+  const dlcAcceptForBatch = DlcAcceptV0.deserialize(dlcAccept.serialize());
+  dlcAcceptForBatch.tempContractId = sha256(dlcOfferForBatch.serialize());
+  (dlcAcceptForBatch
+    .fundingInputs[0] as FundingInputV0).prevTx.outputs[0].value = Value.fromBitcoin(
+    4,
+  );
+
   before(async () => {
     util.rmdir('.testdb');
     sut = new RocksdbDlcStore('./.testdb/nested/dir');
@@ -362,6 +379,13 @@ describe('RocksdbDlcStore', () => {
     it('should return the num_dlc_accept', async () => {
       const numDlcAccepts = await sut.findNumDlcAccepts();
       expect(numDlcAccepts).to.equal(1);
+    });
+  });
+
+  describe('save dlc_accepts', () => {
+    it('should save batch dlc accepts', async () => {
+      await sut.saveDlcOffer(dlcOfferForBatch);
+      await sut.saveDlcAccepts([dlcAcceptForBatch, dlcAcceptForBatch]);
     });
   });
 
