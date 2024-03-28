@@ -17,7 +17,7 @@ export class IrcOrderManager extends IrcManager {
   constructor(
     logger: ILogger,
     privKey: Buffer,
-    servers = ['irc.darkscience.net'],
+    servers = ['irc.libera.chat'],
     debug = false,
     channel = ChannelType.AtomicMarketPit,
     port = 6697,

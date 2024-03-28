@@ -4,7 +4,7 @@ interface IrcServer {
 }
 
 const primary_server: IrcServer = {
-  host: 'irc.darkscience.net',
+  host: 'irc.libera.chat',
   port: 6697,
 };
 
