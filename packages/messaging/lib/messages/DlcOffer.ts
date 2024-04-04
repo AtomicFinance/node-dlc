@@ -397,3 +397,60 @@ export interface IDlcOfferV0Addresses {
   changeAddress: string;
   payoutAddress: string;
 }
+
+export class DlcOfferContainer {
+  private offers: DlcOffer[] = [];
+
+  /**
+   * Adds a DlcOffer to the container.
+   * @param offer The DlcOffer to add.
+   */
+  public addOffer(offer: DlcOffer): void {
+    this.offers.push(offer);
+  }
+
+  /**
+   * Returns all DlcOffers in the container.
+   * @returns An array of DlcOffer instances.
+   */
+  public getOffers(): DlcOffer[] {
+    return this.offers;
+  }
+
+  /**
+   * Serializes all DlcOffers in the container to a Buffer.
+   * @returns A Buffer containing the serialized DlcOffers.
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    // Write the number of offers in the container first.
+    writer.writeUInt16BE(this.offers.length);
+    // Serialize each offer and write it.
+    this.offers.forEach((offer) => {
+      const serializedOffer = offer.serialize();
+      // Optionally, write the length of the serialized offer for easier deserialization.
+      writer.writeUInt16BE(serializedOffer.length);
+      writer.writeBytes(serializedOffer);
+    });
+    return writer.toBuffer();
+  }
+
+  /**
+   * Deserializes a Buffer into a DlcOfferContainer with DlcOffers.
+   * @param buf The Buffer to deserialize.
+   * @returns A DlcOfferContainer instance.
+   */
+  public static deserialize(buf: Buffer): DlcOfferContainer {
+    const reader = new BufferReader(buf);
+    const container = new DlcOfferContainer();
+    const offersCount = reader.readUInt16BE();
+    for (let i = 0; i < offersCount; i++) {
+      // Optionally, read the length of the serialized offer if it was written during serialization.
+      const offerLength = reader.readUInt16BE();
+      const offerBuf = reader.readBytes(offerLength);
+      const offer = DlcOffer.deserialize(offerBuf); // This needs to be adjusted based on actual implementation.
+      container.addOffer(offer);
+    }
+    return container;
+  }
+}

@@ -1,7 +1,12 @@
 import { expect } from 'chai';
 
+import { MessageType } from '../../lib';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
-import { DlcSign, DlcSignV0 } from '../../lib/messages/DlcSign';
+import {
+  DlcSign,
+  DlcSignContainer,
+  DlcSignV0,
+} from '../../lib/messages/DlcSign';
 import { FundingSignaturesV0 } from '../../lib/messages/FundingSignaturesV0';
 
 describe('DlcSign', () => {
@@ -11,6 +16,11 @@ describe('DlcSign', () => {
 
   const contractId = Buffer.from(
     'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269',
+    'hex',
+  );
+
+  const contractId2 = Buffer.from(
+    '4946fe172de3778fa660b9858d0624044f4494667757f50388abe6fe523376e8',
     'hex',
   );
 
@@ -44,7 +54,7 @@ describe('DlcSign', () => {
     'hex',
   );
 
-  const dlcAcceptHex = Buffer.concat([
+  const dlcSignHex = Buffer.concat([
     type,
     contractId,
     cetAdaptorSignaturesV0,
@@ -67,7 +77,7 @@ describe('DlcSign', () => {
 
   describe('deserialize', () => {
     it('should throw if incorrect type', () => {
-      instance.type = 0x123;
+      instance.type = 0x123 as MessageType;
       expect(function () {
         DlcSign.deserialize(instance.serialize());
       }).to.throw(Error);
@@ -84,14 +94,14 @@ describe('DlcSign', () => {
     describe('serialize', () => {
       it('serializes', () => {
         expect(instance.serialize().toString('hex')).to.equal(
-          dlcAcceptHex.toString('hex'),
+          dlcSignHex.toString('hex'),
         );
       });
     });
 
     describe('deserialize', () => {
       it('deserializes', () => {
-        const instance = DlcSignV0.deserialize(dlcAcceptHex);
+        const instance = DlcSignV0.deserialize(dlcSignHex);
         expect(instance.contractId).to.deep.equal(contractId);
         expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
           cetAdaptorSignaturesV0.toString('hex'),
@@ -109,6 +119,23 @@ describe('DlcSign', () => {
         expect(json.contractId).to.equal(contractId.toString('hex'));
         expect(json.refundSignature).to.equal(refundSignature.toString('hex'));
       });
+    });
+  });
+
+  describe('DlcSignContainer', () => {
+    it('should serialize and deserialize', () => {
+      const dlcSign = DlcSignV0.deserialize(dlcSignHex);
+      // swap payout and change spk to differentiate between dlcaccepts
+      const dlcSign2 = DlcSignV0.deserialize(dlcSignHex);
+      dlcSign2.contractId = contractId2;
+
+      const container = new DlcSignContainer();
+      container.addSign(dlcSign);
+      container.addSign(dlcSign2);
+
+      const instance = DlcSignContainer.deserialize(container.serialize());
+
+      expect(container.serialize()).to.deep.equal(instance.serialize());
     });
   });
 });

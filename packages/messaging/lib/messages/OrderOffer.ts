@@ -251,3 +251,60 @@ export interface IOrderOfferJSON {
     | IBatchFundingGroupJSON
   )[];
 }
+
+export class OrderOfferContainer {
+  private offers: OrderOffer[] = [];
+
+  /**
+   * Adds an OrderOffer to the container.
+   * @param offer The OrderOffer to add.
+   */
+  public addOffer(offer: OrderOffer): void {
+    this.offers.push(offer);
+  }
+
+  /**
+   * Returns all OrderOffers in the container.
+   * @returns An array of OrderOffer instances.
+   */
+  public getOffers(): OrderOffer[] {
+    return this.offers;
+  }
+
+  /**
+   * Serializes all OrderOffers in the container to a Buffer.
+   * @returns A Buffer containing the serialized OrderOffers.
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    // Write the number of offers in the container first.
+    writer.writeUInt16BE(this.offers.length);
+    // Serialize each offer and write it.
+    this.offers.forEach((offer) => {
+      const serializedOffer = offer.serialize();
+      // Optionally, write the length of the serialized offer for easier deserialization.
+      writer.writeUInt16BE(serializedOffer.length);
+      writer.writeBytes(serializedOffer);
+    });
+    return writer.toBuffer();
+  }
+
+  /**
+   * Deserializes a Buffer into an OrderOfferContainer with OrderOffers.
+   * @param buf The Buffer to deserialize.
+   * @returns An OrderOfferContainer instance.
+   */
+  public static deserialize(buf: Buffer): OrderOfferContainer {
+    const reader = new BufferReader(buf);
+    const container = new OrderOfferContainer();
+    const offersCount = reader.readUInt16BE();
+    for (let i = 0; i < offersCount; i++) {
+      // Optionally, read the length of the serialized offer if it was written during serialization.
+      const offerLength = reader.readUInt16BE();
+      const offerBuf = reader.readBytes(offerLength);
+      const offer = OrderOffer.deserialize(offerBuf); // Adjust based on actual implementation.
+      container.addOffer(offer);
+    }
+    return container;
+  }
+}

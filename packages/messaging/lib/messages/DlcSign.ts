@@ -108,3 +108,60 @@ export interface IDlcSignV0JSON {
   refundSignature: string;
   fundingSignatures: IFundingSignaturesV0JSON;
 }
+
+export class DlcSignContainer {
+  private signs: DlcSign[] = [];
+
+  /**
+   * Adds a DlcSign to the container.
+   * @param sign The DlcSign to add.
+   */
+  public addSign(sign: DlcSign): void {
+    this.signs.push(sign);
+  }
+
+  /**
+   * Returns all DlcSigns in the container.
+   * @returns An array of DlcSign instances.
+   */
+  public getSigns(): DlcSign[] {
+    return this.signs;
+  }
+
+  /**
+   * Serializes all DlcSigns in the container to a Buffer.
+   * @returns A Buffer containing the serialized DlcSigns.
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    // Write the number of signs in the container first.
+    writer.writeUInt16BE(this.signs.length);
+    // Serialize each sign and write it.
+    this.signs.forEach((sign) => {
+      const serializedSign = sign.serialize();
+      // Optionally, write the length of the serialized sign for easier deserialization.
+      writer.writeUInt16BE(serializedSign.length);
+      writer.writeBytes(serializedSign);
+    });
+    return writer.toBuffer();
+  }
+
+  /**
+   * Deserializes a Buffer into a DlcSignContainer with DlcSigns.
+   * @param buf The Buffer to deserialize.
+   * @returns A DlcSignContainer instance.
+   */
+  public static deserialize(buf: Buffer): DlcSignContainer {
+    const reader = new BufferReader(buf);
+    const container = new DlcSignContainer();
+    const signsCount = reader.readUInt16BE();
+    for (let i = 0; i < signsCount; i++) {
+      // Optionally, read the length of the serialized sign if it was written during serialization.
+      const signLength = reader.readUInt16BE();
+      const signBuf = reader.readBytes(signLength);
+      const sign = DlcSign.deserialize(signBuf); // Adjust based on actual implementation.
+      container.addSign(sign);
+    }
+    return container;
+  }
+}

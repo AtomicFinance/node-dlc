@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import {
   LOCKTIME_THRESHOLD,
   MessageType,
+  OrderOfferContainer,
   OrderPositionInfoV0,
 } from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
@@ -524,6 +525,23 @@ describe('OrderOffer', () => {
       expect(function () {
         instance.validate();
       }).to.throw(Error);
+    });
+  });
+
+  describe('OrderOfferContainer', () => {
+    it('should serialize and deserialize', () => {
+      const orderOffer = OrderOfferV0.deserialize(buf);
+      // swap payout and change spk to differentiate between dlcoffers
+      const orderOffer2 = OrderOfferV0.deserialize(buf);
+      orderOffer2.refundLocktime = 300;
+
+      const container = new OrderOfferContainer();
+      container.addOffer(orderOffer);
+      container.addOffer(orderOffer2);
+
+      const instance = OrderOfferContainer.deserialize(container.serialize());
+
+      expect(container.serialize()).to.deep.equal(instance.serialize());
     });
   });
 });
