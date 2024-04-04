@@ -5,6 +5,7 @@ import { OrderPositionInfoV0 } from '../../lib';
 import { ContractInfo } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
+  DlcOfferContainer,
   DlcOfferV0,
   LOCKTIME_THRESHOLD,
 } from '../../lib/messages/DlcOffer';
@@ -139,7 +140,7 @@ describe('DlcOffer', () => {
 
   describe('deserialize', () => {
     it('should throw if incorrect type', () => {
-      instance.type = 0x123;
+      instance.type = 0x123 as MessageType;
       expect(function () {
         DlcOffer.deserialize(instance.serialize());
       }).to.throw(Error);
@@ -409,6 +410,24 @@ describe('DlcOffer', () => {
           instance.validate();
         }).to.throw(Error);
       });
+    });
+  });
+
+  describe('DlcOfferContainer', () => {
+    it('should serialize and deserialize', () => {
+      const dlcOffer = DlcOfferV0.deserialize(dlcOfferHex);
+      // swap payout and change spk to differentiate between dlcoffers
+      const dlcOffer2 = DlcOfferV0.deserialize(dlcOfferHex);
+      dlcOffer2.payoutSPK = dlcOffer.changeSPK;
+      dlcOffer2.changeSPK = dlcOffer.payoutSPK;
+
+      const container = new DlcOfferContainer();
+      container.addOffer(dlcOffer);
+      container.addOffer(dlcOffer2);
+
+      const instance = DlcOfferContainer.deserialize(container.serialize());
+
+      expect(container.serialize()).to.deep.equal(instance.serialize());
     });
   });
 });

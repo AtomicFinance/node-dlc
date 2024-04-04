@@ -330,3 +330,59 @@ export interface IDlcAcceptV0Addresses {
   changeAddress: string;
   payoutAddress: string;
 }
+
+export class DlcAcceptContainer {
+  private accepts: DlcAccept[] = [];
+
+  /**
+   * Adds a DlcAccept to the container.
+   * @param accept The DlcAccept to add.
+   */
+  public addAccept(accept: DlcAccept): void {
+    this.accepts.push(accept);
+  }
+
+  /**
+   * Returns all DlcAccepts in the container.
+   * @returns An array of DlcAccept instances.
+   */
+  public getAccepts(): DlcAccept[] {
+    return this.accepts;
+  }
+
+  /**
+   * Serializes all DlcAccepts in the container to a Buffer.
+   * @returns A Buffer containing the serialized DlcAccepts.
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    // Write the number of accepts in the container first.
+    writer.writeUInt16BE(this.accepts.length);
+    // Serialize each accept and write it.
+    this.accepts.forEach((accept) => {
+      const serializedAccept = accept.serialize();
+      // Optionally, write the length of the serialized accept for easier deserialization.
+      writer.writeUInt16BE(serializedAccept.length);
+      writer.writeBytes(serializedAccept);
+    });
+    return writer.toBuffer();
+  }
+
+  /**
+   * Deserializes a Buffer into a DlcAcceptContainer with DlcAccepts.
+   * @param buf The Buffer to deserialize.
+   * @returns A DlcAcceptContainer instance.
+   */
+  public static deserialize(buf: Buffer, parseCets = true): DlcAcceptContainer {
+    const reader = new BufferReader(buf);
+    const container = new DlcAcceptContainer();
+    const acceptsCount = reader.readUInt16BE();
+    for (let i = 0; i < acceptsCount; i++) {
+      const acceptLength = reader.readUInt16BE();
+      const acceptBuf = reader.readBytes(acceptLength);
+      const accept = DlcAccept.deserialize(acceptBuf, parseCets); // Adjust based on actual implementation.
+      container.addAccept(accept);
+    }
+    return container;
+  }
+}

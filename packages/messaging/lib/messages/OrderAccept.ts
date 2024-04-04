@@ -95,3 +95,58 @@ export interface IOrderAcceptV0JSON {
     | IOrderNegotiationFieldsV0JSON
     | IOrderNegotiationFieldsV1JSON;
 }
+
+export class OrderAcceptContainer {
+  private accepts: OrderAccept[] = [];
+
+  /**
+   * Adds an OrderAccept to the container.
+   * @param accept The OrderAccept to add.
+   */
+  public addAccept(accept: OrderAccept): void {
+    this.accepts.push(accept);
+  }
+
+  /**
+   * Returns all OrderAccepts in the container.
+   * @returns An array of OrderAccept instances.
+   */
+  public getAccepts(): OrderAccept[] {
+    return this.accepts;
+  }
+
+  /**
+   * Serializes all OrderAccepts in the container to a Buffer.
+   * @returns A Buffer containing the serialized OrderAccepts.
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    // Write the number of accepts in the container first.
+    writer.writeUInt16BE(this.accepts.length);
+    // Serialize each accept and write it.
+    this.accepts.forEach((accept) => {
+      const serializedAccept = accept.serialize();
+      writer.writeUInt16BE(serializedAccept.length);
+      writer.writeBytes(serializedAccept);
+    });
+    return writer.toBuffer();
+  }
+
+  /**
+   * Deserializes a Buffer into an OrderAcceptContainer with OrderAccepts.
+   * @param buf The Buffer to deserialize.
+   * @returns An OrderAcceptContainer instance.
+   */
+  public static deserialize(buf: Buffer): OrderAcceptContainer {
+    const reader = new BufferReader(buf);
+    const container = new OrderAcceptContainer();
+    const acceptsCount = reader.readUInt16BE();
+    for (let i = 0; i < acceptsCount; i++) {
+      const acceptLength = reader.readUInt16BE();
+      const acceptBuf = reader.readBytes(acceptLength);
+      const accept = OrderAccept.deserialize(acceptBuf); // Adjust based on actual implementation.
+      container.addAccept(accept);
+    }
+    return container;
+  }
+}

@@ -2,7 +2,11 @@ import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
-import { DlcAccept, DlcAcceptV0 } from '../../lib/messages/DlcAccept';
+import {
+  DlcAccept,
+  DlcAcceptContainer,
+  DlcAcceptV0,
+} from '../../lib/messages/DlcAccept';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
 import { NegotiationFields } from '../../lib/messages/NegotiationFields';
 import { MessageType } from '../../lib/MessageType';
@@ -114,7 +118,7 @@ describe('DlcAccept', () => {
 
   describe('deserialize', () => {
     it('should throw if incorrect type', () => {
-      instance.type = 0x123;
+      instance.type = 0x123 as MessageType;
       expect(function () {
         DlcAccept.deserialize(instance.serialize());
       }).to.throw(Error);
@@ -285,6 +289,24 @@ describe('DlcAccept', () => {
           instance.validate();
         }).to.throw(Error);
       });
+    });
+  });
+
+  describe('DlcAcceptContainer', () => {
+    it('should serialize and deserialize', () => {
+      const dlcAccept = DlcAcceptV0.deserialize(dlcAcceptHex);
+      // swap payout and change spk to differentiate between dlcaccepts
+      const dlcAccept2 = DlcAcceptV0.deserialize(dlcAcceptHex);
+      dlcAccept2.payoutSPK = dlcAccept.changeSPK;
+      dlcAccept2.changeSPK = dlcAccept.payoutSPK;
+
+      const container = new DlcAcceptContainer();
+      container.addAccept(dlcAccept);
+      container.addAccept(dlcAccept2);
+
+      const instance = DlcAcceptContainer.deserialize(container.serialize());
+
+      expect(container.serialize()).to.deep.equal(instance.serialize());
     });
   });
 });
