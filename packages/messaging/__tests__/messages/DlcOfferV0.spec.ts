@@ -1,8 +1,13 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
-import { OrderPositionInfoV0 } from '../../lib';
-import { ContractInfo } from '../../lib/messages/ContractInfo';
+import {
+  BatchFundingGroup,
+  OrderIrcInfoV0,
+  OrderMetadataV0,
+  OrderPositionInfoV0,
+} from '../../lib';
+import { ContractInfo, ContractInfoV0 } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
   DlcOfferContainer,
@@ -428,6 +433,95 @@ describe('DlcOffer', () => {
       const instance = DlcOfferContainer.deserialize(container.serialize());
 
       expect(container.serialize()).to.deep.equal(instance.serialize());
+    });
+  });
+
+  describe('TLVs', () => {
+    it('should deserialize with all TLV types present', () => {
+      const contractFlags = Buffer.from('00', 'hex');
+      const chainHash = Buffer.from(
+        '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
+        'hex',
+      );
+      const contractInfo = ContractInfoV0.deserialize(
+        Buffer.from(
+          'fdd82efd03e80000000000fe502bfda7209c0015fda72684000300fe00f3e2a30000fda72816000200fe00f3e2a30000fe000ea79ffe00f3e2a30000fe000ea79ffe00f3e2a30000fda7281a0002fe000ea79ffe00f3e2a30000fe000f47c8fe00fe502b0000fe000f47c8fe00fe502b0000fda7281a0002fe000f47c8fe00fe502b0000fe001ffffffe00fe502b0000fe001ffffffe00fe502b0000fda7240e000200fd8235fe000b71b0fd411afda712fd033afdd824fd03340c9050848d0ae5294a88020f45ee3c920dcf5c050effa1894480f1c7d6c8fb24ffb379ba9b87f6b4279b104761c776126f85400ea9bb6c6c91c8953af92ae686c3d07289c2ade25405c1c421b38c9322cd73fb2c89f42ce0730a35fae1f8875dfdd822fd02ce001536393424064fae281c59dfce1842dbdb1a696f34620611d25035ed53b8f79f07a855f3c3b2d300d4bfdce1e325b6a59a60272276d89f283db41ca90e3aedbb522fa3c1f8bc08de68c4c5b6ce177f0c62c683fca22b61eccb41fb06bb6e8881d3c23b4d88536e68d65de66e8a7d1c2ec0e6316fdc0d25c4cf42ebaf1775b168fdc847c824efd6f6ae43d9ba0e973de205979971020ebec4919c97cae238513e41e2bc759cd11d213ca2a118e948e0c380eb8bdcf4bcb5eebce6e57c2b22c10fd7083e53643d29206ff66ca5e02485c710e57a1a2de36612323cb7d6ddd1521b4128ce0fb18ff87dda1b796cefa1ec25e89e26f964a0bb6b78423cdf2dbf60df41f6187bdb7e01aeb6c53d7ccb608cc5afbd469e8b45017e1c34bf94dbfb58f3b9a363d4c89bb3ca7f060540b6b03ea6e296381c781fe70d9343aefa095dfdd39dc65f6f748a7a23d4b293ad36e2df52fd988d7a6327088afb483c45b4d21a8e13ef3bec9324cd8b8945dc3c7c534c2c742bd3ecd45bd2c50b78707ea43752ced2620e3cf429ab93c07e137ccf1662376e1d3290818a2020033911deeedc0fe8322091d5bb7b959723c15cb20b7fd2d71abded50cfd4b4db89076d87ad2a0171de9bac64d34e18b7c741618a4e68ca2431631c6fd88b5b90a1d007cc7ac22597df943df27b23d53a1e3a6fe01f5f230a8eb6ae8c7f4c1d40e63d2765250b66f468692bf1b0afa7d7e2ccc8cdc7ca6d691f3327aa3b5b27440ecf3cdcc0da0a9be605f3b4518685624688aa3da90e6a74041cf9330dda94f44d8aabf904e2e31fa54c0503289729cf92bbd63aaf56f97df7baa5a3b677cce06edf54602242671f18695728b465e95fa997a8a4852727e5416433970b902f918485554577129f130b177b7f9d958936c8adf69711e0369f07e8ce92cba06f6e0d91c3f32a8634e52b67046313fdd80a0e00020004626974730000000000151561746f6d69632d656e67696e652d74726164652d31',
+          'hex',
+        ),
+      );
+      const fundingPubkey = Buffer.from(
+        '03636a2812026c6ea83a6eb27f579ae588aa48dd221fafa049e6613e48ff03953a',
+        'hex',
+      );
+      const payoutSPK = Buffer.from(
+        '0014ecf78cf9c4e3cf16b5dccdbd013a7b84cd530d0c',
+        'hex',
+      );
+      const payoutSerialId = BigInt(29829);
+      const offerCollateralSatoshis = BigInt(16649967);
+      const fundingInput = FundingInputV0.deserialize(
+        Buffer.from(
+          'fda714fd01fd0000000000a34e3b01e70200000000010369a13b156aff1cf5027140f45d41840c5c552b6d1c512cbb3b1610b850e47ae40000000000feffffff55767d33c145aea3efe723d9803916340fd013ee4f5ad8491e88d38bf8cd180e0000000000feffffff6bab2f95d6b0ca6abf8e8adbec1e70a79bc553c433e1d942f49084f1a1b73bb70100000000feffffff0100e1f50500000000160014bc32a8067fe02ea3a0d1b0daf42e17dd4039992d02473044022055662f02effb509e37bc074c6915eddb09658e6d388e545270ad08ce0bf339a702204b54713323a9bf37e575d4f3349080e4fae1a50762ab2d572967d185a0d16e8901210293914f759527e8e47770750242e7198738705b3a4b2de4f672456497aebf00820247304402202f9d4f5dc184868f866f978f7b4433167d4f50d13329a91eef5f6feec1974019022059b38836960fc3d45fc60021fd2215ad54d2a50224f523e110d48ab63dec4e61012102248d7ea318582d01f9f4c5267a18e28b9a4c03f69877075451f37f4c38af529e0247304402202b592244c641b678d13b059b822754b8f532c0d8ba7ece9a1c3b199b7acea27e02202c506668a40278075d4c6ad68bab0fa8db26fcd1b458aa5becc8a3c845cd86d701210230dbeb555b88731390f0431d3b329002c057cec662d80a8b47f5560433f2efd63104000000000000ffffffff006c0000',
+          'hex',
+        ),
+      );
+      const changeSPK = Buffer.from(
+        '0014a734d87e6d29d79422f7e5ea7a7709f65dac60e9',
+        'hex',
+      );
+      const changeSerialId = BigInt(94880);
+      const fundOutputSerialId = BigInt(44394);
+      const feeRatePerVb = BigInt(45);
+      const cetLocktime = 1712689645;
+      const refundLocktime = 1719255498;
+      const metadata = OrderMetadataV0.deserialize(
+        Buffer.from('fdf5360f06656e67696e650000000000000000', 'hex'),
+      );
+      const ircInfo = OrderIrcInfoV0.deserialize(
+        Buffer.from(
+          'fdf53832104130346a7a504b4b726a6751456f506802dff1fe9bd33ce81881120be26c27d443247bfd3398866a7dc071867e94ff69c9',
+          'hex',
+        ),
+      );
+      const positionInfo = OrderPositionInfoV0.deserialize(
+        Buffer.from(
+          'fdf53a32010000000000001b121561746f6d69632d656e67696e652d74726164652d310000000000fe502b0000000000000000000000',
+          'hex',
+        ),
+      );
+      const batchFundingGroup = BatchFundingGroup.deserialize(
+        BatchFundingGroup.deserialize(
+          Buffer.from(
+            'fdff967900000000000005f5e100051561746f6d69632d656e67696e652d74726164652d311561746f6d69632d656e67696e652d74726164652d321561746f6d69632d656e67696e652d74726164652d331561746f6d69632d656e67696e652d74726164652d341561746f6d69632d656e67696e652d74726164652d35',
+            'hex',
+          ),
+        ).serialize(),
+      );
+
+      const dlcOffer = new DlcOfferV0();
+
+      dlcOffer.contractFlags = contractFlags;
+      dlcOffer.chainHash = chainHash;
+      dlcOffer.contractInfo = contractInfo;
+      dlcOffer.fundingPubKey = fundingPubkey;
+      dlcOffer.payoutSPK = payoutSPK;
+      dlcOffer.payoutSerialId = payoutSerialId;
+      dlcOffer.offerCollateralSatoshis = offerCollateralSatoshis;
+      dlcOffer.fundingInputs = [fundingInput];
+      dlcOffer.changeSPK = changeSPK;
+      dlcOffer.changeSerialId = changeSerialId;
+      dlcOffer.fundOutputSerialId = fundOutputSerialId;
+      dlcOffer.feeRatePerVb = feeRatePerVb;
+      dlcOffer.cetLocktime = cetLocktime;
+      dlcOffer.refundLocktime = refundLocktime;
+      dlcOffer.metadata = metadata;
+      dlcOffer.ircInfo = ircInfo;
+      dlcOffer.positionInfo = positionInfo;
+      dlcOffer.batchFundingGroups = [batchFundingGroup];
+
+      expect(dlcOffer.toJSON()).to.deep.equal(
+        DlcOfferV0.deserialize(dlcOffer.serialize()).toJSON(),
+      );
     });
   });
 });
