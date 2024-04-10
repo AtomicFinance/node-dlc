@@ -41,6 +41,8 @@ export class BatchFundingGroup implements IDlcMessage {
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
+    instance.length = reader.readBigSize();
+
     const tempContractIdsCount = reader.readBigSize();
     for (let i = 0; i < Number(tempContractIdsCount); i++) {
       const length = reader.readBigSize();
@@ -57,8 +59,9 @@ export class BatchFundingGroup implements IDlcMessage {
 
     const eventIdsCount = reader.readBigSize();
     for (let i = 0; i < Number(eventIdsCount); i++) {
-      const length = reader.readBigSize();
-      instance.eventIds.push(reader.readBytes(Number(length)).toString());
+      const eventIdLength = reader.readBigSize();
+      const eventIdBuf = reader.readBytes(Number(eventIdLength));
+      instance.eventIds.push(eventIdBuf.toString());
     }
 
     return instance;
@@ -68,6 +71,8 @@ export class BatchFundingGroup implements IDlcMessage {
    * The type for batch_contract_info message.
    */
   public type = BatchFundingGroup.type;
+
+  public length: bigint;
 
   public tempContractIds: Buffer[] = [];
 
@@ -97,26 +102,31 @@ export class BatchFundingGroup implements IDlcMessage {
     const writer = new BufferWriter();
     writer.writeBigSize(this.type);
 
-    writer.writeBigSize(this.tempContractIds.length);
+    const dataWriter = new BufferWriter();
+
+    dataWriter.writeBigSize(this.tempContractIds.length);
     this.tempContractIds.forEach((id) => {
-      writer.writeBigSize(id.length);
-      writer.writeBytes(id);
+      dataWriter.writeBigSize(id.length);
+      dataWriter.writeBytes(id);
     });
 
-    writer.writeBigSize(this.contractIds.length);
+    dataWriter.writeBigSize(this.contractIds.length);
     this.contractIds.forEach((id) => {
-      writer.writeBigSize(id.length);
-      writer.writeBytes(id);
+      dataWriter.writeBigSize(id.length);
+      dataWriter.writeBytes(id);
     });
 
-    writer.writeUInt64BE(this.allocatedCollateral.sats);
+    dataWriter.writeUInt64BE(this.allocatedCollateral.sats);
 
-    writer.writeBigSize(this.eventIds.length);
+    dataWriter.writeBigSize(this.eventIds.length);
     this.eventIds.forEach((id) => {
       const idBuffer = Buffer.from(id);
-      writer.writeBigSize(idBuffer.length);
-      writer.writeBytes(idBuffer);
+      dataWriter.writeBigSize(id.length);
+      dataWriter.writeBytes(idBuffer);
     });
+
+    writer.writeBigSize(dataWriter.size);
+    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
