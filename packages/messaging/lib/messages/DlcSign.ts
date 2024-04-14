@@ -135,12 +135,12 @@ export class DlcSignContainer {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     // Write the number of signs in the container first.
-    writer.writeUInt16BE(this.signs.length);
+    writer.writeBigSize(this.signs.length);
     // Serialize each sign and write it.
     this.signs.forEach((sign) => {
       const serializedSign = sign.serialize();
       // Optionally, write the length of the serialized sign for easier deserialization.
-      writer.writeUInt16BE(serializedSign.length);
+      writer.writeBigSize(serializedSign.length);
       writer.writeBytes(serializedSign);
     });
     return writer.toBuffer();
@@ -154,11 +154,11 @@ export class DlcSignContainer {
   public static deserialize(buf: Buffer): DlcSignContainer {
     const reader = new BufferReader(buf);
     const container = new DlcSignContainer();
-    const signsCount = reader.readUInt16BE();
+    const signsCount = reader.readBigSize();
     for (let i = 0; i < signsCount; i++) {
       // Optionally, read the length of the serialized sign if it was written during serialization.
-      const signLength = reader.readUInt16BE();
-      const signBuf = reader.readBytes(signLength);
+      const signLength = reader.readBigSize();
+      const signBuf = reader.readBytes(Number(signLength));
       const sign = DlcSign.deserialize(signBuf); // Adjust based on actual implementation.
       container.addSign(sign);
     }

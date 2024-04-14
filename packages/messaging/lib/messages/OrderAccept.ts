@@ -122,11 +122,11 @@ export class OrderAcceptContainer {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     // Write the number of accepts in the container first.
-    writer.writeUInt16BE(this.accepts.length);
+    writer.writeBigSize(this.accepts.length);
     // Serialize each accept and write it.
     this.accepts.forEach((accept) => {
       const serializedAccept = accept.serialize();
-      writer.writeUInt16BE(serializedAccept.length);
+      writer.writeBigSize(serializedAccept.length);
       writer.writeBytes(serializedAccept);
     });
     return writer.toBuffer();
@@ -140,10 +140,10 @@ export class OrderAcceptContainer {
   public static deserialize(buf: Buffer): OrderAcceptContainer {
     const reader = new BufferReader(buf);
     const container = new OrderAcceptContainer();
-    const acceptsCount = reader.readUInt16BE();
+    const acceptsCount = reader.readBigSize();
     for (let i = 0; i < acceptsCount; i++) {
-      const acceptLength = reader.readUInt16BE();
-      const acceptBuf = reader.readBytes(acceptLength);
+      const acceptLength = reader.readBigSize();
+      const acceptBuf = reader.readBytes(Number(acceptLength));
       const accept = OrderAccept.deserialize(acceptBuf); // Adjust based on actual implementation.
       container.addAccept(accept);
     }
