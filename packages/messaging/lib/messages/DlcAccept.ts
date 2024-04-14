@@ -357,12 +357,12 @@ export class DlcAcceptContainer {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     // Write the number of accepts in the container first.
-    writer.writeUInt16BE(this.accepts.length);
+    writer.writeBigSize(this.accepts.length);
     // Serialize each accept and write it.
     this.accepts.forEach((accept) => {
       const serializedAccept = accept.serialize();
       // Optionally, write the length of the serialized accept for easier deserialization.
-      writer.writeUInt16BE(serializedAccept.length);
+      writer.writeBigSize(serializedAccept.length);
       writer.writeBytes(serializedAccept);
     });
     return writer.toBuffer();
@@ -376,10 +376,10 @@ export class DlcAcceptContainer {
   public static deserialize(buf: Buffer, parseCets = true): DlcAcceptContainer {
     const reader = new BufferReader(buf);
     const container = new DlcAcceptContainer();
-    const acceptsCount = reader.readUInt16BE();
+    const acceptsCount = reader.readBigSize();
     for (let i = 0; i < acceptsCount; i++) {
-      const acceptLength = reader.readUInt16BE();
-      const acceptBuf = reader.readBytes(acceptLength);
+      const acceptLength = reader.readBigSize();
+      const acceptBuf = reader.readBytes(Number(acceptLength));
       const accept = DlcAccept.deserialize(acceptBuf, parseCets); // Adjust based on actual implementation.
       container.addAccept(accept);
     }

@@ -278,12 +278,12 @@ export class OrderOfferContainer {
   public serialize(): Buffer {
     const writer = new BufferWriter();
     // Write the number of offers in the container first.
-    writer.writeUInt16BE(this.offers.length);
+    writer.writeBigSize(this.offers.length);
     // Serialize each offer and write it.
     this.offers.forEach((offer) => {
       const serializedOffer = offer.serialize();
       // Optionally, write the length of the serialized offer for easier deserialization.
-      writer.writeUInt16BE(serializedOffer.length);
+      writer.writeBigSize(serializedOffer.length);
       writer.writeBytes(serializedOffer);
     });
     return writer.toBuffer();
@@ -297,11 +297,11 @@ export class OrderOfferContainer {
   public static deserialize(buf: Buffer): OrderOfferContainer {
     const reader = new BufferReader(buf);
     const container = new OrderOfferContainer();
-    const offersCount = reader.readUInt16BE();
+    const offersCount = reader.readBigSize();
     for (let i = 0; i < offersCount; i++) {
       // Optionally, read the length of the serialized offer if it was written during serialization.
-      const offerLength = reader.readUInt16BE();
-      const offerBuf = reader.readBytes(offerLength);
+      const offerLength = reader.readBigSize();
+      const offerBuf = reader.readBytes(Number(offerLength));
       const offer = OrderOffer.deserialize(offerBuf); // Adjust based on actual implementation.
       container.addOffer(offer);
     }
