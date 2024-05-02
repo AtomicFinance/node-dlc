@@ -1,7 +1,9 @@
 import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 
 import { MessageType } from '../MessageType';
+import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
+import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
 import {
   CetAdaptorSignaturesV0,
   ICetAdaptorSignaturesV0JSON,
@@ -57,6 +59,23 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
       getTlv(reader),
     );
 
+    while (!reader.eof) {
+      const buf = getTlv(reader);
+      const tlvReader = new BufferReader(buf);
+      const { type } = deserializeTlv(tlvReader);
+
+      switch (Number(type)) {
+        case MessageType.BatchFundingGroup:
+          if (!instance.batchFundingGroups) {
+            instance.batchFundingGroups = [];
+          }
+          instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
+          break;
+        default:
+          break;
+      }
+    }
+
     return instance;
   }
 
@@ -73,16 +92,27 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
 
   public fundingSignatures: FundingSignaturesV0;
 
+  public batchFundingGroups?: BatchFundingGroup[];
+
   /**
    * Converts sign_dlc_v0 to JSON
    */
   public toJSON(): IDlcSignV0JSON {
+    const tlvs = [];
+
+    if (this.batchFundingGroups) {
+      this.batchFundingGroups.forEach((group) => {
+        tlvs.push(group.serialize());
+      });
+    }
+
     return {
       type: this.type,
       contractId: this.contractId.toString('hex'),
       cetSignatures: this.cetSignatures.toJSON(),
       refundSignature: this.refundSignature.toString('hex'),
       fundingSignatures: this.fundingSignatures.toJSON(),
+      tlvs,
     };
   }
 
@@ -97,6 +127,11 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
     writer.writeBytes(this.refundSignature);
     writer.writeBytes(this.fundingSignatures.serialize());
 
+    if (this.batchFundingGroups)
+      this.batchFundingGroups.forEach((fundingInfo) =>
+        writer.writeBytes(fundingInfo.serialize()),
+      );
+
     return writer.toBuffer();
   }
 }
@@ -107,6 +142,7 @@ export interface IDlcSignV0JSON {
   cetSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
   fundingSignatures: IFundingSignaturesV0JSON;
+  tlvs: IBatchFundingGroupJSON[];
 }
 
 export class DlcSignContainer {
