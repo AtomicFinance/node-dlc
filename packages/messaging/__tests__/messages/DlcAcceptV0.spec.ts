@@ -1,6 +1,7 @@
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
+import { BatchFundingGroup } from '../../lib';
 import { CetAdaptorSignaturesV0 } from '../../lib/messages/CetAdaptorSignaturesV0';
 import {
   DlcAccept,
@@ -307,6 +308,29 @@ describe('DlcAccept', () => {
       const instance = DlcAcceptContainer.deserialize(container.serialize());
 
       expect(container.serialize()).to.deep.equal(instance.serialize());
+    });
+  });
+
+  describe('TLVs', () => {
+    it('should serialize and deserialize batch funding groups', () => {
+      const dlcAccept = DlcAcceptV0.deserialize(dlcAcceptHex);
+
+      const batchFundingGroup = BatchFundingGroup.deserialize(
+        BatchFundingGroup.deserialize(
+          Buffer.from(
+            'fdff967900000000000005f5e100051561746f6d69632d656e67696e652d74726164652d311561746f6d69632d656e67696e652d74726164652d321561746f6d69632d656e67696e652d74726164652d331561746f6d69632d656e67696e652d74726164652d341561746f6d69632d656e67696e652d74726164652d35',
+            'hex',
+          ),
+        ).serialize(),
+      );
+
+      dlcAccept.batchFundingGroups = [batchFundingGroup];
+
+      const instance = DlcAcceptV0.deserialize(dlcAccept.serialize());
+
+      expect(instance.batchFundingGroups[0].serialize()).to.deep.equal(
+        batchFundingGroup.serialize(),
+      );
     });
   });
 });
