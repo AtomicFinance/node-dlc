@@ -506,6 +506,44 @@ describe('CsoInfo', () => {
       ],
     );
 
+    it.only('should', () => {
+      const contractSize = Value.fromSats(7431401000);
+      const collateral = Value.fromSats(7431401000);
+      const numOfferInputs = 3;
+      const numContracts = 1;
+
+      const normalizedMaxGain = Value.fromBitcoin(0.005);
+      const normalizedMaxLoss = Value.fromBitcoin(0.04);
+
+      const feePerByte = BigInt(100);
+
+      const shiftForFees: DlcParty = 'offeror'; // 'offeror pays network fees
+      const fees = Value.fromSats(
+        getFinalizerByCount(feePerByte, numOfferInputs, 1, numContracts)
+          .offerFees,
+      );
+
+      const skipValidation = true;
+
+      const csoOrderOffer = buildCustomStrategyOrderOffer(
+        oracleAnnouncement,
+        contractSize,
+        normalizedMaxLoss,
+        normalizedMaxGain,
+        feePerByte,
+        roundingIntervals,
+        network,
+        shiftForFees,
+        fees,
+        collateral,
+        numOfferInputs,
+        numContracts,
+        skipValidation,
+      );
+
+      getCsoInfoFromOffer(csoOrderOffer, 'v1');
+    });
+
     it('should get cso info from offer with contract size greater than collateral', () => {
       const contractSize = Value.fromBitcoin(0.03);
       const collateral = Value.fromBitcoin(0.01);

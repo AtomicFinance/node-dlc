@@ -54,7 +54,6 @@ export class ContractDescriptorV0
   public static deserialize(buf: Buffer): ContractDescriptorV0 {
     const instance = new ContractDescriptorV0();
     const reader = new BufferReader(buf);
-
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
     reader.readBigSize(); // num_outcomes

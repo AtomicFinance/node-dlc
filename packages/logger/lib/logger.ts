@@ -25,7 +25,7 @@ export class Logger implements ILogger {
   private _level: LogLevel;
   private _root: Logger;
 
-  constructor(area = '', instance?: string, format = true) {
+  constructor(area = '', instance = '', format = true) {
     this._root = this;
     this.area = area;
     this.instance = instance;
@@ -120,7 +120,12 @@ export class Logger implements ILogger {
 
   /////////////////////////////
 
-  private _log(level: LogLevel, area: string, instance: string, args: any[]) {
+  private _log(
+    level: LogLevel,
+    area: string,
+    instance: string,
+    args: unknown[],
+  ): void {
     if (!shouldLog(this.level, level)) return;
     const formattedMsg = this._format(level, area, instance, args);
     const error = this._findError(args, formattedMsg);
@@ -131,7 +136,7 @@ export class Logger implements ILogger {
     level: LogLevel,
     area: string,
     instance: string,
-    args: any[],
+    args: unknown[],
   ): string {
     const date = new Date().toISOString();
     const formattedArea = area ? ' ' + area : '';
@@ -139,7 +144,7 @@ export class Logger implements ILogger {
 
     // convert buffers to hex encodings
     // and extracts message from error unless LogLevel Trace
-    args = args.map((arg) =>
+    const processedArgs = args.map((arg: unknown) =>
       Buffer.isBuffer(arg)
         ? arg.toString('hex')
         : arg instanceof Error && level !== LogLevel.Trace
@@ -147,7 +152,7 @@ export class Logger implements ILogger {
         : arg,
     );
 
-    const msg = util.format(args[0], ...args.slice(1));
+    const msg = util.format(processedArgs[0], ...processedArgs.slice(1));
     if (this.format) {
       return `${date} [${level}]${formattedArea}${instanceFmt}: ${msg}`;
     } else {
@@ -155,12 +160,12 @@ export class Logger implements ILogger {
     }
   }
 
-  private _findError(args, formattedMsg): Error {
-    const error = args.find((arg) => arg instanceof Error);
+  private _findError(args: unknown[], formattedMsg: string): Error {
+    const error = args.find((arg: unknown) => arg instanceof Error);
     if (!error) {
       return new Error(formattedMsg);
     } else {
-      return error;
+      return error as Error;
     }
   }
 

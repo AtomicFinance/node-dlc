@@ -1,4 +1,4 @@
-import { Sequence, Tx } from '@node-lightning/bitcoin';
+import { OutPoint, Sequence, Tx } from '@node-lightning/bitcoin';
 import {
   BufferReader,
   BufferWriter,
@@ -99,6 +99,10 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
     // 1. Type is set automatically in class
     // 2. Ensure inputs are segwit
     if (!this.prevTx.isSegWit) throw new Error('fundingInput must be segwit');
+  }
+
+  public toOutPoint(): OutPoint {
+    return new OutPoint(this.prevTx.txId, this.prevTxVout);
   }
 
   /**

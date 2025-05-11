@@ -31,7 +31,8 @@
     "decimal.js": "10.4.3"
   },
   "devDependencies": {
-    "@types/node": "16.10.3"
+    "@types/node": "16.10.3",
+    "@node-lightning/crypto": "0.26.1"
   },
   "publishConfig": {
     "access": "public"

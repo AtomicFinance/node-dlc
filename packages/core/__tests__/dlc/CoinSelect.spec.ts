@@ -1,4 +1,6 @@
 import { Value } from '@node-dlc/bitcoin';
+import { OutPoint } from '@node-lightning/core';
+import { sha256 } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
 import { dualFees, dualFundingCoinSelect, UTXO } from '../../lib';
@@ -9,9 +11,11 @@ const getUtxos = (totalCollateral: bigint, numUtxos = 1) => {
   for (let i = 0; i < numUtxos; i++) {
     utxos.push({
       address: 'bcrt1qjzut0906d9sk4hml4k6sz6cssljktf4c7yl80f',
-      txid: 'c7bf12ac16aba1cf6c7769117294853453f7da3006363dfe4e8979847e32f7e1',
+      txid: sha256(
+        Buffer.from(`${String(i)}${String(totalCollateral)})`),
+      ).toString('hex'), // generate random txid
       value: Math.ceil(Number(totalCollateral) / numUtxos),
-      vout: Math.floor(Math.random() * 11), // random integer between 0 and 10
+      vout: Math.floor(Math.random() * 51), // random integer between 0 and 50
     });
   }
 
@@ -174,6 +178,32 @@ describe('CoinSelect', () => {
       // Expecting it to select fewer UTXOs due to the low cost of adding an input
       expect(inputs.length).to.be.lessThan(10);
       expect(fee).to.equal(BigInt(687));
+    });
+  });
+
+  describe('Required Outpoints', () => {
+    it('should select required UTXOs', () => {
+      const feeRate = BigInt(8);
+      const numUtxos = 5;
+      const totalCollateral = Value.fromBitcoin(0.01);
+      const offerCollateral = Value.fromBitcoin(0.0096);
+
+      const utxos = getUtxos(totalCollateral.sats, numUtxos);
+      const requiredUtxos = getUtxos(Value.fromBitcoin(0.0021).sats, 1);
+      const requiredOutpoints = [
+        new OutPoint(requiredUtxos[0].txid, requiredUtxos[0].vout),
+      ];
+
+      const { fee, inputs } = dualFundingCoinSelect(
+        [...utxos, ...requiredUtxos],
+        [offerCollateral.sats],
+        feeRate,
+        requiredOutpoints,
+      );
+
+      expect(fee).to.equal(BigInt(3864));
+      expect(inputs.length).to.equal(5);
+      expect(inputs.some((i) => i.txid === requiredUtxos[0].txid)).to.be.true; // required utxo should be selected
     });
   });
 });

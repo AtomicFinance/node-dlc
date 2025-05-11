@@ -9,6 +9,7 @@ import { MessageType } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
+import { CloseTLV, ICloseTLVJSON } from './CloseTLV';
 import {
   ContractInfo,
   IContractInfoV0JSON,
@@ -118,6 +119,12 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
           }
           instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
           break;
+        case MessageType.CloseTLV:
+          if (!instance.closeInfos) {
+            instance.closeInfos = [];
+          }
+          instance.closeInfos.push(CloseTLV.deserialize(buf));
+          break;
         default:
           break;
       }
@@ -166,6 +173,8 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   public positionInfo?: OrderPositionInfo;
 
   public batchFundingGroups?: BatchFundingGroup[];
+
+  public closeInfos?: CloseTLV[];
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -307,6 +316,8 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       this.batchFundingGroups.forEach((fundingInfo) =>
         tlvs.push(fundingInfo.toJSON()),
       );
+    if (this.closeInfos)
+      this.closeInfos.forEach((close) => tlvs.push(close.toJSON()));
 
     return {
       type: this.type,
@@ -363,6 +374,8 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
       this.batchFundingGroups.forEach((fundingInfo) =>
         writer.writeBytes(fundingInfo.serialize()),
       );
+    if (this.closeInfos)
+      this.closeInfos.forEach((close) => writer.writeBytes(close.serialize()));
 
     return writer.toBuffer();
   }
@@ -389,6 +402,7 @@ export interface IDlcOfferV0JSON {
     | IOrderIrcInfoJSON
     | IOrderPositionInfoJSON
     | IBatchFundingGroupJSON
+    | ICloseTLVJSON
   )[];
 }
 

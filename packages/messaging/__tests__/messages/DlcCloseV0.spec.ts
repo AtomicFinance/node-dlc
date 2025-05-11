@@ -77,7 +77,7 @@ describe('DlcClose', () => {
 
   describe('deserialize', () => {
     it('should throw if incorrect type', () => {
-      instance.type = 0x123;
+      instance.type = 0x123 as MessageType;
       expect(function () {
         DlcClose.deserialize(instance.serialize());
       }).to.throw(Error);

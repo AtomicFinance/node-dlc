@@ -8,6 +8,7 @@ export * from './messages/BatchFundingGroup';
 export * from './messages/CetAdaptorSignaturesV0';
 export * from './messages/ContractDescriptor';
 export * from './messages/ContractInfo';
+export * from './messages/CloseTLV';
 export * from './messages/DlcAccept';
 export * from './messages/DlcCancel';
 export * from './messages/DlcClose';

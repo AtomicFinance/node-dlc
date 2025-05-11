@@ -77,6 +77,8 @@ export enum MessageType {
 
   BatchFundingGroup = 65430,
 
+  CloseTLV = 65432,
+
   IrcMessageV0 = 59314,
 
   NodeAnnouncement = 51394,

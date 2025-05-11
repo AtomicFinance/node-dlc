@@ -326,6 +326,16 @@ export const getCsoInfoFromContractInfo = (
 
   const expiry = new Date(eventMaturityEpoch * 1000);
 
+  console.log('normalizedMaxGain', normalizedMaxGain.bitcoin);
+  console.log('normalizedMaxGain', normalizedMaxGain.bitcoin);
+  console.log('maxGainForContractSize', maxGainForContractSize.bitcoin);
+  console.log('maxLossForContractSize', maxLossForContractSize.bitcoin);
+  console.log('minPayout', minPayout);
+  console.log('maxPayout', maxPayout);
+  console.log('contractSize', contractSize.bitcoin);
+  console.log('offerCollateral', offerCollateral.bitcoin);
+  console.log('collateral', collateral.bitcoin);
+
   return {
     normalizedMaxGain,
     normalizedMaxLoss,
@@ -378,6 +388,12 @@ export const getCsoInfoFromOffer = (
     contractSize,
     csoVersion,
   );
+
+  console.log(
+    'positionInfo.offerCollateral.sats',
+    positionInfo.offerCollateral.sats,
+  );
+  console.log('offer.offerCollateralSatoshis', offer.offerCollateralSatoshis);
 
   if (positionInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
     throw Error('Offer was not generated with CSO ContractInfo');

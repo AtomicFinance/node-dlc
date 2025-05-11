@@ -7,6 +7,7 @@ import {
   OrderMetadataV0,
   OrderPositionInfoV0,
 } from '../../lib';
+import { CloseTLV } from '../../lib/messages/CloseTLV';
 import { ContractInfo, ContractInfoV0 } from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
@@ -141,6 +142,19 @@ describe('DlcOffer', () => {
     instance.feeRatePerVb = BigInt(1);
     instance.cetLocktime = 100;
     instance.refundLocktime = 200;
+  });
+
+  describe.only('test-deserialize', () => {
+    it('should deserialize', () => {
+      const dlcOfferHexInfo = Buffer.from(
+        'a71a0043497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000fdd82efd018f000000000000c350fda7107903f95e1393d334bb4c3c8d106ef58855bf6e71a7dfd63f986c2a24d423a02c724e000000000000c3503a6b3f90ea14fb986390c7be5f19b3134eeae7d571a7f4a44dffc2341db1ee520000000000000000afe572dbdbf6324f7ba09a8a58c9c9f0c8862567b18ca1388d46e6591caffa5800000000000061a8fda712fd0104fdd824fd00fe11d53ab09ec03503d34007454efa8543baa8c3870b0e238ef46b8aa997dcd6a17af8e742de9b796a48a44e4de2f0dfc1297a3dc2f067aa49a2fddabf6fe9bcf1795998c95e091a62d0dd1e6fd721c06dd0cbc04e65eacef9b81732c8262c85d8fdd8229a00034ac6e75f9690f540e7f8710fdc4fab527b1385f8934c82e99d294d1921114feea49f00bb87cf9b245b517dd53e61de917985bc114951bad9470f08f8580ce3e30e263895c8a769fe7ddbb5002f795109144b64476d983d821825b8a21003efbe671c7452fdd806200003085452554d5057494e094b414d414c4157494e0a4e45495448455257494e0f6b616d616c612d76732d7472756d7002195201c6de9cdd676ab5031b238683209a148efe62b9942659ead701a97217e0001600144e48397c06c3b950428f669d3fda671076c30cac0000000000003dfb00000000000061a80001fda714f400000000000e65ff00de020000000001019bef73cbb153c4415a05a2469e3a42e79383e8c47c4dbc8ccd589c72fa1c0a780100000000fdffffff02a086010000000000160014f6cb2ff4c4b413b08c062a72ab0b13fe5282d2802438e80b000000001600144557dfd35227701c6e170b953c4801dfddf787f3024730440220634dbf56e0c60ebd858f56671ed01462ec47e25657cd3fff30614fbe3f9c676102201b5560bd7725826bd07d36fea76ce40fc636ed9933317137fbdb30790ff1caf00121023370f7daaabc11a5e7a37c072c3d5c35abf32be586907138b80990f9868edc3b0758030000000000ffffffff006c0000001600147bdc428a3bbd823d135f57ca89b7bede2a8df2b10000000000a0f88a000000000000b773000000000000000a6064108c6064108d',
+        'hex',
+      );
+      const instance = DlcOfferV0.deserialize(dlcOfferHexInfo);
+      expect(instance.serialize().toString('hex')).to.equal(
+        dlcOfferHexInfo.toString('hex'),
+      );
+    });
   });
 
   describe('deserialize', () => {
@@ -498,6 +512,13 @@ describe('DlcOffer', () => {
         ).serialize(),
       );
 
+      const closeInfos = CloseTLV.deserialize(
+        Buffer.from(
+          'fdff984cc1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f8412690000000005f5e100000000000000000000000000000000000000000000000000000000000000000000000000',
+          'hex',
+        ),
+      );
+
       const dlcOffer = new DlcOfferV0();
 
       dlcOffer.contractFlags = contractFlags;
@@ -518,6 +539,7 @@ describe('DlcOffer', () => {
       dlcOffer.ircInfo = ircInfo;
       dlcOffer.positionInfo = positionInfo;
       dlcOffer.batchFundingGroups = [batchFundingGroup];
+      dlcOffer.closeInfos = [closeInfos];
 
       expect(dlcOffer.toJSON()).to.deep.equal(
         DlcOfferV0.deserialize(dlcOffer.serialize()).toJSON(),

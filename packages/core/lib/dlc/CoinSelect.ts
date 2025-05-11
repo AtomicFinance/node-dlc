@@ -1,4 +1,5 @@
 import { FundingInputV0 } from '@node-dlc/messaging';
+import { OutPoint } from '@node-lightning/core';
 
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
@@ -72,10 +73,22 @@ export const dualFundingCoinSelect = (
   utxos: UTXO[],
   collaterals: bigint[], // in satoshis
   feeRate: bigint,
+  requiredOutpoints: OutPoint[] = [],
 ): { inputs: UTXO[]; fee: bigint } => {
-  utxos = [...utxos].sort((a, b) =>
-    Number(utxoScore(b, feeRate) - utxoScore(a, feeRate)),
+  const requiredUtxos = requiredOutpoints.map((outpoint) =>
+    utxos.find((u) => outpoint.toString() === `${u.txid}:${u.vout}`),
   );
+
+  utxos = [...utxos]
+    .filter(
+      (utxo) =>
+        !requiredOutpoints.some(
+          (required) => required.toString() === `${utxo.txid}:${utxo.vout}`,
+        ),
+    )
+    .sort((a, b) => Number(utxoScore(b, feeRate) - utxoScore(a, feeRate)));
+
+  utxos = [...requiredUtxos, ...utxos];
 
   let inAccum = 0;
   const inputs: UTXO[] = [];

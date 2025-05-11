@@ -30,5 +30,7 @@ export function shouldLog(myLevel: LogLevel, msgLevel: LogLevel): boolean {
       return msgLevel === LogLevel.Warn || msgLevel === LogLevel.Error;
     case LogLevel.Error:
       return msgLevel === LogLevel.Error;
+    default:
+      return false;
   }
 }
