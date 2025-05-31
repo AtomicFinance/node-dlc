@@ -1,6 +1,7 @@
+import { BufferReader, BufferWriter } from '@node-lightning/bufio';
 import { Tx } from '@node-lightning/core';
 
-import { DlcAcceptV0, DlcOfferV0, DlcTransactionsV0 } from '..';
+import { DlcAcceptV0, DlcOffer, DlcTransactionsV0 } from '..';
 
 /**
  * DlcClose Metadata object contains information required for verifying DlcClose
@@ -28,7 +29,7 @@ export class DlcCloseMetadata {
   }
 
   public static fromDlcMessages(
-    dlcOffer: DlcOfferV0,
+    dlcOffer: DlcOffer,
     dlcAccept: DlcAcceptV0,
     dlcTxs: DlcTransactionsV0,
   ): DlcCloseMetadata {
@@ -83,11 +84,11 @@ export class DlcCloseMetadata {
   }
 
   public toDlcMessages(): {
-    dlcOffer: DlcOfferV0;
+    dlcOffer: DlcOffer;
     dlcAccept: DlcAcceptV0;
     dlcTxs: DlcTransactionsV0;
   } {
-    const dlcOffer = new DlcOfferV0();
+    const dlcOffer = new DlcOffer();
     const dlcAccept = new DlcAcceptV0();
     const dlcTxs = new DlcTransactionsV0();
 

@@ -126,8 +126,9 @@ export function getOptionInfoFromOffer(
   if (
     offer.type !== MessageType.DlcOfferV0 &&
     offer.type !== MessageType.OrderOfferV0
-  )
-    throw Error('Only DlcOfferV0 and OrderOfferV0 currently supported');
+  ) {
+    throw Error('Only DlcOffer and OrderOfferV0 currently supported');
+  }
 
   const premium =
     offer.contractInfo.totalCollateral - offer.offerCollateralSatoshis;

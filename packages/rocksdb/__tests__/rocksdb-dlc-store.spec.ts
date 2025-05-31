@@ -2,6 +2,7 @@
 
 import { DlcTxBuilder } from '@node-dlc/core';
 import {
+  ContractInfoV0,
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,
@@ -9,6 +10,8 @@ import {
   DlcSignV0,
   DlcTransactionsV0,
   FundingInputV0,
+  MessageType,
+  OrderOfferV0,
 } from '@node-dlc/messaging';
 import { OutPoint, Value } from '@node-lightning/bitcoin';
 import { sha256, xor } from '@node-lightning/crypto';

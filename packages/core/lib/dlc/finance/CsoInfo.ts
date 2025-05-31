@@ -356,8 +356,9 @@ export const getCsoInfoFromOffer = (
   if (
     offer.type !== MessageType.DlcOfferV0 &&
     offer.type !== MessageType.OrderOfferV0
-  )
-    throw Error('Only DlcOfferV0 and OrderOfferV0 currently supported');
+  ) {
+    throw Error('Only DlcOffer and OrderOfferV0 currently supported');
+  }
 
   let shiftForFees: DlcParty = 'neither';
   const fees = Value.zero();

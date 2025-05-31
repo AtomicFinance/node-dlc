@@ -5,7 +5,7 @@ import {
   DlcAcceptV0,
   DlcCancelV0,
   DlcCloseV0,
-  DlcOfferV0,
+  DlcOffer,
   DlcSignV0,
   DlcTransactionsV0,
   FundingInputV0,
@@ -15,7 +15,7 @@ import { sha256, xor } from '@node-lightning/crypto';
 import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 
 enum Prefix {
-  DlcOfferV0 = 50,
+  DlcOffer = 50,
   DlcAcceptV0 = 51,
   DlcSignV0 = 52,
   DlcTransactionsV0 = 53,
@@ -27,19 +27,22 @@ enum Prefix {
 }
 
 export class RocksdbDlcStore extends RocksdbBase {
-  public async findDlcOffers(): Promise<DlcOfferV0[]> {
+  public async findDlcOffers(): Promise<DlcOffer[]> {
     return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcOfferV0) {
-          results.push(DlcOfferV0.deserialize(data.value));
-        }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
+      const results: DlcOffer[] = [];
+      this._db
+        .createReadStream()
+        .on('data', (data) => {
+          if (data.key[0] === Prefix.DlcOffer) {
+            results.push(DlcOffer.deserialize(data.value));
+          }
+        })
+        .on('error', (err) => {
+          reject(err);
+        })
+        .on('end', () => {
+          resolve(results);
+        });
     });
   }
 
@@ -48,7 +51,7 @@ export class RocksdbDlcStore extends RocksdbBase {
       const stream = this._db.createReadStream();
       let num = 0;
       stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcOfferV0) num++;
+        if (data.key[0] === Prefix.DlcOffer) num++;
       });
       stream.on('end', () => {
         resolve(num);
@@ -57,19 +60,18 @@ export class RocksdbDlcStore extends RocksdbBase {
     });
   }
 
-  public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
-    const key = Buffer.concat([
-      Buffer.from([Prefix.DlcOfferV0]),
+  public async findDlcOffer(tempContractId: Buffer): Promise<DlcOffer> {
+    const raw = await this._db.get(
+      Buffer.from([Prefix.DlcOffer]),
       tempContractId,
-    ]);
-    const raw = await this._safeGet<Buffer>(key);
-    if (!raw) return;
-    return DlcOfferV0.deserialize(raw);
+    );
+
+    return DlcOffer.deserialize(raw);
   }
 
   public async findDlcOffersByTempContractIds(
     tempContractIds: Buffer[],
-  ): Promise<DlcOfferV0[]> {
+  ): Promise<DlcOffer[]> {
     const dlcOffers = await Promise.all(
       tempContractIds.map((tempContractId) =>
         this.findDlcOffer(tempContractId),
@@ -78,57 +80,63 @@ export class RocksdbDlcStore extends RocksdbBase {
     return dlcOffers.filter((dlcOffer) => !!dlcOffer);
   }
 
-  public async findDlcOffersByEventId(eventId: string): Promise<DlcOfferV0[]> {
+  public async findDlcOffersByEventId(eventId: string): Promise<DlcOffer[]> {
     return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcOfferV0) {
-          const dlcOffer = DlcOfferV0.deserialize(data.value);
-          if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
-            if (
-              (dlcOffer.contractInfo as ContractInfoV0).oracleInfo.announcement
-                .oracleEvent.eventId === eventId
-            ) {
-              results.push(dlcOffer);
+      const results: DlcOffer[] = [];
+      this._db
+        .createReadStream()
+        .on('data', (data) => {
+          if (data.key[0] === Prefix.DlcOffer) {
+            const dlcOffer = DlcOffer.deserialize(data.value);
+            if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
+              if (
+                (dlcOffer.contractInfo as ContractInfoV0).oracleInfo
+                  .announcement.oracleEvent.eventId === eventId
+              ) {
+                results.push(dlcOffer);
+              }
+            } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
+              (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
+                (pair) => {
+                  if (
+                    pair.oracleInfo.announcement.oracleEvent.eventId === eventId
+                  ) {
+                    results.push(dlcOffer);
+                    return true; // Returning true will stop the iteration since we've found a match
+                  }
+                  return false; // Returning false will continue the iteration to check other pairs
+                },
+              );
             }
-          } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
-            (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
-              (pair) => {
-                if (
-                  pair.oracleInfo.announcement.oracleEvent.eventId === eventId
-                ) {
-                  results.push(dlcOffer);
-                  return true; // Returning true will stop the iteration since we've found a match
-                }
-                return false; // Returning false will continue the iteration to check other pairs
-              },
-            );
           }
-        }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
+        })
+        .on('error', (err) => {
+          reject(err);
+        })
+        .on('end', () => {
+          resolve(results);
+        });
     });
   }
 
-  public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
-    const value = dlcOffer.serialize();
-    const tempContractId = sha256(value);
-    const key = Buffer.concat([
-      Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
-    ]);
-    await this._db.put(key, value);
+  public async saveDlcOffer(dlcOffer: DlcOffer): Promise<void> {
+    await this._db.put(
+      Buffer.concat([
+        Buffer.from([Prefix.DlcOffer]),
+        dlcOffer.contractInfo.contractId,
+      ]),
+      dlcOffer.serialize(),
+    );
+
+    await this._db.put(
+      Buffer.from([Prefix.DlcOffer]),
+      dlcOffer.contractInfo.contractId,
+      dlcOffer.serialize(),
+    );
   }
 
   public async deleteDlcOffer(tempContractId: Buffer): Promise<void> {
-    const key = Buffer.concat([
-      Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcOffer]), tempContractId]);
     await this._db.del(key);
   }
 
@@ -258,7 +266,7 @@ export class RocksdbDlcStore extends RocksdbBase {
 
   // NOTE: ONLY USE FOR BATCH FUNDED DLCs
   public async saveDlcAccepts(dlcAccepts: DlcAcceptV0[]): Promise<void> {
-    const dlcOffers: DlcOfferV0[] = [];
+    const dlcOffers: DlcOffer[] = [];
     for (let i = 0; i < dlcAccepts.length; i++) {
       const dlcOffer = await this.findDlcOffer(dlcAccepts[i].tempContractId);
       dlcOffers.push(dlcOffer);

@@ -20,7 +20,7 @@ import { MessageType } from '../../lib/MessageType';
 describe('DlcOffer', () => {
   const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;
 
-  let instance: DlcOfferV0;
+  let instance: DlcOffer;
   const type = Buffer.from('a71a', 'hex');
   const contractFlags = Buffer.from('00', 'hex');
   const chainHash = Buffer.from(
@@ -126,7 +126,7 @@ describe('DlcOffer', () => {
   ]);
 
   beforeEach(() => {
-    instance = new DlcOfferV0();
+    instance = new DlcOffer();
     instance.contractFlags = contractFlags;
     instance.chainHash = chainHash;
     instance.contractInfo = ContractInfo.deserialize(contractInfo);
@@ -158,7 +158,7 @@ describe('DlcOffer', () => {
     });
   });
 
-  describe('DlcOfferV0', () => {
+  describe('DlcOffer', () => {
     describe('serialize', () => {
       it('serializes', () => {
         expect(instance.serialize().toString('hex')).to.equal(
@@ -182,7 +182,7 @@ describe('DlcOffer', () => {
 
     describe('deserialize', () => {
       it('deserializes', () => {
-        const instance = DlcOfferV0.deserialize(dlcOfferHex);
+        const instance = DlcOffer.deserialize(dlcOfferHex);
 
         expect(instance.contractFlags).to.deep.equal(contractFlags);
         expect(instance.chainHash).to.deep.equal(chainHash);
@@ -205,7 +205,7 @@ describe('DlcOffer', () => {
       });
 
       it('has correct type', () => {
-        expect(DlcOfferV0.deserialize(dlcOfferHex).type).to.equal(
+        expect(DlcOffer.deserialize(dlcOfferHex).type).to.equal(
           MessageType.DlcOfferV0,
         );
       });
@@ -217,7 +217,7 @@ describe('DlcOffer', () => {
 
         instance.positionInfo = positionInfo;
         expect(
-          DlcOfferV0.deserialize(instance.serialize()).positionInfo.serialize(),
+          DlcOffer.deserialize(instance.serialize()).positionInfo.serialize(),
         ).to.deep.equal(positionInfo.serialize());
       });
     });
@@ -270,7 +270,7 @@ describe('DlcOffer', () => {
         const expectedPayoutAddress =
           'bcrt1q9w77csjsqlwrvpfrkq556try6gsn4ayc2kn0kl';
 
-        const instance = DlcOfferV0.deserialize(dlcOfferHex);
+        const instance = DlcOffer.deserialize(dlcOfferHex);
 
         const {
           fundingAddress,
@@ -420,9 +420,9 @@ describe('DlcOffer', () => {
 
   describe('DlcOfferContainer', () => {
     it('should serialize and deserialize', () => {
-      const dlcOffer = DlcOfferV0.deserialize(dlcOfferHex);
+      const dlcOffer = DlcOffer.deserialize(dlcOfferHex);
       // swap payout and change spk to differentiate between dlcoffers
-      const dlcOffer2 = DlcOfferV0.deserialize(dlcOfferHex);
+      const dlcOffer2 = DlcOffer.deserialize(dlcOfferHex);
       dlcOffer2.payoutSPK = dlcOffer.changeSPK;
       dlcOffer2.changeSPK = dlcOffer.payoutSPK;
 
@@ -498,7 +498,7 @@ describe('DlcOffer', () => {
         ).serialize(),
       );
 
-      const dlcOffer = new DlcOfferV0();
+      const dlcOffer = new DlcOffer();
 
       dlcOffer.contractFlags = contractFlags;
       dlcOffer.chainHash = chainHash;
@@ -520,8 +520,22 @@ describe('DlcOffer', () => {
       dlcOffer.batchFundingGroups = [batchFundingGroup];
 
       expect(dlcOffer.toJSON()).to.deep.equal(
-        DlcOfferV0.deserialize(dlcOffer.serialize()).toJSON(),
+        DlcOffer.deserialize(dlcOffer.serialize()).toJSON(),
       );
+    });
+  });
+
+  describe('Backward Compatibility', () => {
+    it('should work with DlcOfferV0 alias', () => {
+      const instance = new DlcOfferV0();
+      expect(instance).to.be.instanceOf(DlcOffer);
+      expect(DlcOfferV0).to.equal(DlcOffer);
+    });
+
+    it('should deserialize using DlcOfferV0 alias', () => {
+      const instance = DlcOfferV0.deserialize(dlcOfferHex);
+      expect(instance).to.be.instanceOf(DlcOffer);
+      expect(instance.type).to.equal(MessageType.DlcOfferV0);
     });
   });
 });

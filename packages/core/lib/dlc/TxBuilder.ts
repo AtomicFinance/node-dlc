@@ -1,6 +1,9 @@
 import {
+  DlcAcceptV0,
   DlcAcceptWithoutSigs,
   DlcOfferV0,
+  DlcSignV0,
+  DlcTransactionsV0,
   FundingInputV0,
   MessageType,
 } from '@node-dlc/messaging';

@@ -90,7 +90,7 @@ describe('DlcSign', () => {
     });
   });
 
-  describe('DlcOfferV0', () => {
+  describe('DlcOffer', () => {
     describe('serialize', () => {
       it('serializes', () => {
         expect(instance.serialize().toString('hex')).to.equal(

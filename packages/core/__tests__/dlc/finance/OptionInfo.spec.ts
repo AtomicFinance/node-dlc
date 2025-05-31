@@ -4,6 +4,7 @@ import {
   DigitDecompositionEventDescriptorV0,
   DlcOfferV0,
   HyperbolaPayoutCurvePiece,
+  MessageType,
   OracleAnnouncementV0,
   OracleEventV0,
   OracleInfoV0,

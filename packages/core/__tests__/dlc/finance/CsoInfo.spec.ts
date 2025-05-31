@@ -9,6 +9,8 @@ import {
   OracleInfoV0,
   PayoutFunctionV0,
   PolynomialPayoutCurvePiece,
+  FundingInputV0,
+  MessageType,
 } from '@node-dlc/messaging';
 import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';

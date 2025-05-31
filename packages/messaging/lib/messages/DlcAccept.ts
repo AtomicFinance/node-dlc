@@ -137,9 +137,9 @@ export class DlcAcceptV0 extends DlcAccept implements IDlcMessage {
   public batchFundingGroups?: BatchFundingGroup[];
 
   /**
-   * Get funding, change and payout address from DlcOffer
+   * Get funding, change and payout address from DlcAccept
    * @param network Bitcoin Network
-   * @returns {IDlcOfferV0Addresses}
+   * @returns {IDlcOfferAddresses}
    */
   public getAddresses(network: BitcoinNetwork): IDlcAcceptV0Addresses {
     const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))

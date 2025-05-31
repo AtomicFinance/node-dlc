@@ -33,48 +33,29 @@ import {
 import { IOrderPositionInfoJSON, OrderPositionInfo } from './OrderPositionInfo';
 
 export const LOCKTIME_THRESHOLD = 500000000;
-export abstract class DlcOffer {
-  public static deserialize(buf: Buffer): DlcOfferV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.DlcOfferV0:
-        return DlcOfferV0.deserialize(buf);
-      default:
-        throw new Error(`DLC Offer message type must be DlcOfferV0`); // This is a temporary measure while protocol is being developed
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract getAddresses(network: BitcoinNetwork): IDlcOfferV0Addresses;
-
-  public abstract validate(): void;
-
-  public abstract toJSON(): IDlcOfferV0JSON;
-
-  public abstract serialize(): Buffer;
-}
 
 /**
  * DlcOffer message contains information about a node and indicates its
  * desire to enter into a new contract. This is the first step toward
  * creating the funding transaction and CETs.
  */
-export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
+export class DlcOffer implements IDlcMessage {
   public static type = MessageType.DlcOfferV0;
 
   /**
    * Deserializes an offer_dlc_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcOfferV0 {
-    const instance = new DlcOfferV0();
+  public static deserialize(buf: Buffer): DlcOffer {
+    const instance = new DlcOffer();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = Number(reader.readUInt16BE());
+
+    if (type !== MessageType.DlcOfferV0) {
+      throw new Error(`DLC Offer message type must be DlcOfferV0`);
+    }
+
     instance.contractFlags = reader.readBytes(1);
     instance.chainHash = reader.readBytes(32);
     instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
@@ -129,7 +110,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   /**
    * The type for offer_dlc_v0 message. offer_dlc_v0 = 42778
    */
-  public type = DlcOfferV0.type;
+  public type = DlcOffer.type;
 
   public contractFlags: Buffer;
 
@@ -170,9 +151,9 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   /**
    * Get funding, change and payout address from DlcOffer
    * @param network Bitcoin Network
-   * @returns {IDlcOfferV0Addresses}
+   * @returns {IDlcOfferAddresses}
    */
-  public getAddresses(network: BitcoinNetwork): IDlcOfferV0Addresses {
+  public getAddresses(network: BitcoinNetwork): IDlcOfferAddresses {
     const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))
       .serialize()
       .slice(1);
@@ -297,7 +278,7 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   /**
    * Converts dlc_offer_v0 to JSON
    */
-  public toJSON(): IDlcOfferV0JSON {
+  public toJSON(): IDlcOfferJSON {
     const tlvs = [];
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
@@ -368,7 +349,10 @@ export class DlcOfferV0 extends DlcOffer implements IDlcMessage {
   }
 }
 
-export interface IDlcOfferV0JSON {
+// Legacy alias for backward compatibility
+export const DlcOfferV0 = DlcOffer;
+
+export interface IDlcOfferJSON {
   type: number;
   contractFlags: string;
   chainHash: string;
@@ -392,11 +376,17 @@ export interface IDlcOfferV0JSON {
   )[];
 }
 
-export interface IDlcOfferV0Addresses {
+// Legacy alias for backward compatibility
+export type IDlcOfferV0JSON = IDlcOfferJSON;
+
+export interface IDlcOfferAddresses {
   fundingAddress: string;
   changeAddress: string;
   payoutAddress: string;
 }
+
+// Legacy alias for backward compatibility
+export type IDlcOfferV0Addresses = IDlcOfferAddresses;
 
 export class DlcOfferContainer {
   private offers: DlcOffer[] = [];
@@ -448,7 +438,7 @@ export class DlcOfferContainer {
       // Optionally, read the length of the serialized offer if it was written during serialization.
       const offerLength = reader.readBigSize();
       const offerBuf = reader.readBytes(Number(offerLength));
-      const offer = DlcOffer.deserialize(offerBuf); // This needs to be adjusted based on actual implementation.
+      const offer = DlcOffer.deserialize(offerBuf);
       container.addOffer(offer);
     }
     return container;
