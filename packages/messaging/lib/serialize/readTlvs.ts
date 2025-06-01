@@ -1,4 +1,4 @@
-import { BufferReader } from '@node-lightning/bufio';
+import { BufferReader } from '@node-dlc/bufio';
 
 /**
  * Reads TLVs from a reader until the entire stream is processed. The handler is

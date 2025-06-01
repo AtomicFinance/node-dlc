@@ -1,4 +1,4 @@
-import { Tx } from '@node-lightning/bitcoin';
+import { Tx } from '@node-dlc/bitcoin';
 import { Block, Transaction } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
 

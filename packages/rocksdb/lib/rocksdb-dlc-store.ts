@@ -10,8 +10,8 @@ import {
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
-import { OutPoint, Script } from '@node-lightning/bitcoin';
-import { sha256, xor } from '@node-lightning/crypto';
+import { OutPoint, Script } from '@node-dlc/bitcoin';
+import { sha256, xor } from '@node-dlc/crypto';
 
 import { RocksdbBase } from './rocksdb-base';
 

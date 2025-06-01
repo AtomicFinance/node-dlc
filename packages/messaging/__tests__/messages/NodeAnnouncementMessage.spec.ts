@@ -1,5 +1,5 @@
 // tslint:disable: no-unused-expression
-import { BitField } from '@node-lightning/core';
+import { BitField } from '@node-dlc/common';
 import { expect } from 'chai';
 
 import { Address } from '../../lib/domain/Address';

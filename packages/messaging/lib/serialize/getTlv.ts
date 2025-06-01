@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 // TODO: add unit tests
 export function getTlv(reader: BufferReader): Buffer {

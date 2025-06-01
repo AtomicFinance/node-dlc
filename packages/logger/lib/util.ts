@@ -1,4 +1,4 @@
-import { LogLevel } from './log-level';
+import { LogLevel } from "./log-level";
 
 /**
  * Helper function to determine if a log message is at the appropraite
@@ -7,28 +7,25 @@ import { LogLevel } from './log-level';
  * @param msgLevel
  */
 export function shouldLog(myLevel: LogLevel, msgLevel: LogLevel): boolean {
-  if (msgLevel === LogLevel.Log) {
-    return true;
-  }
-  switch (myLevel) {
-    case LogLevel.Trace:
-      return true;
-    case LogLevel.Debug:
-      return (
-        msgLevel === LogLevel.Debug ||
-        msgLevel === LogLevel.Info ||
-        msgLevel === LogLevel.Warn ||
-        msgLevel === LogLevel.Error
-      );
-    case LogLevel.Info:
-      return (
-        msgLevel === LogLevel.Info ||
-        msgLevel === LogLevel.Warn ||
-        msgLevel === LogLevel.Error
-      );
-    case LogLevel.Warn:
-      return msgLevel === LogLevel.Warn || msgLevel === LogLevel.Error;
-    case LogLevel.Error:
-      return msgLevel === LogLevel.Error;
-  }
+    switch (myLevel) {
+        case LogLevel.Trace:
+            return true;
+        case LogLevel.Debug:
+            return (
+                msgLevel === LogLevel.Debug ||
+                msgLevel === LogLevel.Info ||
+                msgLevel === LogLevel.Warn ||
+                msgLevel === LogLevel.Error
+            );
+        case LogLevel.Info:
+            return (
+                msgLevel === LogLevel.Info ||
+                msgLevel === LogLevel.Warn ||
+                msgLevel === LogLevel.Error
+            );
+        case LogLevel.Warn:
+            return msgLevel === LogLevel.Warn || msgLevel === LogLevel.Error;
+        case LogLevel.Error:
+            return msgLevel === LogLevel.Error;
+    }
 }

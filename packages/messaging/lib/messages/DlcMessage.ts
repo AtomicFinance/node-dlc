@@ -1,4 +1,4 @@
-import { BufferReader } from '@node-lightning/bufio';
+import { BufferReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
 import {

@@ -24,13 +24,15 @@
   },
   "dependencies": {
     "@node-dlc/bitcoin": "^0.23.6",
-    "@node-dlc/messaging": "^0.23.6",
-    "@node-lightning/core": "0.26.1",
+    "@node-dlc/bufio": "^0.26.1",
+    "@node-dlc/common": "^0.26.1",
+    "@node-dlc/crypto": "^0.26.1",
     "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0",
     "decimal.js": "10.4.3"
   },
   "devDependencies": {
+    "@node-dlc/messaging": "^0.23.6",
     "@types/node": "18.11.9"
   },
   "publishConfig": {

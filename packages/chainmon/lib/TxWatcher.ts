@@ -1,5 +1,5 @@
-import { OutPoint, Script, Tx, Value } from '@node-lightning/bitcoin';
-import { BitcoindClient } from '@node-lightning/bitcoind';
+import { OutPoint, Script, Tx, Value } from '@node-dlc/bitcoin';
+import { BitcoindClient } from '@node-dlc/bitcoind';
 import { EventEmitter } from 'events';
 
 export class TxWatcher extends EventEmitter {

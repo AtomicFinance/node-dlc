@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../MessageType';

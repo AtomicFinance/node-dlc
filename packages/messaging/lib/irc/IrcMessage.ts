@@ -1,5 +1,5 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import { crc32c } from '@node-lightning/checksum';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { crc32c } from '@node-dlc/checksum';
 
 import { MessageType } from '../MessageType';
 

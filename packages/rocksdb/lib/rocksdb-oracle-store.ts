@@ -3,7 +3,7 @@ import {
   OracleEventContainerV0,
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
-import { sha256 } from '@node-lightning/crypto';
+import { sha256 } from '@node-dlc/crypto';
 
 import { RocksdbBase } from './rocksdb-base';
 

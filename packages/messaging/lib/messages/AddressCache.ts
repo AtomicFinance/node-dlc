@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 

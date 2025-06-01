@@ -1,5 +1,5 @@
 import { Value } from '@node-dlc/bitcoin';
-import { BufferReader } from '@node-lightning/bufio';
+import { BufferReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import { BatchFundingGroup } from '../../lib';
