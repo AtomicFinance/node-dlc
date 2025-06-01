@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@node-lightning/logger": "0.26.1",
-    "@types/node": "16.10.3",
+    "@types/node": "18.11.9",
     "fs": "0.0.1-security",
     "net": "1.0.2",
     "path": "0.12.7",

@@ -4,7 +4,8 @@ import {
   OrderOfferV0,
 } from '@node-dlc/messaging';
 import { sha256 } from '@node-lightning/crypto';
-import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
+
+import { RocksdbBase } from './rocksdb-base';
 
 enum Prefix {
   OrderOfferV0 = 40,
@@ -17,19 +18,20 @@ enum Prefix {
 
 export class RocksdbOrderStore extends RocksdbBase {
   public async findOrderOffers(): Promise<OrderOfferV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OrderOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OrderOfferV0) {
-          results.push(OrderOfferV0.deserialize(data.value));
+    const results: OrderOfferV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OrderOfferV0) {
+          results.push(OrderOfferV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOrderOffer(tempOrderId: Buffer): Promise<OrderOfferV0> {
@@ -46,22 +48,23 @@ export class RocksdbOrderStore extends RocksdbBase {
     nick: string,
   ): Promise<Buffer[]> {
     const nickBuf = Buffer.from(nick);
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: Buffer[] = [];
-      stream.on('data', (data) => {
+    const results: Buffer[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
         if (
-          data.key[0] === Prefix.OrderOfferV0Nick &&
-          this.keyBufCompare(data.key.slice(1), nickBuf)
+          key[0] === Prefix.OrderOfferV0Nick &&
+          this.keyBufCompare(key.slice(1), nickBuf)
         ) {
-          results.push(data.value);
+          results.push(value);
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOrderOfferTempOrderIdsByNickAndMetadata(
@@ -69,34 +72,35 @@ export class RocksdbOrderStore extends RocksdbBase {
     orderMetadataId: Buffer,
   ): Promise<Buffer[]> {
     const nickBuf = Buffer.from(nick);
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: Buffer[] = [];
-      stream.on('data', (data) => {
+    const results: Buffer[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
         if (
-          data.key[0] === Prefix.OrderMetadataV0Nick &&
-          this.keyBufCompare(data.key.slice(1, 33), orderMetadataId) &&
-          this.keyBufCompare(data.key.slice(33), nickBuf)
+          key[0] === Prefix.OrderMetadataV0Nick &&
+          this.keyBufCompare(key.slice(1, 33), orderMetadataId) &&
+          this.keyBufCompare(key.slice(33), nickBuf)
         ) {
-          results.push(data.value);
+          results.push(value);
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOrderOffersByNick(nick: string): Promise<OrderOfferV0[]> {
     const tempOrderIds = await this.findOrderOfferTempOrderIdsByNick(nick);
+    const results: OrderOfferV0[] = [];
+    const iterator = this._db.iterator();
 
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OrderOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OrderOfferV0) {
-          const orderOffer = OrderOfferV0.deserialize(data.value);
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OrderOfferV0) {
+          const orderOffer = OrderOfferV0.deserialize(value);
 
           if (
             tempOrderIds
@@ -106,12 +110,12 @@ export class RocksdbOrderStore extends RocksdbBase {
             results.push(orderOffer);
           }
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOrderOfferByNickAndMetadata(
@@ -138,12 +142,13 @@ export class RocksdbOrderStore extends RocksdbBase {
       orderMetadataId,
     );
 
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OrderOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OrderOfferV0) {
-          const orderOffer = OrderOfferV0.deserialize(data.value);
+    const results: OrderOfferV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OrderOfferV0) {
+          const orderOffer = OrderOfferV0.deserialize(value);
 
           if (
             tempOrderIds
@@ -153,12 +158,12 @@ export class RocksdbOrderStore extends RocksdbBase {
             results.push(orderOffer);
           }
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async saveOrderOffer(orderOffer: OrderOfferV0): Promise<void> {
@@ -223,64 +228,64 @@ export class RocksdbOrderStore extends RocksdbBase {
   }
 
   public async findOrderAccepts(): Promise<OrderAcceptV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OrderAcceptV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OrderAcceptV0) {
-          results.push(OrderAcceptV0.deserialize(data.value));
+    const results: OrderAcceptV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OrderAcceptV0) {
+          results.push(OrderAcceptV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOrderAcceptTempOrderIdsByNick(
     nick: string,
   ): Promise<Buffer[]> {
     const nickBuf = Buffer.from(nick);
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: Buffer[] = [];
-      stream.on('data', (data) => {
+    const results: Buffer[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
         if (
-          data.key[0] === Prefix.OrderAcceptV0Nick &&
-          this.keyBufCompare(data.key.slice(1), nickBuf)
+          key[0] === Prefix.OrderAcceptV0Nick &&
+          this.keyBufCompare(key.slice(1), nickBuf)
         ) {
-          results.push(data.value);
+          results.push(value);
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOrderAcceptsByNick(nick: string): Promise<OrderAcceptV0[]> {
     const tempOrderIds = await this.findOrderAcceptTempOrderIdsByNick(nick);
+    const results: OrderAcceptV0[] = [];
+    const iterator = this._db.iterator();
 
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OrderAcceptV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OrderAcceptV0) {
-          results.push(OrderAcceptV0.deserialize(data.value));
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OrderAcceptV0) {
+          results.push(OrderAcceptV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(
-          results.filter((orderAccept) => {
-            return tempOrderIds
-              .map((orderId) => orderId.toString('hex'))
-              .includes(orderAccept.tempOrderId.toString('hex'));
-          }),
-        );
-      });
-      stream.on('error', (err) => reject(err));
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results.filter((orderAccept) => {
+      return tempOrderIds
+        .map((orderId) => orderId.toString('hex'))
+        .includes(orderAccept.tempOrderId.toString('hex'));
     });
   }
 

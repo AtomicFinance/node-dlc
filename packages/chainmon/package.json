@@ -30,7 +30,7 @@
     "bitcoinjs-lib": "5.2.0"
   },
   "devDependencies": {
-    "@types/node": "16.10.3"
+    "@types/node": "18.11.9"
   },
   "publishConfig": {
     "access": "public"
