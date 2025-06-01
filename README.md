@@ -14,6 +14,7 @@ Node-DLC is a an implementation of Bitcoin DLC Protocol in the Node.js runtime, 
 - [@node-dlc/logger](https://github.com/atomicfinance/node-dlc/tree/master/packages/logger)
 - [@node-dlc/messaging](https://github.com/atomicfinance/node-dlc/tree/master/packages/messaging)
 - [@node-dlc/rocksdb](https://github.com/atomicfinance/node-dlc/tree/master/packages/rocksdb)
+- [@node-dlc/classic-level](https://github.com/atomicfinance/node-dlc/tree/master/packages/classic-level)
 - [@node-dlc/transport](https://github.com/atomicfinance/node-dlc/tree/master/packages/transport)
 
 ## Dependencies
