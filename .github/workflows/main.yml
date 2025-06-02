@@ -9,13 +9,29 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          node-version: 16.x
-      - run: sudo apt-get install libzmq3-dev
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn test
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+          
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libzmq3-dev
+        
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        
+      - name: Bootstrap packages
+        run: yarn bootstrap
+        
+      - name: Run tests
+        run: yarn test
