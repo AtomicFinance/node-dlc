@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { EventEmitter } from 'events';
-import * as zmq from 'zeromq';
+import { Subscriber } from 'zeromq';
 
 import { IBitcoindOptions } from './bitcoind-options';
 import { jsonrpcRequest } from './jsonrpc-request';
@@ -27,8 +27,8 @@ export class BitcoindClient extends EventEmitter {
   public opts: IBitcoindOptions;
   public id: number;
 
-  public rawTxSock: zmq.socket;
-  public rawBlockSock: zmq.socket;
+  public rawTxSock: Subscriber;
+  public rawBlockSock: Subscriber;
 
   constructor(opts: IBitcoindOptions) {
     super();
@@ -42,12 +42,11 @@ export class BitcoindClient extends EventEmitter {
    * @emits rawtx
    */
   public subscribeRawTx() {
-    const sock = (this.rawTxSock = zmq.socket('sub'));
+    const sock = (this.rawTxSock = new Subscriber());
     sock.connect(this.opts.zmqpubrawtx);
     sock.subscribe('rawtx');
-    sock.on('message', (topic: string, message: Buffer) =>
-      this.emit('rawtx', message),
-    );
+
+    this._startListening(sock, 'rawtx');
   }
 
   /**
@@ -56,12 +55,41 @@ export class BitcoindClient extends EventEmitter {
    * @emits rawblock
    */
   public subscribeRawBlock() {
-    const sock = (this.rawBlockSock = zmq.socket('sub'));
+    const sock = (this.rawBlockSock = new Subscriber());
     sock.connect(this.opts.zmqpubrawblock);
     sock.subscribe('rawblock');
-    sock.on('message', (topic: string, message: Buffer) =>
-      this.emit('rawblock', message),
-    );
+
+    this._startListening(sock, 'rawblock');
+  }
+
+  /**
+   * Starts listening for messages on a ZeroMQ subscriber socket
+   * @private
+   */
+  private async _startListening(
+    sock: Subscriber,
+    eventType: 'rawtx' | 'rawblock',
+  ) {
+    try {
+      for await (const [topic, message] of sock) {
+        this.emit(eventType, message);
+      }
+    } catch (error) {
+      // Handle errors or socket closure
+      console.error(`ZeroMQ ${eventType} subscription error:`, error);
+    }
+  }
+
+  /**
+   * Closes ZeroMQ connections
+   */
+  public async close() {
+    if (this.rawTxSock) {
+      await this.rawTxSock.close();
+    }
+    if (this.rawBlockSock) {
+      await this.rawBlockSock.close();
+    }
   }
 
   /**
