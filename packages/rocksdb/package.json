@@ -38,7 +38,6 @@
     "winston": "3.3.3"
   },
   "devDependencies": {
-    "bcrypto": "5.4.0",
     "bip39": "3.0.3"
   },
   "publishConfig": {

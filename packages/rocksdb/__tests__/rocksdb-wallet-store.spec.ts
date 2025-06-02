@@ -1,10 +1,10 @@
 // tslint:disable: no-unused-expression
 
 import { AddressCache } from '@node-dlc/messaging';
-import * as bcrypto from 'bcrypto';
 import { generateMnemonic } from 'bip39';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import { randomBytes } from 'crypto';
 
 import { RocksdbWalletStore } from '../lib/rocksdb-wallet-store';
 import * as util from './rocksdb';
@@ -16,7 +16,7 @@ describe('RocksdbWalletStore', () => {
   let sut: RocksdbWalletStore;
 
   const mnemonic = generateMnemonic(256);
-  const apiKey = bcrypto.random.randomBytes(32);
+  const apiKey = randomBytes(32);
 
   const addressCacheHex = Buffer.from(
     "fe6c" + // type address_cache
