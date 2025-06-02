@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { BufferReader } from '@node-lightning/bufio';
-import { ShortChannelId } from '@node-lightning/core';
-import { shortChannelIdFromBuffer } from '@node-lightning/core';
-import { OutPoint } from '@node-lightning/core';
-import { IGossipStore } from '@node-lightning/wire';
-import { NodeAnnouncementMessage } from '@node-lightning/wire';
-import { ChannelAnnouncementMessage } from '@node-lightning/wire';
-import { ExtendedChannelAnnouncementMessage } from '@node-lightning/wire';
-import { ChannelUpdateMessage } from '@node-lightning/wire';
+import { BufferReader } from '@node-dlc/bufio';
+import { ShortChannelId } from '@node-dlc/core';
+import { shortChannelIdFromBuffer } from '@node-dlc/core';
+import { OutPoint } from '@node-dlc/core';
+import { IGossipStore } from '@node-dlc/wire';
+import { NodeAnnouncementMessage } from '@node-dlc/wire';
+import { ChannelAnnouncementMessage } from '@node-dlc/wire';
+import { ExtendedChannelAnnouncementMessage } from '@node-dlc/wire';
+import { ChannelUpdateMessage } from '@node-dlc/wire';
 
 import { RocksdbBase } from './rocksdb-base';
 

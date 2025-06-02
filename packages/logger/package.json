@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/logger",
-  "version": "0.23.6",
+  "version": "0.26.1",
   "description": "DLC Logger",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
@@ -20,10 +20,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
-  },
-  "dependencies": {
-    "@node-lightning/bufio": "0.26.1",
-    "@node-lightning/logger": "0.26.1"
   },
   "publishConfig": {
     "access": "public"

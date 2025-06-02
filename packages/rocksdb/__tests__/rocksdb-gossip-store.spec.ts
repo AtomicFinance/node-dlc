@@ -1,12 +1,12 @@
 // tslint:disable: no-unused-expression
 
-import { ShortChannelId } from '@node-lightning/core';
+import { ShortChannelId } from '@node-dlc/core';
 import {
   ChannelAnnouncementMessage,
   ChannelUpdateMessage,
   ExtendedChannelAnnouncementMessage,
   NodeAnnouncementMessage,
-} from '@node-lightning/wire';
+} from '@node-dlc/wire';
 import { expect } from 'chai';
 
 import { RocksdbGossipStore } from '../lib/rocksdb-gossip-store';

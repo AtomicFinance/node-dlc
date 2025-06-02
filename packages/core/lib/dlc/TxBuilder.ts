@@ -11,7 +11,7 @@ import {
   Tx,
   TxBuilder,
   Value,
-} from '@node-lightning/bitcoin';
+} from '@node-dlc/bitcoin';
 import Decimal from 'decimal.js';
 
 import { DualFundingTxFinalizer } from './TxFinalizer';

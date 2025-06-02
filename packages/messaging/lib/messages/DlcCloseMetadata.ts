@@ -1,4 +1,4 @@
-import { Tx } from '@node-lightning/core';
+import { Tx } from '@node-dlc/bitcoin';
 
 import { DlcAcceptV0, DlcOfferV0, DlcTransactionsV0 } from '..';
 

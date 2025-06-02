@@ -4,7 +4,7 @@ import {
   OrderAcceptV0,
   OrderOfferV0,
 } from '@node-dlc/messaging';
-import { sha256 } from '@node-lightning/crypto';
+import { sha256 } from '@node-dlc/crypto';
 
 import { ChannelType } from './ChannelType';
 import { ILogger } from './ILogger';

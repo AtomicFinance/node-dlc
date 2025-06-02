@@ -1,4 +1,4 @@
-import { BufferReader } from '@node-lightning/bufio';
+import { BufferReader } from '@node-dlc/bufio';
 
 export function deserializeTlv(reader: BufferReader): ITlv {
   const type = reader.readBigSize();

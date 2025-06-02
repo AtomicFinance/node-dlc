@@ -1,6 +1,6 @@
-import { Script } from '@node-lightning/bitcoin';
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import { hash160 } from '@node-lightning/crypto';
+import { Script } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { hash160 } from '@node-dlc/crypto';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';

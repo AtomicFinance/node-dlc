@@ -1,7 +1,7 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
-import { BitField } from '@node-lightning/core';
-import * as crypto from '@node-lightning/crypto';
-import { NodeFeatureFlags } from '@node-lightning/wire';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { BitField } from '@node-dlc/common';
+import * as crypto from '@node-dlc/crypto';
+import { NodeFeatureFlags } from '@node-dlc/wire';
 
 import { Address } from '../domain/Address';
 import { MessageType } from '../MessageType';

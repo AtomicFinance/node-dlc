@@ -1,4 +1,3 @@
-import { BitcoinError, BitcoinErrorCode } from '.';
 import { ICloneable } from './ICloneable';
 
 /**
@@ -19,7 +18,7 @@ export class Value implements ICloneable<Value> {
    * equates to 0.00000001 bitcoin.
    * @param num
    */
-  public static fromSats(num: bigint | number): Value {
+  public static fromSats(num: bigint | number) {
     return new Value(BigInt(num) * BigInt(1e12));
   }
 
@@ -30,7 +29,7 @@ export class Value implements ICloneable<Value> {
    * eg: 123 millisatoshis equates to 0.00000000123 bitcoin
    * @param num
    */
-  public static fromMilliSats(num: bigint | number): Value {
+  public static fromMilliSats(num: bigint | number) {
     return new Value(BigInt(num) * BigInt(1e9));
   }
 
@@ -41,7 +40,7 @@ export class Value implements ICloneable<Value> {
    * eg: 123 microsatoshis equates to 0.00000000000123 bitcoin
    * @param num
    */
-  public static fromMicroSats(num: bigint | number): Value {
+  public static fromMicroSats(num: bigint | number) {
     return new Value(BigInt(num) * BigInt(1e6));
   }
 
@@ -52,7 +51,7 @@ export class Value implements ICloneable<Value> {
    * eg: 123 picosatoshis equates to 0.00000000000000000123 bitcoin
    * @param num
    */
-  public static fromPicoSats(num: bigint | number): Value {
+  public static fromPicoSats(num: bigint | number) {
     return new Value(BigInt(num));
   }
 
@@ -112,120 +111,91 @@ export class Value implements ICloneable<Value> {
   }
 
   /**
-   * Returns the value as a string of Bitcoin. This is a fixed eight
-   * decimal string, as such value below satoshis will be truncated.
-   */
-  public toString(): string {
-    return this.bitcoin.toFixed(8);
-  }
-
-  /**
-   * Converts the value to a standard JavaScript number. This is safe
-   * for values that are within the Number.MAX_SAFE_INTEGER range.
-   * @returns {number} The value as a number.
-   */
-  public toNumber(): number {
-    return Number(this._picoSats / BigInt(1e12)); // Convert picosatoshis to satoshis and then to a number
-  }
-
-  /**
-   * Returns true if the current value is equal to the other value
-   * @param other
-   * @returns
-   */
-  public eq(other: Value): boolean {
-    return other._picoSats === this._picoSats;
-  }
-
-  /**
-   * Returns true if the current value is not equal to the other value
-   * @param other
-   * @returns
-   */
-  public neq(other: Value): boolean {
-    return other._picoSats !== this._picoSats;
-  }
-
-  /**
-   * Returns true if the current value is greater than the other value.
-   * @param other
-   * @returns
-   */
-  public gt(other: Value): boolean {
-    return this._picoSats > other._picoSats;
-  }
-
-  /**
-   * Returns true if the current value is greater than or equal to the
-   * other value.
-   * @param other
-   * @returns
-   */
-  public gte(other: Value): boolean {
-    return this._picoSats >= other._picoSats;
-  }
-
-  /**
-   * Returns true if the current value is less than the other value.
-   * @param other
-   */
-  public lt(other: Value): boolean {
-    return this._picoSats < other._picoSats;
-  }
-
-  /**
-   * Returns true if the current value is less than or equal to the
-   * other value.
-   * @param other
-   * @returns
-   */
-  public lte(other: Value): boolean {
-    return this._picoSats <= other._picoSats;
-  }
-
-  /**
-   * Modifies the current instance by adding the other value to the
-   * existing value.
+   * Adds another value to this instance and returns this instance
    * @param other
    */
   public add(other: Value): this {
-    this._picoSats += other._picoSats;
+    this._picoSats += other.psats;
     return this;
   }
 
   /**
-   * Modifies the current instance by subtracting the other value
-   * from our existing value. Since Value is unsigned, this throws
-   * if subtraction results in a value that is less than zero.
-   * @param other
-   */
-  public sub(other: Value): this {
-    if (this._picoSats - other._picoSats < 0) {
-      throw new BitcoinError(BitcoinErrorCode.ValueUnderflow);
-    }
-    this._picoSats -= other._picoSats;
-    return this;
-  }
-
-  /**
-   * Adding the other value to the existing value and returns a new
-   * instance of Value.
+   * Adds another value to the current value and returns a new Value instance
    * @param other
    */
   public addn(other: Value): Value {
-    return new Value(this._picoSats + other._picoSats);
+    return new Value(this._picoSats + other.psats);
   }
 
   /**
-   * Subtracts supplied value from the current value and returns a new
-   * value instance. Since Value is unsigned, this throws if
-   * subtraction results in a value that is less than zero.
+   * Subtracts another value from this instance and returns this instance
+   * @param other
+   */
+  public sub(other: Value): this {
+    if (this._picoSats < other.psats) {
+      throw new Error('Value underflow');
+    }
+    this._picoSats -= other.psats;
+    return this;
+  }
+
+  /**
+   * Subtracts another value from the current value and returns a new Value instance
    * @param other
    */
   public subn(other: Value): Value {
-    if (this._picoSats - other._picoSats < 0) {
-      throw new BitcoinError(BitcoinErrorCode.ValueUnderflow);
+    if (this._picoSats < other.psats) {
+      throw new Error('Value underflow');
     }
-    return new Value(this._picoSats - other._picoSats);
+    return new Value(this._picoSats - other.psats);
+  }
+
+  /**
+   * Returns true if this value is less than the other value
+   * @param other
+   */
+  public lt(other: Value): boolean {
+    return this._picoSats < other.psats;
+  }
+
+  /**
+   * Returns true if this value is equal to the other value
+   * @param other
+   */
+  public eq(other: Value): boolean {
+    return this._picoSats === other.psats;
+  }
+
+  /**
+   * Returns true if this value is greater than the other value
+   * @param other
+   */
+  public gt(other: Value): boolean {
+    return this._picoSats > other.psats;
+  }
+
+  /**
+   * Returns true if this value is greater than or equal to the other value
+   * @param other
+   */
+  public gte(other: Value): boolean {
+    return this._picoSats >= other.psats;
+  }
+
+  /**
+   * Returns true if this value is less than or equal to the other value
+   * @param other
+   */
+  public lte(other: Value): boolean {
+    return this._picoSats <= other.psats;
+  }
+
+  /**
+   * Returns a string representation of the value in bitcoin format
+   * with 8 decimal places
+   */
+  public toString(): string {
+    const btc = this.bitcoin;
+    return btc.toFixed(8);
   }
 }

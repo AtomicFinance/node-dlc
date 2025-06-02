@@ -1,5 +1,5 @@
-import { Tx } from '@node-lightning/bitcoin';
-import { StreamReader } from '@node-lightning/bufio';
+import { Tx } from '@node-dlc/bitcoin';
+import { StreamReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import {
