@@ -1,9 +1,9 @@
+import { sha256 } from '@node-dlc/crypto';
 import {
   DlcIdsV0,
   OracleEventContainerV0,
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
-import { sha256 } from '@node-dlc/crypto';
 
 import { RocksdbBase } from './rocksdb-base';
 

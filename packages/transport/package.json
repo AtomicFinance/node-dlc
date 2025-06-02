@@ -27,9 +27,9 @@
     "@node-dlc/core": "^0.23.6",
     "@node-dlc/messaging": "^0.23.6",
     "@node-dlc/bitcoin": "^0.23.6",
-    "@node-dlc/bufio": "^0.26.1",
-    "@node-dlc/crypto": "^0.26.1",
-    "@node-dlc/wire": "^0.26.1",
+    "@node-dlc/bufio": "^0.23.6",
+    "@node-dlc/crypto": "^0.23.6",
+    "@node-dlc/wire": "^0.23.6",
     "bitcoinjs-lib": "5.2.0",
     "irc-upd": "^0.11.0",
     "secp256k1": "4.0.2"

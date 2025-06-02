@@ -1,3 +1,3 @@
 export enum OpenChannelFlags {
-    AnnounceChannel = 0,
+  AnnounceChannel = 0,
 }

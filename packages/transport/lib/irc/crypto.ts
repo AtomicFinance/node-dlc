@@ -1,5 +1,5 @@
-import { IrcMessageV0 } from '@node-dlc/messaging';
 import { sha256 } from '@node-dlc/crypto';
+import { IrcMessageV0 } from '@node-dlc/messaging';
 import secp256k1 from 'secp256k1';
 export const TOKEN_EXPIRY = 1000 * 60;
 export const EXPECTED_PREFIX = `dlc/v0/irc/token`;

@@ -1,11 +1,12 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { Value } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import {
   BitField,
   ShortChannelId,
   shortChannelIdFromBuffer,
 } from '@node-dlc/common';
 import * as crypto from '@node-dlc/crypto';
+
 import { Checksum } from '../domain/Checksum';
 import { ChannelUpdateMessageFlags } from '../flags/ChannelUpdateMessageFlags';
 import { ChannelUpdateChannelFlags } from '../flags/ChanneUpdateChannelFlags';

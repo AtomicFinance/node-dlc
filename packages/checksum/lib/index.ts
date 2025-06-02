@@ -1,1 +1,1 @@
-export * from "./crc32c";
+export * from './crc32c';

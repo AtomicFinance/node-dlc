@@ -45,7 +45,7 @@ describe('Logger', () => {
   describe('nested sub logger', () => {
     it('should point to root', () => {
       sut.level = LogLevel.Debug;
-      const level2 = sut.sub('level2');
+      const level2 = sut.sub('level2'); // eslint-disable-line @typescript-eslint/no-unused-vars
       const level3 = sut.sub('level3');
       level3.debug('test');
       expect((transport.write as sinon.SinonSpy).args[0][0]).contain('test');

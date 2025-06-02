@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/require-await */
-import { NodeAnnouncementMessage } from '../messages/NodeAnnouncementMessage';
 import { OutPoint } from '@node-dlc/bitcoin';
 import { ShortChannelId, shortChannelIdFromNumber } from '@node-dlc/common';
+
 import { ChannelAnnouncementMessage } from '../messages/ChannelAnnouncementMessage';
 import { ChannelUpdateMessage } from '../messages/ChannelUpdateMessage';
 import { ExtendedChannelAnnouncementMessage } from '../messages/ExtendedChannelAnnouncementMessage';
+import { NodeAnnouncementMessage } from '../messages/NodeAnnouncementMessage';
 import { IGossipStore } from './GossipStore';
 
 /**

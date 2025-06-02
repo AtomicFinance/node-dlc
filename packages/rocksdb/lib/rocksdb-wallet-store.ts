@@ -1,5 +1,5 @@
-import { AddressCache } from '@node-dlc/messaging';
 import { sha256 } from '@node-dlc/crypto';
+import { AddressCache } from '@node-dlc/messaging';
 import Cryptr from 'cryptr';
 
 import { RocksdbBase } from './rocksdb-base';

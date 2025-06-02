@@ -3,7 +3,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: ['./tsconfig.eslint.json', './packages/**/*/tsconfig.json']
+    project: ['./tsconfig.eslint.json', './packages/*/tsconfig.json']
   },
   plugins: [
     '@typescript-eslint',
@@ -21,6 +21,16 @@ module.exports = {
     'no-console': ['error', { allow: ['error'] }],
   },
   overrides: [
+    {
+      // Disable TypeScript parsing for checksum test files
+      files: ['packages/checksum/__tests__/**/*.ts'],
+      extends: ['eslint:recommended'],
+      rules: {
+        'prettier/prettier': 'error',
+        'no-undef': 'off',
+        'no-unused-vars': 'off'
+      }
+    },
     {
       // Apply this rule to all files
       files: ['**/*'],

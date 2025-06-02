@@ -1,5 +1,6 @@
 import { OutPoint } from '@node-dlc/bitcoin';
 import { ShortChannelId } from '@node-dlc/common';
+
 import { ChannelAnnouncementMessage } from '../messages/ChannelAnnouncementMessage';
 import { ChannelUpdateMessage } from '../messages/ChannelUpdateMessage';
 import { NodeAnnouncementMessage } from '../messages/NodeAnnouncementMessage';

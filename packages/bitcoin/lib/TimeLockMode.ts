@@ -4,13 +4,13 @@
  * time locks (nLocktime) or relative time locks (nSequence).
  */
 export enum TimeLockMode {
-    /**
-     * Block height based time lock
-     */
-    Block,
+  /**
+   * Block height based time lock
+   */
+  Block,
 
-    /**
-     * Unix timestamps based time lock
-     */
-    Time,
+  /**
+   * Unix timestamps based time lock
+   */
+  Time,
 }

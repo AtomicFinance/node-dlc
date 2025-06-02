@@ -18,14 +18,14 @@ const constants = generateReversedTable();
  * @returns number
  */
 export function crc32c(buf: Buffer): number {
-    let crc = 0xffffffff;
-    for (let i = 0; i < buf.length; i++) {
-        const constantIdx = (crc & 0xff) ^ buf[i];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const constant = constants[constantIdx];
-        crc = xor(constant, crc >>> 8);
-    }
-    return xor(crc, 0xffffffff);
+  let crc = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) {
+    const constantIdx = (crc & 0xff) ^ buf[i];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const constant = constants[constantIdx];
+    crc = xor(constant, crc >>> 8);
+  }
+  return xor(crc, 0xffffffff);
 }
 
 /**
@@ -45,20 +45,20 @@ export function crc32c(buf: Buffer): number {
  * https://en.wikipedia.org/wiki/Cyclic_redundancy_check#Polynomial_representations_of_cyclic_redundancy_checks
  */
 function generateReversedTable(): number[] {
-    const table: number[] = [];
-    for (let i = 0; i < 256; i++) {
-        let byte = i;
-        for (let bit = 0; bit < 8; bit++) {
-            if (byte & 0x00000001) {
-                byte >>>= 1;
-                byte = (byte ^ 0x82f63b78) >>> 0;
-            } else {
-                byte >>>= 1;
-            }
-        }
-        table[i] = byte;
+  const table: number[] = [];
+  for (let i = 0; i < 256; i++) {
+    let byte = i;
+    for (let bit = 0; bit < 8; bit++) {
+      if (byte & 0x00000001) {
+        byte >>>= 1;
+        byte = (byte ^ 0x82f63b78) >>> 0;
+      } else {
+        byte >>>= 1;
+      }
     }
-    return table;
+    table[i] = byte;
+  }
+  return table;
 }
 
 /**
@@ -67,5 +67,5 @@ function generateReversedTable(): number[] {
  * @param b
  */
 function xor(a: number, b: number): number {
-    return (a ^ b) >>> 0;
+  return (a ^ b) >>> 0;
 }

@@ -1,5 +1,5 @@
-import { bigFromBufBE } from "./bigFromBufBE";
+import { bigFromBufBE } from './bigFromBufBE';
 
 export function bigFromBufLE(buf: Buffer): bigint {
-    return bigFromBufBE(Buffer.from(buf).reverse());
+  return bigFromBufBE(Buffer.from(buf).reverse());
 }
