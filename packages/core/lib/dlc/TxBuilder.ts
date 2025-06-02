@@ -1,10 +1,4 @@
 import {
-  DlcAcceptWithoutSigs,
-  DlcOfferV0,
-  FundingInputV0,
-  MessageType,
-} from '@node-dlc/messaging';
-import {
   LockTime,
   OutPoint,
   Script,
@@ -12,6 +6,12 @@ import {
   TxBuilder,
   Value,
 } from '@node-dlc/bitcoin';
+import {
+  DlcAcceptWithoutSigs,
+  DlcOfferV0,
+  FundingInputV0,
+  MessageType,
+} from '@node-dlc/messaging';
 import Decimal from 'decimal.js';
 
 import { DualFundingTxFinalizer } from './TxFinalizer';

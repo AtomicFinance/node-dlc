@@ -1,5 +1,6 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { Value } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+
 import { MessageType } from '../MessageType';
 import { readTlvs } from '../serialize/readTlvs';
 import { IWireMessage } from './IWireMessage';

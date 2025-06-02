@@ -1,4 +1,4 @@
-import { HashByteOrder, OutPoint } from "@node-dlc/bitcoin";
+import { HashByteOrder, OutPoint } from '@node-dlc/bitcoin';
 
 /**
  * ChannelId type that that encapsulates an outpoint as a 32-byte value
@@ -8,47 +8,47 @@ import { HashByteOrder, OutPoint } from "@node-dlc/bitcoin";
  * output_index modifies the last two bytes).
  */
 export class ChannelId {
-    public static fromOutPoint(outpoint: OutPoint): ChannelId {
-        const txid = outpoint.txid.serialize(HashByteOrder.RPC);
+  public static fromOutPoint(outpoint: OutPoint): ChannelId {
+    const txid = outpoint.txid.serialize(HashByteOrder.RPC);
 
-        if (outpoint.outputIndex > 0xffff) {
-            throw new Error("Invalid output index length");
-        }
-
-        txid[30] ^= outpoint.outputIndex >> 8;
-        txid[31] ^= outpoint.outputIndex & 0xff;
-
-        return new ChannelId(txid);
+    if (outpoint.outputIndex > 0xffff) {
+      throw new Error('Invalid output index length');
     }
 
-    constructor(readonly value: Buffer) {}
+    txid[30] ^= outpoint.outputIndex >> 8;
+    txid[31] ^= outpoint.outputIndex & 0xff;
 
-    /**
-     * Converts the ChannelId into a buffer
-     */
-    public toBuffer(): Buffer {
-        return Buffer.from(this.value);
-    }
+    return new ChannelId(txid);
+  }
 
-    /**
-     * Converts the ChannelId into a hex-encoded string
-     */
-    public toString(): string {
-        return this.toHex();
-    }
+  constructor(readonly value: Buffer) {}
 
-    /**
-     * Converts the ChannelId to a hex-encoded string
-     */
-    public toHex(): string {
-        return this.value.toString("hex");
-    }
+  /**
+   * Converts the ChannelId into a buffer
+   */
+  public toBuffer(): Buffer {
+    return Buffer.from(this.value);
+  }
 
-    /**
-     * Returns true if the ChannelIds are byte-wise equal
-     * @param other
-     */
-    public equals(other: ChannelId): boolean {
-        return this.value.equals(other.value);
-    }
+  /**
+   * Converts the ChannelId into a hex-encoded string
+   */
+  public toString(): string {
+    return this.toHex();
+  }
+
+  /**
+   * Converts the ChannelId to a hex-encoded string
+   */
+  public toHex(): string {
+    return this.value.toString('hex');
+  }
+
+  /**
+   * Returns true if the ChannelIds are byte-wise equal
+   * @param other
+   */
+  public equals(other: ChannelId): boolean {
+    return this.value.equals(other.value);
+  }
 }

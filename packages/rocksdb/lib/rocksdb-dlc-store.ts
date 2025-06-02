@@ -1,4 +1,6 @@
+import { OutPoint, Script } from '@node-dlc/bitcoin';
 import { BatchDlcTxBuilder, DlcTxBuilder } from '@node-dlc/core';
+import { sha256, xor } from '@node-dlc/crypto';
 import {
   ContractInfoV0,
   ContractInfoV1,
@@ -10,8 +12,6 @@ import {
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
-import { OutPoint, Script } from '@node-dlc/bitcoin';
-import { sha256, xor } from '@node-dlc/crypto';
 
 import { RocksdbBase } from './rocksdb-base';
 

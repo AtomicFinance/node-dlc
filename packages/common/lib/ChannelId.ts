@@ -1,4 +1,4 @@
-import { HashByteOrder, OutPoint } from "@node-dlc/bitcoin";
+import { HashByteOrder, OutPoint } from '@node-dlc/bitcoin';
 
 /**
  * The `channel_id`, defined in [BOLT #2](https://github.com/lightningnetwork/lightning-rfc/blob/master/02-peer-protocol.md#definition-of-channel_id),
@@ -9,47 +9,47 @@ import { HashByteOrder, OutPoint } from "@node-dlc/bitcoin";
  * `funding_txid` and the `funding_output_index`.
  */
 export class ChannelId {
-    /**
-     * Constructs a `channel_id` from an outpoint by performing an XOR
-     * of the output index against the last-two bytes of the bid-endian
-     * txid.
-     * @param outpoint
-     * @returns
-     */
-    public static fromOutPoint(outpoint: OutPoint): ChannelId {
-        if (outpoint.outputIndex > 0xffff) {
-            throw new Error("Invalid channel_id outpoint");
-        }
-
-        const value = outpoint.txid.serialize(HashByteOrder.RPC);
-        value[30] ^= outpoint.outputIndex >> 8;
-        value[31] ^= outpoint.outputIndex & 0xff;
-        return new ChannelId(value);
+  /**
+   * Constructs a `channel_id` from an outpoint by performing an XOR
+   * of the output index against the last-two bytes of the bid-endian
+   * txid.
+   * @param outpoint
+   * @returns
+   */
+  public static fromOutPoint(outpoint: OutPoint): ChannelId {
+    if (outpoint.outputIndex > 0xffff) {
+      throw new Error('Invalid channel_id outpoint');
     }
 
-    constructor(readonly value: Buffer) {}
+    const value = outpoint.txid.serialize(HashByteOrder.RPC);
+    value[30] ^= outpoint.outputIndex >> 8;
+    value[31] ^= outpoint.outputIndex & 0xff;
+    return new ChannelId(value);
+  }
 
-    /**
-     * Returns true if the `channel_id`s are equal.
-     * @param other
-     * @returns
-     */
-    public equals(other: ChannelId): boolean {
-        return this.value.equals(other.value);
-    }
+  constructor(readonly value: Buffer) {}
 
-    /**
-     * Serializes to the hex representation of the `channel_id`
-     */
-    public toString(): string {
-        return this.value.toString("hex");
-    }
+  /**
+   * Returns true if the `channel_id`s are equal.
+   * @param other
+   * @returns
+   */
+  public equals(other: ChannelId): boolean {
+    return this.value.equals(other.value);
+  }
 
-    /**
-     * Serializes to a buffer
-     * @returns
-     */
-    public toBuffer(): Buffer {
-        return Buffer.from(this.value);
-    }
+  /**
+   * Serializes to the hex representation of the `channel_id`
+   */
+  public toString(): string {
+    return this.value.toString('hex');
+  }
+
+  /**
+   * Serializes to a buffer
+   * @returns
+   */
+  public toBuffer(): Buffer {
+    return Buffer.from(this.value);
+  }
 }

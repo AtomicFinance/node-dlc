@@ -1,6 +1,7 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { Script, Value } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { BitField } from '@node-dlc/common';
+
 import { OpenChannelFlags } from '../flags/OpenChannelFlags';
 import { MessageType } from '../MessageType';
 import { readTlvs } from '../serialize/readTlvs';

@@ -23,17 +23,17 @@
   },
   "dependencies": {
     "@node-dlc/bitcoin": "^0.23.6",
-    "@node-dlc/bufio": "^0.26.1",
-    "@node-dlc/checksum": "^0.26.1",
-    "@node-dlc/common": "^0.26.1",
-    "@node-dlc/crypto": "^0.26.1",
-    "@node-dlc/wire": "^0.26.1",
+    "@node-dlc/bufio": "^0.23.6",
+    "@node-dlc/checksum": "^0.23.6",
+    "@node-dlc/common": "^0.23.6",
+    "@node-dlc/crypto": "^0.23.6",
+    "@node-dlc/wire": "^0.23.6",
     "bip-schnorr": "0.6.3",
     "bitcoin-networks": "^1.0.0",
     "bitcoinjs-lib": "5.2.0"
   },
   "devDependencies": {
-    "@node-dlc/logger": "^0.26.1",
+    "@node-dlc/logger": "^0.23.6",
     "@types/bitcoinjs-lib": "5.0.0",
     "@types/node": "18.11.9",
     "sinon": "14.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/crypto",
-  "version": "0.26.1",
+  "version": "0.23.6",
   "description": "Lightning cryptography utilities",
   "keywords": [
     "lightning",
@@ -17,7 +17,8 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
-    "lint": "../../node_modules/.bin/eslint lib/**/* __tests__/**/*",
+    "lint": "../../node_modules/.bin/eslint lib --ext .ts,.js",
+    "lint:fix": "../../node_modules/.bin/eslint lib --ext .ts,.js --fix",
     "build": "../../node_modules/.bin/tsc --project ./tsconfig-build.json",
     "prepublish": "npm run build"
   },

@@ -1,6 +1,7 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { HashByteOrder, HashValue, OutPoint } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { BitField, shortChannelIdFromBuffer } from '@node-dlc/common';
+
 import { readTlvs } from '../serialize/readTlvs';
 import { ChannelAnnouncementMessage } from './ChannelAnnouncementMessage';
 

@@ -2,6 +2,7 @@ import { HashByteOrder, OutPoint } from '@node-dlc/bitcoin';
 import { ShortChannelId } from '@node-dlc/common';
 import { ILogger } from '@node-dlc/logger';
 import { EventEmitter } from 'events';
+
 import { ChannelAnnouncementMessage } from '../messages/ChannelAnnouncementMessage';
 import { ExtendedChannelAnnouncementMessage } from '../messages/ExtendedChannelAnnouncementMessage';
 import { IWireMessage } from '../messages/IWireMessage';

@@ -1,11 +1,11 @@
 // tslint:disable: no-unused-expression
 
+import { sha256 } from '@node-dlc/crypto';
 import {
   DlcIdsV0,
   OracleEventContainerV0,
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
-import { sha256 } from '@node-dlc/crypto';
 import { expect } from 'chai';
 
 import { RocksdbOracleStore } from '../lib/rocksdb-oracle-store';

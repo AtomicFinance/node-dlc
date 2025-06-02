@@ -2,5 +2,9 @@
 node_modules
 # don't lint build output (make sure it's set to your correct build folder name)
 dist
+**/dist
 # don't lint nyc coverage output
 coverage
+# don't lint checksum test files
+build
+packages/checksum/__tests__/**/*.ts

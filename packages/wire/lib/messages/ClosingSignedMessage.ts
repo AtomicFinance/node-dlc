@@ -1,6 +1,7 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { Value } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { ChannelId } from '@node-dlc/common';
+
 import { MessageType } from '../MessageType';
 import { IWireMessage } from './IWireMessage';
 

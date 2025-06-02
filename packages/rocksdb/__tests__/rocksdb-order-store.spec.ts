@@ -1,7 +1,7 @@
 // tslint:disable: no-unused-expression
 
-import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
 import { sha256 } from '@node-dlc/crypto';
+import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
 import { RocksdbOrderStore } from '../lib/rocksdb-order-store';

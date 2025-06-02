@@ -1,6 +1,6 @@
-import { IrcMessageV0 } from '@node-dlc/messaging';
 import { Base58 } from '@node-dlc/bitcoin';
 import { sha256 } from '@node-dlc/crypto';
+import { IrcMessageV0 } from '@node-dlc/messaging';
 import { ECPair } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
 import irc from 'irc-upd';

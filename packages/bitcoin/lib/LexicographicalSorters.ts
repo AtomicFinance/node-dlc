@@ -1,6 +1,6 @@
-import { HashByteOrder } from "./HashByteOrder";
-import { TxIn } from "./TxIn";
-import { TxOut } from "./TxOut";
+import { HashByteOrder } from './HashByteOrder';
+import { TxIn } from './TxIn';
+import { TxOut } from './TxOut';
 
 /**
  * Compares two transaction inputs and lexicographically sorted in
@@ -11,12 +11,14 @@ import { TxOut } from "./TxOut";
  * @param b
  */
 export function bip69InputSorter(a: TxIn, b: TxIn): number {
-    const txid = a.outpoint.txid.serialize(HashByteOrder.RPC).compare(b.outpoint.txid.serialize());
-    if (txid !== 0) return txid;
+  const txid = a.outpoint.txid
+    .serialize(HashByteOrder.RPC)
+    .compare(b.outpoint.txid.serialize());
+  if (txid !== 0) return txid;
 
-    if (a.outpoint.outputIndex < b.outpoint.outputIndex) return -1;
-    if (a.outpoint.outputIndex > b.outpoint.outputIndex) return 1;
-    return 0;
+  if (a.outpoint.outputIndex < b.outpoint.outputIndex) return -1;
+  if (a.outpoint.outputIndex > b.outpoint.outputIndex) return 1;
+  return 0;
 }
 
 /**
@@ -26,10 +28,10 @@ export function bip69InputSorter(a: TxIn, b: TxIn): number {
  * @param b
  */
 export function bip69OutputSorter(a: TxOut, b: TxOut): number {
-    // sort by amount desc first
-    const amount = Number(a.value.sats - b.value.sats);
-    if (amount !== 0) return amount;
+  // sort by amount desc first
+  const amount = Number(a.value.sats - b.value.sats);
+  if (amount !== 0) return amount;
 
-    // then sort by script pub key
-    return a.scriptPubKey.serializeCmds().compare(b.scriptPubKey.serializeCmds());
+  // then sort by script pub key
+  return a.scriptPubKey.serializeCmds().compare(b.scriptPubKey.serializeCmds());
 }

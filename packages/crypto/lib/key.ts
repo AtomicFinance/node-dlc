@@ -1,5 +1,5 @@
-import crypto from "crypto";
-import secp256k1 from "secp256k1";
+import crypto from 'crypto';
+import secp256k1 from 'secp256k1';
 
 // const minPrivateKey = BigInt("0x01");
 // const maxPrivateKey = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140");
@@ -12,11 +12,11 @@ import secp256k1 from "secp256k1";
  * @param privKey 32-byte/256-bit buffer
  */
 export function validPrivateKey(privKey: Buffer): boolean {
-    try {
-        return secp256k1.privateKeyVerify(privKey);
-    } catch (ex) {
-        return false;
-    }
+  try {
+    return secp256k1.privateKeyVerify(privKey);
+  } catch (ex) {
+    return false;
+  }
 }
 
 /**
@@ -26,11 +26,11 @@ export function validPrivateKey(privKey: Buffer): boolean {
  * @param pubkey
  */
 export function validPublicKey(pubkey: Buffer): boolean {
-    try {
-        return secp256k1.publicKeyVerify(pubkey);
-    } catch (ex) {
-        return false;
-    }
+  try {
+    return secp256k1.publicKeyVerify(pubkey);
+  } catch (ex) {
+    return false;
+  }
 }
 
 /**
@@ -44,11 +44,11 @@ export function validPublicKey(pubkey: Buffer): boolean {
  * @returns the 32-byte/256-bit private key
  */
 export function createPrivateKey(): Buffer {
-    let result: Buffer;
-    do {
-        result = crypto.randomBytes(32);
-    } while (!validPrivateKey(result));
-    return result;
+  let result: Buffer;
+  do {
+    result = crypto.randomBytes(32);
+  } while (!validPrivateKey(result));
+  return result;
 }
 
 /**
@@ -60,5 +60,5 @@ export function createPrivateKey(): Buffer {
  * 65-byte buffer for uncompressed
  */
 export function getPublicKey(privKey: Buffer, compressed = true): Buffer {
-    return Buffer.from(secp256k1.publicKeyCreate(privKey, compressed));
+  return Buffer.from(secp256k1.publicKeyCreate(privKey, compressed));
 }

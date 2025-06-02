@@ -1,6 +1,7 @@
-import { BufferWriter, StreamReader } from "@node-dlc/bufio";
-import { ICloneable } from "./ICloneable";
-import { TimeLockMode } from "./TimeLockMode";
+import { BufferWriter, StreamReader } from '@node-dlc/bufio';
+
+import { ICloneable } from './ICloneable';
+import { TimeLockMode } from './TimeLockMode';
 
 const DEFAULT_LOCKTIME = 0xffff_ffff;
 const TIME_THRESHOLD = 500_000_000;
@@ -12,90 +13,90 @@ const TIME_THRESHOLD = 500_000_000;
  * transaction input has a non-0xffff_ffff nSequence.
  */
 export class LockTime implements ICloneable<LockTime> {
-    /**
-     * Parses a locktime from a reader
-     * @param reader
-     */
-    public static parse(reader: StreamReader): LockTime {
-        return new LockTime(reader.readUInt32LE());
-    }
+  /**
+   * Parses a locktime from a reader
+   * @param reader
+   */
+  public static parse(reader: StreamReader): LockTime {
+    return new LockTime(reader.readUInt32LE());
+  }
 
-    /**
-     * Creates an nLockTime of zero which enforces finality for the
-     * transaction.
-     */
-    public static zero() {
-        return new LockTime(0);
-    }
+  /**
+   * Creates an nLockTime of zero which enforces finality for the
+   * transaction.
+   */
+  public static zero(): LockTime {
+    return new LockTime(0);
+  }
 
-    /**
-     * Gets or sets the value of the timelock. The value must be less than
-     * the maximum allowed value of 0xffff_ffff. When set to the max
-     * value, the locktime is disabled.
-     */
-    public get value(): number {
-        return this._value;
-    }
+  /**
+   * Gets or sets the value of the timelock. The value must be less than
+   * the maximum allowed value of 0xffff_ffff. When set to the max
+   * value, the locktime is disabled.
+   */
+  public get value(): number {
+    return this._value;
+  }
 
-    public set value(val: number) {
-        if (val > DEFAULT_LOCKTIME || val < 0) throw new Error("Invalid nLocktime");
-        this._value = val;
-    }
+  public set value(val: number) {
+    if (val > DEFAULT_LOCKTIME || val < 0) throw new Error('Invalid nLocktime');
+    this._value = val;
+  }
 
-    private _value: number;
+  private _value: number;
 
-    /**
-     * Creates a new locktime instance
-     * @param value defaults to 0xffff_ffff
-     */
-    constructor(value: number = DEFAULT_LOCKTIME) {
-        this.value = value;
-    }
+  /**
+   * Creates a new locktime instance
+   * @param value defaults to 0xffff_ffff
+   */
+  constructor(value: number = DEFAULT_LOCKTIME) {
+    this.value = value;
+  }
 
-    /**
-     * True when a non-default is configured. This flag has no
-     * knowledge if the locktime is fully enabled with the requirement
-     * that at least one tx input has an nSequence value that non-default.
-     */
-    public get isEnabled(): boolean {
-        return this.value < DEFAULT_LOCKTIME;
-    }
+  /**
+   * True when a non-default is configured. This flag has no
+   * knowledge if the locktime is fully enabled with the requirement
+   * that at least one tx input has an nSequence value that non-default.
+   */
+  public get isEnabled(): boolean {
+    return this.value < DEFAULT_LOCKTIME;
+  }
 
-    /**
-     * Gets the type of lock time: Block or Time based
-     */
-    public get type(): TimeLockMode {
-        if (this.value < TIME_THRESHOLD) return TimeLockMode.Block;
-        else return TimeLockMode.Time;
-    }
+  /**
+   * Gets the type of lock time: Block or Time based
+   */
+  public get type(): TimeLockMode {
+    if (this.value < TIME_THRESHOLD) return TimeLockMode.Block;
+    else return TimeLockMode.Time;
+  }
 
-    /**
-     * Returns the string value
-     */
-    public toString(): string {
-        return this.value.toString();
-    }
+  /**
+   * Returns the string value
+   */
+  public toString(): string {
+    return this.value.toString();
+  }
 
-    /**
-     * Returns the JSON serialized value
-     */
-    public toJSON() {
-        return this.value;
-    }
+  /**
+   * Returns the JSON serialized value
+   */
+  public toJSON(): number {
+    return this.value;
+  }
 
-    /**
-     * Serializes the locktime into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter(Buffer.alloc(4));
-        writer.writeUInt32LE(this.value);
-        return writer.toBuffer();
-    }
+  /**
+   * Serializes the locktime into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter(Buffer.alloc(4));
+    writer.writeUInt32LE(this.value);
+    return writer.toBuffer();
+  }
 
-    /**
-     * Clone via deep copy
-     */
-    public clone(): LockTime {
-        return new LockTime(this._value);
-    }
+  /**
+   * Clone via deep copy
+   */
+  public clone(): LockTime {
+    return new LockTime(this._value);
+  }
 }

@@ -1,7 +1,8 @@
-import { BufferReader, BufferWriter } from "@node-dlc/bufio";
-import { ChannelId } from "@node-dlc/common";
-import { MessageType } from "../MessageType";
-import { IWireMessage } from "./IWireMessage";
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { ChannelId } from '@node-dlc/common';
+
+import { MessageType } from '../MessageType';
+import { IWireMessage } from './IWireMessage';
 
 /**
  * The `funding_signed` message is sent by the channel acceptor after
@@ -15,50 +16,50 @@ import { IWireMessage } from "./IWireMessage";
  * `channel_id`.
  */
 export class FundingSignedMessage implements IWireMessage {
-    public static type: MessageType = MessageType.FundingSigned;
+  public static type: MessageType = MessageType.FundingSigned;
 
-    /**
-     * Deserializes the funding_signed message
-     * @param buf
-     * @returns
-     */
-    public static deserialize(buf: Buffer): FundingSignedMessage {
-        const instance = new FundingSignedMessage();
-        const reader = new BufferReader(buf);
+  /**
+   * Deserializes the funding_signed message
+   * @param buf
+   * @returns
+   */
+  public static deserialize(buf: Buffer): FundingSignedMessage {
+    const instance = new FundingSignedMessage();
+    const reader = new BufferReader(buf);
 
-        reader.readUInt16BE(); // read type
-        instance.channelId = new ChannelId(reader.readBytes(32));
-        instance.signature = reader.readBytes(64);
+    reader.readUInt16BE(); // read type
+    instance.channelId = new ChannelId(reader.readBytes(32));
+    instance.signature = reader.readBytes(64);
 
-        return instance;
-    }
+    return instance;
+  }
 
-    /**
-     * The type for message. funding_signed = 35
-     */
-    public readonly type: MessageType = FundingSignedMessage.type;
+  /**
+   * The type for message. funding_signed = 35
+   */
+  public readonly type: MessageType = FundingSignedMessage.type;
 
-    /**
-     * ChannelId generated from the funding transactions outpoint.
-     */
-    public channelId: ChannelId;
+  /**
+   * ChannelId generated from the funding transactions outpoint.
+   */
+  public channelId: ChannelId;
 
-    /**
-     * Signature for the counterpary's first commitment transaction.
-     * This signature allows the counterparty to spend the commitment
-     * using their own signature. The signature must be 64-bytes
-     * representing the 32-byte (r,s) values for an ECDSA signature.
-     */
-    public signature: Buffer;
+  /**
+   * Signature for the counterpary's first commitment transaction.
+   * This signature allows the counterparty to spend the commitment
+   * using their own signature. The signature must be 64-bytes
+   * representing the 32-byte (r,s) values for an ECDSA signature.
+   */
+  public signature: Buffer;
 
-    /**
-     * Serializes the message into a Buffer
-     */
-    public serialize(): Buffer {
-        const writer = new BufferWriter();
-        writer.writeUInt16BE(this.type);
-        writer.writeBytes(this.channelId.toBuffer());
-        writer.writeBytes(this.signature);
-        return writer.toBuffer();
-    }
+  /**
+   * Serializes the message into a Buffer
+   */
+  public serialize(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeUInt16BE(this.type);
+    writer.writeBytes(this.channelId.toBuffer());
+    writer.writeBytes(this.signature);
+    return writer.toBuffer();
+  }
 }

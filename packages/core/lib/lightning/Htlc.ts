@@ -1,5 +1,6 @@
-import { Value } from "@node-dlc/bitcoin";
-import { HtlcDirection } from "./HtlcDirection";
+import { Value } from '@node-dlc/bitcoin';
+
+import { HtlcDirection } from './HtlcDirection';
 
 /**
  * An HTLC (hashed time-locked contract) is part of the transfer
@@ -12,40 +13,40 @@ import { HtlcDirection } from "./HtlcDirection";
  * payments.
  */
 export class Htlc {
-    /**
-     * The preimage of the payment hash using SHA256.
-     */
-    public paymentPreimage: Buffer;
+  /**
+   * The preimage of the payment hash using SHA256.
+   */
+  public paymentPreimage: Buffer;
 
-    /**
-     * Constructs an HTLC with associated information
-     * @param htlcId Identifier for the HTLC is a counter maintained
-     * per-channel, per-peer. It starts at zero and is incremented when
-     * an HTLC is offered. This value is used when sending channel
-     * related messages to disambiguate HTLCs that may share the same
-     * preimage.
-     *
-     * @param direction Direction, from your node's perspective, that
-     * indicates if the HTLC was offered or received.
-     *
-     * @param value The value of the HTLC in millisatoshi.
-     *
-     * @param cltvExpiry The absolutely blocktime expiry of the HTLC.
-     * The value must be under 500,000,000 to ensure it is a block-based
-     * locktime. After this timeout has expired, the offeror can perform
-     * a forced resolution on-chain.
-     *
-     * @param paymentHash The 32-byte hash of the preimage. Knowledge of
-     * the preimage is irrevocable and considers payment complete.
-     */
-    constructor(
-        readonly htlcId: bigint,
-        readonly direction: HtlcDirection,
-        readonly value: Value,
-        readonly cltvExpiry: number,
-        readonly paymentHash: Buffer,
-        paymentPreimage?: Buffer,
-    ) {
-        this.paymentPreimage = paymentPreimage;
-    }
+  /**
+   * Constructs an HTLC with associated information
+   * @param htlcId Identifier for the HTLC is a counter maintained
+   * per-channel, per-peer. It starts at zero and is incremented when
+   * an HTLC is offered. This value is used when sending channel
+   * related messages to disambiguate HTLCs that may share the same
+   * preimage.
+   *
+   * @param direction Direction, from your node's perspective, that
+   * indicates if the HTLC was offered or received.
+   *
+   * @param value The value of the HTLC in millisatoshi.
+   *
+   * @param cltvExpiry The absolutely blocktime expiry of the HTLC.
+   * The value must be under 500,000,000 to ensure it is a block-based
+   * locktime. After this timeout has expired, the offeror can perform
+   * a forced resolution on-chain.
+   *
+   * @param paymentHash The 32-byte hash of the preimage. Knowledge of
+   * the preimage is irrevocable and considers payment complete.
+   */
+  constructor(
+    readonly htlcId: bigint,
+    readonly direction: HtlcDirection,
+    readonly value: Value,
+    readonly cltvExpiry: number,
+    readonly paymentHash: Buffer,
+    paymentPreimage?: Buffer,
+  ) {
+    this.paymentPreimage = paymentPreimage;
+  }
 }

@@ -1,4 +1,5 @@
 import { HashValue, OutPoint } from '@node-dlc/bitcoin';
+
 import { ChannelAnnouncementMessage } from '../messages/ChannelAnnouncementMessage';
 import { ChannelUpdateMessage } from '../messages/ChannelUpdateMessage';
 import { ExtendedChannelAnnouncementMessage } from '../messages/ExtendedChannelAnnouncementMessage';
