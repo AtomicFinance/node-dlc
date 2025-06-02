@@ -2,7 +2,7 @@ import { sha256 } from '@node-dlc/crypto';
 import { AddressCache } from '@node-dlc/messaging';
 import Cryptr from 'cryptr';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   Wallet = 30,
@@ -10,7 +10,7 @@ enum Prefix {
   AddressCache = 32,
 }
 
-export class RocksdbWalletStore extends RocksdbBase {
+export class LeveldbWalletStore extends LeveldbBase {
   public async checkSeed(): Promise<boolean> {
     const iterator = this._db.iterator();
     const results: Buffer[] = [];

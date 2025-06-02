@@ -4,11 +4,11 @@ import { sha256 } from '@node-dlc/crypto';
 import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
-import { RocksdbOrderStore } from '../lib/rocksdb-order-store';
-import * as util from './rocksdb';
+import { LeveldbOrderStore } from '../lib/leveldb-order-store';
+import * as util from './leveldb';
 
-describe('RocksdbOrderStore', () => {
-  let sut: RocksdbOrderStore;
+describe('LeveldbOrderStore', () => {
+  let sut: LeveldbOrderStore;
 
   const orderOfferHex = Buffer.from(
     "f532" + // type
@@ -175,7 +175,7 @@ describe('RocksdbOrderStore', () => {
 
   before(async () => {
     util.rmdir('.testdb');
-    sut = new RocksdbOrderStore('./.testdb/nested/dir');
+    sut = new LeveldbOrderStore('./.testdb/nested/dir');
     await sut.open();
   });
 

@@ -13,7 +13,7 @@ import {
   FundingInputV0,
 } from '@node-dlc/messaging';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   DlcOfferV0 = 50,
@@ -27,7 +27,7 @@ enum Prefix {
   TempContractId = 58,
 }
 
-export class RocksdbDlcStore extends RocksdbBase {
+export class LeveldbDlcStore extends LeveldbBase {
   public async findDlcOffers(): Promise<DlcOfferV0[]> {
     const results: DlcOfferV0[] = [];
     const iterator = this._db.iterator();

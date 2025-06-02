@@ -3,11 +3,11 @@
 import { DlcInfoV0 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
-import { RocksdbInfoStore } from '../lib/rocksdb-info-store';
-import * as util from './rocksdb';
+import { LeveldbInfoStore } from '../lib/leveldb-info-store';
+import * as util from './leveldb';
 
-describe('RocksdbDlcStore', () => {
-  let sut: RocksdbInfoStore;
+describe('LeveldbDlcStore', () => {
+  let sut: LeveldbInfoStore;
 
   const dlcInfoHex = Buffer.from(
     "ef32" + // type
@@ -24,7 +24,7 @@ describe('RocksdbDlcStore', () => {
 
   before(async () => {
     util.rmdir('.testdb');
-    sut = new RocksdbInfoStore('./.testdb/nested/dir');
+    sut = new LeveldbInfoStore('./.testdb/nested/dir');
     await sut.open();
   });
 

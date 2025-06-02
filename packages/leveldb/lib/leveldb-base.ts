@@ -1,7 +1,7 @@
 import { ClassicLevel } from 'classic-level';
 import fs from 'fs';
 
-export abstract class RocksdbBase {
+export abstract class LeveldbBase {
   protected _path: string;
   protected _db: ClassicLevel<Buffer, Buffer>;
 

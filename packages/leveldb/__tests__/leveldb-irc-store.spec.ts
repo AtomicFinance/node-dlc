@@ -2,11 +2,11 @@
 
 import { expect } from 'chai';
 
-import { RocksdbIrcStore } from '../lib/rocksdb-irc-store';
-import * as util from './rocksdb';
+import { LeveldbIrcStore } from '../lib/leveldb-irc-store';
+import * as util from './leveldb';
 
-describe('RocksdbIrcStore', () => {
-  let sut: RocksdbIrcStore;
+describe('LeveldbIrcStore', () => {
+  let sut: LeveldbIrcStore;
 
   const tempContractId = Buffer.from(
     'a860dfb8d9eb5412d98c2c12936150ed606fb078edacd256aa4eef94cefc6c7d',
@@ -32,7 +32,7 @@ describe('RocksdbIrcStore', () => {
 
   before(async () => {
     util.rmdir('.testdb');
-    sut = new RocksdbIrcStore('./.testdb/nested/dir');
+    sut = new LeveldbIrcStore('./.testdb/nested/dir');
     await sut.open();
   });
 

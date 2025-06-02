@@ -14,11 +14,11 @@ import {
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
-import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';
-import * as util from './rocksdb';
+import { LeveldbDlcStore } from '../lib/leveldb-dlc-store';
+import * as util from './leveldb';
 
-describe('RocksdbDlcStore', () => {
-  let sut: RocksdbDlcStore;
+describe('LeveldbDlcStore', () => {
+  let sut: LeveldbDlcStore;
 
   const dlcOfferHex = Buffer.from(
     "a71a" + // type
@@ -230,7 +230,7 @@ describe('RocksdbDlcStore', () => {
 
   before(async () => {
     util.rmdir('.testdb');
-    sut = new RocksdbDlcStore('./.testdb/nested/dir');
+    sut = new LeveldbDlcStore('./.testdb/nested/dir');
     await sut.open();
   });
 
