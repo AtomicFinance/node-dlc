@@ -7,9 +7,6 @@ import { LogLevel } from './log-level';
  * @param msgLevel
  */
 export function shouldLog(myLevel: LogLevel, msgLevel: LogLevel): boolean {
-  if (msgLevel === LogLevel.Log) {
-    return true;
-  }
   switch (myLevel) {
     case LogLevel.Trace:
       return true;

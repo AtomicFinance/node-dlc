@@ -45,7 +45,7 @@ describe('Logger', () => {
   describe('nested sub logger', () => {
     it('should point to root', () => {
       sut.level = LogLevel.Debug;
-      const level2 = sut.sub('level2');
+      const level2 = sut.sub('level2'); // eslint-disable-line @typescript-eslint/no-unused-vars
       const level3 = sut.sub('level3');
       level3.debug('test');
       expect((transport.write as sinon.SinonSpy).args[0][0]).contain('test');
@@ -74,7 +74,6 @@ describe('Logger', () => {
     { fn: 'info', level: LogLevel.Info },
     { fn: 'warn', level: LogLevel.Warn },
     { fn: 'error', level: LogLevel.Error },
-    { fn: 'log', level: LogLevel.Log },
   ];
 
   for (const { fn, level } of fixtures) {
@@ -136,26 +135,6 @@ describe('Logger', () => {
         const debug = sut[fn];
         debug('testing');
         expect((transport.write as sinon.SinonSpy).called).to.be.true;
-      });
-
-      it('should pass and format errors', () => {
-        sut[fn]('testing', Error('error'));
-        expect((transport.write as sinon.SinonSpy).args[0][2]).to.be.instanceOf(
-          Error,
-        );
-        expect((transport.write as sinon.SinonSpy).args[0][0]).to.match(
-          / Error: error/,
-        );
-        // Expect stack trace for LogLevel Trace
-        if (fn === 'trace') {
-          expect((transport.write as sinon.SinonSpy).args[0][0]).to.match(
-            /logger.spec.ts/,
-          );
-        } else {
-          expect((transport.write as sinon.SinonSpy).args[0][0]).not.to.match(
-            /logger.spec.ts/,
-          );
-        }
       });
     });
   }

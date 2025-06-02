@@ -1,4 +1,4 @@
-import { ILogger, Logger } from '@node-lightning/logger';
+import { ILogger, Logger } from '@node-dlc/logger';
 import sinon from 'sinon';
 
 export function createFakeLogger(): ILogger {

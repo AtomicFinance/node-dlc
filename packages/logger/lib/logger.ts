@@ -2,34 +2,32 @@ import util from 'util';
 
 import { LogLevel } from './log-level';
 import { ITransport } from './transport';
+import { ConsoleTransport } from './transports/console-transport';
 import { shouldLog } from './util';
 
 export interface ILogger {
   area: string;
   instance: string;
-  format: boolean;
   trace(...args: any[]): void;
   debug(...args: any[]): void;
   info(...args: any[]): void;
   warn(...args: any[]): void;
   error(...args: any[]): void;
-  sub(area: string, instance?: string, format?: boolean): ILogger;
+  sub(area: string, instance?: string): ILogger;
 }
 
 export class Logger implements ILogger {
   public readonly area: string;
   public readonly instance: string;
-  public readonly format: boolean;
 
   private _transports: ITransport[];
   private _level: LogLevel;
   private _root: Logger;
 
-  constructor(area = '', instance?: string, format = true) {
+  constructor(area = '', instance?: string) {
     this._root = this;
     this.area = area;
     this.instance = instance;
-    this.format = format;
     this._level = LogLevel.Info;
     this._transports = [];
 
@@ -39,13 +37,12 @@ export class Logger implements ILogger {
     this.info = this.info.bind(this);
     this.warn = this.warn.bind(this);
     this.error = this.error.bind(this);
-    this.log = this.log.bind(this);
   }
 
   /**
    * Configured log-level
    */
-  get level() {
+  get level(): LogLevel {
     return this._root._level;
   }
 
@@ -56,7 +53,7 @@ export class Logger implements ILogger {
   /**
    * Gets the available transports
    */
-  get transports() {
+  get transports(): ITransport[] {
     return this._root._transports;
   }
 
@@ -65,24 +62,16 @@ export class Logger implements ILogger {
    * @param area optional area, if not provided it inherits from the parent
    * @param instance optional instance, if not provied it inherits from the parent
    */
-  public sub(area?: string, instance?: string, format = true): ILogger {
-    const logger = new Logger(
-      area || this.area,
-      instance || this.instance,
-      format || this.format,
-    );
+  public sub(area?: string, instance?: string): Logger {
+    const logger = new Logger(area || this.area, instance || this.instance);
     logger._root = this._root;
     return logger;
-  }
-
-  public log(...args: any[]) {
-    this._log(LogLevel.Log, this.area, this.instance, args);
   }
 
   /**
    * Write a trace message
    */
-  public trace(...args: any[]) {
+  public trace(...args: any[]): void {
     this._log(LogLevel.Trace, this.area, this.instance, args);
   }
 
@@ -90,7 +79,7 @@ export class Logger implements ILogger {
    * Write a debug message
    * @param args variadic arguments
    */
-  public debug(...args: any[]) {
+  public debug(...args: any[]): void {
     this._log(LogLevel.Debug, this.area, this.instance, args);
   }
 
@@ -98,7 +87,7 @@ export class Logger implements ILogger {
    * Write an info message
    * @param args variadic arguments
    */
-  public info(...args: any[]) {
+  public info(...args: any[]): void {
     this._log(LogLevel.Info, this.area, this.instance, args);
   }
 
@@ -106,7 +95,7 @@ export class Logger implements ILogger {
    * Write a warning message
    * @param args variadic arguments
    */
-  public warn(...args: any[]) {
+  public warn(...args: any[]): void {
     this._log(LogLevel.Warn, this.area, this.instance, args);
   }
 
@@ -114,17 +103,21 @@ export class Logger implements ILogger {
    * Write an error message
    * @param args variadic arguments
    */
-  public error(...args: any[]) {
+  public error(...args: any[]): void {
     this._log(LogLevel.Error, this.area, this.instance, args);
   }
 
   /////////////////////////////
 
-  private _log(level: LogLevel, area: string, instance: string, args: any[]) {
+  private _log(
+    level: LogLevel,
+    area: string,
+    instance: string,
+    args: any[],
+  ): void {
     if (!shouldLog(this.level, level)) return;
     const formattedMsg = this._format(level, area, instance, args);
-    const error = this._findError(args, formattedMsg);
-    this._write(formattedMsg, level, error);
+    this._write(formattedMsg);
   }
 
   private _format(
@@ -138,35 +131,17 @@ export class Logger implements ILogger {
     const instanceFmt = instance ? ' ' + instance : '';
 
     // convert buffers to hex encodings
-    // and extracts message from error unless LogLevel Trace
     args = args.map((arg) =>
-      Buffer.isBuffer(arg)
-        ? arg.toString('hex')
-        : arg instanceof Error && level !== LogLevel.Trace
-        ? arg.toString()
-        : arg,
+      Buffer.isBuffer(arg) ? arg.toString('hex') : arg,
     );
 
     const msg = util.format(args[0], ...args.slice(1));
-    if (this.format) {
-      return `${date} [${level}]${formattedArea}${instanceFmt}: ${msg}`;
-    } else {
-      return msg;
-    }
+    return `${date} [${level}]${formattedArea}${instanceFmt}: ${msg}`;
   }
 
-  private _findError(args, formattedMsg): Error {
-    const error = args.find((arg) => arg instanceof Error);
-    if (!error) {
-      return new Error(formattedMsg);
-    } else {
-      return error;
-    }
-  }
-
-  private _write(msg: string, level: LogLevel, error: Error) {
+  private _write(msg: string): void {
     for (const transport of this._root.transports) {
-      transport.write(msg, level, error);
+      transport.write(msg);
     }
   }
 }

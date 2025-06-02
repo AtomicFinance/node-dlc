@@ -1,7 +1,8 @@
+import { sha256 } from '@node-dlc/crypto';
 import { AddressCache } from '@node-dlc/messaging';
-import { sha256 } from '@node-lightning/crypto';
-import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
 import Cryptr from 'cryptr';
+
+import { RocksdbBase } from './rocksdb-base';
 
 enum Prefix {
   Wallet = 30,
@@ -11,25 +12,25 @@ enum Prefix {
 
 export class RocksdbWalletStore extends RocksdbBase {
   public async checkSeed(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: Buffer[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.Wallet) {
-          results.push(data.value);
+    const iterator = this._db.iterator();
+    const results: Buffer[] = [];
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.Wallet) {
+          results.push(value);
         }
-      });
-      stream.on('end', () => {
-        switch (results.length) {
-          case 0:
-            resolve(false);
-            break;
-          default:
-            resolve(true);
-        }
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    switch (results.length) {
+      case 0:
+        return false;
+      default:
+        return true;
+    }
   }
 
   public async findSeed(apiKey: Buffer): Promise<string> {

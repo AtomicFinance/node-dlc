@@ -1,10 +1,11 @@
+import { sha256 } from '@node-dlc/crypto';
 import {
   DlcIdsV0,
   OracleEventContainerV0,
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
-import { sha256 } from '@node-lightning/crypto';
-import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
+
+import { RocksdbBase } from './rocksdb-base';
 
 enum Prefix {
   OracleEventContainerV0 = 80,
@@ -14,19 +15,20 @@ enum Prefix {
 
 export class RocksdbOracleStore extends RocksdbBase {
   public async findOracleEventContainers(): Promise<OracleEventContainerV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OracleEventContainerV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OracleEventContainerV0) {
-          results.push(OracleEventContainerV0.deserialize(data.value));
+    const results: OracleEventContainerV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OracleEventContainerV0) {
+          results.push(OracleEventContainerV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOracleEventContainer(
@@ -96,19 +98,20 @@ export class RocksdbOracleStore extends RocksdbBase {
   }
 
   public async findOracleIdentifiers(): Promise<OracleIdentifierV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: OracleIdentifierV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.OracleIdentifierV0) {
-          results.push(OracleIdentifierV0.deserialize(data.value));
+    const results: OracleIdentifierV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.OracleIdentifierV0) {
+          results.push(OracleIdentifierV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findOracleIdentifier(

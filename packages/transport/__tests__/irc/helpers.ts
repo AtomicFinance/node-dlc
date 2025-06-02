@@ -1,4 +1,4 @@
-import { ILogger, Logger } from '@node-lightning/logger';
+import { ILogger, Logger } from '@node-dlc/logger';
 import { EventEmitter } from 'events';
 import fs from 'fs';
 import net from 'net';

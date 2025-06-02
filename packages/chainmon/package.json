@@ -24,13 +24,13 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-lightning/bitcoin": "0.26.1",
-    "@node-lightning/bitcoind": "0.26.1",
-    "@node-lightning/chainmon": "0.26.1",
+    "@node-dlc/bitcoin": "^0.23.6",
+    "@node-dlc/bitcoind": "^0.23.6",
+    "@node-dlc/logger": "^0.23.6",
     "bitcoinjs-lib": "5.2.0"
   },
   "devDependencies": {
-    "@types/node": "16.10.3"
+    "@types/node": "18.11.9"
   },
   "publishConfig": {
     "access": "public"

@@ -105,7 +105,5 @@ dist
 
 .DS_Store
 
-*.txt
-
 .metals/
 .vscode/

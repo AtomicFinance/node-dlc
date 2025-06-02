@@ -1,11 +1,11 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
 
 export class Address {
   public static type = MessageType.NodeAnnouncementAddress;
 
-  public static deserialize(buf: Buffer) {
+  public static deserialize(buf: Buffer): Address {
     const reader = new BufferReader(buf);
     reader.readBigSize(); // read off type
     reader.readBigSize(); // read size
@@ -40,7 +40,7 @@ export class Address {
     this.port = port;
   }
 
-  public toString() {
+  public toString(): string {
     return `${this.host}:${this.port}`;
   }
 

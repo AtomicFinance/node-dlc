@@ -11,11 +11,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
         with:
-          node-version: 16.x
-      - run: sudo apt-get install libzmq3-dev
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn test
+          python-version: '3.10'
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: 'yarn'
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libzmq3-dev build-essential
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Bootstrap packages
+        run: yarn bootstrap
+
+      - name: Run tests
+        run: yarn test

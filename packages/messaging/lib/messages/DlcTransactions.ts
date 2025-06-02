@@ -1,9 +1,5 @@
-import { Tx } from '@node-lightning/bitcoin';
-import {
-  BufferReader,
-  BufferWriter,
-  StreamReader,
-} from '@node-lightning/bufio';
+import { Tx } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';

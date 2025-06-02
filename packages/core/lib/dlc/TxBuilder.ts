@@ -1,17 +1,17 @@
 import {
-  DlcAcceptWithoutSigs,
-  DlcOfferV0,
-  FundingInputV0,
-  MessageType,
-} from '@node-dlc/messaging';
-import {
   LockTime,
   OutPoint,
   Script,
   Tx,
   TxBuilder,
   Value,
-} from '@node-lightning/bitcoin';
+} from '@node-dlc/bitcoin';
+import {
+  DlcAcceptWithoutSigs,
+  DlcOfferV0,
+  FundingInputV0,
+  MessageType,
+} from '@node-dlc/messaging';
 import Decimal from 'decimal.js';
 
 import { DualFundingTxFinalizer } from './TxFinalizer';

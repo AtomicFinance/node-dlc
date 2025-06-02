@@ -1,4 +1,10 @@
 export enum BitcoinErrorCode {
-  // Value
-  ValueUnderflow,
+  Base58ChecksumFailed,
+  PubKeyInvalid,
+  PubKeyHashInvalid,
+  SigEncodingInvalid,
+  SigHashTypeInvalid,
+  MultiSigSetupInvalid,
+  Hash160Invalid,
+  Hash256Invalid,
 }

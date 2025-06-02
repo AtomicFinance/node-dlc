@@ -1,4 +1,6 @@
+import { OutPoint, Script } from '@node-dlc/bitcoin';
 import { BatchDlcTxBuilder, DlcTxBuilder } from '@node-dlc/core';
+import { sha256, xor } from '@node-dlc/crypto';
 import {
   ContractInfoV0,
   ContractInfoV1,
@@ -10,9 +12,8 @@ import {
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
-import { OutPoint, Script } from '@node-lightning/bitcoin';
-import { sha256, xor } from '@node-lightning/crypto';
-import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
+
+import { RocksdbBase } from './rocksdb-base';
 
 enum Prefix {
   DlcOfferV0 = 50,
@@ -28,33 +29,35 @@ enum Prefix {
 
 export class RocksdbDlcStore extends RocksdbBase {
   public async findDlcOffers(): Promise<DlcOfferV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcOfferV0) {
-          results.push(DlcOfferV0.deserialize(data.value));
+    const results: DlcOfferV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcOfferV0) {
+          results.push(DlcOfferV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findNumDlcOffers(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      let num = 0;
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcOfferV0) num++;
-      });
-      stream.on('end', () => {
-        resolve(num);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+    let num = 0;
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key] of iterator) {
+        if (key[0] === Prefix.DlcOfferV0) num++;
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return num;
   }
 
   public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
@@ -79,12 +82,13 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcOffersByEventId(eventId: string): Promise<DlcOfferV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcOfferV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcOfferV0) {
-          const dlcOffer = DlcOfferV0.deserialize(data.value);
+    const results: DlcOfferV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcOfferV0) {
+          const dlcOffer = DlcOfferV0.deserialize(value);
           if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
             if (
               (dlcOffer.contractInfo as ContractInfoV0).oracleInfo.announcement
@@ -106,12 +110,12 @@ export class RocksdbDlcStore extends RocksdbBase {
             );
           }
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
@@ -133,49 +137,53 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcAccepts(): Promise<DlcAcceptV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcAcceptV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcAcceptV0) {
-          results.push(DlcAcceptV0.deserialize(data.value));
+    const results: DlcAcceptV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcAcceptV0) {
+          results.push(DlcAcceptV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findFirstDlcAccept(): Promise<DlcAcceptV0> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      let result: DlcAcceptV0;
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcAcceptV0 && !result) {
-          result = DlcAcceptV0.deserialize(data.value);
+    let result: DlcAcceptV0;
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcAcceptV0 && !result) {
+          result = DlcAcceptV0.deserialize(value);
+          break;
         }
-      });
-      stream.on('end', () => {
-        resolve(result);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return result;
   }
 
   public async findNumDlcAccepts(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      let num = 0;
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcAcceptV0) num++;
-      });
-      stream.on('end', () => {
-        resolve(num);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+    let num = 0;
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key] of iterator) {
+        if (key[0] === Prefix.DlcAcceptV0) num++;
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return num;
   }
 
   public async findDlcAccept(
@@ -306,33 +314,35 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcSigns(): Promise<DlcSignV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcSignV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcSignV0) {
-          results.push(DlcSignV0.deserialize(data.value));
+    const results: DlcSignV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcSignV0) {
+          results.push(DlcSignV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findNumDlcSigns(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      let num = 0;
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcSignV0) num++;
-      });
-      stream.on('end', () => {
-        resolve(num);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+    let num = 0;
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key] of iterator) {
+        if (key[0] === Prefix.DlcSignV0) num++;
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return num;
   }
 
   public async findDlcSign(contractId: Buffer): Promise<DlcSignV0> {
@@ -357,19 +367,20 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcCancels(): Promise<DlcCancelV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcCancelV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcCancelV0) {
-          results.push(DlcCancelV0.deserialize(data.value));
+    const results: DlcCancelV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcCancelV0) {
+          results.push(DlcCancelV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findDlcCancel(contractId: Buffer): Promise<DlcCancelV0> {
@@ -394,19 +405,20 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcCloses(): Promise<DlcCloseV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcCloseV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcCloseV0) {
-          results.push(DlcCloseV0.deserialize(data.value));
+    const results: DlcCloseV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcCloseV0) {
+          results.push(DlcCloseV0.deserialize(value));
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findDlcClose(contractId: Buffer): Promise<DlcCloseV0> {
@@ -431,35 +443,37 @@ export class RocksdbDlcStore extends RocksdbBase {
   }
 
   public async findDlcTransactionsList(): Promise<DlcTransactionsV0[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      const results: DlcTransactionsV0[] = [];
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcTransactionsV0) {
+    const results: DlcTransactionsV0[] = [];
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key, value] of iterator) {
+        if (key[0] === Prefix.DlcTransactionsV0) {
           // Don't parse cets to avoid java heap out of memory
-          const dlcTxs = DlcTransactionsV0.deserialize(data.value, false);
+          const dlcTxs = DlcTransactionsV0.deserialize(value, false);
           results.push(dlcTxs);
         }
-      });
-      stream.on('end', () => {
-        resolve(results);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return results;
   }
 
   public async findNumDlcTransactionsList(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const stream = this._db.createReadStream();
-      let num = 0;
-      stream.on('data', (data) => {
-        if (data.key[0] === Prefix.DlcTransactionsV0) num++;
-      });
-      stream.on('end', () => {
-        resolve(num);
-      });
-      stream.on('error', (err) => reject(err));
-    });
+    let num = 0;
+    const iterator = this._db.iterator();
+
+    try {
+      for await (const [key] of iterator) {
+        if (key[0] === Prefix.DlcTransactionsV0) num++;
+      }
+    } finally {
+      await iterator.close();
+    }
+
+    return num;
   }
 
   public async findDlcTransactions(

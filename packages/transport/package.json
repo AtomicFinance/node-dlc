@@ -26,17 +26,17 @@
   "dependencies": {
     "@node-dlc/core": "^0.23.6",
     "@node-dlc/messaging": "^0.23.6",
-    "@node-lightning/bitcoin": "0.26.1",
-    "@node-lightning/bufio": "0.26.1",
-    "@node-lightning/crypto": "0.26.1",
-    "@node-lightning/wire": "0.26.1",
+    "@node-dlc/bitcoin": "^0.23.6",
+    "@node-dlc/bufio": "^0.23.6",
+    "@node-dlc/crypto": "^0.23.6",
+    "@node-dlc/wire": "^0.23.6",
     "bitcoinjs-lib": "5.2.0",
     "irc-upd": "^0.11.0",
     "secp256k1": "4.0.2"
   },
   "devDependencies": {
-    "@node-lightning/logger": "0.26.1",
-    "@types/node": "16.10.3",
+    "@node-dlc/logger": "^0.23.6",
+    "@types/node": "18.11.9",
     "fs": "0.0.1-security",
     "net": "1.0.2",
     "path": "0.12.7",

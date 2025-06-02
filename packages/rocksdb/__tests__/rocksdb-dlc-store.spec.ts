@@ -1,6 +1,8 @@
 // tslint:disable: no-unused-expression
 
+import { OutPoint, Value } from '@node-dlc/bitcoin';
 import { DlcTxBuilder } from '@node-dlc/core';
+import { sha256, xor } from '@node-dlc/crypto';
 import {
   DlcAcceptV0,
   DlcCancelV0,
@@ -10,8 +12,6 @@ import {
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
-import { OutPoint, Value } from '@node-lightning/bitcoin';
-import { sha256, xor } from '@node-lightning/crypto';
 import { expect } from 'chai';
 
 import { RocksdbDlcStore } from '../lib/rocksdb-dlc-store';

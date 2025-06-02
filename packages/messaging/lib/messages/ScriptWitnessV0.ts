@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from '@node-lightning/bufio';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 /**
  * ScriptWitness is the data for a witness element in a witness stack.
