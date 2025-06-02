@@ -1,7 +1,5 @@
 # Node DLC
 
-> ⚠️ **Alpha Stage**: This project is in early development and should not be used in production environments.
-
 Node DLC is a Discreet Log Contract (DLC) client written in TypeScript that allows you to create, manage, and execute DLCs on the Bitcoin blockchain.
 
 ## Overview
@@ -22,13 +20,15 @@ Discreet Log Contracts (DLCs) are a type of smart contract that enables conditio
 This project was inspired by [Node-Lightning](https://github.com/altangent/node-lightning/) and has now absorbed its functionality. The monorepo contains the following packages:
 
 ### Core Packages
+
 - `@node-dlc/bitcoin` - Bitcoin primitives and utilities
 - `@node-dlc/core` - Core DLC functionality and types
 - `@node-dlc/messaging` - DLC messaging protocol implementation
-- `@node-dlc/rocksdb` - Storage layer using classic-level
+- `@node-dlc/leveldb` - Storage layer using classic-level
 - `@node-dlc/transport` - Network transport layer (IRC)
 
 ### Supporting Packages
+
 - `@node-dlc/bitcoind` - Bitcoin Core RPC and ZMQ client
 - `@node-dlc/bufio` - Buffer I/O utilities
 - `@node-dlc/chainmon` - Blockchain monitoring tools

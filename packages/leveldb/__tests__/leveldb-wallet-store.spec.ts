@@ -6,14 +6,14 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { randomBytes } from 'crypto';
 
-import { RocksdbWalletStore } from '../lib/rocksdb-wallet-store';
-import * as util from './rocksdb';
+import { LeveldbWalletStore } from '../lib/leveldb-wallet-store';
+import * as util from './leveldb';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe('RocksdbWalletStore', () => {
-  let sut: RocksdbWalletStore;
+describe('LeveldbWalletStore', () => {
+  let sut: LeveldbWalletStore;
 
   const mnemonic = generateMnemonic(256);
   const apiKey = randomBytes(32);
@@ -32,7 +32,7 @@ describe('RocksdbWalletStore', () => {
 
   before(async () => {
     util.rmdir('.testdb');
-    sut = new RocksdbWalletStore('./.testdb/nested/dir');
+    sut = new LeveldbWalletStore('./.testdb/nested/dir');
     await sut.open();
   });
 

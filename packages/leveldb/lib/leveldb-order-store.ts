@@ -5,7 +5,7 @@ import {
   OrderOfferV0,
 } from '@node-dlc/messaging';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   OrderOfferV0 = 40,
@@ -16,7 +16,7 @@ enum Prefix {
   OrderMetadataV0Nick = 45,
 }
 
-export class RocksdbOrderStore extends RocksdbBase {
+export class LeveldbOrderStore extends LeveldbBase {
   public async findOrderOffers(): Promise<OrderOfferV0[]> {
     const results: OrderOfferV0[] = [];
     const iterator = this._db.iterator();

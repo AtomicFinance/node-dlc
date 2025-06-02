@@ -5,7 +5,7 @@ import {
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   OracleEventContainerV0 = 80,
@@ -13,7 +13,7 @@ enum Prefix {
   OracleIdentifierV0 = 82,
 }
 
-export class RocksdbOracleStore extends RocksdbBase {
+export class LeveldbOracleStore extends LeveldbBase {
   public async findOracleEventContainers(): Promise<OracleEventContainerV0[]> {
     const results: OracleEventContainerV0[] = [];
     const iterator = this._db.iterator();

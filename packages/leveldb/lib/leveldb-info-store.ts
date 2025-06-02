@@ -1,6 +1,6 @@
 import { DlcInfoV0 } from '@node-dlc/messaging';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   DlcInfoV0 = 90,
@@ -14,7 +14,7 @@ export type InfoValue =
   | 'close'
   | 'transactions';
 
-export class RocksdbInfoStore extends RocksdbBase {
+export class LeveldbInfoStore extends LeveldbBase {
   public async findDlcInfo(): Promise<DlcInfoV0> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcInfoV0])]);
     const raw = await this._safeGet<Buffer>(key);

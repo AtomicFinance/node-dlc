@@ -1,7 +1,7 @@
 {
-  "name": "@node-dlc/rocksdb",
+  "name": "@node-dlc/leveldb",
   "version": "0.23.6",
-  "description": "DLC RocksDB",
+  "description": "DLC LevelDB",
   "scripts": {
     "start": "npm run build && node dist/index.js",
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
@@ -12,10 +12,10 @@
   },
   "keywords": [
     "dlc",
-    "rocksdb"
+    "leveldb"
   ],
   "author": "Atomic Finance <info@atomic.finance>",
-  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/rocksdb",
+  "homepage": "https://github.com/atomicfinance/node-dlc/tree/master/packages/leveldb",
   "license": "MIT",
   "main": "dist/index.js",
   "repository": {

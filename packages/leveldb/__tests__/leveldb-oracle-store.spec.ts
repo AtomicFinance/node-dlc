@@ -8,11 +8,11 @@ import {
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
-import { RocksdbOracleStore } from '../lib/rocksdb-oracle-store';
-import * as util from './rocksdb';
+import { LeveldbOracleStore } from '../lib/leveldb-oracle-store';
+import * as util from './leveldb';
 
-describe('RocksdbOracleStore', () => {
-  let sut: RocksdbOracleStore;
+describe('LeveldbOracleStore', () => {
+  let sut: LeveldbOracleStore;
 
   const oracleEventContainerHex = Buffer.from(
     'fdf0c0' + // type oracle_event_container
@@ -160,7 +160,7 @@ describe('RocksdbOracleStore', () => {
 
   before(async () => {
     util.rmdir('.testdb');
-    sut = new RocksdbOracleStore('./.testdb/nested/dir');
+    sut = new LeveldbOracleStore('./.testdb/nested/dir');
     await sut.open();
   });
 

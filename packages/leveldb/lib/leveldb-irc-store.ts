@@ -1,13 +1,13 @@
 import { DlcIdsV0 } from '@node-dlc/messaging';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   TempContractIds = 60,
   ContractIds = 61,
 }
 
-export class RocksdbIrcStore extends RocksdbBase {
+export class LeveldbIrcStore extends LeveldbBase {
   public async findTempContractIdsByNick(nick: string): Promise<DlcIdsV0> {
     const key = Buffer.concat([
       Buffer.from([Prefix.TempContractIds]),

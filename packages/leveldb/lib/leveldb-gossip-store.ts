@@ -9,7 +9,7 @@ import { ChannelAnnouncementMessage } from '@node-dlc/wire';
 import { ExtendedChannelAnnouncementMessage } from '@node-dlc/wire';
 import { ChannelUpdateMessage } from '@node-dlc/wire';
 
-import { RocksdbBase } from './rocksdb-base';
+import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
   ChannelAnnouncement = 1,
@@ -20,7 +20,7 @@ enum Prefix {
   NodeId = 70,
 }
 
-export class RocksdbGossipStore extends RocksdbBase implements IGossipStore {
+export class LeveldbGossipStore extends LeveldbBase implements IGossipStore {
   public async findNodeIdByNick(nick: string): Promise<Buffer> {
     const key = Buffer.concat([
       Buffer.from([Prefix.NodeId]),
