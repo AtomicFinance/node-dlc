@@ -1,4 +1,4 @@
-# @node-lightning/bitcoind
+# @node-dlc/bitcoind
 
 This package provides connectivity to a bitcoind node by enabling RPC functions
 and Zeromq streaming.

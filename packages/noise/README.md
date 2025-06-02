@@ -1,7 +1,7 @@
 # Lightning Network Noise Protocol Socket (BOLT #8)
 
-[![CircleCI](https://circleci.com/gh/altangent/node-lightning/tree/master.svg?style=shield)](https://circleci.com/gh/altangent/node-lightning/tree/master)
-[![codecov](https://codecov.io/gh/altangent/node-lightning/branch/master/graph/badge.svg)](https://codecov.io/gh/altangent/node-lightning)
+[![CircleCI](https://circleci.com/gh/atomicfinance/node-dlc/tree/master.svg?style=shield)](https://circleci.com/gh/atomicfinance/node-dlc/tree/master)
+[![codecov](https://codecov.io/gh/atomicfinance/node-dlc/branch/master/graph/badge.svg)](https://codecov.io/gh/atomicfinance/node-dlc)
 
 Implements a Noise Protocol TCP Socket and Server in Node.js as defined in Lightning Network BOLT #8 for Encrypted and Authenticated Transport.
 
@@ -13,12 +13,12 @@ Implements a Noise Protocol TCP Socket and Server in Node.js as defined in Light
 
 Learn more about the Noise Protocol and the Lighting Network version:
 
--   [Noise Protocol](http://noiseprotocol.org/)
--   [Lightning Network BOLT #8](https://github.com/lightningnetwork/lightning-rfc/blob/master/08-transport.md)
+- [Noise Protocol](http://noiseprotocol.org/)
+- [Lightning Network BOLT #8](https://github.com/lightningnetwork/lightning-rfc/blob/master/08-transport.md)
 
 ## Requirements
 
--   Node.js 10.17+
+- Node.js 18+
 
 ## Usage
 
@@ -28,13 +28,13 @@ This example shows how to create a `NoiseSocket` that connects to a `NoiseServer
 
 To create a `NoiseSocket`, you must provide:
 
--   local private key `ls` which is a `Buffer` with 32-bytes
--   remote node's compressed public key `rp` which is a `Buffer` with 33-bytes.
+- local private key `ls` which is a `Buffer` with 32-bytes
+- remote node's compressed public key `rp` which is a `Buffer` with 33-bytes.
 
 These two values are required to create the encrypted and authenticated communication channel.
 
 ```javascript
-const noise = require("@node-lightning/noise");
+const noise = require("@node-dlc/noise");
 
 // ls is private key as a Buffer(32) defining a point on elliptic
 // curve secp256k1
@@ -76,7 +76,7 @@ socket.on("data", buf => {
 ### Creating a NoiseSocket Server:
 
 ```javascript
-const noise = require('@node-lightning/noise');
+const noise = require('@node-dlc/noise');
 
 // ls is private key as a Buffer(32) defining a point on elliptic
 // curve secp256k1
