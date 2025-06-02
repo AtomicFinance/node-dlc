@@ -34,7 +34,7 @@
   "devDependencies": {
     "@node-lightning/logger": "0.26.1",
     "@types/bitcoinjs-lib": "5.0.0",
-    "@types/node": "16.10.3",
+    "@types/node": "18.11.9",
     "sinon": "10.0.0"
   },
   "publishConfig": {

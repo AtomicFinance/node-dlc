@@ -1,5 +1,6 @@
 import { DlcInfoV0 } from '@node-dlc/messaging';
-import { RocksdbBase } from '@node-lightning/gossip-rocksdb';
+
+import { RocksdbBase } from './rocksdb-base';
 
 enum Prefix {
   DlcInfoV0 = 90,

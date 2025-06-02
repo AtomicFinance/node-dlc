@@ -31,7 +31,7 @@
     "decimal.js": "10.4.3"
   },
   "devDependencies": {
-    "@types/node": "16.10.3"
+    "@types/node": "18.11.9"
   },
   "publishConfig": {
     "access": "public"
