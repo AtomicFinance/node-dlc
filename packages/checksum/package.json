@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/checksum",
-  "version": "0.23.6",
+  "version": "0.24.0",
   "description": "Lightning Network checksum utilities",
   "keywords": [],
   "author": "Brian Mancini <bmancini@gmail.com>",

@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/bitcoind",
-  "version": "0.23.6",
+  "version": "0.24.0",
   "description": "Basic bitcoind JSONRPC and ZMQ client",
   "keywords": [],
   "author": "Brian Mancini <bmancini@gmail.com>",
