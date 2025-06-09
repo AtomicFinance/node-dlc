@@ -1,7 +1,10 @@
 // tslint:disable: no-unused-expression
-import { ECPair } from 'bitcoinjs-lib';
 import chai from 'chai';
+import { ECPairFactory } from 'ecpair';
 import sinonChai from 'sinon-chai';
+import * as tinysecp from 'tiny-secp256k1';
+
+const ECPair = ECPairFactory(tinysecp);
 
 import { ChannelType } from '../../lib/irc/ChannelType';
 import { IrcManager } from '../../lib/irc/IrcManager';

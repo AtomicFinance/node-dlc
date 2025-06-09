@@ -107,3 +107,6 @@ dist
 
 .metals/
 .vscode/
+
+# LevelDB temporary directories
+packages/leveldb/tmp-leveldb/

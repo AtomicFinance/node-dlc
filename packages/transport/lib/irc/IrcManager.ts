@@ -1,10 +1,13 @@
 import { Base58 } from '@node-dlc/bitcoin';
 import { sha256 } from '@node-dlc/crypto';
 import { IrcMessageV0 } from '@node-dlc/messaging';
-import { ECPair } from 'bitcoinjs-lib';
+import { ECPairFactory } from 'ecpair';
 import { EventEmitter } from 'events';
 import irc from 'irc-upd';
 import secp256k1 from 'secp256k1';
+import * as tinysecp from 'tiny-secp256k1';
+
+const ECPair = ECPairFactory(tinysecp);
 
 import { ChannelType } from './ChannelType';
 import { verifySignature } from './crypto';

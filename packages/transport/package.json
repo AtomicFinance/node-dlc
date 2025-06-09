@@ -30,9 +30,11 @@
     "@node-dlc/crypto": "^0.24.0",
     "@node-dlc/messaging": "^0.24.0",
     "@node-dlc/wire": "^0.24.0",
-    "bitcoinjs-lib": "5.2.0",
+    "bitcoinjs-lib": "6.1.7",
+    "ecpair": "^2.0.1",
     "irc-upd": "^0.11.0",
-    "secp256k1": "4.0.2"
+    "secp256k1": "4.0.2",
+    "tiny-secp256k1": "^2.2.3"
   },
   "devDependencies": {
     "@node-dlc/logger": "^0.24.0",

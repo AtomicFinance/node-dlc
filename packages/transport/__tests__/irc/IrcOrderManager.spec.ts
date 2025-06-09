@@ -1,8 +1,11 @@
 // tslint:disable: no-unused-expression
 import { OrderAcceptV0, OrderOfferV0 } from '@node-dlc/messaging';
-import { ECPair } from 'bitcoinjs-lib';
 import chai from 'chai';
+import { ECPairFactory } from 'ecpair';
 import sinonChai from 'sinon-chai';
+import * as tinysecp from 'tiny-secp256k1';
+
+const ECPair = ECPairFactory(tinysecp);
 
 import { ChannelType } from '../../lib/irc/ChannelType';
 import { IrcOrderManager } from '../../lib/irc/IrcOrderManager';
