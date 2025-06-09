@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/bitcoin",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "DLC bitcoin",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
@@ -22,8 +22,8 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bufio": "^0.24.0",
-    "@node-dlc/crypto": "^0.24.0"
+    "@node-dlc/bufio": "^0.24.1",
+    "@node-dlc/crypto": "^0.24.1"
   },
   "publishConfig": {
     "access": "public"

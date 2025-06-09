@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/transport",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "DLC Transport",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -24,12 +24,12 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^0.24.0",
-    "@node-dlc/bufio": "^0.24.0",
-    "@node-dlc/core": "^0.24.0",
-    "@node-dlc/crypto": "^0.24.0",
-    "@node-dlc/messaging": "^0.24.0",
-    "@node-dlc/wire": "^0.24.0",
+    "@node-dlc/bitcoin": "^0.24.1",
+    "@node-dlc/bufio": "^0.24.1",
+    "@node-dlc/core": "^0.24.1",
+    "@node-dlc/crypto": "^0.24.1",
+    "@node-dlc/messaging": "^0.24.1",
+    "@node-dlc/wire": "^0.24.1",
     "bitcoinjs-lib": "6.1.7",
     "ecpair": "^2.0.1",
     "irc-upd": "^0.11.0",
@@ -37,7 +37,7 @@
     "tiny-secp256k1": "^2.2.3"
   },
   "devDependencies": {
-    "@node-dlc/logger": "^0.24.0",
+    "@node-dlc/logger": "^0.24.1",
     "@types/node": "18.11.9",
     "fs": "0.0.1-security",
     "net": "1.0.2",

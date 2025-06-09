@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/chainmon",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "Bitcoin on-chain transaction monitoring tool for DLCs",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
@@ -24,9 +24,9 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^0.24.0",
-    "@node-dlc/bitcoind": "^0.24.0",
-    "@node-dlc/logger": "^0.24.0",
+    "@node-dlc/bitcoin": "^0.24.1",
+    "@node-dlc/bitcoind": "^0.24.1",
+    "@node-dlc/logger": "^0.24.1",
     "bitcoinjs-lib": "6.1.7"
   },
   "devDependencies": {

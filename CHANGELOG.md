@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.1] - 2025-06-09
+
+### 🔧 Improvements
+
+- **Dependency Updates**: Upgraded `bitcoinjs-lib` to version 6.1.7 across affected packages
+  - `@node-dlc/chainmon` - Updated bitcoinjs-lib dependency
+  - `@node-dlc/messaging` - Updated bitcoinjs-lib dependency  
+  - `@node-dlc/transport` - Updated bitcoinjs-lib dependency
+- **Security**: Latest bitcoinjs-lib includes security fixes and performance improvements
+- **Compatibility**: Enhanced Bitcoin protocol compatibility with latest library version
+
+### 🐛 Bug Fixes
+
+- **Package Dependencies**: Resolved dependency conflicts in affected packages
+- **Build Process**: Updated package-lock.json files for consistent dependency resolution
+
+---
+
 ## [0.24.0] - 2025-06-02
 
 ### 🚀 Major Features

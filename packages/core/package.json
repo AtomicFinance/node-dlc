@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/core",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "DLC Core",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -23,16 +23,16 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^0.24.0",
-    "@node-dlc/bufio": "^0.24.0",
-    "@node-dlc/common": "^0.24.0",
-    "@node-dlc/crypto": "^0.24.0",
+    "@node-dlc/bitcoin": "^0.24.1",
+    "@node-dlc/bufio": "^0.24.1",
+    "@node-dlc/common": "^0.24.1",
+    "@node-dlc/crypto": "^0.24.1",
     "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0",
     "decimal.js": "10.4.3"
   },
   "devDependencies": {
-    "@node-dlc/messaging": "^0.24.0",
+    "@node-dlc/messaging": "^0.24.1",
     "@types/node": "18.11.9"
   },
   "publishConfig": {
