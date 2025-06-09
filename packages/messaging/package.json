@@ -30,12 +30,11 @@
     "@node-dlc/wire": "^0.24.0",
     "bip-schnorr": "0.6.3",
     "bitcoin-networks": "^1.0.0",
-    "bitcoinjs-lib": "5.2.0",
+    "bitcoinjs-lib": "6.1.7",
     "secp256k1": "^4.0.3"
   },
   "devDependencies": {
     "@node-dlc/logger": "^0.24.0",
-    "@types/bitcoinjs-lib": "5.0.0",
     "@types/node": "18.11.9",
     "@types/secp256k1": "^4.0.3",
     "sinon": "14.0.0"

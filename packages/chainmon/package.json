@@ -27,7 +27,7 @@
     "@node-dlc/bitcoin": "^0.24.0",
     "@node-dlc/bitcoind": "^0.24.0",
     "@node-dlc/logger": "^0.24.0",
-    "bitcoinjs-lib": "5.2.0"
+    "bitcoinjs-lib": "6.1.7"
   },
   "devDependencies": {
     "@types/node": "18.11.9"
