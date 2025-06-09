@@ -80,6 +80,48 @@ export const roundDownToNearestMultiplier = (
 
 export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
+const safeConvertToBigInt = (value: number | bigint | Value): bigint => {
+  if (value instanceof Value) {
+    return value.sats;
+  }
+
+  if (typeof value === 'bigint') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    // If it's a decimal less than 1, it's likely a bitcoin amount that needs conversion to sats
+    if (value < 1 && value > 0) {
+      return BigInt(Math.round(value * 1e8));
+    }
+    // For larger numbers, treat as sats
+    return BigInt(Math.round(value));
+  }
+
+  // Handle string representations of numbers (which can happen during serialization)
+  if (typeof value === 'string') {
+    const numValue = Number(value);
+    if (!isNaN(numValue)) {
+      if (numValue < 1 && numValue > 0) {
+        return BigInt(Math.round(numValue * 1e8));
+      }
+      return BigInt(Math.round(numValue));
+    }
+  }
+
+  // Final fallback: try to convert directly, but catch BigInt errors for decimals
+  try {
+    return BigInt(value);
+  } catch (error) {
+    // If BigInt conversion fails, try to parse as a decimal bitcoin amount
+    const numValue = Number(value);
+    if (!isNaN(numValue)) {
+      return BigInt(Math.round(numValue * 1e8));
+    }
+    throw error;
+  }
+};
+
 /**
  * Compute rounding intervals for a linear or hyperbola payout curve
  *
@@ -91,11 +133,8 @@ export const computeRoundingModulus = (
   rounding: number | bigint | Value,
   contractSize: number | bigint | Value,
 ): bigint => {
-  const roundingInSats =
-    rounding instanceof Value ? rounding.sats : BigInt(rounding);
-
-  const contractSizeInSats =
-    contractSize instanceof Value ? contractSize.sats : BigInt(contractSize);
+  const roundingInSats = safeConvertToBigInt(rounding);
+  const contractSizeInSats = safeConvertToBigInt(contractSize);
 
   return (roundingInSats * contractSizeInSats) / BigInt(1e8);
 };
