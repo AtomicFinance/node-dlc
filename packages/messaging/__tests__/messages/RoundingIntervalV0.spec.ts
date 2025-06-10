@@ -14,32 +14,28 @@ describe('RoundingIntervalsV0', () => {
       instance.intervals = intervals;
 
       expect(instance.serialize().toString("hex")).to.equal(
-        'fda724' + // type
-        '06' + // length
-        '0002' + // array_length
-        '01' + // begin_interval
-        '02' + // rounding_mod
-        '03' + // begin_interval
-        '04'   // rounding_mod
+        '02' + // number of intervals (bigsize)
+        '0000000000000001' + // begin_interval (u64)
+        '0000000000000002' + // rounding_mod (u64)
+        '0000000000000003' + // begin_interval (u64)
+        '0000000000000004'   // rounding_mod (u64)
       ); // prettier-ignore
     });
   });
 
   describe('deserialize', () => {
     it('deserializes', () => {
-      const buf =  Buffer.from(
-        'fda724' + // type
-        '06' + // length
-        '0002' + // array_length
-        '01' + // begin_interval
-        '02' + // rounding_mod
-        '03' + // begin_interval
-        '04'   // rounding_mod
+      const buf = Buffer.from(
+        '02' + // number of intervals (bigsize)
+        '0000000000000001' + // begin_interval (u64)
+        '0000000000000002' + // rounding_mod (u64)
+        '0000000000000003' + // begin_interval (u64)
+        '0000000000000004'   // rounding_mod (u64)
       , 'hex'); // prettier-ignore
 
       const instance = RoundingIntervalsV0.deserialize(buf);
 
-      expect(instance.length).to.eq(6n);
+      expect(instance.intervals.length).to.eq(2); // Check number of intervals instead of instance.length
       expect(instance.intervals[0].beginInterval).to.eq(1n);
       expect(instance.intervals[0].roundingMod).to.eq(2n);
       expect(instance.intervals[1].beginInterval).to.eq(3n);

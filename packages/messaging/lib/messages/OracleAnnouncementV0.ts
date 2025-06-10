@@ -7,6 +7,9 @@ import { IDlcMessage } from './DlcMessage';
 import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
 
 /**
+ * Oracle announcement that describe an event and the way that an oracle will
+ * attest to it. Updated to be rust-dlc compliant.
+ *
  * In order to make it possible to hold oracles accountable in cases where
  * they do not release a signature for an event outcome, there needs to be
  * a proof that an oracle has committed to a given outcome. This proof is
@@ -45,21 +48,68 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 
   public length: bigint;
 
+  /** The signature enabling verifying the origin of the announcement. */
   public announcementSig: Buffer;
 
+  /** The public key of the oracle (32 bytes, x-only). */
   public oraclePubkey: Buffer;
 
+  /** The description of the event and attesting. */
   public oracleEvent: OracleEventV0;
 
+  /**
+   * Validates the oracle announcement according to rust-dlc specification.
+   * This includes validating the oracle event and verifying the announcement signature.
+   * @throws Will throw an error if validation fails
+   */
   public validate(): void {
+    // Validate oracle event first
     this.oracleEvent.validate();
 
-    // Verify announcement sig
-    const msg = math.taggedHash(
-      'DLC/oracle/announcement/v0',
-      this.oracleEvent.serialize(),
-    );
-    verify(this.oraclePubkey, msg, this.announcementSig);
+    // Validate oracle public key format (32 bytes for x-only)
+    if (!this.oraclePubkey || this.oraclePubkey.length !== 32) {
+      throw new Error('Oracle public key must be 32 bytes (x-only format)');
+    }
+
+    // Validate announcement signature format (64 bytes for Schnorr)
+    if (!this.announcementSig || this.announcementSig.length !== 64) {
+      throw new Error(
+        'Announcement signature must be 64 bytes (Schnorr format)',
+      );
+    }
+
+    // Verify announcement signature over the oracle event
+    try {
+      const msg = math.taggedHash(
+        'DLC/oracle/announcement/v0',
+        this.oracleEvent.serialize(),
+      );
+      verify(this.oraclePubkey, msg, this.announcementSig);
+    } catch (error) {
+      throw new Error(`Invalid announcement signature: ${error.message}`);
+    }
+  }
+
+  /**
+   * Returns the nonces from the oracle event.
+   * This is useful for finding matching oracle announcements.
+   */
+  public getNonces(): Buffer[] {
+    return this.oracleEvent.oracleNonces;
+  }
+
+  /**
+   * Returns the event maturity epoch from the oracle event.
+   */
+  public getEventMaturityEpoch(): number {
+    return this.oracleEvent.eventMaturityEpoch;
+  }
+
+  /**
+   * Returns the event ID from the oracle event.
+   */
+  public getEventId(): string {
+    return this.oracleEvent.eventId;
   }
 
   /**

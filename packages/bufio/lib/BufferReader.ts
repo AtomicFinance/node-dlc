@@ -191,6 +191,33 @@ export class BufferReader {
   }
 
   /**
+   * Read a sibling sub-type with type identifier (as per dlcspecs PR #163)
+   * Returns both the type identifier and the remaining data
+   * @returns Object with typeId and remaining buffer data
+   */
+  public readSiblingType(): { typeId: number; data: Buffer } {
+    const typeId = Number(this.readBigSize());
+    const data = this.readBytes(); // Read remaining data
+    return { typeId, data };
+  }
+
+  /**
+   * Read an optional sub-type (as per dlcspecs PR #163)
+   * Returns null if the field is absent, or the data buffer if present
+   * @returns Buffer data or null if absent
+   */
+  public readOptional(): Buffer | null {
+    const present = this.readUInt8();
+    if (present === 0x00) {
+      return null;
+    } else if (present === 0x01) {
+      return this.readBytes(); // Read remaining data
+    } else {
+      throw new Error(`Invalid optional field marker: ${present}`);
+    }
+  }
+
+  /**
    * Read bytes from the buffer into a new Buffer. Unlike the default
    * slice method, the values do not point to the same memory location
    * as the source buffer. The values are copied to a new buffer.

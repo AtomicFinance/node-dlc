@@ -66,7 +66,13 @@ export class OrderOfferV0 extends OrderOffer implements IDlcMessage {
 
     reader.readUInt16BE(); // read type
     instance.chainHash = reader.readBytes(32);
-    instance.contractInfo = ContractInfo.deserialize(getTlv(reader));
+    // ContractInfo is serialized as sibling type in dlcspecs PR #163 format
+    instance.contractInfo = ContractInfo.deserialize(
+      reader.buffer.slice(reader.position),
+    );
+    // Skip past the ContractInfo we just read
+    const contractInfoLength = instance.contractInfo.serialize().length;
+    reader.position += contractInfoLength;
     instance.offerCollateralSatoshis = reader.readUInt64BE();
     instance.feeRatePerVb = reader.readUInt64BE();
     instance.cetLocktime = reader.readUInt32BE();

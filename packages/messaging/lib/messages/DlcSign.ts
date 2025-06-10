@@ -1,6 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
-import { MessageType } from '../MessageType';
+import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
@@ -14,44 +14,27 @@ import {
   IFundingSignaturesV0JSON,
 } from './FundingSignaturesV0';
 
-export abstract class DlcSign {
-  public static deserialize(buf: Buffer): DlcSignV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.DlcSignV0:
-        return DlcSignV0.deserialize(buf);
-      default:
-        throw new Error(`Dlc Sign message type must be DlcSignV0`);
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract toJSON(): IDlcSignV0JSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
  * DlcSign gives all of the initiator's signatures, which allows the
  * receiver to broadcast the funding transaction with both parties being
  * fully committed to all closing transactions.
+ * Updated to support dlcspecs PR #163 format.
  */
-export class DlcSignV0 extends DlcSign implements IDlcMessage {
+export class DlcSign implements IDlcMessage {
   public static type = MessageType.DlcSignV0;
 
   /**
-   * Deserializes an sign_dlc_v0 message
+   * Deserializes a sign_dlc message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcSignV0 {
-    const instance = new DlcSignV0();
+  public static deserialize(buf: Buffer): DlcSign {
+    const instance = new DlcSign();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
+
+    // New fields as per dlcspecs PR #163
+    instance.protocolVersion = reader.readUInt32BE();
     instance.contractId = reader.readBytes(32);
     instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
     instance.refundSignature = reader.readBytes(64);
@@ -59,6 +42,7 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
       getTlv(reader),
     );
 
+    // Parse TLV stream as per dlcspecs PR #163
     while (!reader.eof) {
       const buf = getTlv(reader);
       const tlvReader = new BufferReader(buf);
@@ -72,6 +56,11 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
           instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
           break;
         default:
+          // Store unknown TLVs for future compatibility
+          if (!instance.unknownTlvs) {
+            instance.unknownTlvs = [];
+          }
+          instance.unknownTlvs.push({ type: Number(type), data: buf });
           break;
       }
     }
@@ -80,10 +69,14 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
   }
 
   /**
-   * The type for sign_dlc_v0 message. sign_dlc_v0 = 42782
+   * The type for sign_dlc message. sign_dlc = 42782
    */
-  public type = DlcSignV0.type;
+  public type = DlcSign.type;
 
+  // New fields as per dlcspecs PR #163
+  public protocolVersion: number = PROTOCOL_VERSION; // Default to current protocol version
+
+  // Existing fields
   public contractId: Buffer;
 
   public cetSignatures: CetAdaptorSignaturesV0;
@@ -94,20 +87,54 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
 
   public batchFundingGroups?: BatchFundingGroup[];
 
+  // Store unknown TLVs for forward compatibility
+  public unknownTlvs?: Array<{ type: number; data: Buffer }>;
+
   /**
-   * Converts sign_dlc_v0 to JSON
+   * Validates correctness of all fields
+   * Updated validation rules as per dlcspecs PR #163
+   * @throws Will throw an error if validation fails
    */
-  public toJSON(): IDlcSignV0JSON {
+  public validate(): void {
+    // 1. Type is set automatically in class
+    // 2. protocol_version validation
+    if (this.protocolVersion !== PROTOCOL_VERSION) {
+      throw new Error(
+        `Unsupported protocol version: ${this.protocolVersion}, expected: ${PROTOCOL_VERSION}`,
+      );
+    }
+
+    // 3. contract_id must be 32 bytes
+    if (!this.contractId || this.contractId.length !== 32) {
+      throw new Error('contractId must be 32 bytes');
+    }
+
+    // 4. Other validations would depend on specific business logic
+    // TODO: Add more specific validation rules as needed
+  }
+
+  /**
+   * Converts sign_dlc to JSON
+   */
+  public toJSON(): IDlcSignJSON {
     const tlvs = [];
 
     if (this.batchFundingGroups) {
       this.batchFundingGroups.forEach((group) => {
-        tlvs.push(group.serialize());
+        tlvs.push(group.toJSON());
       });
+    }
+
+    // Include unknown TLVs for debugging
+    if (this.unknownTlvs) {
+      this.unknownTlvs.forEach((tlv) =>
+        tlvs.push({ type: tlv.type, data: tlv.data.toString('hex') }),
+      );
     }
 
     return {
       type: this.type,
+      protocolVersion: this.protocolVersion,
       contractId: this.contractId.toString('hex'),
       cetSignatures: this.cetSignatures.toJSON(),
       refundSignature: this.refundSignature.toString('hex'),
@@ -117,32 +144,45 @@ export class DlcSignV0 extends DlcSign implements IDlcMessage {
   }
 
   /**
-   * Serializes the sign_dlc_v0 message into a Buffer
+   * Serializes the sign_dlc message into a Buffer
+   * Updated serialization format as per dlcspecs PR #163
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
+
+    // New fields as per dlcspecs PR #163
+    writer.writeUInt32BE(this.protocolVersion);
     writer.writeBytes(this.contractId);
     writer.writeBytes(this.cetSignatures.serialize());
     writer.writeBytes(this.refundSignature);
     writer.writeBytes(this.fundingSignatures.serialize());
 
+    // TLV stream as per dlcspecs PR #163
     if (this.batchFundingGroups)
       this.batchFundingGroups.forEach((fundingInfo) =>
         writer.writeBytes(fundingInfo.serialize()),
       );
 
+    // Write unknown TLVs for forward compatibility
+    if (this.unknownTlvs) {
+      this.unknownTlvs.forEach((tlv) => {
+        writer.writeBytes(tlv.data);
+      });
+    }
+
     return writer.toBuffer();
   }
 }
 
-export interface IDlcSignV0JSON {
+export interface IDlcSignJSON {
   type: number;
+  protocolVersion: number;
   contractId: string;
   cetSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
   fundingSignatures: IFundingSignaturesV0JSON;
-  tlvs: IBatchFundingGroupJSON[];
+  tlvs: (IBatchFundingGroupJSON | any)[]; // For unknown TLVs
 }
 
 export class DlcSignContainer {
@@ -195,7 +235,7 @@ export class DlcSignContainer {
       // Optionally, read the length of the serialized sign if it was written during serialization.
       const signLength = reader.readBigSize();
       const signBuf = reader.readBytes(Number(signLength));
-      const sign = DlcSign.deserialize(signBuf); // Adjust based on actual implementation.
+      const sign = DlcSign.deserialize(signBuf);
       container.addSign(sign);
     }
     return container;

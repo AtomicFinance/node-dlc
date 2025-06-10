@@ -1,6 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
-import { MessageType } from '../MessageType';
+import { MessageType, PayoutCurvePieceType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class PayoutCurvePiece {
@@ -8,57 +8,51 @@ export abstract class PayoutCurvePiece {
     buf: Buffer,
   ): PolynomialPayoutCurvePiece | HyperbolaPayoutCurvePiece {
     const reader = new BufferReader(buf);
+    const typeId = Number(reader.readBigSize());
 
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.PolynomialPayoutCurvePiece:
+    switch (typeId) {
+      case PayoutCurvePieceType.Polynomial:
         return PolynomialPayoutCurvePiece.deserialize(buf);
-      case MessageType.HyperbolaPayoutCurvePiece:
-        return HyperbolaPayoutCurvePiece.deserialize(buf);
-      case MessageType.OldHyperbolaPayoutCurvePiece:
+      case PayoutCurvePieceType.Hyperbola:
         return HyperbolaPayoutCurvePiece.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be PolynomialPayoutCurvePiece or HyperbolaPayoutCurvePiece`,
+          `Payout curve piece type must be Polynomial (0) or Hyperbola (1), got ${typeId}`,
         );
     }
   }
 
-  public abstract type: number;
-
-  public abstract length: bigint;
-
+  public abstract payoutCurvePieceType: PayoutCurvePieceType;
+  public abstract type: number; // For backward compatibility
   public abstract toJSON():
     | PolynomialPayoutCurvePieceJSON
     | HyperbolaPayoutCurvePieceJSON;
-
   public abstract serialize(): Buffer;
 }
 
 /**
- * PolynomialPayoutCurvePiece
+ * PolynomialPayoutCurvePiece defines a polynomial curve piece for payout functions.
+ * This corresponds to type 0 in the sibling sub-type format.
  */
 export class PolynomialPayoutCurvePiece
   extends PayoutCurvePiece
   implements IDlcMessage {
-  public static type = MessageType.PolynomialPayoutCurvePiece;
+  public static payoutCurvePieceType = PayoutCurvePieceType.Polynomial;
 
   /**
-   * Deserializes an polynomial_payout_curve_piece message
+   * Deserializes a polynomial_payout_curve_piece message
    * @param buf
    */
   public static deserialize(buf: Buffer): PolynomialPayoutCurvePiece {
     const instance = new PolynomialPayoutCurvePiece();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
-    reader.readUInt16BE(); // num_pts
+    reader.readBigSize(); // read type (0)
+    const numPts = Number(reader.readBigSize());
 
-    while (!reader.eof) {
-      const eventOutcome = reader.readBigSize();
-      const outcomePayout = reader.readBigSize();
+    for (let i = 0; i < numPts; i++) {
+      const eventOutcome = reader.readUInt64BE();
+      const outcomePayout = reader.readUInt64BE();
       const extraPrecision = reader.readUInt16BE();
 
       instance.points.push({
@@ -72,11 +66,14 @@ export class PolynomialPayoutCurvePiece
   }
 
   /**
-   * The type for polynomial_payout_curve_piece message. polynomial_payout_curve_piece = ???
+   * The type for polynomial_payout_curve_piece message - using MessageType for IDlcMessage compatibility
    */
-  public type = PolynomialPayoutCurvePiece.type;
+  public type = MessageType.PolynomialPayoutCurvePiece; // For IDlcMessage compatibility
 
-  public length: bigint;
+  /**
+   * The payout curve piece type for new format
+   */
+  public payoutCurvePieceType = PayoutCurvePieceType.Polynomial;
 
   public points: IPoint[] = [];
 
@@ -86,6 +83,7 @@ export class PolynomialPayoutCurvePiece
   public toJSON(): PolynomialPayoutCurvePieceJSON {
     return {
       type: this.type,
+      payoutCurvePieceType: this.payoutCurvePieceType,
       points: this.points.map((point) => {
         return {
           eventOutcome: Number(point.eventOutcome),
@@ -101,108 +99,95 @@ export class PolynomialPayoutCurvePiece
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
 
-    const dataWriter = new BufferWriter();
-    dataWriter.writeUInt16BE(this.points.length);
+    writer.writeBigSize(this.payoutCurvePieceType);
+    writer.writeBigSize(this.points.length);
 
     for (const point of this.points) {
-      dataWriter.writeBigSize(point.eventOutcome);
-      dataWriter.writeBigSize(point.outcomePayout);
-      dataWriter.writeUInt16BE(point.extraPrecision);
+      writer.writeUInt64BE(point.eventOutcome);
+      writer.writeUInt64BE(point.outcomePayout);
+      writer.writeUInt16BE(point.extraPrecision);
     }
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
 }
 
 /**
- * HyperbolaPayoutCurvePiece
+ * HyperbolaPayoutCurvePiece defines a hyperbola curve piece for payout functions.
+ * This corresponds to type 1 in the sibling sub-type format.
  */
 export class HyperbolaPayoutCurvePiece
   extends PayoutCurvePiece
   implements IDlcMessage {
-  public static type = MessageType.HyperbolaPayoutCurvePiece;
+  public static payoutCurvePieceType = PayoutCurvePieceType.Hyperbola;
 
   /**
-   * Deserializes an hyperbola_payout_curve_piece message
+   * Deserializes a hyperbola_payout_curve_piece message
    * @param buf
    */
   public static deserialize(buf: Buffer): HyperbolaPayoutCurvePiece {
     const instance = new HyperbolaPayoutCurvePiece();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
+    reader.readBigSize(); // read type (1)
     instance.usePositivePiece = reader.readUInt8() === 1;
     instance.translateOutcomeSign = reader.readUInt8() === 1;
-    instance.translateOutcome = reader.readBigSize();
+    instance.translateOutcome = reader.readUInt64BE();
     instance.translateOutcomeExtraPrecision = reader.readUInt16BE();
     instance.translatePayoutSign = reader.readUInt8() === 1;
-    instance.translatePayout = reader.readBigSize();
+    instance.translatePayout = reader.readUInt64BE();
     instance.translatePayoutExtraPrecision = reader.readUInt16BE();
     instance.aSign = reader.readUInt8() === 1;
-    instance.a = reader.readBigSize();
+    instance.a = reader.readUInt64BE();
     instance.aExtraPrecision = reader.readUInt16BE();
     instance.bSign = reader.readUInt8() === 1;
-    instance.b = reader.readBigSize();
+    instance.b = reader.readUInt64BE();
     instance.bExtraPrecision = reader.readUInt16BE();
     instance.cSign = reader.readUInt8() === 1;
-    instance.c = reader.readBigSize();
+    instance.c = reader.readUInt64BE();
     instance.cExtraPrecision = reader.readUInt16BE();
     instance.dSign = reader.readUInt8() === 1;
-    instance.d = reader.readBigSize();
+    instance.d = reader.readUInt64BE();
     instance.dExtraPrecision = reader.readUInt16BE();
 
     return instance;
   }
 
   /**
-   * The type for hyperbola_payout_curve_piece message. hyperbola_payout_curve_piece = ???
+   * The type for hyperbola_payout_curve_piece message - using MessageType for IDlcMessage compatibility
    */
-  public type = HyperbolaPayoutCurvePiece.type;
+  public type = MessageType.HyperbolaPayoutCurvePiece; // For IDlcMessage compatibility
 
-  public length: bigint;
+  /**
+   * The payout curve piece type for new format
+   */
+  public payoutCurvePieceType = PayoutCurvePieceType.Hyperbola;
 
   public usePositivePiece: boolean;
 
   public translateOutcomeSign: boolean;
-
   public translateOutcome: bigint;
-
   public translateOutcomeExtraPrecision: number;
 
   public translatePayoutSign: boolean;
-
   public translatePayout: bigint;
-
   public translatePayoutExtraPrecision: number;
 
   public aSign: boolean;
-
   public a: bigint;
-
   public aExtraPrecision: number;
 
   public bSign: boolean;
-
   public b: bigint;
-
   public bExtraPrecision: number;
 
   public cSign: boolean;
-
   public c: bigint;
-
   public cExtraPrecision: number;
 
   public dSign: boolean;
-
   public d: bigint;
-
   public dExtraPrecision: number;
 
   /**
@@ -211,6 +196,7 @@ export class HyperbolaPayoutCurvePiece
   public toJSON(): HyperbolaPayoutCurvePieceJSON {
     return {
       type: this.type,
+      payoutCurvePieceType: this.payoutCurvePieceType,
       usePositivePiece: this.usePositivePiece,
       translateOutcomeSign: this.translateOutcomeSign,
       translateOutcome: Number(this.translateOutcome),
@@ -238,32 +224,27 @@ export class HyperbolaPayoutCurvePiece
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
 
-    const dataWriter = new BufferWriter();
-
-    dataWriter.writeUInt8(this.usePositivePiece ? 1 : 0);
-    dataWriter.writeUInt8(this.translateOutcomeSign ? 1 : 0);
-    dataWriter.writeBigSize(this.translateOutcome);
-    dataWriter.writeUInt16BE(this.translateOutcomeExtraPrecision);
-    dataWriter.writeUInt8(this.translatePayoutSign ? 1 : 0);
-    dataWriter.writeBigSize(this.translatePayout);
-    dataWriter.writeUInt16BE(this.translatePayoutExtraPrecision);
-    dataWriter.writeUInt8(this.aSign ? 1 : 0);
-    dataWriter.writeBigSize(this.a);
-    dataWriter.writeUInt16BE(this.aExtraPrecision);
-    dataWriter.writeUInt8(this.bSign ? 1 : 0);
-    dataWriter.writeBigSize(this.b);
-    dataWriter.writeUInt16BE(this.bExtraPrecision);
-    dataWriter.writeUInt8(this.cSign ? 1 : 0);
-    dataWriter.writeBigSize(this.c);
-    dataWriter.writeUInt16BE(this.cExtraPrecision);
-    dataWriter.writeUInt8(this.dSign ? 1 : 0);
-    dataWriter.writeBigSize(this.d);
-    dataWriter.writeUInt16BE(this.dExtraPrecision);
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
+    writer.writeBigSize(this.payoutCurvePieceType);
+    writer.writeUInt8(this.usePositivePiece ? 1 : 0);
+    writer.writeUInt8(this.translateOutcomeSign ? 1 : 0);
+    writer.writeUInt64BE(this.translateOutcome);
+    writer.writeUInt16BE(this.translateOutcomeExtraPrecision);
+    writer.writeUInt8(this.translatePayoutSign ? 1 : 0);
+    writer.writeUInt64BE(this.translatePayout);
+    writer.writeUInt16BE(this.translatePayoutExtraPrecision);
+    writer.writeUInt8(this.aSign ? 1 : 0);
+    writer.writeUInt64BE(this.a);
+    writer.writeUInt16BE(this.aExtraPrecision);
+    writer.writeUInt8(this.bSign ? 1 : 0);
+    writer.writeUInt64BE(this.b);
+    writer.writeUInt16BE(this.bExtraPrecision);
+    writer.writeUInt8(this.cSign ? 1 : 0);
+    writer.writeUInt64BE(this.c);
+    writer.writeUInt16BE(this.cExtraPrecision);
+    writer.writeUInt8(this.dSign ? 1 : 0);
+    writer.writeUInt64BE(this.d);
+    writer.writeUInt16BE(this.dExtraPrecision);
 
     return writer.toBuffer();
   }
@@ -283,11 +264,13 @@ interface IPointJSON {
 
 export interface PolynomialPayoutCurvePieceJSON {
   type: number;
+  payoutCurvePieceType: PayoutCurvePieceType;
   points: IPointJSON[];
 }
 
 export interface HyperbolaPayoutCurvePieceJSON {
   type: number;
+  payoutCurvePieceType: PayoutCurvePieceType;
   usePositivePiece: boolean;
   translateOutcomeSign: boolean;
   translateOutcome: number;

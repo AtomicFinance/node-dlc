@@ -1,7 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
   HyperbolaPayoutCurvePieceJSON,
@@ -9,54 +8,39 @@ import {
   PolynomialPayoutCurvePieceJSON,
 } from './PayoutCurvePiece';
 
-export abstract class PayoutFunction {
-  public static deserialize(buf: Buffer): PayoutFunctionV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.PayoutFunctionV0:
-        return PayoutFunctionV0.deserialize(buf);
-      default:
-        throw new Error(`Payout function TLV type must be PayoutFunctionV0`);
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract length: bigint;
-
-  public abstract toJSON(): PayoutFunctionV0JSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
- * PayoutFunction V0
+ * PayoutFunction contains the payout curve definition for numeric outcome contracts.
+ * Updated to match dlcspecs format (no longer uses TLV).
  */
-export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
+export class PayoutFunction implements IDlcMessage {
   public static type = MessageType.PayoutFunctionV0;
 
   /**
-   * Deserializes an payout_function_v0 message
+   * Deserializes a payout_function message
    * @param buf
    */
-  public static deserialize(buf: Buffer): PayoutFunctionV0 {
-    const instance = new PayoutFunctionV0();
+  public static deserialize(buf: Buffer): PayoutFunction {
+    const instance = new PayoutFunction();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize(); // need to fix this
-    reader.readUInt16BE(); // num_pieces
-    instance.endpoint0 = reader.readBigSize();
-    instance.endpointPayout0 = reader.readBigSize();
+    const numPieces = Number(reader.readBigSize());
+    instance.endpoint0 = reader.readUInt64BE();
+    instance.endpointPayout0 = reader.readUInt64BE();
     instance.extraPrecision0 = reader.readUInt16BE();
 
-    while (!reader.eof) {
-      const payoutCurvePiece = PayoutCurvePiece.deserialize(getTlv(reader));
-      const endpoint = reader.readBigSize();
-      const endpointPayout = reader.readBigSize();
+    for (let i = 0; i < numPieces; i++) {
+      // Parse payout curve piece - need to calculate its size to avoid consuming all bytes
+      const payoutCurvePieceStartPos = reader.position;
+      const payoutCurvePiece = PayoutCurvePiece.deserialize(
+        reader.buffer.slice(reader.position),
+      );
+
+      // Skip past the payout curve piece bytes
+      const payoutCurvePieceSize = payoutCurvePiece.serialize().length;
+      reader.position = payoutCurvePieceStartPos + payoutCurvePieceSize;
+
+      const endpoint = reader.readUInt64BE();
+      const endpointPayout = reader.readUInt64BE();
       const extraPrecision = reader.readUInt16BE();
 
       instance.pieces.push({
@@ -71,11 +55,9 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   }
 
   /**
-   * The type for payout_function_v0 message. payout_function_v0 = 42790
+   * The type for payout_function message. payout_function = 42790
    */
-  public type = PayoutFunctionV0.type;
-
-  public length: bigint;
+  public type = PayoutFunction.type;
 
   public endpoint0: bigint;
   public endpointPayout0: bigint;
@@ -84,9 +66,9 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   public pieces: IPayoutCurvePieces[] = [];
 
   /**
-   * Converts payout_function_v0 to JSON
+   * Converts payout_function to JSON
    */
-  public toJSON(): PayoutFunctionV0JSON {
+  public toJSON(): PayoutFunctionJSON {
     return {
       type: this.type,
       endpoint0: Number(this.endpoint0),
@@ -104,31 +86,30 @@ export class PayoutFunctionV0 extends PayoutFunction implements IDlcMessage {
   }
 
   /**
-   * Serializes the payout_function_v0 message into a Buffer
+   * Serializes the payout_function message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
 
-    const dataWriter = new BufferWriter();
-    dataWriter.writeUInt16BE(this.pieces.length);
-    dataWriter.writeBigSize(this.endpoint0);
-    dataWriter.writeBigSize(this.endpointPayout0);
-    dataWriter.writeUInt16BE(this.extraPrecision0);
+    writer.writeBigSize(this.pieces.length);
+    writer.writeUInt64BE(this.endpoint0);
+    writer.writeUInt64BE(this.endpointPayout0);
+    writer.writeUInt16BE(this.extraPrecision0);
 
     for (const piece of this.pieces) {
-      dataWriter.writeBytes(piece.payoutCurvePiece.serialize());
-      dataWriter.writeBigSize(piece.endpoint);
-      dataWriter.writeBigSize(piece.endpointPayout);
-      dataWriter.writeUInt16BE(piece.extraPrecision);
+      writer.writeBytes(piece.payoutCurvePiece.serialize());
+      writer.writeUInt64BE(piece.endpoint);
+      writer.writeUInt64BE(piece.endpointPayout);
+      writer.writeUInt16BE(piece.extraPrecision);
     }
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
 }
+
+// Legacy support
+export const PayoutFunctionV0 = PayoutFunction;
+export type PayoutFunctionV0 = PayoutFunction;
 
 interface IPayoutCurvePieces {
   payoutCurvePiece: PayoutCurvePiece;
@@ -146,10 +127,13 @@ interface IPayoutCurvePiecesJSON {
   extraPrecision: number;
 }
 
-export interface PayoutFunctionV0JSON {
+export interface PayoutFunctionJSON {
   type: number;
   endpoint0: number;
   endpointPayout0: number;
   extraPrecision0: number;
   pieces: IPayoutCurvePiecesJSON[];
 }
+
+// Legacy interface
+export type PayoutFunctionV0JSON = PayoutFunctionJSON;

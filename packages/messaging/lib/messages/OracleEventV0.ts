@@ -5,16 +5,20 @@ import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
   DigitDecompositionEventDescriptorV0,
+  EnumEventDescriptorV0,
   EventDescriptor,
   IDigitDecompositionEventDescriptorV0JSON,
   IEnumEventDescriptorV0JSON,
 } from './EventDescriptor';
 
 /**
+ * Oracle event containing information about an event and the way that the
+ * oracle will attest to it. Updated to be rust-dlc compliant.
+ *
  * For users to be able to create DLCs based on a given event, they also
  * need to obtain information about the oracle and the time at which it
  * plans on releasing a signature over the event outcome. OracleEvent
- * mesages contain such information, which includes:
+ * messages contain such information, which includes:
  *   - the nonce(s) that will be used to sign the event outcome(s)
  *   - the earliest time (UTC) at which it plans on releasing a signature
  *     over the event outcome, in epoch seconds
@@ -57,38 +61,117 @@ export class OracleEventV0 implements IDlcMessage {
 
   public length: bigint;
 
+  /** The nonces that the oracle will use to attest to the event outcome. */
   public oracleNonces: Buffer[] = [];
 
+  /** The expected maturity of the contract (Unix timestamp). */
   public eventMaturityEpoch: number;
 
+  /** The description of the event. */
   public eventDescriptor: EventDescriptor;
 
+  /** The ID of the event. */
   public eventId: string;
 
   /**
-   * Validates correctness of all fields in the message
+   * Validates correctness of all fields in the message according to rust-dlc specification.
+   * This includes validating that the number of nonces matches the expected count for the event type.
    * https://github.com/discreetlogcontracts/dlcspecs/blob/master/Oracle.md
    * @throws Will throw an error if validation fails
    */
   public validate(): void {
+    // Validate event maturity epoch
     if (this.eventMaturityEpoch < 0) {
       throw new Error('eventMaturityEpoch must be greater than or equal to 0');
     }
 
-    if (
-      this.eventDescriptor.type === DigitDecompositionEventDescriptorV0.type
-    ) {
-      const eventDescriptor = this
-        .eventDescriptor as DigitDecompositionEventDescriptorV0;
-
-      eventDescriptor.validate();
-
-      if (eventDescriptor.nbDigits !== this.oracleNonces.length) {
-        throw Error(
-          'OracleEvent oracleNonces length must match DigitDecompositionEventDescriptor nbDigits',
-        );
-      }
+    // Validate event ID
+    if (!this.eventId || this.eventId.length === 0) {
+      throw new Error('eventId cannot be empty');
     }
+
+    // Validate oracle nonces (must be 32 bytes each)
+    if (this.oracleNonces.length === 0) {
+      throw new Error('Must have at least one oracle nonce');
+    }
+
+    this.oracleNonces.forEach((nonce, index) => {
+      if (!nonce || nonce.length !== 32) {
+        throw new Error(`Oracle nonce at index ${index} must be 32 bytes`);
+      }
+    });
+
+    // Validate expected number of nonces based on event descriptor type
+    const expectedNbNonces = this.getExpectedNonceCount();
+
+    if (expectedNbNonces !== this.oracleNonces.length) {
+      throw new Error(
+        `OracleEvent nonce count mismatch: expected ${expectedNbNonces}, got ${this.oracleNonces.length}`,
+      );
+    }
+
+    // Validate the event descriptor itself
+    if (this.eventDescriptor instanceof DigitDecompositionEventDescriptorV0) {
+      this.eventDescriptor.validate();
+    }
+    // EnumEventDescriptorV0 doesn't have validation requirements beyond basic structure
+  }
+
+  /**
+   * Returns the expected number of nonces based on the event descriptor type.
+   * This matches the rust-dlc validation logic.
+   */
+  private getExpectedNonceCount(): number {
+    if (this.eventDescriptor instanceof EnumEventDescriptorV0) {
+      // Enum events require exactly 1 nonce
+      return 1;
+    } else if (
+      this.eventDescriptor instanceof DigitDecompositionEventDescriptorV0
+    ) {
+      // Digit decomposition events require nbDigits nonces, plus 1 if signed
+      const descriptor = this.eventDescriptor;
+      return descriptor.isSigned
+        ? descriptor.nbDigits + 1
+        : descriptor.nbDigits;
+    } else {
+      throw new Error('Unknown event descriptor type');
+    }
+  }
+
+  /**
+   * Returns whether this event is for enumerated outcomes.
+   */
+  public isEnumEvent(): boolean {
+    return this.eventDescriptor instanceof EnumEventDescriptorV0;
+  }
+
+  /**
+   * Returns whether this event is for numerical outcomes.
+   */
+  public isDigitDecompositionEvent(): boolean {
+    return this.eventDescriptor instanceof DigitDecompositionEventDescriptorV0;
+  }
+
+  /**
+   * Returns the event descriptor as EnumEventDescriptor if it's an enum event.
+   * @throws Error if not an enum event
+   */
+  public getEnumEventDescriptor(): EnumEventDescriptorV0 {
+    if (!this.isEnumEvent()) {
+      throw new Error('Event is not an enum event');
+    }
+    return this.eventDescriptor as EnumEventDescriptorV0;
+  }
+
+  /**
+   * Returns the event descriptor as DigitDecompositionEventDescriptor if it's a numerical event.
+   * @throws Error if not a numerical event
+   */
+  public getDigitDecompositionEventDescriptor(): DigitDecompositionEventDescriptorV0 {
+    if (!this.isDigitDecompositionEvent()) {
+      throw new Error('Event is not a digit decomposition event');
+    }
+    return this.eventDescriptor as DigitDecompositionEventDescriptorV0;
   }
 
   /**

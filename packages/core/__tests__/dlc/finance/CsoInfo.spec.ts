@@ -3,7 +3,7 @@ import {
   ContractDescriptorV1,
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
-  DlcOfferV0,
+  DlcOffer,
   OracleAnnouncementV0,
   OracleEventV0,
   OracleInfoV0,
@@ -53,7 +53,7 @@ const buildCsoDlcOfferFixture = (
   payoutFunction: PayoutFunctionV0,
   totalCollateral: bigint,
   offerCollateral: bigint,
-): DlcOfferV0 => {
+): DlcOffer => {
   const oracleAnnouncement = buildOracleAnnouncement(oracleDigits, expiry);
 
   const oracleInfo = new OracleInfoV0();
@@ -68,7 +68,7 @@ const buildCsoDlcOfferFixture = (
   contractInfo.contractDescriptor = contractDescriptor;
   contractInfo.oracleInfo = oracleInfo;
 
-  const dlcOffer = new DlcOfferV0();
+  const dlcOffer = new DlcOffer();
   dlcOffer.contractInfo = contractInfo;
   dlcOffer.offerCollateralSatoshis = offerCollateral;
 

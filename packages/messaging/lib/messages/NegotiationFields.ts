@@ -110,8 +110,11 @@ export class NegotiationFieldsV1
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
+
+    // Read remaining bytes as raw RoundingIntervalsV0 data (not TLV wrapped)
+    const remainingBytes = reader.readBytes();
     instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      getTlv(reader),
+      remainingBytes,
     );
 
     return instance;
@@ -163,7 +166,7 @@ export class NegotiationFieldsV2
   public static type = MessageType.NegotiationFieldsV2;
 
   /**
-   * Deserializes an negotiation_fields_v1 message
+   * Deserializes an negotiation_fields_v2 message
    * @param buf
    */
   public static deserialize(buf: Buffer): NegotiationFieldsV2 {
@@ -172,11 +175,22 @@ export class NegotiationFieldsV2
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    reader.readBigSize(); // num_disjoint_events
+    const numDisjointEvents = Number(reader.readBigSize());
 
-    while (!reader.eof) {
+    for (let i = 0; i < numDisjointEvents; i++) {
+      // Read the serialized NegotiationFields data directly (not TLV wrapped)
+      const fieldType = Number(reader.readBigSize());
+      const fieldLength = Number(reader.readBigSize());
+      const fieldData = reader.readBytes(fieldLength);
+
+      // Recreate the full buffer with type + length + data for deserialization
+      const fieldWriter = new BufferWriter();
+      fieldWriter.writeBigSize(fieldType);
+      fieldWriter.writeBigSize(fieldLength);
+      fieldWriter.writeBytes(fieldData);
+
       instance.negotiationFieldsList.push(
-        NegotiationFields.deserialize(getTlv(reader)),
+        NegotiationFields.deserialize(fieldWriter.toBuffer()),
       );
     }
 

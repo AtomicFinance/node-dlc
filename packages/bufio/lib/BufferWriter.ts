@@ -177,6 +177,33 @@ export class BufferWriter {
   }
 
   /**
+   * Write a sibling sub-type with type identifier (as per dlcspecs PR #163)
+   * Sibling sub-types are prefixed with a bigsize type identifier
+   * @param typeId The type identifier (0, 1, 2, etc.)
+   * @param data The serialized data
+   */
+  public writeSiblingType(typeId: number, data: Buffer): void {
+    this.writeBigSize(typeId);
+    this.writeBytes(data);
+  }
+
+  /**
+   * Write an optional sub-type (as per dlcspecs PR #163)
+   * Optional sub-types are prefixed with a single byte:
+   * - 0x00 means the field is absent
+   * - 0x01 means the field is present
+   * @param data The serialized data, or null/undefined if absent
+   */
+  public writeOptional(data: Buffer | null | undefined): void {
+    if (data == null) {
+      this.writeUInt8(0x00);
+    } else {
+      this.writeUInt8(0x01);
+      this.writeBytes(data);
+    }
+  }
+
+  /**
    * TLV 0 to 2 byte unsigned integer encoded in big-endian.
    * @param val
    */

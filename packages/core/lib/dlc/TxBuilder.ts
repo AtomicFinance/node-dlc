@@ -8,7 +8,7 @@ import {
 } from '@node-dlc/bitcoin';
 import {
   DlcAcceptWithoutSigs,
-  DlcOfferV0,
+  DlcOffer,
   FundingInputV0,
   MessageType,
 } from '@node-dlc/messaging';
@@ -18,7 +18,7 @@ import { DualFundingTxFinalizer } from './TxFinalizer';
 
 export class DlcTxBuilder {
   constructor(
-    readonly dlcOffer: DlcOfferV0,
+    readonly dlcOffer: DlcOffer,
     readonly dlcAccept: DlcAcceptWithoutSigs,
   ) {}
 
@@ -30,7 +30,7 @@ export class DlcTxBuilder {
 
 export class BatchDlcTxBuilder {
   constructor(
-    readonly dlcOffers: DlcOfferV0[],
+    readonly dlcOffers: DlcOffer[],
     readonly dlcAccepts: DlcAcceptWithoutSigs[],
   ) {}
 

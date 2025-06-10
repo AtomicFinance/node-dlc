@@ -4,26 +4,25 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 /**
- * RoundingIntervals V0
+ * RoundingIntervals defines rounding intervals for numeric outcome contracts.
+ * Updated to match dlcspecs format (no longer uses TLV).
  */
 export class RoundingIntervalsV0 implements IDlcMessage {
   public static type = MessageType.RoundingIntervalsV0;
 
   /**
-   * Deserializes an rounding_intervals_v0 tlv
+   * Deserializes a rounding_intervals message
    * @param buf
    */
   public static deserialize(buf: Buffer): RoundingIntervalsV0 {
     const instance = new RoundingIntervalsV0();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    reader.readUInt16BE(); // num_rounding_intervals
+    const numRoundingIntervals = Number(reader.readBigSize());
 
-    while (!reader.eof) {
-      const beginInterval = reader.readBigSize();
-      const roundingMod = reader.readBigSize();
+    for (let i = 0; i < numRoundingIntervals; i++) {
+      const beginInterval = reader.readUInt64BE();
+      const roundingMod = reader.readUInt64BE();
 
       instance.intervals.push({ beginInterval, roundingMod });
     }
@@ -32,11 +31,9 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   }
 
   /**
-   * The type for rounding_intervals_v0 tlv. rounding_intervals_v0 = 42788
+   * The type for rounding_intervals message. rounding_intervals = 42788
    */
   public type = RoundingIntervalsV0.type;
-
-  public length: bigint;
 
   public intervals: IInterval[] = [];
 
@@ -64,7 +61,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   }
 
   /**
-   * Converts rounding_intervals_v0 to JSON
+   * Converts rounding_intervals to JSON
    */
   public toJSON(): IRoundingIntervalsV0JSON {
     return {
@@ -79,22 +76,17 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   }
 
   /**
-   * Serializes the rounding_intervals_v0 tlv into a Buffer
+   * Serializes the rounding_intervals message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
 
-    const dataWriter = new BufferWriter();
-    dataWriter.writeUInt16BE(this.intervals.length);
+    writer.writeBigSize(this.intervals.length);
 
     for (const interval of this.intervals) {
-      dataWriter.writeBigSize(interval.beginInterval);
-      dataWriter.writeBigSize(interval.roundingMod);
+      writer.writeUInt64BE(interval.beginInterval);
+      writer.writeUInt64BE(interval.roundingMod);
     }
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();
   }
