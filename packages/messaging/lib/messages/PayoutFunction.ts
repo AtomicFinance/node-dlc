@@ -16,6 +16,36 @@ export class PayoutFunction implements IDlcMessage {
   public static type = MessageType.PayoutFunctionV0;
 
   /**
+   * Creates a PayoutFunction from JSON data
+   * @param json JSON object representing a payout function
+   */
+  public static fromJSON(json: any): PayoutFunction {
+    const instance = new PayoutFunction();
+
+    instance.endpoint0 = BigInt(json.endpoint0 || json.endpoint_0 || 0);
+    instance.endpointPayout0 = BigInt(
+      json.endpointPayout0 || json.endpoint_payout_0 || 0,
+    );
+    instance.extraPrecision0 =
+      json.extraPrecision0 || json.extra_precision_0 || 0;
+
+    const pieces = json.pieces || [];
+    instance.pieces = pieces.map((pieceJson: any) => ({
+      payoutCurvePiece: PayoutCurvePiece.fromJSON(
+        pieceJson.payoutCurvePiece || pieceJson.payout_curve_piece,
+      ),
+      endpoint: BigInt(pieceJson.endpoint || 0),
+      endpointPayout: BigInt(
+        pieceJson.endpointPayout || pieceJson.endpoint_payout || 0,
+      ),
+      extraPrecision:
+        pieceJson.extraPrecision || pieceJson.extra_precision || 0,
+    }));
+
+    return instance;
+  }
+
+  /**
    * Deserializes a payout_function message
    * @param buf
    */
@@ -32,7 +62,7 @@ export class PayoutFunction implements IDlcMessage {
       // Parse payout curve piece - need to calculate its size to avoid consuming all bytes
       const payoutCurvePieceStartPos = reader.position;
       const payoutCurvePiece = PayoutCurvePiece.deserialize(
-        reader.buffer.slice(reader.position),
+        reader.buffer.subarray(reader.position),
       );
 
       // Skip past the payout curve piece bytes

@@ -1,5 +1,5 @@
-import { Script } from '@node-dlc/bitcoin';
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { Script, Sequence, Tx } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
 import { hash160 } from '@node-dlc/crypto';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
@@ -14,7 +14,11 @@ import {
   ICetAdaptorSignaturesV0JSON,
 } from './CetAdaptorSignaturesV0';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import {
+  FundingInput,
+  FundingInputV0,
+  IFundingInputV0JSON,
+} from './FundingInput';
 import {
   INegotiationFieldsV0JSON,
   INegotiationFieldsV1JSON,
@@ -31,6 +35,152 @@ import {
  */
 export class DlcAccept implements IDlcMessage {
   public static type = MessageType.DlcAcceptV0;
+
+  /**
+   * Creates a DlcAccept from JSON data (e.g., from test vectors)
+   * Handles both our internal format and external test vector formats
+   * @param json JSON object representing a DLC accept
+   */
+  public static fromJSON(json: any): DlcAccept {
+    const instance = new DlcAccept();
+
+    // Handle both internal and external field naming conventions
+    instance.protocolVersion =
+      json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
+    instance.tempContractId = Buffer.from(
+      json.tempContractId ||
+        json.temporaryContractId ||
+        json.temporary_contract_id,
+      'hex',
+    );
+    instance.acceptCollateralSatoshis = BigInt(
+      json.acceptCollateralSatoshis ||
+        json.acceptCollateral ||
+        json.accept_collateral ||
+        0,
+    );
+
+    // Handle field name variations between formats
+    instance.fundingPubKey = Buffer.from(
+      json.fundingPubKey || json.fundingPubkey || json.funding_pubkey,
+      'hex',
+    );
+    instance.payoutSPK = Buffer.from(
+      json.payoutSPK || json.payoutSpk || json.payout_spk,
+      'hex',
+    );
+    instance.payoutSerialId = BigInt(
+      json.payoutSerialId || json.payout_serial_id || 0,
+    );
+
+    instance.changeSPK = Buffer.from(
+      json.changeSPK || json.changeSpk || json.change_spk,
+      'hex',
+    );
+    instance.changeSerialId = BigInt(
+      json.changeSerialId || json.change_serial_id || 0,
+    );
+
+    // Parse FundingInputs
+    instance.fundingInputs = DlcAccept.parseFundingInputsFromJSON(
+      json.fundingInputs || json.funding_inputs || [],
+    );
+
+    // Parse CET adaptor signatures
+    instance.cetAdaptorSignatures = DlcAccept.parseCetAdaptorSignaturesFromJSON(
+      json.cetAdaptorSignatures || json.cet_adaptor_signatures,
+    );
+
+    instance.refundSignature = Buffer.from(
+      json.refundSignature || json.refund_signature,
+      'hex',
+    );
+
+    // Parse optional negotiation fields
+    if (json.negotiationFields || json.negotiation_fields) {
+      instance.negotiationFields = DlcAccept.parseNegotiationFieldsFromJSON(
+        json.negotiationFields || json.negotiation_fields,
+      );
+    }
+
+    return instance;
+  }
+
+  /**
+   * Parses FundingInputs from JSON
+   * @param fundingInputsJson Array of JSON objects representing funding inputs
+   */
+  private static parseFundingInputsFromJSON(
+    fundingInputsJson: any[],
+  ): FundingInputV0[] {
+    return fundingInputsJson.map((inputJson) => {
+      const instance = new FundingInputV0();
+
+      instance.inputSerialId = BigInt(
+        inputJson.inputSerialId || inputJson.input_serial_id,
+      );
+
+      // Parse previous transaction
+      const prevTxHex = inputJson.prevTx || inputJson.prev_tx;
+      instance.prevTx = Tx.decode(
+        StreamReader.fromBuffer(Buffer.from(prevTxHex, 'hex')),
+      );
+
+      instance.prevTxVout = inputJson.prevTxVout || inputJson.prev_tx_vout;
+      instance.sequence = new Sequence(inputJson.sequence || 0xffffffff);
+      instance.maxWitnessLen =
+        inputJson.maxWitnessLen || inputJson.max_witness_len;
+
+      const redeemScript =
+        inputJson.redeemScript || inputJson.redeem_script || '';
+      instance.redeemScript = Buffer.from(redeemScript, 'hex');
+
+      return instance;
+    });
+  }
+
+  /**
+   * Parses CetAdaptorSignatures from JSON
+   * @param cetSigsJson JSON object representing CET adaptor signatures
+   */
+  private static parseCetAdaptorSignaturesFromJSON(
+    cetSigsJson: any,
+  ): CetAdaptorSignaturesV0 {
+    const instance = new CetAdaptorSignaturesV0();
+
+    if (
+      cetSigsJson.ecdsaAdaptorSignatures ||
+      cetSigsJson.ecdsa_adaptor_signatures
+    ) {
+      const ecdsaSigs =
+        cetSigsJson.ecdsaAdaptorSignatures ||
+        cetSigsJson.ecdsa_adaptor_signatures;
+      instance.sigs = ecdsaSigs.map((sig: any) => {
+        // The test vectors use 'signature' field, but our internal format uses encryptedSig/dleqProof
+        // For now, we'll parse the signature as encryptedSig and leave dleqProof empty
+        const sigBuffer = Buffer.from(sig.signature, 'hex');
+        return {
+          encryptedSig: sigBuffer.slice(0, 65), // First 65 bytes
+          dleqProof:
+            sigBuffer.length > 65 ? sigBuffer.slice(65, 162) : Buffer.alloc(97), // Next 97 bytes or empty
+        };
+      });
+    }
+
+    return instance;
+  }
+
+  /**
+   * Parses NegotiationFields from JSON
+   * @param negotiationJson JSON object representing negotiation fields
+   */
+  private static parseNegotiationFieldsFromJSON(
+    negotiationJson: any,
+  ): NegotiationFields {
+    // For now, return a basic implementation
+    // TODO: Implement proper NegotiationFields parsing from JSON
+    throw new Error('NegotiationFields.fromJSON not yet implemented');
+  }
 
   /**
    * Deserializes an accept_dlc message
@@ -54,7 +204,15 @@ export class DlcAccept implements IDlcMessage {
     // Changed from u16 to bigsize as per dlcspecs PR #163
     const fundingInputsLen = Number(reader.readBigSize());
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
+      const fundingInput = FundingInputV0.deserializeBody(
+        reader.buffer.subarray(reader.position),
+      );
+      instance.fundingInputs.push(fundingInput);
+
+      // Skip past the FundingInput we just read
+      const fundingInputLength = fundingInput.serializeBody().length;
+      reader.position += fundingInputLength;
     }
 
     const changeSPKLen = reader.readUInt16BE();
@@ -62,12 +220,12 @@ export class DlcAccept implements IDlcMessage {
     instance.changeSerialId = reader.readUInt64BE();
 
     if (parseCets) {
-      instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+      instance.cetAdaptorSignatures = CetAdaptorSignaturesV0.deserialize(
         getTlv(reader),
       );
     } else {
       skipTlv(reader);
-      instance.cetSignatures = new CetAdaptorSignaturesV0();
+      instance.cetAdaptorSignatures = new CetAdaptorSignaturesV0();
     }
 
     instance.refundSignature = reader.readBytes(64);
@@ -131,7 +289,7 @@ export class DlcAccept implements IDlcMessage {
 
   public changeSerialId: bigint;
 
-  public cetSignatures: CetAdaptorSignaturesV0;
+  public cetAdaptorSignatures: CetAdaptorSignaturesV0;
 
   public refundSignature: Buffer;
 
@@ -261,9 +419,10 @@ export class DlcAccept implements IDlcMessage {
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
       changeSPK: this.changeSPK.toString('hex'),
       changeSerialId: Number(this.changeSerialId),
-      cetSignatures: this.cetSignatures.toJSON(),
+      cetAdaptorSignatures: this.cetAdaptorSignatures.toJSON(),
       refundSignature: this.refundSignature.toString('hex'),
       negotiationFields: this.negotiationFields?.toJSON(),
+      serialized: this.serialize().toString('hex'), // Add serialized hex for compatibility testing
       tlvs,
     };
   }
@@ -289,13 +448,14 @@ export class DlcAccept implements IDlcMessage {
     writer.writeBigSize(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {
-      writer.writeBytes(fundingInput.serialize());
+      // Use serializeBody() to match rust-dlc behavior - funding inputs in vec are serialized without TLV wrapper
+      writer.writeBytes(fundingInput.serializeBody());
     }
 
     writer.writeUInt16BE(this.changeSPK.length);
     writer.writeBytes(this.changeSPK);
     writer.writeUInt64BE(this.changeSerialId);
-    writer.writeBytes(this.cetSignatures.serialize());
+    writer.writeBytes(this.cetAdaptorSignatures.serialize());
     writer.writeBytes(this.refundSignature);
 
     // negotiation_fields is now optional as per dlcspecs PR #163
@@ -366,12 +526,13 @@ export interface IDlcAcceptJSON {
   fundingInputs: IFundingInputV0JSON[];
   changeSPK: string;
   changeSerialId: number;
-  cetSignatures: ICetAdaptorSignaturesV0JSON;
+  cetAdaptorSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
   negotiationFields?: // Now optional
   | INegotiationFieldsV0JSON
     | INegotiationFieldsV1JSON
     | INegotiationFieldsV2JSON;
+  serialized: string; // Hex serialization for compatibility testing
   tlvs: (IBatchFundingGroupJSON | any)[]; // For unknown TLVs
 }
 

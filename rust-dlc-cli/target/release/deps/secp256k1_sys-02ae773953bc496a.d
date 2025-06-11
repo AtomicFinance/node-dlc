@@ -1,0 +1,10 @@
+/Users/matthewblack/code/github.com/AtomicFinance/wip-node-dlc/node-dlc/rust-dlc-cli/target/release/deps/libsecp256k1_sys-02ae773953bc496a.rmeta: /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/lib.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/macros.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/types.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/recovery.rs
+
+/Users/matthewblack/code/github.com/AtomicFinance/wip-node-dlc/node-dlc/rust-dlc-cli/target/release/deps/libsecp256k1_sys-02ae773953bc496a.rlib: /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/lib.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/macros.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/types.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/recovery.rs
+
+/Users/matthewblack/code/github.com/AtomicFinance/wip-node-dlc/node-dlc/rust-dlc-cli/target/release/deps/secp256k1_sys-02ae773953bc496a.d: /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/lib.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/macros.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/types.rs /Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/recovery.rs
+
+/Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/lib.rs:
+/Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/macros.rs:
+/Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/types.rs:
+/Users/matthewblack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secp256k1-sys-0.10.1/src/recovery.rs:

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
+import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
 import { SingleContractInfo } from '../../lib/messages/ContractInfo';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
@@ -65,7 +65,7 @@ describe('OrderNegotiationFields', () => {
         contractInfo.totalCollateral = BigInt(200000000);
 
         // Create enumerated contract descriptor
-        const contractDescriptor = new EnumeratedContractDescriptor();
+        const contractDescriptor = new EnumeratedDescriptor();
         contractDescriptor.outcomes = [
           { outcome: 'win', localPayout: BigInt(0) },
           { outcome: 'lose', localPayout: BigInt(200000000) },
@@ -126,7 +126,7 @@ describe('OrderNegotiationFields', () => {
         contractInfo.totalCollateral = BigInt(200000000);
 
         // Create enumerated contract descriptor
-        const contractDescriptor = new EnumeratedContractDescriptor();
+        const contractDescriptor = new EnumeratedDescriptor();
         contractDescriptor.outcomes = [
           { outcome: 'win', localPayout: BigInt(0) },
           { outcome: 'lose', localPayout: BigInt(200000000) },

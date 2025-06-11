@@ -11,15 +11,15 @@ import {
 export abstract class ContractDescriptor {
   public static deserialize(
     buf: Buffer,
-  ): EnumeratedContractDescriptor | NumericOutcomeContractDescriptor {
+  ): EnumeratedDescriptor | NumericalDescriptor {
     const reader = new BufferReader(buf);
     const typeId = Number(reader.readBigSize());
 
     switch (typeId) {
       case ContractDescriptorType.Enumerated:
-        return EnumeratedContractDescriptor.deserialize(buf);
+        return EnumeratedDescriptor.deserialize(buf);
       case ContractDescriptorType.NumericOutcome:
-        return NumericOutcomeContractDescriptor.deserialize(buf);
+        return NumericalDescriptor.deserialize(buf);
       default:
         throw new Error(
           `Contract descriptor type must be Enumerated (0) or NumericOutcome (1), got ${typeId}`,
@@ -27,11 +27,44 @@ export abstract class ContractDescriptor {
     }
   }
 
+  /**
+   * Creates a ContractDescriptor from JSON data (e.g., from test vectors)
+   * @param json JSON object representing a contract descriptor
+   */
+  public static fromJSON(json: any): ContractDescriptor {
+    if (!json) {
+      throw new Error('contractDescriptor is required');
+    }
+
+    // Handle enumerated contract descriptor
+    if (
+      json.enumeratedContractDescriptor ||
+      json.enumerated_contract_descriptor
+    ) {
+      return EnumeratedDescriptor.fromJSON(
+        json.enumeratedContractDescriptor ||
+          json.enumerated_contract_descriptor,
+      );
+    }
+    // Handle numeric outcome contract descriptor
+    else if (
+      json.numericOutcomeContractDescriptor ||
+      json.numeric_outcome_contract_descriptor
+    ) {
+      return NumericalDescriptor.fromJSON(
+        json.numericOutcomeContractDescriptor ||
+          json.numeric_outcome_contract_descriptor,
+      );
+    } else {
+      throw new Error(
+        'contractDescriptor must have either enumeratedContractDescriptor or numericOutcomeContractDescriptor',
+      );
+    }
+  }
+
   public abstract contractDescriptorType: ContractDescriptorType;
   public abstract type: number; // For backward compatibility
-  public abstract toJSON():
-    | EnumeratedContractDescriptorJSON
-    | NumericOutcomeContractDescriptorJSON;
+  public abstract toJSON(): EnumeratedDescriptorJSON | NumericalDescriptorJSON;
   public abstract serialize(): Buffer;
 }
 
@@ -40,17 +73,33 @@ export abstract class ContractDescriptor {
  * and their corresponding payouts (for enumerated outcomes).
  * This corresponds to the previous ContractDescriptorV0.
  */
-export class EnumeratedContractDescriptor
+export class EnumeratedDescriptor
   extends ContractDescriptor
   implements IDlcMessage {
   public static contractDescriptorType = ContractDescriptorType.Enumerated;
 
   /**
+   * Creates an EnumeratedContractDescriptor from JSON data
+   * @param json JSON object representing an enumerated contract descriptor
+   */
+  public static fromJSON(json: any): EnumeratedDescriptor {
+    const instance = new EnumeratedDescriptor();
+
+    const payouts = json.payouts || [];
+    instance.outcomes = payouts.map((payout: any) => ({
+      outcome: payout.outcome,
+      localPayout: BigInt(payout.localPayout || payout.local_payout || 0),
+    }));
+
+    return instance;
+  }
+
+  /**
    * Deserializes an enumerated_contract_descriptor message
    * @param buf
    */
-  public static deserialize(buf: Buffer): EnumeratedContractDescriptor {
-    const instance = new EnumeratedContractDescriptor();
+  public static deserialize(buf: Buffer): EnumeratedDescriptor {
+    const instance = new EnumeratedDescriptor();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type (0)
@@ -85,7 +134,7 @@ export class EnumeratedContractDescriptor
   /**
    * Converts enumerated_contract_descriptor to JSON
    */
-  public toJSON(): EnumeratedContractDescriptorJSON {
+  public toJSON(): EnumeratedDescriptorJSON {
     return {
       type: this.type,
       contractDescriptorType: this.contractDescriptorType,
@@ -122,17 +171,39 @@ export class EnumeratedContractDescriptor
  * and their corresponding payouts (for numeric outcomes).
  * This corresponds to the previous ContractDescriptorV1.
  */
-export class NumericOutcomeContractDescriptor
+export class NumericalDescriptor
   extends ContractDescriptor
   implements IDlcMessage {
   public static contractDescriptorType = ContractDescriptorType.NumericOutcome;
 
   /**
+   * Creates a NumericOutcomeContractDescriptor from JSON data
+   * @param json JSON object representing a numeric outcome contract descriptor
+   */
+  public static fromJSON(json: any): NumericalDescriptor {
+    const instance = new NumericalDescriptor();
+
+    instance.numDigits = json.numDigits || json.num_digits || 0;
+
+    // Parse payout function using proper fromJSON method
+    instance.payoutFunction = PayoutFunction.fromJSON(
+      json.payoutFunction || json.payout_function,
+    );
+
+    // Parse rounding intervals using proper fromJSON method
+    instance.roundingIntervals = RoundingIntervalsV0.fromJSON(
+      json.roundingIntervals || json.rounding_intervals,
+    );
+
+    return instance;
+  }
+
+  /**
    * Deserializes a numeric_outcome_contract_descriptor message
    * @param buf
    */
-  public static deserialize(buf: Buffer): NumericOutcomeContractDescriptor {
-    const instance = new NumericOutcomeContractDescriptor();
+  public static deserialize(buf: Buffer): NumericalDescriptor {
+    const instance = new NumericalDescriptor();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type (1)
@@ -141,7 +212,7 @@ export class NumericOutcomeContractDescriptor
     // Parse payout function - need to calculate its size to avoid consuming all bytes
     const payoutFunctionStartPos = reader.position;
     const tempPayoutFunction = PayoutFunction.deserialize(
-      reader.buffer.slice(reader.position),
+      reader.buffer.subarray(reader.position),
     );
     instance.payoutFunction = tempPayoutFunction;
 
@@ -151,7 +222,7 @@ export class NumericOutcomeContractDescriptor
 
     // Parse remaining bytes as rounding intervals
     instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      reader.buffer.slice(reader.position),
+      reader.buffer.subarray(reader.position),
     );
 
     return instance;
@@ -185,7 +256,7 @@ export class NumericOutcomeContractDescriptor
   /**
    * Converts numeric_outcome_contract_descriptor to JSON
    */
-  public toJSON(): NumericOutcomeContractDescriptorJSON {
+  public toJSON(): NumericalDescriptorJSON {
     return {
       type: this.type,
       contractDescriptorType: this.contractDescriptorType,
@@ -211,10 +282,10 @@ export class NumericOutcomeContractDescriptor
 }
 
 // Legacy support - keeping old class names as aliases
-export const ContractDescriptorV0 = EnumeratedContractDescriptor;
-export const ContractDescriptorV1 = NumericOutcomeContractDescriptor;
-export type ContractDescriptorV0 = EnumeratedContractDescriptor;
-export type ContractDescriptorV1 = NumericOutcomeContractDescriptor;
+export const ContractDescriptorV0 = EnumeratedDescriptor;
+export const ContractDescriptorV1 = NumericalDescriptor;
+export type ContractDescriptorV0 = EnumeratedDescriptor;
+export type ContractDescriptorV1 = NumericalDescriptor;
 
 interface IOutcome {
   outcome: string;
@@ -226,13 +297,13 @@ interface IOutcomeJSON {
   localPayout: number;
 }
 
-export interface EnumeratedContractDescriptorJSON {
+export interface EnumeratedDescriptorJSON {
   type: number;
   contractDescriptorType: ContractDescriptorType;
   outcomes: IOutcomeJSON[];
 }
 
-export interface NumericOutcomeContractDescriptorJSON {
+export interface NumericalDescriptorJSON {
   type: number;
   contractDescriptorType: ContractDescriptorType;
   numDigits: number;
@@ -241,5 +312,5 @@ export interface NumericOutcomeContractDescriptorJSON {
 }
 
 // Legacy interfaces for backward compatibility
-export type ContractDescriptorV0JSON = EnumeratedContractDescriptorJSON;
-export type ContractDescriptorV1JSON = NumericOutcomeContractDescriptorJSON;
+export type ContractDescriptorV0JSON = EnumeratedDescriptorJSON;
+export type ContractDescriptorV1JSON = NumericalDescriptorJSON;

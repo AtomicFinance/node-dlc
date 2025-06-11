@@ -2,8 +2,8 @@ import { expect } from 'chai';
 
 import {
   ContractDescriptor,
-  EnumeratedContractDescriptor,
-  NumericOutcomeContractDescriptor,
+  EnumeratedDescriptor,
+  NumericalDescriptor,
 } from '../../lib/messages/ContractDescriptor';
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunctionV0 } from '../../lib/messages/PayoutFunction';
@@ -11,10 +11,10 @@ import { RoundingIntervalsV0 } from '../../lib/messages/RoundingIntervalsV0';
 import { MessageType } from '../../lib/MessageType';
 
 describe('ContractDescriptor', () => {
-  describe('EnumeratedContractDescriptor', () => {
+  describe('EnumeratedDescriptor', () => {
     describe('serialize', () => {
       it('serializes', () => {
-        const instance = new EnumeratedContractDescriptor();
+        const instance = new EnumeratedDescriptor();
 
         // Use simple string outcomes instead of hex hashes for the new format
         const outcomeOne = 'win';
@@ -49,7 +49,7 @@ describe('ContractDescriptor', () => {
     describe('deserialize', () => {
       it('deserializes', () => {
         // Create a test instance and serialize it
-        const originalInstance = new EnumeratedContractDescriptor();
+        const originalInstance = new EnumeratedDescriptor();
         originalInstance.outcomes = [
           { outcome: 'win', localPayout: BigInt(0) },
           { outcome: 'lose', localPayout: BigInt(153517731) },
@@ -62,8 +62,8 @@ describe('ContractDescriptor', () => {
 
         expect(unknownInstance.contractDescriptorType).to.equal(0); // enumerated_contract_descriptor type (new format)
 
-        if (unknownInstance instanceof EnumeratedContractDescriptor) {
-          const instance = unknownInstance as EnumeratedContractDescriptor;
+        if (unknownInstance instanceof EnumeratedDescriptor) {
+          const instance = unknownInstance as EnumeratedDescriptor;
 
           expect(instance.outcomes.length).to.equal(3);
           expect(instance.outcomes[0].outcome).to.equal('win');
@@ -78,7 +78,7 @@ describe('ContractDescriptor', () => {
 
     describe('toJSON', () => {
       it('converts to JSON', () => {
-        const instance = new EnumeratedContractDescriptor();
+        const instance = new EnumeratedDescriptor();
 
         const outcomeOne = 'win';
         const payoutOne = BigInt(0);
@@ -110,7 +110,7 @@ describe('ContractDescriptor', () => {
   describe('NumericOutcomeContractDescriptor', () => {
     describe('serialize/deserialize', () => {
       it('should serialize and deserialize correctly', () => {
-        const instance = new NumericOutcomeContractDescriptor();
+        const instance = new NumericalDescriptor();
         instance.numDigits = 18;
 
         // Create proper HyperbolaPayoutCurvePiece instance
@@ -166,9 +166,9 @@ describe('ContractDescriptor', () => {
         const deserialized = ContractDescriptor.deserialize(serialized);
 
         expect(deserialized.contractDescriptorType).to.equal(1); // numeric_outcome_contract_descriptor type (new format)
-        expect(deserialized).to.be.instanceOf(NumericOutcomeContractDescriptor);
+        expect(deserialized).to.be.instanceOf(NumericalDescriptor);
 
-        if (deserialized instanceof NumericOutcomeContractDescriptor) {
+        if (deserialized instanceof NumericalDescriptor) {
           expect(deserialized.numDigits).to.equal(18);
           expect(deserialized.payoutFunction.endpoint0).to.equal(BigInt(0));
           expect(deserialized.roundingIntervals.intervals.length).to.equal(1);

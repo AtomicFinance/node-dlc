@@ -3,9 +3,9 @@ import chaiAsPromised from 'chai-as-promised';
 
 import {
   ContractDescriptor,
-  NumericOutcomeContractDescriptor,
+  EnumeratedDescriptor,
+  NumericalDescriptor,
 } from '../../lib/messages/ContractDescriptor';
-import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
 import {
   ContractInfo,
   SingleContractInfo,
@@ -31,7 +31,7 @@ describe('ContractInfo', () => {
         instance.totalCollateral = BigInt(200000000);
 
         // Create contract descriptor programmatically to match new format
-        const contractDescriptor = new EnumeratedContractDescriptor();
+        const contractDescriptor = new EnumeratedDescriptor();
         contractDescriptor.outcomes = [
           { outcome: 'outcome1', localPayout: BigInt(0) },
           { outcome: 'outcome2', localPayout: BigInt(150000000) },
@@ -84,7 +84,7 @@ describe('ContractInfo', () => {
         originalInstance.totalCollateral = BigInt(200000000);
 
         // Create contract descriptor
-        const contractDescriptor = new EnumeratedContractDescriptor();
+        const contractDescriptor = new EnumeratedDescriptor();
         contractDescriptor.outcomes = [
           { outcome: 'outcome1', localPayout: BigInt(0) },
           { outcome: 'outcome2', localPayout: BigInt(100000000) },
@@ -132,12 +132,12 @@ describe('ContractInfo', () => {
 
           expect(Number(instance.totalCollateral)).to.equal(200000000);
           expect(instance.contractDescriptor).to.be.instanceof(
-            EnumeratedContractDescriptor,
+            EnumeratedDescriptor,
           );
           expect(instance.oracleInfo).to.be.instanceof(SingleOracleInfo);
 
           // Verify the contract descriptor was properly deserialized
-          const enumDescriptor = instance.contractDescriptor as EnumeratedContractDescriptor;
+          const enumDescriptor = instance.contractDescriptor as EnumeratedDescriptor;
           expect(enumDescriptor.outcomes.length).to.equal(3);
           expect(enumDescriptor.outcomes[0].outcome).to.equal('outcome1');
           expect(enumDescriptor.outcomes[1].outcome).to.equal('outcome2');
@@ -302,7 +302,7 @@ describe('ContractInfo', () => {
           },
         ];
 
-        const contractDescriptor = new NumericOutcomeContractDescriptor();
+        const contractDescriptor = new NumericalDescriptor();
         contractDescriptor.numDigits = contractDescriptorNumDigits;
         contractDescriptor.payoutFunction = payoutFunction;
         contractDescriptor.roundingIntervals = roundingIntervals;

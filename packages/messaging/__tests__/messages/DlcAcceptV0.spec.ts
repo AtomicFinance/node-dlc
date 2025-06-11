@@ -115,7 +115,7 @@ describe('DlcAccept', () => {
     instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
     instance.changeSPK = changeSPK;
     instance.changeSerialId = BigInt(885015);
-    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+    instance.cetAdaptorSignatures = CetAdaptorSignaturesV0.deserialize(
       cetAdaptorSignaturesV0,
     );
     instance.refundSignature = refundSignature;
@@ -142,7 +142,7 @@ describe('DlcAccept', () => {
     it('deserializes without cets', () => {
       // Set parseCets to false
       const dlcAccept = DlcAccept.deserialize(instance.serialize(), false);
-      expect(dlcAccept.cetSignatures.sigs.length).to.be.equal(0);
+      expect(dlcAccept.cetAdaptorSignatures.sigs.length).to.be.equal(0);
     });
   });
 
@@ -167,7 +167,9 @@ describe('DlcAccept', () => {
           true,
         );
 
-        expect(dlcAcceptWithoutSigs.cetSignatures.sigs.length).to.be.equal(0);
+        expect(
+          dlcAcceptWithoutSigs.cetAdaptorSignatures.sigs.length,
+        ).to.be.equal(0);
       });
     });
 
@@ -185,9 +187,9 @@ describe('DlcAccept', () => {
         );
         expect(instance.changeSPK).to.deep.equal(changeSPK);
         expect(Number(instance.changeSerialId)).to.equal(885015);
-        expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
-          cetAdaptorSignaturesV0.toString('hex'),
-        );
+        expect(
+          instance.cetAdaptorSignatures.serialize().toString('hex'),
+        ).to.equal(cetAdaptorSignaturesV0.toString('hex'));
         expect(instance.refundSignature).to.deep.equal(refundSignature);
         expect(instance.negotiationFields.serialize().toString('hex')).to.equal(
           negotiationFieldsData.toString('hex'),
@@ -218,7 +220,7 @@ describe('DlcAccept', () => {
     describe('withoutSigs', () => {
       it('does not contain sigs', () => {
         const instance = DlcAccept.deserialize(dlcAcceptHex).withoutSigs();
-        expect(instance['cetSignatures']).to.not.exist;
+        expect(instance['cetAdaptorSignatures']).to.not.exist;
       });
     });
 

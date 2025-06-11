@@ -30,6 +30,32 @@ export class OracleEventV0 implements IDlcMessage {
   public static type = MessageType.OracleEventV0;
 
   /**
+   * Creates an OracleEventV0 from JSON data
+   * @param json JSON object representing oracle event
+   */
+  public static fromJSON(json: any): OracleEventV0 {
+    const instance = new OracleEventV0();
+
+    // Parse oracle nonces array
+    const nonces = json.oracleNonces || json.oracle_nonces || [];
+    instance.oracleNonces = nonces.map((nonce: string) =>
+      Buffer.from(nonce, 'hex'),
+    );
+
+    instance.eventMaturityEpoch =
+      json.eventMaturityEpoch || json.event_maturity_epoch || 0;
+
+    // Parse event descriptor
+    instance.eventDescriptor = EventDescriptor.fromJSON(
+      json.eventDescriptor || json.event_descriptor,
+    );
+
+    instance.eventId = json.eventId || json.event_id || '';
+
+    return instance;
+  }
+
+  /**
    * Deserializes an oracle_event message
    * @param buf
    */

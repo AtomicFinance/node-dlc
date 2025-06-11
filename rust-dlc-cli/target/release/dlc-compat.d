@@ -1,0 +1,1 @@
+/Users/matthewblack/code/github.com/AtomicFinance/wip-node-dlc/node-dlc/rust-dlc-cli/target/release/dlc-compat: /Users/matthewblack/code/github.com/AtomicFinance/wip-node-dlc/node-dlc/rust-dlc-cli/src/main.rs

@@ -25,6 +25,31 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   public static type = MessageType.OracleAnnouncementV0;
 
   /**
+   * Creates an OracleAnnouncementV0 from JSON data
+   * @param json JSON object representing oracle announcement
+   */
+  public static fromJSON(json: any): OracleAnnouncementV0 {
+    const instance = new OracleAnnouncementV0();
+
+    // Handle different field name variations
+    instance.announcementSig = Buffer.from(
+      json.announcementSignature ||
+        json.announcementSig ||
+        json.announcement_signature,
+      'hex',
+    );
+    instance.oraclePubkey = Buffer.from(
+      json.oraclePublicKey || json.oraclePubkey || json.oracle_public_key,
+      'hex',
+    );
+    instance.oracleEvent = OracleEventV0.fromJSON(
+      json.oracleEvent || json.oracle_event,
+    );
+
+    return instance;
+  }
+
+  /**
    * Deserializes an oracle_announcement_v0 message
    * @param buf
    */

@@ -6,7 +6,7 @@ import {
   OrderOfferContainer,
   OrderPositionInfoV0,
 } from '../../lib';
-import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
+import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
 import {
   ContractInfo,
   SingleContractInfo,
@@ -82,7 +82,7 @@ describe('OrderOffer', () => {
       contractInfo.totalCollateral = BigInt(200000000);
 
       // Create enumerated contract descriptor
-      const contractDescriptor = new EnumeratedContractDescriptor();
+      const contractDescriptor = new EnumeratedDescriptor();
       contractDescriptor.outcomes = [
         { outcome: 'win', localPayout: BigInt(0) },
         { outcome: 'lose', localPayout: BigInt(200000000) },

@@ -67,7 +67,7 @@ describe('DlcSign', () => {
 
     instance.protocolVersion = 1; // Set protocol version for dlcspecs PR #163
     instance.contractId = contractId;
-    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(
+    instance.cetAdaptorSignatures = CetAdaptorSignaturesV0.deserialize(
       cetAdaptorSignaturesV0,
     );
     instance.refundSignature = refundSignature;
@@ -105,9 +105,9 @@ describe('DlcSign', () => {
       it('deserializes', () => {
         const instance = DlcSign.deserialize(dlcSignHex);
         expect(instance.contractId).to.deep.equal(contractId);
-        expect(instance.cetSignatures.serialize().toString('hex')).to.equal(
-          cetAdaptorSignaturesV0.toString('hex'),
-        );
+        expect(
+          instance.cetAdaptorSignatures.serialize().toString('hex'),
+        ).to.equal(cetAdaptorSignaturesV0.toString('hex'));
         expect(instance.refundSignature).to.deep.equal(refundSignature);
         expect(instance.fundingSignatures.serialize().toString('hex')).to.equal(
           fundingSignaturesV0.toString('hex'),

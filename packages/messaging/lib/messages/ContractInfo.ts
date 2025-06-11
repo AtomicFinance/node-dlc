@@ -7,7 +7,14 @@ import {
   ContractDescriptorV1JSON,
 } from './ContractDescriptor';
 import { DlcMessage, IDlcMessage } from './DlcMessage';
-import { OracleInfoV0, OracleInfoV0JSON } from './OracleInfoV0';
+import {
+  OracleInfo,
+  OracleInfoV0,
+  SingleOracleInfo,
+  MultiOracleInfo,
+  SingleOracleInfoJSON,
+  MultiOracleInfoJSON,
+} from './OracleInfoV0';
 
 export abstract class ContractInfo extends DlcMessage {
   public static deserialize(
@@ -25,6 +32,31 @@ export abstract class ContractInfo extends DlcMessage {
         throw new Error(
           `Contract info type must be Single (0) or Disjoint (1), got ${typeId}`,
         );
+    }
+  }
+
+  /**
+   * Creates a ContractInfo from JSON data (e.g., from test vectors)
+   * @param json JSON object representing contract info
+   */
+  public static fromJSON(json: any): ContractInfo {
+    if (!json) {
+      throw new Error('contractInfo is required');
+    }
+
+    // Check if it's a single contract info or disjoint contract info
+    if (json.singleContractInfo || json.single_contract_info) {
+      return SingleContractInfo.fromJSON(
+        json.singleContractInfo || json.single_contract_info,
+      );
+    } else if (json.disjointContractInfo || json.disjoint_contract_info) {
+      return DisjointContractInfo.fromJSON(
+        json.disjointContractInfo || json.disjoint_contract_info,
+      );
+    } else {
+      throw new Error(
+        'contractInfo must have either singleContractInfo or disjointContractInfo',
+      );
     }
   }
 
@@ -50,6 +82,34 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
   public static type = MessageType.ContractInfoV0; // For backward compatibility
 
   /**
+   * Creates a SingleContractInfo from JSON data
+   * @param json JSON object representing single contract info
+   */
+  public static fromJSON(json: any): SingleContractInfo {
+    const instance = new SingleContractInfo();
+
+    instance.totalCollateral = BigInt(
+      json.totalCollateral || json.total_collateral || 0,
+    );
+
+    // Handle nested contractInfo structure (test vectors have double nesting)
+    const contractInfoData = json.contractInfo || json.contract_info || json;
+
+    // Parse contract descriptor using proper fromJSON method
+    instance.contractDescriptor = ContractDescriptor.fromJSON(
+      contractInfoData.contractDescriptor ||
+        contractInfoData.contract_descriptor,
+    );
+
+    // Parse oracle info using proper fromJSON method
+    instance.oracleInfo = OracleInfo.fromJSON(
+      contractInfoData.oracleInfo || contractInfoData.oracle_info,
+    );
+
+    return instance;
+  }
+
+  /**
    * Deserializes a single_contract_info message
    * @param buf
    */
@@ -62,17 +122,28 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 
     // Read contract descriptor as sibling type (starts with its own type prefix)
     instance.contractDescriptor = ContractDescriptor.deserialize(
-      reader.buffer.slice(reader.position),
+      reader.buffer.subarray(reader.position),
     );
     // Skip past the contract descriptor we just read
     const contractDescriptorLength =
       instance.contractDescriptor.serialize().length;
     reader.position += contractDescriptorLength;
 
-    // Read oracle info as sibling type (starts with its own type prefix)
-    instance.oracleInfo = OracleInfoV0.deserialize(
-      reader.buffer.slice(reader.position),
-    );
+    // Read oracle info with rust-dlc format - discriminator + body
+    const oracleType = Number(reader.readBigSize());
+    if (oracleType === 0) {
+      // Single oracle
+      instance.oracleInfo = SingleOracleInfo.deserializeBody(
+        reader.buffer.subarray(reader.position),
+      );
+    } else if (oracleType === 1) {
+      // Multi oracle
+      instance.oracleInfo = MultiOracleInfo.deserializeBody(
+        reader.buffer.subarray(reader.position),
+      );
+    } else {
+      throw new Error(`Unknown oracle info type: ${oracleType}`);
+    }
 
     return instance;
   }
@@ -91,7 +162,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 
   public contractDescriptor: ContractDescriptor;
 
-  public oracleInfo: OracleInfoV0;
+  public oracleInfo: OracleInfo;
 
   // Compatibility property
   public get length(): bigint {
@@ -135,7 +206,15 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
     writer.writeBigSize(this.contractInfoType);
     writer.writeUInt64BE(this.totalCollateral);
     writer.writeBytes(this.contractDescriptor.serialize());
-    writer.writeBytes(this.oracleInfo.serialize());
+
+    // Use serializeBody() to match rust-dlc behavior - don't add extra TLV wrapper
+    if (this.oracleInfo instanceof SingleOracleInfo) {
+      writer.writeBigSize(0); // Single oracle discriminator
+      writer.writeBytes(this.oracleInfo.serializeBody());
+    } else {
+      writer.writeBigSize(1); // Multi oracle discriminator
+      writer.writeBytes(this.oracleInfo.serializeBody());
+    }
 
     return writer.toBuffer();
   }
@@ -148,6 +227,34 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
   public static contractInfoType = ContractInfoType.Disjoint;
   public static type = MessageType.ContractInfoV1; // For backward compatibility
+
+  /**
+   * Creates a DisjointContractInfo from JSON data
+   * @param json JSON object representing disjoint contract info
+   */
+  public static fromJSON(json: any): DisjointContractInfo {
+    const instance = new DisjointContractInfo();
+
+    instance.totalCollateral = BigInt(
+      json.totalCollateral || json.total_collateral || 0,
+    );
+
+    // Parse contract infos array
+    const contractInfosData = json.contractInfos || json.contract_infos || [];
+    instance.contractOraclePairs = contractInfosData.map(
+      (contractInfoData: any) => ({
+        contractDescriptor: ContractDescriptor.fromJSON(
+          contractInfoData.contractDescriptor ||
+            contractInfoData.contract_descriptor,
+        ),
+        oracleInfo: OracleInfo.fromJSON(
+          contractInfoData.oracleInfo || contractInfoData.oracle_info,
+        ),
+      }),
+    );
+
+    return instance;
+  }
 
   /**
    * Deserializes a disjoint_contract_info message
@@ -170,7 +277,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
       );
 
       const oracleInfoData = reader.readBytes(100); // Temporary
-      const oracleInfo = OracleInfoV0.deserialize(oracleInfoData);
+      const oracleInfo = OracleInfo.deserialize(oracleInfoData);
 
       instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
     }
@@ -265,12 +372,12 @@ export type ContractInfoV1 = DisjointContractInfo;
 
 interface IContractOraclePair {
   contractDescriptor: ContractDescriptor;
-  oracleInfo: OracleInfoV0;
+  oracleInfo: OracleInfo;
 }
 
 interface IContractOraclePairJSON {
   contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
-  oracleInfo: OracleInfoV0JSON;
+  oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
 }
 
 export interface ISingleContractInfoJSON {
@@ -278,7 +385,7 @@ export interface ISingleContractInfoJSON {
   contractInfoType: ContractInfoType;
   totalCollateral: number;
   contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
-  oracleInfo: OracleInfoV0JSON;
+  oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
 }
 
 export interface IDisjointContractInfoJSON {

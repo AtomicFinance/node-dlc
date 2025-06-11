@@ -11,6 +11,24 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   public static type = MessageType.RoundingIntervalsV0;
 
   /**
+   * Creates a RoundingIntervalsV0 from JSON data
+   * @param json JSON object representing rounding intervals
+   */
+  public static fromJSON(json: any): RoundingIntervalsV0 {
+    const instance = new RoundingIntervalsV0();
+
+    const intervals = json.intervals || [];
+    instance.intervals = intervals.map((interval: any) => ({
+      beginInterval: BigInt(
+        interval.beginInterval || interval.begin_interval || 0,
+      ),
+      roundingMod: BigInt(interval.roundingMod || interval.rounding_mod || 0),
+    }));
+
+    return instance;
+  }
+
+  /**
    * Deserializes a rounding_intervals message
    * @param buf
    */

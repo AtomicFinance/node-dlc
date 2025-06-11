@@ -22,6 +22,27 @@ export abstract class PayoutCurvePiece {
     }
   }
 
+  /**
+   * Creates a PayoutCurvePiece from JSON data
+   * @param json JSON object representing a payout curve piece
+   */
+  public static fromJSON(json: any): PayoutCurvePiece {
+    if (!json) {
+      throw new Error('payoutCurvePiece is required');
+    }
+
+    // Determine type by checking for specific fields
+    if (json.points !== undefined) {
+      return PolynomialPayoutCurvePiece.fromJSON(json);
+    } else if (json.usePositivePiece !== undefined) {
+      return HyperbolaPayoutCurvePiece.fromJSON(json);
+    } else {
+      throw new Error(
+        'payoutCurvePiece must be either polynomial (with points) or hyperbola (with usePositivePiece)',
+      );
+    }
+  }
+
   public abstract payoutCurvePieceType: PayoutCurvePieceType;
   public abstract type: number; // For backward compatibility
   public abstract toJSON():
@@ -38,6 +59,23 @@ export class PolynomialPayoutCurvePiece
   extends PayoutCurvePiece
   implements IDlcMessage {
   public static payoutCurvePieceType = PayoutCurvePieceType.Polynomial;
+
+  /**
+   * Creates a PolynomialPayoutCurvePiece from JSON data
+   * @param json JSON object representing a polynomial payout curve piece
+   */
+  public static fromJSON(json: any): PolynomialPayoutCurvePiece {
+    const instance = new PolynomialPayoutCurvePiece();
+
+    const points = json.points || [];
+    instance.points = points.map((point: any) => ({
+      eventOutcome: BigInt(point.eventOutcome || point.event_outcome || 0),
+      outcomePayout: BigInt(point.outcomePayout || point.outcome_payout || 0),
+      extraPrecision: point.extraPrecision || point.extra_precision || 0,
+    }));
+
+    return instance;
+  }
 
   /**
    * Deserializes a polynomial_payout_curve_piece message
@@ -121,6 +159,53 @@ export class HyperbolaPayoutCurvePiece
   extends PayoutCurvePiece
   implements IDlcMessage {
   public static payoutCurvePieceType = PayoutCurvePieceType.Hyperbola;
+
+  /**
+   * Creates a HyperbolaPayoutCurvePiece from JSON data
+   * @param json JSON object representing a hyperbola payout curve piece
+   */
+  public static fromJSON(json: any): HyperbolaPayoutCurvePiece {
+    const instance = new HyperbolaPayoutCurvePiece();
+
+    instance.usePositivePiece =
+      json.usePositivePiece || json.use_positive_piece || false;
+    instance.translateOutcomeSign =
+      json.translateOutcomeSign || json.translate_outcome_sign || false;
+    instance.translateOutcome = BigInt(
+      json.translateOutcome || json.translate_outcome || 0,
+    );
+    instance.translateOutcomeExtraPrecision =
+      json.translateOutcomeExtraPrecision ||
+      json.translate_outcome_extra_precision ||
+      0;
+    instance.translatePayoutSign =
+      json.translatePayoutSign || json.translate_payout_sign || false;
+    instance.translatePayout = BigInt(
+      json.translatePayout || json.translate_payout || 0,
+    );
+    instance.translatePayoutExtraPrecision =
+      json.translatePayoutExtraPrecision ||
+      json.translate_payout_extra_precision ||
+      0;
+    instance.aSign = json.aSign || json.a_sign || false;
+    instance.a = BigInt(json.a || 0);
+    instance.aExtraPrecision =
+      json.aExtraPrecision || json.a_extra_precision || 0;
+    instance.bSign = json.bSign || json.b_sign || false;
+    instance.b = BigInt(json.b || 0);
+    instance.bExtraPrecision =
+      json.bExtraPrecision || json.b_extra_precision || 0;
+    instance.cSign = json.cSign || json.c_sign || false;
+    instance.c = BigInt(json.c || 0);
+    instance.cExtraPrecision =
+      json.cExtraPrecision || json.c_extra_precision || 0;
+    instance.dSign = json.dSign || json.d_sign || false;
+    instance.d = BigInt(json.d || 0);
+    instance.dExtraPrecision =
+      json.dExtraPrecision || json.d_extra_precision || 0;
+
+    return instance;
+  }
 
   /**
    * Deserializes a hyperbola_payout_curve_piece message

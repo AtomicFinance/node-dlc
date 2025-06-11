@@ -2,10 +2,9 @@ import { BufferReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
 import {
-  ContractDescriptorV0JSON,
-  ContractDescriptorV1JSON,
-  EnumeratedContractDescriptor,
-  NumericOutcomeContractDescriptor,
+  ContractDescriptor,
+  EnumeratedDescriptor,
+  NumericalDescriptor,
 } from './ContractDescriptor';
 import {
   ContractInfo,
@@ -39,8 +38,8 @@ export abstract class DlcMessage {
   public static deserialize(
     buf: Buffer,
   ):
-    | EnumeratedContractDescriptor
-    | NumericOutcomeContractDescriptor
+    | EnumeratedDescriptor
+    | NumericalDescriptor
     | ContractInfoV0
     | ContractInfoV1
     | OrderOfferV0
@@ -57,9 +56,9 @@ export abstract class DlcMessage {
 
     switch (type) {
       case MessageType.ContractDescriptorV0:
-        return EnumeratedContractDescriptor.deserialize(buf);
+        return EnumeratedDescriptor.deserialize(buf);
       case MessageType.ContractDescriptorV1:
-        return NumericOutcomeContractDescriptor.deserialize(buf);
+        return NumericalDescriptor.deserialize(buf);
       case MessageType.ContractInfoV0:
         return ContractInfoV0.deserialize(buf);
       case MessageType.ContractInfoV1:

@@ -13,6 +13,7 @@ import {
   FundingSignaturesV0,
   IFundingSignaturesV0JSON,
 } from './FundingSignaturesV0';
+import { ScriptWitnessV0 } from './ScriptWitnessV0';
 
 /**
  * DlcSign gives all of the initiator's signatures, which allows the
@@ -22,6 +23,101 @@ import {
  */
 export class DlcSign implements IDlcMessage {
   public static type = MessageType.DlcSignV0;
+
+  /**
+   * Creates a DlcSign from JSON data (e.g., from test vectors)
+   * Handles both our internal format and external test vector formats
+   * @param json JSON object representing a DLC sign
+   */
+  public static fromJSON(json: any): DlcSign {
+    const instance = new DlcSign();
+
+    // Handle both internal and external field naming conventions
+    instance.protocolVersion =
+      json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
+    instance.contractId = Buffer.from(
+      json.contractId || json.contract_id,
+      'hex',
+    );
+
+    // Parse CET adaptor signatures
+    instance.cetAdaptorSignatures = DlcSign.parseCetAdaptorSignaturesFromJSON(
+      json.cetAdaptorSignatures || json.cet_adaptor_signatures,
+    );
+
+    instance.refundSignature = Buffer.from(
+      json.refundSignature || json.refund_signature,
+      'hex',
+    );
+
+    // Parse funding signatures
+    instance.fundingSignatures = DlcSign.parseFundingSignaturesFromJSON(
+      json.fundingSignatures || json.funding_signatures,
+    );
+
+    return instance;
+  }
+
+  /**
+   * Parses CetAdaptorSignatures from JSON
+   * @param cetSigsJson JSON object representing CET adaptor signatures
+   */
+  private static parseCetAdaptorSignaturesFromJSON(
+    cetSigsJson: any,
+  ): CetAdaptorSignaturesV0 {
+    const instance = new CetAdaptorSignaturesV0();
+
+    if (
+      cetSigsJson.ecdsaAdaptorSignatures ||
+      cetSigsJson.ecdsa_adaptor_signatures
+    ) {
+      const ecdsaSigs =
+        cetSigsJson.ecdsaAdaptorSignatures ||
+        cetSigsJson.ecdsa_adaptor_signatures;
+      instance.sigs = ecdsaSigs.map((sig: any) => {
+        // The test vectors use 'signature' field, but our internal format uses encryptedSig/dleqProof
+        // For now, we'll parse the signature as encryptedSig and leave dleqProof empty
+        const sigBuffer = Buffer.from(sig.signature, 'hex');
+        return {
+          encryptedSig: sigBuffer.slice(0, 65), // First 65 bytes
+          dleqProof:
+            sigBuffer.length > 65 ? sigBuffer.slice(65, 162) : Buffer.alloc(97), // Next 97 bytes or empty
+        };
+      });
+    }
+
+    return instance;
+  }
+
+  /**
+   * Parses FundingSignatures from JSON
+   * @param fundingSigsJson JSON object representing funding signatures
+   */
+  private static parseFundingSignaturesFromJSON(
+    fundingSigsJson: any,
+  ): FundingSignaturesV0 {
+    const instance = new FundingSignaturesV0();
+
+    if (
+      fundingSigsJson.fundingSignatures ||
+      fundingSigsJson.funding_signatures
+    ) {
+      const fundingSigs =
+        fundingSigsJson.fundingSignatures || fundingSigsJson.funding_signatures;
+      instance.witnessElements = fundingSigs.map((sig: any) =>
+        (sig.witnessElements || sig.witness_elements || []).map(
+          (element: any) => {
+            // Create a ScriptWitnessV0 instance for each witness element
+            const witness = new ScriptWitnessV0();
+            witness.witness = Buffer.from(element.witness || element, 'hex');
+            return witness;
+          },
+        ),
+      );
+    }
+
+    return instance;
+  }
 
   /**
    * Deserializes a sign_dlc message
@@ -36,7 +132,9 @@ export class DlcSign implements IDlcMessage {
     // New fields as per dlcspecs PR #163
     instance.protocolVersion = reader.readUInt32BE();
     instance.contractId = reader.readBytes(32);
-    instance.cetSignatures = CetAdaptorSignaturesV0.deserialize(getTlv(reader));
+    instance.cetAdaptorSignatures = CetAdaptorSignaturesV0.deserialize(
+      getTlv(reader),
+    );
     instance.refundSignature = reader.readBytes(64);
     instance.fundingSignatures = FundingSignaturesV0.deserialize(
       getTlv(reader),
@@ -79,7 +177,7 @@ export class DlcSign implements IDlcMessage {
   // Existing fields
   public contractId: Buffer;
 
-  public cetSignatures: CetAdaptorSignaturesV0;
+  public cetAdaptorSignatures: CetAdaptorSignaturesV0;
 
   public refundSignature: Buffer;
 
@@ -136,9 +234,10 @@ export class DlcSign implements IDlcMessage {
       type: this.type,
       protocolVersion: this.protocolVersion,
       contractId: this.contractId.toString('hex'),
-      cetSignatures: this.cetSignatures.toJSON(),
+      cetAdaptorSignatures: this.cetAdaptorSignatures.toJSON(),
       refundSignature: this.refundSignature.toString('hex'),
       fundingSignatures: this.fundingSignatures.toJSON(),
+      serialized: this.serialize().toString('hex'), // Add serialized hex for compatibility testing
       tlvs,
     };
   }
@@ -154,7 +253,7 @@ export class DlcSign implements IDlcMessage {
     // New fields as per dlcspecs PR #163
     writer.writeUInt32BE(this.protocolVersion);
     writer.writeBytes(this.contractId);
-    writer.writeBytes(this.cetSignatures.serialize());
+    writer.writeBytes(this.cetAdaptorSignatures.serialize());
     writer.writeBytes(this.refundSignature);
     writer.writeBytes(this.fundingSignatures.serialize());
 
@@ -179,9 +278,10 @@ export interface IDlcSignJSON {
   type: number;
   protocolVersion: number;
   contractId: string;
-  cetSignatures: ICetAdaptorSignaturesV0JSON;
+  cetAdaptorSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
   fundingSignatures: IFundingSignaturesV0JSON;
+  serialized: string; // Hex serialization for compatibility testing
   tlvs: (IBatchFundingGroupJSON | any)[]; // For unknown TLVs
 }
 
