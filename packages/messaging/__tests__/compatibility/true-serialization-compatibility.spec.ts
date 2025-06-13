@@ -69,8 +69,8 @@ describe('True DLC Serialization Compatibility Tests', () => {
     });
   });
 
-  describe.only('Round-trip Serialization Compatibility', () => {
-    it.only('should test DlcOffer serialization against all test vectors', () => {
+  describe('Round-trip Serialization Compatibility', () => {
+    it('should test DlcOffer serialization against all test vectors', () => {
       let passCount = 0;
       let failCount = 0;
       const results: Array<{
@@ -173,10 +173,7 @@ describe('True DLC Serialization Compatibility Tests', () => {
             results.push({
               file: filename,
               status: 'FAIL',
-              error: `Hex mismatch. Expected: ${expectedHex.slice(
-                0,
-                40,
-              )}..., Got: ${actualHex.slice(0, 40)}...`,
+              error: `Hex mismatch. Expected:\n${expectedHex}\nGot:\n${actualHex}`,
             });
           }
         } catch (error) {
@@ -243,10 +240,7 @@ describe('True DLC Serialization Compatibility Tests', () => {
             results.push({
               file: filename,
               status: 'FAIL',
-              error: `Hex mismatch. Expected: ${expectedHex.slice(
-                0,
-                40,
-              )}..., Got: ${actualHex.slice(0, 40)}...`,
+              error: `Hex mismatch. Expected:\n${expectedHex}\nGot:\n${actualHex}`,
             });
           }
         } catch (error) {

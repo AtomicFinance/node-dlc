@@ -18,11 +18,10 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
     const instance = new CetAdaptorSignaturesV0();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    reader.readBigSize(); // nb_signatures
+    const nbSignatures = Number(reader.readBigSize()); // nb_signatures
 
-    while (!reader.eof) {
+    // Read exactly nbSignatures * (65 + 97) bytes to match serialize format
+    for (let i = 0; i < nbSignatures; i++) {
       const encryptedSig = reader.readBytes(65);
       const dleqProof = reader.readBytes(97);
       instance.sigs.push({ encryptedSig, dleqProof });
@@ -60,7 +59,7 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
+    // writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
     dataWriter.writeBigSize(this.sigs.length);
@@ -70,7 +69,7 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
       dataWriter.writeBytes(sig.dleqProof);
     }
 
-    writer.writeBigSize(dataWriter.size);
+    // writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
     return writer.toBuffer();
   }

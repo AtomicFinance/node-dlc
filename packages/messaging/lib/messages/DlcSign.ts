@@ -1,4 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import secp256k1 from 'secp256k1';
 
 import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
@@ -32,6 +33,24 @@ export class DlcSign implements IDlcMessage {
   public static fromJSON(json: any): DlcSign {
     const instance = new DlcSign();
 
+    // Helper function to parse DER-encoded signature and extract raw r,s values (64 bytes total)
+    const parseDerSignature = (hexSig: string): Buffer => {
+      const sigBuffer = Buffer.from(hexSig, 'hex');
+
+      // If it's already 64 bytes, assume it's raw
+      if (sigBuffer.length === 64) {
+        return sigBuffer;
+      }
+
+      // Use secp256k1.signatureImport to parse DER signature
+      try {
+        const rawSig = secp256k1.signatureImport(sigBuffer);
+        return Buffer.from(rawSig);
+      } catch (ex) {
+        throw new Error(`Invalid DER signature: ${ex.message}`);
+      }
+    };
+
     // Handle both internal and external field naming conventions
     instance.protocolVersion =
       json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
@@ -45,10 +64,9 @@ export class DlcSign implements IDlcMessage {
       json.cetAdaptorSignatures || json.cet_adaptor_signatures,
     );
 
-    instance.refundSignature = Buffer.from(
-      json.refundSignature || json.refund_signature,
-      'hex',
-    );
+    // Parse refund signature - handle DER encoding
+    const refundSigHex = json.refundSignature || json.refund_signature;
+    instance.refundSignature = parseDerSignature(refundSigHex);
 
     // Parse funding signatures
     instance.fundingSignatures = DlcSign.parseFundingSignaturesFromJSON(
@@ -132,13 +150,26 @@ export class DlcSign implements IDlcMessage {
     // New fields as per dlcspecs PR #163
     instance.protocolVersion = reader.readUInt32BE();
     instance.contractId = reader.readBytes(32);
+
+    // Read CET adaptor signatures directly to match serialize format (no TLV wrapping)
     instance.cetAdaptorSignatures = CetAdaptorSignaturesV0.deserialize(
-      getTlv(reader),
+      reader.buffer.subarray(reader.position),
     );
+
+    // Skip past the CET adaptor signatures we just read
+    const cetLength = instance.cetAdaptorSignatures.serialize().length;
+    reader.position += cetLength;
+
     instance.refundSignature = reader.readBytes(64);
+
+    // Read funding signatures directly to match serialize format (no TLV wrapping)
     instance.fundingSignatures = FundingSignaturesV0.deserialize(
-      getTlv(reader),
+      reader.buffer.subarray(reader.position),
     );
+
+    // Skip past the funding signatures we just read
+    const fundingLength = instance.fundingSignatures.serialize().length;
+    reader.position += fundingLength;
 
     // Parse TLV stream as per dlcspecs PR #163
     while (!reader.eof) {

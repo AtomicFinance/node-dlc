@@ -135,16 +135,15 @@ export class EnumeratedDescriptor
    * Converts enumerated_contract_descriptor to JSON
    */
   public toJSON(): EnumeratedDescriptorJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      contractDescriptorType: this.contractDescriptorType,
-      outcomes: this.outcomes.map((outcome) => {
-        return {
+      enumeratedContractDescriptor: {
+        payouts: this.outcomes.map((outcome) => ({
           outcome: outcome.outcome,
-          localPayout: Number(outcome.localPayout),
-        };
-      }),
-    };
+          offerPayout: Number(outcome.localPayout), // Use offerPayout to match Rust
+        })),
+      },
+    } as any;
   }
 
   /**
@@ -257,13 +256,14 @@ export class NumericalDescriptor
    * Converts numeric_outcome_contract_descriptor to JSON
    */
   public toJSON(): NumericalDescriptorJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      contractDescriptorType: this.contractDescriptorType,
-      numDigits: this.numDigits,
-      payoutFunction: this.payoutFunction.toJSON(),
-      roundingIntervals: this.roundingIntervals.toJSON(),
-    };
+      numericOutcomeContractDescriptor: {
+        numDigits: this.numDigits,
+        payoutFunction: this.payoutFunction.toJSON(),
+        roundingIntervals: this.roundingIntervals.toJSON(),
+      },
+    } as any;
   }
 
   /**

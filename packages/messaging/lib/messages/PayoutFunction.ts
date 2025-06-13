@@ -3,6 +3,7 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import {
+  HyperbolaPayoutCurvePiece,
   HyperbolaPayoutCurvePieceJSON,
   PayoutCurvePiece,
   PolynomialPayoutCurvePieceJSON,
@@ -10,7 +11,7 @@ import {
 
 /**
  * PayoutFunction contains the payout curve definition for numeric outcome contracts.
- * Updated to match dlcspecs format (no longer uses TLV).
+ * Updated to match rust-dlc format exactly.
  */
 export class PayoutFunction implements IDlcMessage {
   public static type = MessageType.PayoutFunctionV0;
@@ -22,25 +23,68 @@ export class PayoutFunction implements IDlcMessage {
   public static fromJSON(json: any): PayoutFunction {
     const instance = new PayoutFunction();
 
-    instance.endpoint0 = BigInt(json.endpoint0 || json.endpoint_0 || 0);
-    instance.endpointPayout0 = BigInt(
-      json.endpointPayout0 || json.endpoint_payout_0 || 0,
-    );
-    instance.extraPrecision0 =
-      json.extraPrecision0 || json.extra_precision_0 || 0;
+    // Parse payout function pieces
+    const pieces =
+      json.payoutFunctionPieces || json.payout_function_pieces || [];
+    instance.payoutFunctionPieces = pieces.map(
+      (pieceJson: any, index: number) => {
+        const piece = {
+          endPoint: {
+            eventOutcome: BigInt(pieceJson.endPoint?.eventOutcome || 0),
+            outcomePayout: BigInt(pieceJson.endPoint?.outcomePayout || 0),
+            extraPrecision: pieceJson.endPoint?.extraPrecision || 0,
+          },
+          payoutCurvePiece: PayoutCurvePiece.fromJSON(
+            pieceJson.payoutCurvePiece || pieceJson.payout_curve_piece,
+          ),
+        };
 
-    const pieces = json.pieces || [];
-    instance.pieces = pieces.map((pieceJson: any) => ({
-      payoutCurvePiece: PayoutCurvePiece.fromJSON(
-        pieceJson.payoutCurvePiece || pieceJson.payout_curve_piece,
-      ),
-      endpoint: BigInt(pieceJson.endpoint || 0),
-      endpointPayout: BigInt(
-        pieceJson.endpointPayout || pieceJson.endpoint_payout || 0,
-      ),
-      extraPrecision:
-        pieceJson.extraPrecision || pieceJson.extra_precision || 0,
-    }));
+        // For HyperbolaPayoutCurvePiece, set the left and right end points
+        if (piece.payoutCurvePiece instanceof HyperbolaPayoutCurvePiece) {
+          const hyperbola = piece.payoutCurvePiece as HyperbolaPayoutCurvePiece;
+
+          // Left end point is this piece's endPoint
+          hyperbola.leftEndPoint = piece.endPoint;
+
+          // Right end point is the next piece's endPoint, or lastEndpoint if this is the last piece
+          if (index < pieces.length - 1) {
+            const nextPiece = pieces[index + 1];
+            hyperbola.rightEndPoint = {
+              eventOutcome: BigInt(nextPiece.endPoint?.eventOutcome || 0),
+              outcomePayout: BigInt(nextPiece.endPoint?.outcomePayout || 0),
+              extraPrecision: nextPiece.endPoint?.extraPrecision || 0,
+            };
+          } else {
+            // Use lastEndpoint for the final piece
+            const lastEndpoint = json.lastEndpoint || json.last_endpoint || {};
+            hyperbola.rightEndPoint = {
+              eventOutcome: BigInt(lastEndpoint.eventOutcome || 0),
+              outcomePayout: BigInt(lastEndpoint.outcomePayout || 0),
+              extraPrecision: lastEndpoint.extraPrecision || 0,
+            };
+          }
+        }
+
+        return piece;
+      },
+    );
+
+    // Parse last endpoint
+    const lastEndpoint = json.lastEndpoint || json.last_endpoint;
+    if (lastEndpoint) {
+      instance.lastEndpoint = {
+        eventOutcome: BigInt(lastEndpoint.eventOutcome || 0),
+        outcomePayout: BigInt(lastEndpoint.outcomePayout || 0),
+        extraPrecision: lastEndpoint.extraPrecision || 0,
+      };
+    } else {
+      // Default last endpoint if not provided
+      instance.lastEndpoint = {
+        eventOutcome: BigInt(0),
+        outcomePayout: BigInt(0),
+        extraPrecision: 0,
+      };
+    }
 
     return instance;
   }
@@ -53,13 +97,16 @@ export class PayoutFunction implements IDlcMessage {
     const instance = new PayoutFunction();
     const reader = new BufferReader(buf);
 
+    // Read payout function pieces (as vec)
     const numPieces = Number(reader.readBigSize());
-    instance.endpoint0 = reader.readUInt64BE();
-    instance.endpointPayout0 = reader.readUInt64BE();
-    instance.extraPrecision0 = reader.readUInt16BE();
 
     for (let i = 0; i < numPieces; i++) {
-      // Parse payout curve piece - need to calculate its size to avoid consuming all bytes
+      // Read end_point first
+      const eventOutcome = reader.readUInt64BE();
+      const outcomePayout = reader.readUInt64BE();
+      const extraPrecision = reader.readUInt16BE();
+
+      // Read payout curve piece
       const payoutCurvePieceStartPos = reader.position;
       const payoutCurvePiece = PayoutCurvePiece.deserialize(
         reader.buffer.subarray(reader.position),
@@ -69,17 +116,22 @@ export class PayoutFunction implements IDlcMessage {
       const payoutCurvePieceSize = payoutCurvePiece.serialize().length;
       reader.position = payoutCurvePieceStartPos + payoutCurvePieceSize;
 
-      const endpoint = reader.readUInt64BE();
-      const endpointPayout = reader.readUInt64BE();
-      const extraPrecision = reader.readUInt16BE();
-
-      instance.pieces.push({
+      instance.payoutFunctionPieces.push({
+        endPoint: {
+          eventOutcome,
+          outcomePayout,
+          extraPrecision,
+        },
         payoutCurvePiece,
-        endpoint,
-        endpointPayout,
-        extraPrecision,
       });
     }
+
+    // Read last_endpoint
+    instance.lastEndpoint = {
+      eventOutcome: reader.readUInt64BE(),
+      outcomePayout: reader.readUInt64BE(),
+      extraPrecision: reader.readUInt16BE(),
+    };
 
     return instance;
   }
@@ -89,11 +141,8 @@ export class PayoutFunction implements IDlcMessage {
    */
   public type = PayoutFunction.type;
 
-  public endpoint0: bigint;
-  public endpointPayout0: bigint;
-  public extraPrecision0: number;
-
-  public pieces: IPayoutCurvePieces[] = [];
+  public payoutFunctionPieces: IPayoutFunctionPiece[] = [];
+  public lastEndpoint: IPayoutPoint;
 
   /**
    * Converts payout_function to JSON
@@ -101,17 +150,19 @@ export class PayoutFunction implements IDlcMessage {
   public toJSON(): PayoutFunctionJSON {
     return {
       type: this.type,
-      endpoint0: Number(this.endpoint0),
-      endpointPayout0: Number(this.endpointPayout0),
-      extraPrecision0: this.extraPrecision0,
-      pieces: this.pieces.map((piece) => {
-        return {
-          payoutCurvePiece: piece.payoutCurvePiece.toJSON(),
-          endpoint: Number(piece.endpoint),
-          endpointPayout: Number(piece.endpointPayout),
-          extraPrecision: piece.extraPrecision,
-        };
-      }),
+      payoutFunctionPieces: this.payoutFunctionPieces.map((piece) => ({
+        endPoint: {
+          eventOutcome: Number(piece.endPoint.eventOutcome),
+          outcomePayout: Number(piece.endPoint.outcomePayout),
+          extraPrecision: piece.endPoint.extraPrecision,
+        },
+        payoutCurvePiece: piece.payoutCurvePiece.toJSON(),
+      })),
+      lastEndpoint: {
+        eventOutcome: Number(this.lastEndpoint.eventOutcome),
+        outcomePayout: Number(this.lastEndpoint.outcomePayout),
+        extraPrecision: this.lastEndpoint.extraPrecision,
+      },
     };
   }
 
@@ -121,17 +172,23 @@ export class PayoutFunction implements IDlcMessage {
   public serialize(): Buffer {
     const writer = new BufferWriter();
 
-    writer.writeBigSize(this.pieces.length);
-    writer.writeUInt64BE(this.endpoint0);
-    writer.writeUInt64BE(this.endpointPayout0);
-    writer.writeUInt16BE(this.extraPrecision0);
+    // Write payout_function_pieces as vec (length + elements)
+    writer.writeBigSize(this.payoutFunctionPieces.length);
 
-    for (const piece of this.pieces) {
+    for (const piece of this.payoutFunctionPieces) {
+      // Write end_point first (matches rust order)
+      writer.writeUInt64BE(piece.endPoint.eventOutcome);
+      writer.writeUInt64BE(piece.endPoint.outcomePayout);
+      writer.writeUInt16BE(piece.endPoint.extraPrecision);
+
+      // Write payout_curve_piece second
       writer.writeBytes(piece.payoutCurvePiece.serialize());
-      writer.writeUInt64BE(piece.endpoint);
-      writer.writeUInt64BE(piece.endpointPayout);
-      writer.writeUInt16BE(piece.extraPrecision);
     }
+
+    // Write last_endpoint
+    writer.writeUInt64BE(this.lastEndpoint.eventOutcome);
+    writer.writeUInt64BE(this.lastEndpoint.outcomePayout);
+    writer.writeUInt16BE(this.lastEndpoint.extraPrecision);
 
     return writer.toBuffer();
   }
@@ -141,28 +198,34 @@ export class PayoutFunction implements IDlcMessage {
 export const PayoutFunctionV0 = PayoutFunction;
 export type PayoutFunctionV0 = PayoutFunction;
 
-interface IPayoutCurvePieces {
-  payoutCurvePiece: PayoutCurvePiece;
-  endpoint: bigint;
-  endpointPayout: bigint;
+interface IPayoutPoint {
+  eventOutcome: bigint;
+  outcomePayout: bigint;
   extraPrecision: number;
 }
 
-interface IPayoutCurvePiecesJSON {
+interface IPayoutPointJSON {
+  eventOutcome: number;
+  outcomePayout: number;
+  extraPrecision: number;
+}
+
+interface IPayoutFunctionPiece {
+  endPoint: IPayoutPoint;
+  payoutCurvePiece: PayoutCurvePiece;
+}
+
+interface IPayoutFunctionPieceJSON {
+  endPoint: IPayoutPointJSON;
   payoutCurvePiece:
     | PolynomialPayoutCurvePieceJSON
     | HyperbolaPayoutCurvePieceJSON;
-  endpoint: number;
-  endpointPayout: number;
-  extraPrecision: number;
 }
 
 export interface PayoutFunctionJSON {
   type: number;
-  endpoint0: number;
-  endpointPayout0: number;
-  extraPrecision0: number;
-  pieces: IPayoutCurvePiecesJSON[];
+  payoutFunctionPieces: IPayoutFunctionPieceJSON[];
+  lastEndpoint: IPayoutPointJSON;
 }
 
 // Legacy interface

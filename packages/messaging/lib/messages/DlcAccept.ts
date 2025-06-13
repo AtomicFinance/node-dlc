@@ -44,6 +44,24 @@ export class DlcAccept implements IDlcMessage {
   public static fromJSON(json: any): DlcAccept {
     const instance = new DlcAccept();
 
+    // Helper function to parse DER-encoded signature and extract raw r,s values (64 bytes total)
+    const parseDerSignature = (hexSig: string): Buffer => {
+      const sigBuffer = Buffer.from(hexSig, 'hex');
+
+      // If it's already 64 bytes, assume it's raw
+      if (sigBuffer.length === 64) {
+        return sigBuffer;
+      }
+
+      // Use secp256k1.signatureImport to parse DER signature
+      try {
+        const rawSig = secp256k1.signatureImport(sigBuffer);
+        return Buffer.from(rawSig);
+      } catch (ex) {
+        throw new Error(`Invalid DER signature: ${ex.message}`);
+      }
+    };
+
     // Handle both internal and external field naming conventions
     instance.protocolVersion =
       json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
@@ -91,10 +109,9 @@ export class DlcAccept implements IDlcMessage {
       json.cetAdaptorSignatures || json.cet_adaptor_signatures,
     );
 
-    instance.refundSignature = Buffer.from(
-      json.refundSignature || json.refund_signature,
-      'hex',
-    );
+    // Parse refund signature - handle DER encoding
+    const refundSigHex = json.refundSignature || json.refund_signature;
+    instance.refundSignature = parseDerSignature(refundSigHex);
 
     // Parse optional negotiation fields
     if (json.negotiationFields || json.negotiation_fields) {
@@ -157,7 +174,7 @@ export class DlcAccept implements IDlcMessage {
         cetSigsJson.ecdsa_adaptor_signatures;
       instance.sigs = ecdsaSigs.map((sig: any) => {
         // The test vectors use 'signature' field, but our internal format uses encryptedSig/dleqProof
-        // For now, we'll parse the signature as encryptedSig and leave dleqProof empty
+        // Adaptor signatures have different format than regular ECDSA (65 bytes + 97 bytes)
         const sigBuffer = Buffer.from(sig.signature, 'hex');
         return {
           encryptedSig: sigBuffer.slice(0, 65), // First 65 bytes
@@ -220,11 +237,15 @@ export class DlcAccept implements IDlcMessage {
     instance.changeSerialId = reader.readUInt64BE();
 
     if (parseCets) {
+      // Read CET adaptor signatures directly to match serialize format (no TLV wrapping)
       instance.cetAdaptorSignatures = CetAdaptorSignaturesV0.deserialize(
-        getTlv(reader),
+        reader.buffer.subarray(reader.position),
       );
+
+      // Skip past the CET adaptor signatures we just read
+      const cetLength = instance.cetAdaptorSignatures.serialize().length;
+      reader.position += cetLength;
     } else {
-      skipTlv(reader);
       instance.cetAdaptorSignatures = new CetAdaptorSignaturesV0();
     }
 

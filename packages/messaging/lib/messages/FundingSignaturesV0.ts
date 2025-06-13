@@ -19,16 +19,22 @@ export class FundingSignaturesV0 implements IDlcMessage {
     const instance = new FundingSignaturesV0();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    const numWitnesses = reader.readUInt16BE();
+    // reader.readBigSize(); // read type
+    // instance.length = reader.readBigSize();
+    const numWitnesses = Number(reader.readBigSize());
 
     for (let i = 0; i < numWitnesses; i++) {
-      const numWitnessElements = reader.readUInt16BE();
+      const numWitnessElements = Number(reader.readBigSize());
       const witnessElements: ScriptWitnessV0[] = [];
       for (let j = 0; j < numWitnessElements; j++) {
-        const witness = ScriptWitnessV0.getWitness(reader);
-        witnessElements.push(ScriptWitnessV0.deserialize(witness));
+        // Read witness element directly: [bigsize:len][len*byte:witness]
+        const witnessLength = Number(reader.readBigSize());
+        const witnessBytes = reader.readBytes(witnessLength);
+
+        const witness = new ScriptWitnessV0();
+        witness.length = witnessLength;
+        witness.witness = witnessBytes;
+        witnessElements.push(witness);
       }
       instance.witnessElements.push(witnessElements);
     }
@@ -62,20 +68,20 @@ export class FundingSignaturesV0 implements IDlcMessage {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
+    // writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
 
-    dataWriter.writeUInt16BE(this.witnessElements.length);
+    dataWriter.writeBigSize(this.witnessElements.length);
 
     for (const witnessElements of this.witnessElements) {
-      dataWriter.writeUInt16BE(witnessElements.length);
+      dataWriter.writeBigSize(witnessElements.length);
       for (const witnessElement of witnessElements) {
         dataWriter.writeBytes(witnessElement.serialize());
       }
     }
 
-    writer.writeBigSize(dataWriter.size);
+    // writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
     return writer.toBuffer();

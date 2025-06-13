@@ -8,12 +8,12 @@ import {
 } from './ContractDescriptor';
 import { DlcMessage, IDlcMessage } from './DlcMessage';
 import {
+  MultiOracleInfo,
+  MultiOracleInfoJSON,
   OracleInfo,
   OracleInfoV0,
   SingleOracleInfo,
-  MultiOracleInfo,
   SingleOracleInfoJSON,
-  MultiOracleInfoJSON,
 } from './OracleInfoV0';
 
 export abstract class ContractInfo extends DlcMessage {
@@ -125,9 +125,8 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
       reader.buffer.subarray(reader.position),
     );
     // Skip past the contract descriptor we just read
-    const contractDescriptorLength =
-      instance.contractDescriptor.serialize().length;
-    reader.position += contractDescriptorLength;
+    const descLength = instance.contractDescriptor.serialize().length;
+    reader.position += descLength;
 
     // Read oracle info with rust-dlc format - discriminator + body
     const oracleType = Number(reader.readBigSize());
@@ -188,13 +187,16 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
    * Converts single_contract_info to JSON
    */
   public toJSON(): ISingleContractInfoJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      contractInfoType: this.contractInfoType,
-      totalCollateral: Number(this.totalCollateral),
-      contractDescriptor: this.contractDescriptor.toJSON(),
-      oracleInfo: this.oracleInfo.toJSON(),
-    };
+      singleContractInfo: {
+        totalCollateral: Number(this.totalCollateral),
+        contractInfo: {
+          contractDescriptor: this.contractDescriptor.toJSON(),
+          oracleInfo: this.oracleInfo.toJSON(),
+        },
+      },
+    } as any;
   }
 
   /**
@@ -270,14 +272,35 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
     const numDisjointEvents = Number(reader.readBigSize());
 
     for (let i = 0; i < numDisjointEvents; i++) {
-      // For now, assume fixed-size parsing until we implement proper TLV handling
-      const contractDescriptorData = reader.readBytes(100); // Temporary
+      // Read contract descriptor as sibling type (starts with its own type prefix)
       const contractDescriptor = ContractDescriptor.deserialize(
-        contractDescriptorData,
+        reader.buffer.subarray(reader.position),
       );
+      // Skip past the contract descriptor we just read
+      const descLength = contractDescriptor.serialize().length;
+      reader.position += descLength;
 
-      const oracleInfoData = reader.readBytes(100); // Temporary
-      const oracleInfo = OracleInfo.deserialize(oracleInfoData);
+      // Read oracle info with rust-dlc format - discriminator + body (same as SingleContractInfo)
+      const oracleType = Number(reader.readBigSize());
+      let oracleInfo: OracleInfo;
+
+      if (oracleType === 0) {
+        // Single oracle
+        oracleInfo = SingleOracleInfo.deserializeBody(
+          reader.buffer.subarray(reader.position),
+        );
+      } else if (oracleType === 1) {
+        // Multi oracle
+        oracleInfo = MultiOracleInfo.deserializeBody(
+          reader.buffer.subarray(reader.position),
+        );
+      } else {
+        throw new Error(`Unknown oracle info type: ${oracleType}`);
+      }
+
+      // Skip past the oracle info we just read
+      const oracleInfoLength = oracleInfo.serializeBody().length;
+      reader.position += oracleInfoLength;
 
       instance.contractOraclePairs.push({ contractDescriptor, oracleInfo });
     }
@@ -334,15 +357,18 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
    * Converts disjoint_contract_info to JSON
    */
   public toJSON(): IDisjointContractInfoJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      contractInfoType: this.contractInfoType,
-      totalCollateral: Number(this.totalCollateral),
-      contractOraclePairs: this.contractOraclePairs.map((pair) => ({
-        contractDescriptor: pair.contractDescriptor.toJSON(),
-        oracleInfo: pair.oracleInfo.toJSON(),
-      })),
-    };
+      disjointContractInfo: {
+        type: this.type,
+        contractInfoType: this.contractInfoType,
+        totalCollateral: Number(this.totalCollateral),
+        contractOraclePairs: this.contractOraclePairs.map((pair) => ({
+          contractDescriptor: pair.contractDescriptor.toJSON(),
+          oracleInfo: pair.oracleInfo.toJSON(),
+        })),
+      },
+    } as any;
   }
 
   /**
@@ -357,7 +383,15 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
 
     for (const pair of this.contractOraclePairs) {
       writer.writeBytes(pair.contractDescriptor.serialize());
-      writer.writeBytes(pair.oracleInfo.serialize());
+
+      // Write oracle info with discriminator like SingleContractInfo does
+      if (pair.oracleInfo instanceof SingleOracleInfo) {
+        writer.writeBigSize(0); // Single oracle discriminator
+        writer.writeBytes(pair.oracleInfo.serializeBody());
+      } else {
+        writer.writeBigSize(1); // Multi oracle discriminator
+        writer.writeBytes(pair.oracleInfo.serializeBody());
+      }
     }
 
     return writer.toBuffer();
@@ -384,8 +418,10 @@ export interface ISingleContractInfoJSON {
   type: number;
   contractInfoType: ContractInfoType;
   totalCollateral: number;
-  contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
-  oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
+  contractInfo: {
+    contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
+    oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
+  };
 }
 
 export interface IDisjointContractInfoJSON {

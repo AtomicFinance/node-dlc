@@ -45,6 +45,21 @@ export class OracleParams implements IDlcMessage {
     return instance;
   }
 
+  /**
+   * Deserializes oracle params body without TLV wrapper (for optional deserialization)
+   */
+  public static deserializeBody(buf: Buffer): OracleParams {
+    const instance = new OracleParams();
+    const reader = new BufferReader(buf);
+
+    // No type/length to read - just the body content
+    instance.maxErrorExp = reader.readUInt16BE();
+    instance.minFailExp = reader.readUInt16BE();
+    instance.maximizeCoverage = reader.readUInt8() === 1;
+
+    return instance;
+  }
+
   public type = OracleParams.type;
   public length: bigint;
 
@@ -90,6 +105,17 @@ export class OracleParams implements IDlcMessage {
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
 
+    return writer.toBuffer();
+  }
+
+  /**
+   * Serializes the oracle params body without TLV wrapper (for optional serialization)
+   */
+  public serializeBody(): Buffer {
+    const writer = new BufferWriter();
+    writer.writeUInt16BE(this.maxErrorExp);
+    writer.writeUInt16BE(this.minFailExp);
+    writer.writeUInt8(this.maximizeCoverage ? 1 : 0);
     return writer.toBuffer();
   }
 }
@@ -157,10 +183,12 @@ export class SingleOracleInfo implements IDlcMessage {
   }
 
   public toJSON(): SingleOracleInfoJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      announcement: this.announcement.toJSON(),
-    };
+      single: {
+        oracleAnnouncement: this.announcement.toJSON(),
+      },
+    } as any;
   }
 
   public serialize(): Buffer {
@@ -255,7 +283,7 @@ export class MultiOracleInfo implements IDlcMessage {
     // Optional oracle params using Optional sub-type format
     const oracleParamsData = reader.readOptional();
     if (oracleParamsData) {
-      instance.oracleParams = OracleParams.deserialize(oracleParamsData);
+      instance.oracleParams = OracleParams.deserializeBody(oracleParamsData);
     }
 
     return instance;
@@ -305,12 +333,14 @@ export class MultiOracleInfo implements IDlcMessage {
   }
 
   public toJSON(): MultiOracleInfoJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      threshold: this.threshold,
-      announcements: this.announcements.map((a) => a.toJSON()),
-      oracleParams: this.oracleParams?.toJSON(),
-    };
+      multi: {
+        threshold: this.threshold,
+        oracleAnnouncements: this.announcements.map((a) => a.toJSON()),
+        oracleParams: this.oracleParams?.toJSON(),
+      },
+    } as any;
   }
 
   public serialize(): Buffer {
@@ -325,9 +355,9 @@ export class MultiOracleInfo implements IDlcMessage {
       dataWriter.writeBytes(announcement.serialize());
     }
 
-    // Use Optional serialization for oracle params
+    // Use Optional serialization for oracle params (body content only, not TLV wrapped)
     const oracleParamsData = this.oracleParams
-      ? this.oracleParams.serialize()
+      ? this.oracleParams.serializeBody()
       : null;
     dataWriter.writeOptional(oracleParamsData);
 
@@ -350,9 +380,9 @@ export class MultiOracleInfo implements IDlcMessage {
       writer.writeBytes(announcement.serialize());
     }
 
-    // Use Optional serialization for oracle params
+    // Use Optional serialization for oracle params (body content only, not TLV wrapped)
     const oracleParamsData = this.oracleParams
-      ? this.oracleParams.serialize()
+      ? this.oracleParams.serializeBody()
       : null;
     writer.writeOptional(oracleParamsData);
 
@@ -380,7 +410,7 @@ export class MultiOracleInfo implements IDlcMessage {
     // Optional oracle params using Optional sub-type format
     const oracleParamsData = reader.readOptional();
     if (oracleParamsData) {
-      instance.oracleParams = OracleParams.deserialize(oracleParamsData);
+      instance.oracleParams = OracleParams.deserializeBody(oracleParamsData);
     }
 
     return instance;

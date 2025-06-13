@@ -31,8 +31,16 @@ export abstract class PayoutCurvePiece {
       throw new Error('payoutCurvePiece is required');
     }
 
-    // Determine type by checking for specific fields
-    if (json.points !== undefined) {
+    // Handle test vector format with nested types
+    if (json.polynomialPayoutCurvePiece) {
+      return PolynomialPayoutCurvePiece.fromJSON(
+        json.polynomialPayoutCurvePiece,
+      );
+    } else if (json.hyperbolaPayoutCurvePiece) {
+      return HyperbolaPayoutCurvePiece.fromJSON(json.hyperbolaPayoutCurvePiece);
+    }
+    // Handle direct format
+    else if (json.points !== undefined || json.payoutPoints !== undefined) {
       return PolynomialPayoutCurvePiece.fromJSON(json);
     } else if (json.usePositivePiece !== undefined) {
       return HyperbolaPayoutCurvePiece.fromJSON(json);
@@ -67,7 +75,7 @@ export class PolynomialPayoutCurvePiece
   public static fromJSON(json: any): PolynomialPayoutCurvePiece {
     const instance = new PolynomialPayoutCurvePiece();
 
-    const points = json.points || [];
+    const points = json.payoutPoints || json.points || [];
     instance.points = points.map((point: any) => ({
       eventOutcome: BigInt(point.eventOutcome || point.event_outcome || 0),
       outcomePayout: BigInt(point.outcomePayout || point.outcome_payout || 0),
@@ -154,6 +162,7 @@ export class PolynomialPayoutCurvePiece
 /**
  * HyperbolaPayoutCurvePiece defines a hyperbola curve piece for payout functions.
  * This corresponds to type 1 in the sibling sub-type format.
+ * Updated to match latest DLC specs with u64 parameters.
  */
 export class HyperbolaPayoutCurvePiece
   extends PayoutCurvePiece
@@ -167,42 +176,73 @@ export class HyperbolaPayoutCurvePiece
   public static fromJSON(json: any): HyperbolaPayoutCurvePiece {
     const instance = new HyperbolaPayoutCurvePiece();
 
+    // These will be set by PayoutFunction when creating from test data
+    instance.leftEndPoint = {
+      eventOutcome: BigInt(0),
+      outcomePayout: BigInt(0),
+      extraPrecision: 0,
+    };
+
+    instance.rightEndPoint = {
+      eventOutcome: BigInt(0),
+      outcomePayout: BigInt(0),
+      extraPrecision: 0,
+    };
+
     instance.usePositivePiece =
       json.usePositivePiece || json.use_positive_piece || false;
-    instance.translateOutcomeSign =
-      json.translateOutcomeSign || json.translate_outcome_sign || false;
-    instance.translateOutcome = BigInt(
-      json.translateOutcome || json.translate_outcome || 0,
+
+    // Helper function to parse signed f64 values for sign+magnitude+precision encoding
+    const parseSignedF64 = (value: any) => {
+      const numValue = Number(value || 0);
+      const isNegative = numValue < 0;
+      const absValue = Math.abs(numValue);
+      const magnitude = BigInt(Math.floor(absValue));
+      // Convert fractional part to 16-bit precision (like PayoutPoint)
+      const fractionalPart = absValue - Math.floor(absValue);
+      const extraPrecision = Math.round(fractionalPart * (1 << 16));
+      return {
+        sign: isNegative,
+        magnitude,
+        extraPrecision,
+      };
+    };
+
+    // Parse values using sign+magnitude+precision representation
+    const translateOutcomeData = parseSignedF64(
+      json.translateOutcome || json.translate_outcome,
     );
+    instance.translateOutcomeSign = translateOutcomeData.sign;
+    instance.translateOutcome = translateOutcomeData.magnitude;
     instance.translateOutcomeExtraPrecision =
-      json.translateOutcomeExtraPrecision ||
-      json.translate_outcome_extra_precision ||
-      0;
-    instance.translatePayoutSign =
-      json.translatePayoutSign || json.translate_payout_sign || false;
-    instance.translatePayout = BigInt(
-      json.translatePayout || json.translate_payout || 0,
+      translateOutcomeData.extraPrecision;
+
+    const translatePayoutData = parseSignedF64(
+      json.translatePayout || json.translate_payout,
     );
-    instance.translatePayoutExtraPrecision =
-      json.translatePayoutExtraPrecision ||
-      json.translate_payout_extra_precision ||
-      0;
-    instance.aSign = json.aSign || json.a_sign || false;
-    instance.a = BigInt(json.a || 0);
-    instance.aExtraPrecision =
-      json.aExtraPrecision || json.a_extra_precision || 0;
-    instance.bSign = json.bSign || json.b_sign || false;
-    instance.b = BigInt(json.b || 0);
-    instance.bExtraPrecision =
-      json.bExtraPrecision || json.b_extra_precision || 0;
-    instance.cSign = json.cSign || json.c_sign || false;
-    instance.c = BigInt(json.c || 0);
-    instance.cExtraPrecision =
-      json.cExtraPrecision || json.c_extra_precision || 0;
-    instance.dSign = json.dSign || json.d_sign || false;
-    instance.d = BigInt(json.d || 0);
-    instance.dExtraPrecision =
-      json.dExtraPrecision || json.d_extra_precision || 0;
+    instance.translatePayoutSign = translatePayoutData.sign;
+    instance.translatePayout = translatePayoutData.magnitude;
+    instance.translatePayoutExtraPrecision = translatePayoutData.extraPrecision;
+
+    const aData = parseSignedF64(json.a);
+    instance.aSign = aData.sign;
+    instance.a = aData.magnitude;
+    instance.aExtraPrecision = aData.extraPrecision;
+
+    const bData = parseSignedF64(json.b);
+    instance.bSign = bData.sign;
+    instance.b = bData.magnitude;
+    instance.bExtraPrecision = bData.extraPrecision;
+
+    const cData = parseSignedF64(json.c);
+    instance.cSign = cData.sign;
+    instance.c = cData.magnitude;
+    instance.cExtraPrecision = cData.extraPrecision;
+
+    const dData = parseSignedF64(json.d);
+    instance.dSign = dData.sign;
+    instance.d = dData.magnitude;
+    instance.dExtraPrecision = dData.extraPrecision;
 
     return instance;
   }
@@ -217,90 +257,111 @@ export class HyperbolaPayoutCurvePiece
 
     reader.readBigSize(); // read type (1)
     instance.usePositivePiece = reader.readUInt8() === 1;
-    instance.translateOutcomeSign = reader.readUInt8() === 1;
+
+    // Read sign+magnitude+precision encoding for each f64 parameter
+    // Each parameter: 1 byte sign + 8 bytes magnitude + 2 bytes precision = 11 bytes
+    instance.translateOutcomeSign = reader.readUInt8() === 0; // 0 = negative
     instance.translateOutcome = reader.readUInt64BE();
     instance.translateOutcomeExtraPrecision = reader.readUInt16BE();
-    instance.translatePayoutSign = reader.readUInt8() === 1;
+
+    instance.translatePayoutSign = reader.readUInt8() === 0; // 0 = negative
     instance.translatePayout = reader.readUInt64BE();
     instance.translatePayoutExtraPrecision = reader.readUInt16BE();
-    instance.aSign = reader.readUInt8() === 1;
+
+    instance.aSign = reader.readUInt8() === 0; // 0 = negative
     instance.a = reader.readUInt64BE();
     instance.aExtraPrecision = reader.readUInt16BE();
-    instance.bSign = reader.readUInt8() === 1;
+
+    instance.bSign = reader.readUInt8() === 0; // 0 = negative
     instance.b = reader.readUInt64BE();
     instance.bExtraPrecision = reader.readUInt16BE();
-    instance.cSign = reader.readUInt8() === 1;
+
+    instance.cSign = reader.readUInt8() === 0; // 0 = negative
     instance.c = reader.readUInt64BE();
     instance.cExtraPrecision = reader.readUInt16BE();
-    instance.dSign = reader.readUInt8() === 1;
+
+    instance.dSign = reader.readUInt8() === 0; // 0 = negative
     instance.d = reader.readUInt64BE();
     instance.dExtraPrecision = reader.readUInt16BE();
+
+    // Note: leftEndPoint and rightEndPoint are not part of the serialization
+    // They will be set by PayoutFunction when creating from JSON
+    instance.leftEndPoint = {
+      eventOutcome: BigInt(0),
+      outcomePayout: BigInt(0),
+      extraPrecision: 0,
+    };
+
+    instance.rightEndPoint = {
+      eventOutcome: BigInt(0),
+      outcomePayout: BigInt(0),
+      extraPrecision: 0,
+    };
 
     return instance;
   }
 
   /**
-   * The type for hyperbola_payout_curve_piece message - using MessageType for IDlcMessage compatibility
+   * The type for hyperbola_payout_curve_piece message
    */
-  public type = MessageType.HyperbolaPayoutCurvePiece; // For IDlcMessage compatibility
+  public type = MessageType.HyperbolaPayoutCurvePiece;
 
-  /**
-   * The payout curve piece type for new format
-   */
-  public payoutCurvePieceType = PayoutCurvePieceType.Hyperbola;
+  public payoutCurvePieceType = HyperbolaPayoutCurvePiece.payoutCurvePieceType;
 
+  // Updated DLC specs format: sign+magnitude+precision encoding for f64 parameters
+  public leftEndPoint: IPayoutPoint;
+  public rightEndPoint: IPayoutPoint;
   public usePositivePiece: boolean;
-
-  public translateOutcomeSign: boolean;
-  public translateOutcome: bigint;
-  public translateOutcomeExtraPrecision: number;
-
-  public translatePayoutSign: boolean;
-  public translatePayout: bigint;
-  public translatePayoutExtraPrecision: number;
-
-  public aSign: boolean;
-  public a: bigint;
-  public aExtraPrecision: number;
-
-  public bSign: boolean;
-  public b: bigint;
-  public bExtraPrecision: number;
-
-  public cSign: boolean;
-  public c: bigint;
-  public cExtraPrecision: number;
-
-  public dSign: boolean;
-  public d: bigint;
-  public dExtraPrecision: number;
+  public translateOutcome: bigint; // magnitude
+  public translateOutcomeSign: boolean; // sign flag
+  public translateOutcomeExtraPrecision: number; // extra precision
+  public translatePayout: bigint; // magnitude
+  public translatePayoutSign: boolean; // sign flag
+  public translatePayoutExtraPrecision: number; // extra precision
+  public a: bigint; // magnitude
+  public aSign: boolean; // sign flag
+  public aExtraPrecision: number; // extra precision
+  public b: bigint; // magnitude
+  public bSign: boolean; // sign flag
+  public bExtraPrecision: number; // extra precision
+  public c: bigint; // magnitude
+  public cSign: boolean; // sign flag
+  public cExtraPrecision: number; // extra precision
+  public d: bigint; // magnitude
+  public dSign: boolean; // sign flag
+  public dExtraPrecision: number; // extra precision
 
   /**
    * Converts hyperbola_payout_curve_piece to JSON
    */
   public toJSON(): HyperbolaPayoutCurvePieceJSON {
+    // Helper function to reconstruct f64 from sign+magnitude+precision
+    const reconstructF64 = (
+      sign: boolean,
+      magnitude: bigint,
+      extraPrecision: number,
+    ) => {
+      const value = Number(magnitude) + extraPrecision / (1 << 16);
+      return sign ? -value : value;
+    };
+
     return {
       type: this.type,
-      payoutCurvePieceType: this.payoutCurvePieceType,
       usePositivePiece: this.usePositivePiece,
-      translateOutcomeSign: this.translateOutcomeSign,
-      translateOutcome: Number(this.translateOutcome),
-      translateOutcomeExtraPrecision: this.translateOutcomeExtraPrecision,
-      translatePayoutSign: this.translatePayoutSign,
-      translatePayout: Number(this.translatePayout),
-      translatePayoutExtraPrecision: this.translatePayoutExtraPrecision,
-      aSign: this.aSign,
-      a: Number(this.a),
-      aExtraPrecision: this.aExtraPrecision,
-      bSign: this.bSign,
-      b: Number(this.b),
-      bExtraPrecision: this.bExtraPrecision,
-      cSign: this.cSign,
-      c: Number(this.c),
-      cExtraPrecision: this.cExtraPrecision,
-      dSign: this.dSign,
-      d: Number(this.d),
-      dExtraPrecision: this.dExtraPrecision,
+      translateOutcome: reconstructF64(
+        this.translateOutcomeSign,
+        this.translateOutcome,
+        this.translateOutcomeExtraPrecision,
+      ),
+      translatePayout: reconstructF64(
+        this.translatePayoutSign,
+        this.translatePayout,
+        this.translatePayoutExtraPrecision,
+      ),
+      a: reconstructF64(this.aSign, this.a, this.aExtraPrecision),
+      b: reconstructF64(this.bSign, this.b, this.bExtraPrecision),
+      c: reconstructF64(this.cSign, this.c, this.cExtraPrecision),
+      d: reconstructF64(this.dSign, this.d, this.dExtraPrecision),
     };
   }
 
@@ -312,22 +373,30 @@ export class HyperbolaPayoutCurvePiece
 
     writer.writeBigSize(this.payoutCurvePieceType);
     writer.writeUInt8(this.usePositivePiece ? 1 : 0);
-    writer.writeUInt8(this.translateOutcomeSign ? 1 : 0);
+
+    // Write sign+magnitude+precision encoding for each f64 parameter
+    // Each parameter: 1 byte sign (00=negative, 01=positive) + 8 bytes magnitude + 2 bytes precision = 11 bytes
+    writer.writeUInt8(this.translateOutcomeSign ? 0 : 1);
     writer.writeUInt64BE(this.translateOutcome);
     writer.writeUInt16BE(this.translateOutcomeExtraPrecision);
-    writer.writeUInt8(this.translatePayoutSign ? 1 : 0);
+
+    writer.writeUInt8(this.translatePayoutSign ? 0 : 1);
     writer.writeUInt64BE(this.translatePayout);
     writer.writeUInt16BE(this.translatePayoutExtraPrecision);
-    writer.writeUInt8(this.aSign ? 1 : 0);
+
+    writer.writeUInt8(this.aSign ? 0 : 1);
     writer.writeUInt64BE(this.a);
     writer.writeUInt16BE(this.aExtraPrecision);
-    writer.writeUInt8(this.bSign ? 1 : 0);
+
+    writer.writeUInt8(this.bSign ? 0 : 1);
     writer.writeUInt64BE(this.b);
     writer.writeUInt16BE(this.bExtraPrecision);
-    writer.writeUInt8(this.cSign ? 1 : 0);
+
+    writer.writeUInt8(this.cSign ? 0 : 1);
     writer.writeUInt64BE(this.c);
     writer.writeUInt16BE(this.cExtraPrecision);
-    writer.writeUInt8(this.dSign ? 1 : 0);
+
+    writer.writeUInt8(this.dSign ? 0 : 1);
     writer.writeUInt64BE(this.d);
     writer.writeUInt16BE(this.dExtraPrecision);
 
@@ -347,6 +416,18 @@ interface IPointJSON {
   extraPrecision: number;
 }
 
+interface IPayoutPoint {
+  eventOutcome: bigint;
+  outcomePayout: bigint;
+  extraPrecision: number;
+}
+
+interface IPayoutPointJSON {
+  eventOutcome: number;
+  outcomePayout: number;
+  extraPrecision: number;
+}
+
 export interface PolynomialPayoutCurvePieceJSON {
   type: number;
   payoutCurvePieceType: PayoutCurvePieceType;
@@ -355,24 +436,11 @@ export interface PolynomialPayoutCurvePieceJSON {
 
 export interface HyperbolaPayoutCurvePieceJSON {
   type: number;
-  payoutCurvePieceType: PayoutCurvePieceType;
   usePositivePiece: boolean;
-  translateOutcomeSign: boolean;
   translateOutcome: number;
-  translateOutcomeExtraPrecision: number;
-  translatePayoutSign: boolean;
   translatePayout: number;
-  translatePayoutExtraPrecision: number;
-  aSign: boolean;
   a: number;
-  aExtraPrecision: number;
-  bSign: boolean;
   b: number;
-  bExtraPrecision: number;
-  cSign: boolean;
   c: number;
-  cExtraPrecision: number;
-  dSign: boolean;
   d: number;
-  dExtraPrecision: number;
 }

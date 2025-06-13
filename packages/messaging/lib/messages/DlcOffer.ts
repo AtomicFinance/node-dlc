@@ -442,8 +442,9 @@ export class DlcOffer implements IDlcMessage {
 
   /**
    * Converts dlc_offer to JSON (includes serialized hex for compatibility testing)
+   * @param format 'nodejs' (default) or 'rust' for rust-dlc compatibility
    */
-  public toJSON(): IDlcOfferJSON {
+  public toJSON(format: 'nodejs' | 'rust' = 'nodejs'): IDlcOfferJSON {
     const tlvs = [];
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
@@ -461,11 +462,34 @@ export class DlcOffer implements IDlcMessage {
       );
     }
 
+    if (format === 'rust') {
+      // Return rust-dlc compatible format
+      return {
+        protocolVersion: this.protocolVersion,
+        temporaryContractId: this.temporaryContractId.toString('hex'),
+        contractFlags: Number(this.contractFlags[0]),
+        chainHash: this.chainHash.toString('hex'),
+        contractInfo: this.contractInfo.toJSON(),
+        fundingPubkey: this.fundingPubKey.toString('hex'), // lowercase 'k'
+        payoutSpk: this.payoutSPK.toString('hex'), // lowercase
+        payoutSerialId: Number(this.payoutSerialId),
+        offerCollateral: Number(this.offerCollateralSatoshis), // no "Satoshis"
+        fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
+        changeSpk: this.changeSPK.toString('hex'), // lowercase
+        changeSerialId: Number(this.changeSerialId),
+        fundOutputSerialId: Number(this.fundOutputSerialId),
+        feeRatePerVb: Number(this.feeRatePerVb),
+        cetLocktime: this.cetLocktime,
+        refundLocktime: this.refundLocktime,
+      } as any; // Allow different field names
+    }
+
+    // Default nodejs format
     return {
       type: this.type,
       protocolVersion: this.protocolVersion,
       temporaryContractId: this.temporaryContractId.toString('hex'),
-      contractFlags: this.contractFlags.toString('hex'),
+      contractFlags: Number(this.contractFlags[0]), // Convert to u8 numeric value for Rust compatibility
       chainHash: this.chainHash.toString('hex'),
       contractInfo: this.contractInfo.toJSON(),
       fundingPubKey: this.fundingPubKey.toString('hex'),
@@ -545,7 +569,7 @@ export interface IDlcOfferJSON {
   type: number;
   protocolVersion: number;
   temporaryContractId: string;
-  contractFlags: string;
+  contractFlags: number;
   chainHash: string;
   contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
   fundingPubKey: string;
