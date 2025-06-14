@@ -88,7 +88,7 @@ export class EnumeratedDescriptor
     const payouts = json.payouts || [];
     instance.outcomes = payouts.map((payout: any) => ({
       outcome: payout.outcome,
-      localPayout: BigInt(payout.localPayout || payout.local_payout || 0),
+      localPayout: BigInt(payout.offerPayout || 0), // Use canonical offerPayout field
     }));
 
     return instance;

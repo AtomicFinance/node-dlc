@@ -40,15 +40,15 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   public sigs: ISig[] = [];
 
   /**
-   * Converts cet_adaptor_signature to JSON
+   * Converts cet_adaptor_signature to JSON (canonical rust-dlc format)
    */
   public toJSON(): ICetAdaptorSignaturesV0JSON {
     return {
-      type: this.type,
-      sigs: this.sigs.map((sig) => {
+      ecdsaAdaptorSignatures: this.sigs.map((sig) => {
+        // Combine encryptedSig and dleqProof into single signature field as expected by rust-dlc
+        const signature = Buffer.concat([sig.encryptedSig, sig.dleqProof]);
         return {
-          encryptedSig: sig.encryptedSig.toString('hex'),
-          dleqProof: sig.dleqProof.toString('hex'),
+          signature: signature.toString('hex'),
         };
       }),
     };
@@ -81,11 +81,9 @@ interface ISig {
 }
 
 export interface ICetAdaptorSignaturesV0JSON {
-  type: number;
-  sigs: ISigJSON[];
+  ecdsaAdaptorSignatures: ISigJSON[];
 }
 
 export interface ISigJSON {
-  encryptedSig: string;
-  dleqProof: string;
+  signature: string;
 }

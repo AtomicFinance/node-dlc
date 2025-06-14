@@ -52,13 +52,14 @@ export class FundingSignaturesV0 implements IDlcMessage {
   public witnessElements: ScriptWitnessV0[][] = [];
 
   /**
-   * Converts funding_signatures_v0 to JSON
+   * Converts funding_signatures_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IFundingSignaturesV0JSON {
     return {
-      type: this.type,
-      witnessElements: this.witnessElements.map((witnessElement) => {
-        return witnessElement.map((witness) => witness.toJSON());
+      fundingSignatures: this.witnessElements.map((witnessElement) => {
+        return {
+          witnessElements: witnessElement.map((witness) => witness.toJSON()),
+        };
       }),
     };
   }
@@ -89,6 +90,9 @@ export class FundingSignaturesV0 implements IDlcMessage {
 }
 
 export interface IFundingSignaturesV0JSON {
-  type: number;
-  witnessElements: IScriptWitnessV0JSON[][];
+  fundingSignatures: IFundingSignatureJSON[];
+}
+
+export interface IFundingSignatureJSON {
+  witnessElements: IScriptWitnessV0JSON[];
 }

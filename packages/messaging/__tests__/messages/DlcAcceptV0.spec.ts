@@ -206,13 +206,15 @@ describe('DlcAccept', () => {
     describe('toJSON', () => {
       it('convert to JSON', async () => {
         const json = instance.toJSON();
-        expect(json.tempContractId).to.equal(tempContractId.toString('hex'));
-        expect(json.fundingPubKey).to.equal(fundingPubKey.toString('hex'));
-        expect(json.payoutSPK).to.equal(payoutSPK.toString('hex'));
+        expect(json.temporaryContractId).to.equal(
+          tempContractId.toString('hex'),
+        );
+        expect(json.fundingPubkey).to.equal(fundingPubKey.toString('hex'));
+        expect(json.payoutSpk).to.equal(payoutSPK.toString('hex'));
         expect(json.fundingInputs[0].prevTx).to.equal(
           instance.fundingInputs[0].prevTx.serialize().toString('hex'),
         );
-        expect(json.changeSPK).to.equal(changeSPK.toString('hex'));
+        expect(json.changeSpk).to.equal(changeSPK.toString('hex'));
         expect(json.refundSignature).to.equal(refundSignature.toString('hex'));
       });
     });

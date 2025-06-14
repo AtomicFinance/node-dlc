@@ -243,33 +243,18 @@ export class DlcSign implements IDlcMessage {
   }
 
   /**
-   * Converts sign_dlc to JSON
+   * Converts sign_dlc to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDlcSignJSON {
-    const tlvs = [];
-
-    if (this.batchFundingGroups) {
-      this.batchFundingGroups.forEach((group) => {
-        tlvs.push(group.toJSON());
-      });
-    }
-
-    // Include unknown TLVs for debugging
-    if (this.unknownTlvs) {
-      this.unknownTlvs.forEach((tlv) =>
-        tlvs.push({ type: tlv.type, data: tlv.data.toString('hex') }),
-      );
-    }
+    // Convert raw signature back to DER format for canonical rust-dlc JSON
+    const derRefundSignature = secp256k1.signatureExport(this.refundSignature);
 
     return {
-      type: this.type,
       protocolVersion: this.protocolVersion,
       contractId: this.contractId.toString('hex'),
       cetAdaptorSignatures: this.cetAdaptorSignatures.toJSON(),
-      refundSignature: this.refundSignature.toString('hex'),
+      refundSignature: Buffer.from(derRefundSignature).toString('hex'),
       fundingSignatures: this.fundingSignatures.toJSON(),
-      serialized: this.serialize().toString('hex'), // Add serialized hex for compatibility testing
-      tlvs,
     };
   }
 
@@ -306,14 +291,11 @@ export class DlcSign implements IDlcMessage {
 }
 
 export interface IDlcSignJSON {
-  type: number;
   protocolVersion: number;
   contractId: string;
   cetAdaptorSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
   fundingSignatures: IFundingSignaturesV0JSON;
-  serialized: string; // Hex serialization for compatibility testing
-  tlvs: (IBatchFundingGroupJSON | any)[]; // For unknown TLVs
 }
 
 export class DlcSignContainer {

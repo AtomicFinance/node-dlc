@@ -441,10 +441,9 @@ export class DlcOffer implements IDlcMessage {
   }
 
   /**
-   * Converts dlc_offer to JSON (includes serialized hex for compatibility testing)
-   * @param format 'nodejs' (default) or 'rust' for rust-dlc compatibility
+   * Converts dlc_offer to JSON (canonical rust-dlc format)
    */
-  public toJSON(format: 'nodejs' | 'rust' = 'nodejs'): IDlcOfferJSON {
+  public toJSON(): IDlcOfferJSON {
     const tlvs = [];
 
     if (this.metadata) tlvs.push(this.metadata.toJSON());
@@ -462,50 +461,38 @@ export class DlcOffer implements IDlcMessage {
       );
     }
 
-    if (format === 'rust') {
-      // Return rust-dlc compatible format
-      return {
-        protocolVersion: this.protocolVersion,
-        temporaryContractId: this.temporaryContractId.toString('hex'),
-        contractFlags: Number(this.contractFlags[0]),
-        chainHash: this.chainHash.toString('hex'),
-        contractInfo: this.contractInfo.toJSON(),
-        fundingPubkey: this.fundingPubKey.toString('hex'), // lowercase 'k'
-        payoutSpk: this.payoutSPK.toString('hex'), // lowercase
-        payoutSerialId: Number(this.payoutSerialId),
-        offerCollateral: Number(this.offerCollateralSatoshis), // no "Satoshis"
-        fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-        changeSpk: this.changeSPK.toString('hex'), // lowercase
-        changeSerialId: Number(this.changeSerialId),
-        fundOutputSerialId: Number(this.fundOutputSerialId),
-        feeRatePerVb: Number(this.feeRatePerVb),
-        cetLocktime: this.cetLocktime,
-        refundLocktime: this.refundLocktime,
-      } as any; // Allow different field names
-    }
+    // Helper function to safely convert BigInt to number, preserving precision
+    const bigIntToNumber = (value: bigint): number => {
+      // For values within safe integer range, convert to number
+      if (
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        return Number(value);
+      }
+      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      return value as any;
+    };
 
-    // Default nodejs format
+    // Return canonical rust-dlc format only
     return {
-      type: this.type,
       protocolVersion: this.protocolVersion,
       temporaryContractId: this.temporaryContractId.toString('hex'),
-      contractFlags: Number(this.contractFlags[0]), // Convert to u8 numeric value for Rust compatibility
+      contractFlags: Number(this.contractFlags[0]),
       chainHash: this.chainHash.toString('hex'),
       contractInfo: this.contractInfo.toJSON(),
-      fundingPubKey: this.fundingPubKey.toString('hex'),
-      payoutSPK: this.payoutSPK.toString('hex'),
-      payoutSerialId: Number(this.payoutSerialId),
-      offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
+      fundingPubkey: this.fundingPubKey.toString('hex'), // lowercase 'k'
+      payoutSpk: this.payoutSPK.toString('hex'), // lowercase
+      payoutSerialId: bigIntToNumber(this.payoutSerialId),
+      offerCollateral: bigIntToNumber(this.offerCollateralSatoshis), // no "Satoshis"
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-      changeSPK: this.changeSPK.toString('hex'),
-      changeSerialId: Number(this.changeSerialId),
-      fundOutputSerialId: Number(this.fundOutputSerialId),
-      feeRatePerVb: Number(this.feeRatePerVb),
+      changeSpk: this.changeSPK.toString('hex'), // lowercase
+      changeSerialId: bigIntToNumber(this.changeSerialId),
+      fundOutputSerialId: bigIntToNumber(this.fundOutputSerialId),
+      feeRatePerVb: bigIntToNumber(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
-      serialized: this.serialize().toString('hex'), // Add serialized hex for compatibility testing
-      tlvs,
-    };
+    } as any; // Allow different field names from interface
   }
 
   /**

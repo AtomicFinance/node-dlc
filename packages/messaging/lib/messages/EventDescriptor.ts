@@ -106,13 +106,14 @@ export class EnumEventDescriptorV0
   public outcomes: string[] = [];
 
   /**
-   * Converts enum_event_descriptor_v0 to JSON
+   * Converts enum_event_descriptor_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IEnumEventDescriptorV0JSON {
     return {
-      type: this.type,
-      outcomes: this.outcomes,
-    };
+      enumEvent: {
+        outcomes: this.outcomes,
+      },
+    } as any;
   }
 
   /**
@@ -220,17 +221,18 @@ export class DigitDecompositionEventDescriptorV0
   }
 
   /**
-   * Converts digit_decomposition_event_descriptor_v0 to JSON
+   * Converts digit_decomposition_event_descriptor_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
     return {
-      type: this.type,
-      base: this.base,
-      isSigned: this.isSigned,
-      unit: this.unit,
-      precision: this.precision,
-      nbDigits: this.nbDigits,
-    };
+      digitDecompositionEvent: {
+        base: this.base,
+        isSigned: this.isSigned,
+        unit: this.unit,
+        precision: this.precision,
+        nbDigits: this.nbDigits,
+      },
+    } as any;
   }
 
   /**

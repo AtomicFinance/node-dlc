@@ -189,12 +189,24 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Converts funding_input_v0 to JSON
+   * Converts funding_input_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IFundingInputV0JSON {
+    // Helper function to safely convert BigInt to number, preserving precision
+    const bigIntToNumber = (value: bigint): number => {
+      // For values within safe integer range, convert to number
+      if (
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        return Number(value);
+      }
+      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      return value as any;
+    };
+
     return {
-      type: this.type,
-      inputSerialId: Number(this.inputSerialId),
+      inputSerialId: bigIntToNumber(this.inputSerialId),
       prevTx: this.prevTx.serialize().toString('hex'),
       prevTxVout: this.prevTxVout,
       sequence: this.sequence.value,
@@ -249,7 +261,6 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
 }
 
 export interface IFundingInputV0JSON {
-  type: number;
   inputSerialId: number;
   prevTx: string;
   prevTxVout: number;

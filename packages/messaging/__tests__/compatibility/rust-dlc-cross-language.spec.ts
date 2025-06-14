@@ -2,9 +2,19 @@
 import { expect } from 'chai';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
+import JSONbig from 'json-bigint';
 import * as path from 'path';
 
 import { DlcAccept, DlcOffer, DlcSign } from '../../lib';
+
+// Configure json-bigint to handle large integers as BigInt but preserve floating point numbers
+const JSONBigInt = JSONbig({
+  storeAsString: false, // Store as BigInt, not string
+  useNativeBigInt: true, // Use native BigInt support
+  alwaysParseAsBig: false, // Don't convert all numbers to BigInt - preserve smaller numbers and floats
+  // This will automatically use BigInt for integers that exceed MAX_SAFE_INTEGER
+  // and keep regular numbers for smaller integers and floats
+});
 
 interface RustDlcCliResult {
   status: 'success' | 'error';
@@ -52,76 +62,6 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
     }
   }
 
-  // Helper function to run round-trip compatibility test
-  function testRoundTripCompatibility(
-    messageType: 'offer' | 'accept' | 'sign',
-    nodeMessage: DlcOffer | DlcAccept | DlcSign,
-    description: string,
-  ) {
-    it(`should maintain cross-language compatibility for ${description}`, () => {
-      // Step 1: Node.js -> JSON
-      const nodeJson = nodeMessage.toJSON();
-
-      // Step 2: Node.js -> Hex
-      const nodeHex = nodeMessage.serialize().toString('hex');
-
-      // Step 3: Test Rust validation of Node.js JSON
-      const rustValidation = callRustCli(
-        `validate -t ${messageType}`,
-        JSON.stringify(nodeJson),
-      );
-
-      if (rustValidation.status === 'error') {
-        // If validation fails, it might be due to field name differences
-        // This is expected and we document the differences
-        expect(rustValidation.message).to.include('missing field');
-        return; // Skip this test for now, but document the incompatibility
-      }
-
-      expect(rustValidation.status).to.equal(
-        'success',
-        'Rust-DLC should validate Node.js JSON structure',
-      );
-
-      // Step 4: Rust JSON -> Hex (if validation passed)
-      const rustSerialization = callRustCli(
-        `serialize -t ${messageType}`,
-        JSON.stringify(nodeJson),
-      );
-
-      if (rustSerialization.status === 'success') {
-        // Step 5: Compare hex outputs for true compatibility
-        const rustHex = rustSerialization.data;
-
-        // For now, we document the differences rather than expect equality
-        // This helps us understand the serialization differences
-        if (nodeHex === rustHex) {
-          // Perfect compatibility!
-          expect(true).to.be.true;
-        } else {
-          // Document the differences for analysis
-          const differences = {
-            nodeHexLength: nodeHex.length,
-            rustHexLength: rustHex.length,
-            nodeHexStart: nodeHex.substring(0, 100),
-            rustHexStart: rustHex.substring(0, 100),
-            hexMatch: nodeHex === rustHex,
-          };
-
-          // For now, we expect differences and document them
-          expect(differences.hexMatch).to.equal(
-            false,
-            `Serialization differences detected (expected): ${JSON.stringify(
-              differences,
-              null,
-              2,
-            )}`,
-          );
-        }
-      }
-    });
-  }
-
   describe('DlcOffer Cross-Language Compatibility', () => {
     // Use the correct path and load test vectors like the working test does
     const testVectorsDir = path.join(__dirname, '../../test_vectors/dlcspecs');
@@ -133,14 +73,15 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
         testVectorFiles = fs
           .readdirSync(testVectorsDir)
           .filter((f) => f.endsWith('.json'))
-          .slice(0, 1); // Limit to first 3 files for testing
+          .filter((f) => f !== 'enum_and_numerical_3_of_5_test.json')
+          .sort(); // Sort for consistent test order
 
-        // Load test vector files
+        // Load test vector files using json-bigint to preserve large integers
         testVectorFiles.forEach((filename) => {
           const filePath = path.join(testVectorsDir, filename);
           try {
             const fileContent = fs.readFileSync(filePath, 'utf8');
-            allTestData[filename] = JSON.parse(fileContent);
+            allTestData[filename] = JSONBigInt.parse(fileContent);
           } catch (error) {
             console.warn(
               `Failed to load test vector ${filename}:`,
@@ -175,7 +116,8 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
       });
     });
 
-    it('should test cross-language compatibility for offers', () => {
+    it('should test cross-language compatibility for offers', function () {
+      this.timeout(60000); // Increase timeout to 60 seconds for testing all vectors
       let testedOffers = 0;
       let rustValidationPassed = 0;
       let rustValidationFailed = 0;
@@ -189,18 +131,14 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
         try {
           // Step 1: Create Node.js DLC message from JSON
           const nodeOffer = DlcOffer.fromJSON(testData.offer_message.message);
-          const nodeJson = nodeOffer.toJSON();
+          const nodeJson = nodeOffer.toJSON(); // Now defaults to canonical rust-dlc format
           const nodeHex = nodeOffer.serialize().toString('hex');
-
-          console.log('JSON.stringify(nodeJson)', JSON.stringify(nodeJson));
 
           // Step 2: Test Rust validation of Node.js JSON (mock for now)
           const rustValidation = callRustCli(
             'validate -t offer',
-            JSON.stringify(nodeJson),
+            JSONBigInt.stringify(nodeJson),
           );
-
-          console.log('rustValidation', rustValidation);
 
           if (rustValidation.status === 'success') {
             rustValidationPassed++;
@@ -209,13 +147,15 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
             // Step 3: Test Rust serialization of Node.js JSON
             const rustSerialization = callRustCli(
               'serialize -t offer',
-              JSON.stringify(nodeJson),
+              JSONBigInt.stringify(nodeJson),
             );
             if (rustSerialization.status === 'success') {
               const rustHex = rustSerialization.data;
               if (nodeHex === rustHex) {
                 console.error(`🎉 Perfect hex compatibility for ${filename}!`);
               } else {
+                console.error('nodeHex', nodeHex);
+                console.error('rustHex', rustHex);
                 console.error(
                   `⚠️  Hex differences for ${filename} (length: Node ${nodeHex.length}, Rust ${rustHex.length})`,
                 );
@@ -223,9 +163,60 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
             }
           } else {
             rustValidationFailed++;
+            console.error('rustValidation', rustValidation);
+            console.error('nodeJson', nodeJson);
+            console.error('nodeHex', nodeHex);
+            console.log(
+              'testData.offer_message.message',
+              testData.offer_message.message,
+            );
             console.error(
               `❌ Rust validation failed for ${filename}: ${rustValidation.message}`,
             );
+
+            // Add debugging for JSON structure issues
+            if (
+              rustValidation.message.includes('expected map with a single key')
+            ) {
+              console.error(
+                `🔍 Debugging ${filename} JSON structure for contract descriptor:`,
+              );
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const jsonObj = nodeJson as any;
+
+              // Check for different contract info structures
+              if (jsonObj.contractInfo?.singleContractInfo) {
+                console.error('Single contract info structure:');
+                console.error(
+                  JSONBigInt.stringify(
+                    jsonObj.contractInfo.singleContractInfo.contractInfo
+                      ?.contractDescriptor,
+                    null,
+                    2,
+                  ),
+                );
+              } else if (jsonObj.contractInfo?.disjointContractInfo) {
+                console.error('Disjoint contract info structure:');
+                console.error('Contract infos array:');
+                jsonObj.contractInfo.disjointContractInfo.contractInfos?.forEach(
+                  (contractInfo: any, index: number) => {
+                    console.error(
+                      `  Contract Info ${index}:`,
+                      JSONBigInt.stringify(
+                        contractInfo.contractDescriptor,
+                        null,
+                        2,
+                      ),
+                    );
+                  },
+                );
+              } else {
+                console.error('Unknown contract info structure:');
+                console.error(
+                  JSONBigInt.stringify(jsonObj.contractInfo, null, 2),
+                );
+              }
+            }
           }
         } catch (error) {
           rustValidationFailed++;
@@ -244,7 +235,8 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
       expect(testedOffers).to.be.greaterThan(0, 'Should test some offers');
     });
 
-    it('should test cross-language compatibility for accepts', () => {
+    it('should test cross-language compatibility for accepts', function () {
+      this.timeout(60000); // Increase timeout to 60 seconds for testing all vectors
       let testedAccepts = 0;
 
       testVectorFiles.forEach((filename) => {
@@ -257,13 +249,15 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
           const nodeAccept = DlcAccept.fromJSON(
             testData.accept_message.message,
           );
+
           const nodeJson = nodeAccept.toJSON();
 
           // Test Rust validation
           const rustValidation = callRustCli(
             'validate -t accept',
-            JSON.stringify(nodeJson),
+            JSONBigInt.stringify(nodeJson),
           );
+
           console.error(
             `Cross-language accept test for ${filename}: ${rustValidation.status}`,
           );
@@ -283,7 +277,8 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
       );
     });
 
-    it('should test cross-language compatibility for signs', () => {
+    it('should test cross-language compatibility for signs', function () {
+      this.timeout(60000); // Increase timeout to 60 seconds for testing all vectors
       let testedSigns = 0;
 
       testVectorFiles.forEach((filename) => {
@@ -299,7 +294,7 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
           // Test Rust validation
           const rustValidation = callRustCli(
             'validate -t sign',
-            JSON.stringify(nodeJson),
+            JSONBigInt.stringify(nodeJson),
           );
           console.error(
             `Cross-language sign test for ${filename}: ${rustValidation.status}`,

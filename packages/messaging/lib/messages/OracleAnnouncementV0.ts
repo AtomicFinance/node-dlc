@@ -138,13 +138,13 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 
   /**
-   * Converts oracle_announcement_v0 to JSON
+   * Converts oracle_announcement_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): OracleAnnouncementV0JSON {
     return {
       type: this.type,
-      announcementSig: this.announcementSig.toString('hex'),
-      oraclePubkey: this.oraclePubkey.toString('hex'),
+      announcementSignature: this.announcementSig.toString('hex'),
+      oraclePublicKey: this.oraclePubkey.toString('hex'),
       oracleEvent: this.oracleEvent.toJSON(),
     };
   }
@@ -170,7 +170,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
 
 export interface OracleAnnouncementV0JSON {
   type: number;
-  announcementSig: string;
-  oraclePubkey: string;
+  announcementSignature: string; // Canonical field name
+  oraclePublicKey: string; // Canonical field name
   oracleEvent: IOracleEventV0JSON;
 }

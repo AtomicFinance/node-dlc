@@ -75,10 +75,19 @@ export class PolynomialPayoutCurvePiece
   public static fromJSON(json: any): PolynomialPayoutCurvePiece {
     const instance = new PolynomialPayoutCurvePiece();
 
+    // Helper function to safely convert to BigInt from various input types
+    const toBigInt = (value: any): bigint => {
+      if (value === null || value === undefined) return BigInt(0);
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(value);
+      return BigInt(0);
+    };
+
     const points = json.payoutPoints || json.points || [];
     instance.points = points.map((point: any) => ({
-      eventOutcome: BigInt(point.eventOutcome || point.event_outcome || 0),
-      outcomePayout: BigInt(point.outcomePayout || point.outcome_payout || 0),
+      eventOutcome: toBigInt(point.eventOutcome || point.event_outcome),
+      outcomePayout: toBigInt(point.outcomePayout || point.outcome_payout),
       extraPrecision: point.extraPrecision || point.extra_precision || 0,
     }));
 
@@ -127,16 +136,29 @@ export class PolynomialPayoutCurvePiece
    * Converts polynomial_payout_curve_piece to JSON
    */
   public toJSON(): PolynomialPayoutCurvePieceJSON {
+    // Helper function to safely convert BigInt to number, preserving precision
+    const bigIntToNumber = (value: bigint): number => {
+      // For values within safe integer range, convert to number
+      if (
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        return Number(value);
+      }
+      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      return value as any;
+    };
+
     return {
-      type: this.type,
-      payoutCurvePieceType: this.payoutCurvePieceType,
-      points: this.points.map((point) => {
-        return {
-          eventOutcome: Number(point.eventOutcome),
-          outcomePayout: Number(point.outcomePayout),
-          extraPrecision: Number(point.extraPrecision),
-        };
-      }),
+      polynomialPayoutCurvePiece: {
+        payoutPoints: this.points.map((point) => {
+          return {
+            eventOutcome: bigIntToNumber(point.eventOutcome),
+            outcomePayout: bigIntToNumber(point.outcomePayout),
+            extraPrecision: Number(point.extraPrecision),
+          };
+        }),
+      },
     };
   }
 
@@ -192,57 +214,17 @@ export class HyperbolaPayoutCurvePiece
     instance.usePositivePiece =
       json.usePositivePiece || json.use_positive_piece || false;
 
-    // Helper function to parse signed f64 values for sign+magnitude+precision encoding
-    const parseSignedF64 = (value: any) => {
-      const numValue = Number(value || 0);
-      const isNegative = numValue < 0;
-      const absValue = Math.abs(numValue);
-      const magnitude = BigInt(Math.floor(absValue));
-      // Convert fractional part to 16-bit precision (like PayoutPoint)
-      const fractionalPart = absValue - Math.floor(absValue);
-      const extraPrecision = Math.round(fractionalPart * (1 << 16));
-      return {
-        sign: isNegative,
-        magnitude,
-        extraPrecision,
-      };
-    };
-
-    // Parse values using sign+magnitude+precision representation
-    const translateOutcomeData = parseSignedF64(
-      json.translateOutcome || json.translate_outcome,
+    // Parse f64 values directly to match rust-dlc implementation
+    instance.translateOutcome = Number(
+      json.translateOutcome || json.translate_outcome || 0,
     );
-    instance.translateOutcomeSign = translateOutcomeData.sign;
-    instance.translateOutcome = translateOutcomeData.magnitude;
-    instance.translateOutcomeExtraPrecision =
-      translateOutcomeData.extraPrecision;
-
-    const translatePayoutData = parseSignedF64(
-      json.translatePayout || json.translate_payout,
+    instance.translatePayout = Number(
+      json.translatePayout || json.translate_payout || 0,
     );
-    instance.translatePayoutSign = translatePayoutData.sign;
-    instance.translatePayout = translatePayoutData.magnitude;
-    instance.translatePayoutExtraPrecision = translatePayoutData.extraPrecision;
-
-    const aData = parseSignedF64(json.a);
-    instance.aSign = aData.sign;
-    instance.a = aData.magnitude;
-    instance.aExtraPrecision = aData.extraPrecision;
-
-    const bData = parseSignedF64(json.b);
-    instance.bSign = bData.sign;
-    instance.b = bData.magnitude;
-    instance.bExtraPrecision = bData.extraPrecision;
-
-    const cData = parseSignedF64(json.c);
-    instance.cSign = cData.sign;
-    instance.c = cData.magnitude;
-    instance.cExtraPrecision = cData.extraPrecision;
-
-    const dData = parseSignedF64(json.d);
-    instance.dSign = dData.sign;
-    instance.d = dData.magnitude;
-    instance.dExtraPrecision = dData.extraPrecision;
+    instance.a = Number(json.a || 0);
+    instance.b = Number(json.b || 0);
+    instance.c = Number(json.c || 0);
+    instance.d = Number(json.d || 0);
 
     return instance;
   }
@@ -258,31 +240,13 @@ export class HyperbolaPayoutCurvePiece
     reader.readBigSize(); // read type (1)
     instance.usePositivePiece = reader.readUInt8() === 1;
 
-    // Read sign+magnitude+precision encoding for each f64 parameter
-    // Each parameter: 1 byte sign + 8 bytes magnitude + 2 bytes precision = 11 bytes
-    instance.translateOutcomeSign = reader.readUInt8() === 0; // 0 = negative
-    instance.translateOutcome = reader.readUInt64BE();
-    instance.translateOutcomeExtraPrecision = reader.readUInt16BE();
-
-    instance.translatePayoutSign = reader.readUInt8() === 0; // 0 = negative
-    instance.translatePayout = reader.readUInt64BE();
-    instance.translatePayoutExtraPrecision = reader.readUInt16BE();
-
-    instance.aSign = reader.readUInt8() === 0; // 0 = negative
-    instance.a = reader.readUInt64BE();
-    instance.aExtraPrecision = reader.readUInt16BE();
-
-    instance.bSign = reader.readUInt8() === 0; // 0 = negative
-    instance.b = reader.readUInt64BE();
-    instance.bExtraPrecision = reader.readUInt16BE();
-
-    instance.cSign = reader.readUInt8() === 0; // 0 = negative
-    instance.c = reader.readUInt64BE();
-    instance.cExtraPrecision = reader.readUInt16BE();
-
-    instance.dSign = reader.readUInt8() === 0; // 0 = negative
-    instance.d = reader.readUInt64BE();
-    instance.dExtraPrecision = reader.readUInt16BE();
+    // Read f64 values directly to match rust-dlc implementation
+    instance.translateOutcome = reader.readDoubleBE();
+    instance.translatePayout = reader.readDoubleBE();
+    instance.a = reader.readDoubleBE();
+    instance.b = reader.readDoubleBE();
+    instance.c = reader.readDoubleBE();
+    instance.d = reader.readDoubleBE();
 
     // Note: leftEndPoint and rightEndPoint are not part of the serialization
     // They will be set by PayoutFunction when creating from JSON
@@ -308,60 +272,31 @@ export class HyperbolaPayoutCurvePiece
 
   public payoutCurvePieceType = HyperbolaPayoutCurvePiece.payoutCurvePieceType;
 
-  // Updated DLC specs format: sign+magnitude+precision encoding for f64 parameters
+  // Match rust-dlc implementation exactly: direct f64 parameters
   public leftEndPoint: IPayoutPoint;
   public rightEndPoint: IPayoutPoint;
   public usePositivePiece: boolean;
-  public translateOutcome: bigint; // magnitude
-  public translateOutcomeSign: boolean; // sign flag
-  public translateOutcomeExtraPrecision: number; // extra precision
-  public translatePayout: bigint; // magnitude
-  public translatePayoutSign: boolean; // sign flag
-  public translatePayoutExtraPrecision: number; // extra precision
-  public a: bigint; // magnitude
-  public aSign: boolean; // sign flag
-  public aExtraPrecision: number; // extra precision
-  public b: bigint; // magnitude
-  public bSign: boolean; // sign flag
-  public bExtraPrecision: number; // extra precision
-  public c: bigint; // magnitude
-  public cSign: boolean; // sign flag
-  public cExtraPrecision: number; // extra precision
-  public d: bigint; // magnitude
-  public dSign: boolean; // sign flag
-  public dExtraPrecision: number; // extra precision
+  public translateOutcome: number; // f64 - matches rust-dlc
+  public translatePayout: number; // f64 - matches rust-dlc
+  public a: number; // f64 - matches rust-dlc
+  public b: number; // f64 - matches rust-dlc
+  public c: number; // f64 - matches rust-dlc
+  public d: number; // f64 - matches rust-dlc
 
   /**
    * Converts hyperbola_payout_curve_piece to JSON
    */
   public toJSON(): HyperbolaPayoutCurvePieceJSON {
-    // Helper function to reconstruct f64 from sign+magnitude+precision
-    const reconstructF64 = (
-      sign: boolean,
-      magnitude: bigint,
-      extraPrecision: number,
-    ) => {
-      const value = Number(magnitude) + extraPrecision / (1 << 16);
-      return sign ? -value : value;
-    };
-
     return {
-      type: this.type,
-      usePositivePiece: this.usePositivePiece,
-      translateOutcome: reconstructF64(
-        this.translateOutcomeSign,
-        this.translateOutcome,
-        this.translateOutcomeExtraPrecision,
-      ),
-      translatePayout: reconstructF64(
-        this.translatePayoutSign,
-        this.translatePayout,
-        this.translatePayoutExtraPrecision,
-      ),
-      a: reconstructF64(this.aSign, this.a, this.aExtraPrecision),
-      b: reconstructF64(this.bSign, this.b, this.bExtraPrecision),
-      c: reconstructF64(this.cSign, this.c, this.cExtraPrecision),
-      d: reconstructF64(this.dSign, this.d, this.dExtraPrecision),
+      hyperbolaPayoutCurvePiece: {
+        usePositivePiece: this.usePositivePiece,
+        translateOutcome: this.translateOutcome,
+        translatePayout: this.translatePayout,
+        a: this.a,
+        b: this.b,
+        c: this.c,
+        d: this.d,
+      },
     };
   }
 
@@ -374,31 +309,13 @@ export class HyperbolaPayoutCurvePiece
     writer.writeBigSize(this.payoutCurvePieceType);
     writer.writeUInt8(this.usePositivePiece ? 1 : 0);
 
-    // Write sign+magnitude+precision encoding for each f64 parameter
-    // Each parameter: 1 byte sign (00=negative, 01=positive) + 8 bytes magnitude + 2 bytes precision = 11 bytes
-    writer.writeUInt8(this.translateOutcomeSign ? 0 : 1);
-    writer.writeUInt64BE(this.translateOutcome);
-    writer.writeUInt16BE(this.translateOutcomeExtraPrecision);
-
-    writer.writeUInt8(this.translatePayoutSign ? 0 : 1);
-    writer.writeUInt64BE(this.translatePayout);
-    writer.writeUInt16BE(this.translatePayoutExtraPrecision);
-
-    writer.writeUInt8(this.aSign ? 0 : 1);
-    writer.writeUInt64BE(this.a);
-    writer.writeUInt16BE(this.aExtraPrecision);
-
-    writer.writeUInt8(this.bSign ? 0 : 1);
-    writer.writeUInt64BE(this.b);
-    writer.writeUInt16BE(this.bExtraPrecision);
-
-    writer.writeUInt8(this.cSign ? 0 : 1);
-    writer.writeUInt64BE(this.c);
-    writer.writeUInt16BE(this.cExtraPrecision);
-
-    writer.writeUInt8(this.dSign ? 0 : 1);
-    writer.writeUInt64BE(this.d);
-    writer.writeUInt16BE(this.dExtraPrecision);
+    // Write f64 values directly to match rust-dlc implementation
+    writer.writeDoubleBE(this.translateOutcome);
+    writer.writeDoubleBE(this.translatePayout);
+    writer.writeDoubleBE(this.a);
+    writer.writeDoubleBE(this.b);
+    writer.writeDoubleBE(this.c);
+    writer.writeDoubleBE(this.d);
 
     return writer.toBuffer();
   }
@@ -429,18 +346,19 @@ interface IPayoutPointJSON {
 }
 
 export interface PolynomialPayoutCurvePieceJSON {
-  type: number;
-  payoutCurvePieceType: PayoutCurvePieceType;
-  points: IPointJSON[];
+  polynomialPayoutCurvePiece: {
+    payoutPoints: IPointJSON[];
+  };
 }
 
 export interface HyperbolaPayoutCurvePieceJSON {
-  type: number;
-  usePositivePiece: boolean;
-  translateOutcome: number;
-  translatePayout: number;
-  a: number;
-  b: number;
-  c: number;
-  d: number;
+  hyperbolaPayoutCurvePiece: {
+    usePositivePiece: boolean;
+    translateOutcome: number;
+    translatePayout: number;
+    a: number;
+    b: number;
+    c: number;
+    d: number;
+  };
 }

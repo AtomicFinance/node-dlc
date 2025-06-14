@@ -289,9 +289,6 @@ describe('DlcOffer', () => {
         expect(json.offerCollateralSatoshis).to.equal(
           Number(instance.offerCollateralSatoshis),
         );
-        expect(json.fundingInputs[0].type).to.equal(
-          instance.fundingInputs[0].type,
-        );
         expect(json.fundingInputs[0].inputSerialId).to.equal(
           Number(instance.fundingInputs[0].toJSON().inputSerialId),
         );

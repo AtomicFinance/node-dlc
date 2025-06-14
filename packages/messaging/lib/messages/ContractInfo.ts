@@ -363,7 +363,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
         type: this.type,
         contractInfoType: this.contractInfoType,
         totalCollateral: Number(this.totalCollateral),
-        contractOraclePairs: this.contractOraclePairs.map((pair) => ({
+        contractInfos: this.contractOraclePairs.map((pair) => ({
           contractDescriptor: pair.contractDescriptor.toJSON(),
           oracleInfo: pair.oracleInfo.toJSON(),
         })),

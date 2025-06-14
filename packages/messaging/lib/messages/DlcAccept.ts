@@ -71,11 +71,20 @@ export class DlcAccept implements IDlcMessage {
         json.temporary_contract_id,
       'hex',
     );
-    instance.acceptCollateralSatoshis = BigInt(
+
+    // Helper function to safely convert to BigInt from various input types
+    const toBigInt = (value: any): bigint => {
+      if (value === null || value === undefined) return BigInt(0);
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(value);
+      return BigInt(0);
+    };
+
+    instance.acceptCollateralSatoshis = toBigInt(
       json.acceptCollateralSatoshis ||
         json.acceptCollateral ||
-        json.accept_collateral ||
-        0,
+        json.accept_collateral,
     );
 
     // Handle field name variations between formats
@@ -87,16 +96,16 @@ export class DlcAccept implements IDlcMessage {
       json.payoutSPK || json.payoutSpk || json.payout_spk,
       'hex',
     );
-    instance.payoutSerialId = BigInt(
-      json.payoutSerialId || json.payout_serial_id || 0,
+    instance.payoutSerialId = toBigInt(
+      json.payoutSerialId || json.payout_serial_id,
     );
 
     instance.changeSPK = Buffer.from(
       json.changeSPK || json.changeSpk || json.change_spk,
       'hex',
     );
-    instance.changeSerialId = BigInt(
-      json.changeSerialId || json.change_serial_id || 0,
+    instance.changeSerialId = toBigInt(
+      json.changeSerialId || json.change_serial_id,
     );
 
     // Parse FundingInputs
@@ -131,28 +140,8 @@ export class DlcAccept implements IDlcMessage {
     fundingInputsJson: any[],
   ): FundingInputV0[] {
     return fundingInputsJson.map((inputJson) => {
-      const instance = new FundingInputV0();
-
-      instance.inputSerialId = BigInt(
-        inputJson.inputSerialId || inputJson.input_serial_id,
-      );
-
-      // Parse previous transaction
-      const prevTxHex = inputJson.prevTx || inputJson.prev_tx;
-      instance.prevTx = Tx.decode(
-        StreamReader.fromBuffer(Buffer.from(prevTxHex, 'hex')),
-      );
-
-      instance.prevTxVout = inputJson.prevTxVout || inputJson.prev_tx_vout;
-      instance.sequence = new Sequence(inputJson.sequence || 0xffffffff);
-      instance.maxWitnessLen =
-        inputJson.maxWitnessLen || inputJson.max_witness_len;
-
-      const redeemScript =
-        inputJson.redeemScript || inputJson.redeem_script || '';
-      instance.redeemScript = Buffer.from(redeemScript, 'hex');
-
-      return instance;
+      // Use the existing FundingInput.fromJSON method which handles all the field mapping correctly
+      return FundingInput.fromJSON(inputJson) as FundingInputV0;
     });
   }
 
@@ -411,40 +400,38 @@ export class DlcAccept implements IDlcMessage {
   }
 
   /**
-   * Converts accept_dlc to JSON
+   * Converts accept_dlc to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDlcAcceptJSON {
-    const tlvs = [];
+    // Helper function to safely convert BigInt to number, preserving precision
+    const bigIntToNumber = (value: bigint): number => {
+      // For values within safe integer range, convert to number
+      if (
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        return Number(value);
+      }
+      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      return value as any;
+    };
 
-    if (this.batchFundingGroups) {
-      this.batchFundingGroups.forEach((group) => {
-        tlvs.push(group.toJSON());
-      });
-    }
-
-    // Include unknown TLVs for debugging
-    if (this.unknownTlvs) {
-      this.unknownTlvs.forEach((tlv) =>
-        tlvs.push({ type: tlv.type, data: tlv.data.toString('hex') }),
-      );
-    }
+    // Convert raw signature back to DER format for canonical rust-dlc JSON
+    const derRefundSignature = secp256k1.signatureExport(this.refundSignature);
 
     return {
-      type: this.type,
       protocolVersion: this.protocolVersion,
-      tempContractId: this.tempContractId.toString('hex'),
-      acceptCollateralSatoshis: Number(this.acceptCollateralSatoshis),
-      fundingPubKey: this.fundingPubKey.toString('hex'),
-      payoutSPK: this.payoutSPK.toString('hex'),
-      payoutSerialId: Number(this.payoutSerialId),
+      temporaryContractId: this.tempContractId.toString('hex'),
+      acceptCollateral: bigIntToNumber(this.acceptCollateralSatoshis),
+      fundingPubkey: this.fundingPubKey.toString('hex'), // lowercase 'k'
+      payoutSpk: this.payoutSPK.toString('hex'), // lowercase
+      payoutSerialId: bigIntToNumber(this.payoutSerialId),
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-      changeSPK: this.changeSPK.toString('hex'),
-      changeSerialId: Number(this.changeSerialId),
+      changeSpk: this.changeSPK.toString('hex'), // lowercase
+      changeSerialId: bigIntToNumber(this.changeSerialId),
       cetAdaptorSignatures: this.cetAdaptorSignatures.toJSON(),
-      refundSignature: this.refundSignature.toString('hex'),
+      refundSignature: Buffer.from(derRefundSignature).toString('hex'),
       negotiationFields: this.negotiationFields?.toJSON(),
-      serialized: this.serialize().toString('hex'), // Add serialized hex for compatibility testing
-      tlvs,
     };
   }
 
@@ -537,15 +524,14 @@ export class DlcAcceptWithoutSigs {
 }
 
 export interface IDlcAcceptJSON {
-  type: number;
   protocolVersion: number;
-  tempContractId: string;
-  acceptCollateralSatoshis: number;
-  fundingPubKey: string;
-  payoutSPK: string;
+  temporaryContractId: string;
+  acceptCollateral: number;
+  fundingPubkey: string;
+  payoutSpk: string;
   payoutSerialId: number;
   fundingInputs: IFundingInputV0JSON[];
-  changeSPK: string;
+  changeSpk: string;
   changeSerialId: number;
   cetAdaptorSignatures: ICetAdaptorSignaturesV0JSON;
   refundSignature: string;
@@ -553,8 +539,6 @@ export interface IDlcAcceptJSON {
   | INegotiationFieldsV0JSON
     | INegotiationFieldsV1JSON
     | INegotiationFieldsV2JSON;
-  serialized: string; // Hex serialization for compatibility testing
-  tlvs: (IBatchFundingGroupJSON | any)[]; // For unknown TLVs
 }
 
 export interface IDlcAcceptAddresses {

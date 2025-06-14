@@ -111,6 +111,16 @@ export class BufferWriter {
   }
 
   /**
+   * Write a 64-bit double (f64) in big-endian format
+   * @param val
+   */
+  public writeDoubleBE(val: number): void {
+    this._expand(8);
+    this._buffer.writeDoubleBE(val, this._position);
+    this._position += 8;
+  }
+
+  /**
    * Write bytes at the current positiion
    * @param buffer
    */

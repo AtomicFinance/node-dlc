@@ -17,12 +17,21 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   public static fromJSON(json: any): RoundingIntervalsV0 {
     const instance = new RoundingIntervalsV0();
 
+    // Helper function to safely convert to BigInt from various input types
+    const toBigInt = (value: any): bigint => {
+      if (value === null || value === undefined) return BigInt(0);
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(value);
+      return BigInt(0);
+    };
+
     const intervals = json.intervals || [];
     instance.intervals = intervals.map((interval: any) => ({
-      beginInterval: BigInt(
-        interval.beginInterval || interval.begin_interval || 0,
+      beginInterval: toBigInt(
+        interval.beginInterval || interval.begin_interval,
       ),
-      roundingMod: BigInt(interval.roundingMod || interval.rounding_mod || 0),
+      roundingMod: toBigInt(interval.roundingMod || interval.rounding_mod),
     }));
 
     return instance;
@@ -83,7 +92,6 @@ export class RoundingIntervalsV0 implements IDlcMessage {
    */
   public toJSON(): IRoundingIntervalsV0JSON {
     return {
-      type: this.type,
       intervals: this.intervals.map((interval) => {
         return {
           beginInterval: Number(interval.beginInterval),
@@ -121,6 +129,6 @@ interface IIntervalJSON {
 }
 
 export interface IRoundingIntervalsV0JSON {
-  type: number;
+  type?: number; // Optional for rust-dlc compatibility
   intervals: IIntervalJSON[];
 }

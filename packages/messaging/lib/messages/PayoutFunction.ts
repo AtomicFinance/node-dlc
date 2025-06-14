@@ -23,6 +23,15 @@ export class PayoutFunction implements IDlcMessage {
   public static fromJSON(json: any): PayoutFunction {
     const instance = new PayoutFunction();
 
+    // Helper function to safely convert to BigInt from various input types
+    const toBigInt = (value: any): bigint => {
+      if (value === null || value === undefined) return BigInt(0);
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(value);
+      return BigInt(0);
+    };
+
     // Parse payout function pieces
     const pieces =
       json.payoutFunctionPieces || json.payout_function_pieces || [];
@@ -30,8 +39,8 @@ export class PayoutFunction implements IDlcMessage {
       (pieceJson: any, index: number) => {
         const piece = {
           endPoint: {
-            eventOutcome: BigInt(pieceJson.endPoint?.eventOutcome || 0),
-            outcomePayout: BigInt(pieceJson.endPoint?.outcomePayout || 0),
+            eventOutcome: toBigInt(pieceJson.endPoint?.eventOutcome),
+            outcomePayout: toBigInt(pieceJson.endPoint?.outcomePayout),
             extraPrecision: pieceJson.endPoint?.extraPrecision || 0,
           },
           payoutCurvePiece: PayoutCurvePiece.fromJSON(
@@ -50,16 +59,16 @@ export class PayoutFunction implements IDlcMessage {
           if (index < pieces.length - 1) {
             const nextPiece = pieces[index + 1];
             hyperbola.rightEndPoint = {
-              eventOutcome: BigInt(nextPiece.endPoint?.eventOutcome || 0),
-              outcomePayout: BigInt(nextPiece.endPoint?.outcomePayout || 0),
+              eventOutcome: toBigInt(nextPiece.endPoint?.eventOutcome),
+              outcomePayout: toBigInt(nextPiece.endPoint?.outcomePayout),
               extraPrecision: nextPiece.endPoint?.extraPrecision || 0,
             };
           } else {
             // Use lastEndpoint for the final piece
             const lastEndpoint = json.lastEndpoint || json.last_endpoint || {};
             hyperbola.rightEndPoint = {
-              eventOutcome: BigInt(lastEndpoint.eventOutcome || 0),
-              outcomePayout: BigInt(lastEndpoint.outcomePayout || 0),
+              eventOutcome: toBigInt(lastEndpoint.eventOutcome),
+              outcomePayout: toBigInt(lastEndpoint.outcomePayout),
               extraPrecision: lastEndpoint.extraPrecision || 0,
             };
           }
@@ -73,8 +82,8 @@ export class PayoutFunction implements IDlcMessage {
     const lastEndpoint = json.lastEndpoint || json.last_endpoint;
     if (lastEndpoint) {
       instance.lastEndpoint = {
-        eventOutcome: BigInt(lastEndpoint.eventOutcome || 0),
-        outcomePayout: BigInt(lastEndpoint.outcomePayout || 0),
+        eventOutcome: toBigInt(lastEndpoint.eventOutcome),
+        outcomePayout: toBigInt(lastEndpoint.outcomePayout),
         extraPrecision: lastEndpoint.extraPrecision || 0,
       };
     } else {
@@ -148,19 +157,31 @@ export class PayoutFunction implements IDlcMessage {
    * Converts payout_function to JSON
    */
   public toJSON(): PayoutFunctionJSON {
+    // Helper function to safely convert BigInt to number, preserving precision
+    const bigIntToNumber = (value: bigint): number => {
+      // For values within safe integer range, convert to number
+      if (
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        return Number(value);
+      }
+      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      return value as any;
+    };
+
     return {
-      type: this.type,
       payoutFunctionPieces: this.payoutFunctionPieces.map((piece) => ({
         endPoint: {
-          eventOutcome: Number(piece.endPoint.eventOutcome),
-          outcomePayout: Number(piece.endPoint.outcomePayout),
+          eventOutcome: bigIntToNumber(piece.endPoint.eventOutcome),
+          outcomePayout: bigIntToNumber(piece.endPoint.outcomePayout),
           extraPrecision: piece.endPoint.extraPrecision,
         },
         payoutCurvePiece: piece.payoutCurvePiece.toJSON(),
       })),
       lastEndpoint: {
-        eventOutcome: Number(this.lastEndpoint.eventOutcome),
-        outcomePayout: Number(this.lastEndpoint.outcomePayout),
+        eventOutcome: bigIntToNumber(this.lastEndpoint.eventOutcome),
+        outcomePayout: bigIntToNumber(this.lastEndpoint.outcomePayout),
         extraPrecision: this.lastEndpoint.extraPrecision,
       },
     };
@@ -223,7 +244,7 @@ interface IPayoutFunctionPieceJSON {
 }
 
 export interface PayoutFunctionJSON {
-  type: number;
+  type?: number; // Optional for rust-dlc compatibility
   payoutFunctionPieces: IPayoutFunctionPieceJSON[];
   lastEndpoint: IPayoutPointJSON;
 }
