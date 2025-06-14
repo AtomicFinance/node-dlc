@@ -27,8 +27,10 @@ export enum MessageType {
   OracleParamsV0 = 55338,
 
   // Oracle message types (remain as TLV for backward compatibility)
-  OracleAnnouncementV0 = 55332,
-  OracleAttestationV0 = 55400,
+  OracleAnnouncement = 55332,
+  OracleAnnouncementV0 = OracleAnnouncement, // Backward compatibility alias
+  OracleAttestation = 55400,
+  OracleAttestationV0 = OracleAttestation, // Backward compatibility alias
   OracleEventV0 = 55330,
 
   OracleEventContainerV0 = 61632,
@@ -42,9 +44,11 @@ export enum MessageType {
 
   FundingInputV0 = 42772,
 
-  CetAdaptorSignaturesV0 = 42774,
+  CetAdaptorSignatures = 42774,
+  CetAdaptorSignaturesV0 = CetAdaptorSignatures, // Backward compatibility alias
 
-  FundingSignaturesV0 = 42776,
+  FundingSignatures = 42776,
+  FundingSignaturesV0 = FundingSignatures, // Backward compatibility alias
 
   PayoutFunctionV0 = 42790,
 

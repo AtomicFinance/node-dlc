@@ -134,7 +134,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
               formatVersion: isNewFormat ? 'new' : 'old',
               contractInfoType: offer.contractInfo.constructor.name,
               fundingInputsCount: offer.fundingInputs.length,
-              offerCollateral: Number(offer.offerCollateralSatoshis),
+              offerCollateral: Number(offer.offerCollateral),
             };
           } catch (error) {
             result.error = error.message;
@@ -169,7 +169,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
             }
 
             if (expectedMessage.temporaryContractId) {
-              expect(accept.tempContractId.toString('hex')).to.equal(
+              expect(accept.temporaryContractId.toString('hex')).to.equal(
                 expectedMessage.temporaryContractId,
               );
             }
@@ -185,7 +185,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
             result.details = {
               protocolVersion: accept.protocolVersion,
               fundingInputsCount: accept.fundingInputs.length,
-              acceptCollateral: Number(accept.acceptCollateralSatoshis),
+              acceptCollateral: Number(accept.acceptCollateral),
               hasNegotiationFields: !!accept.negotiationFields,
             };
           } catch (error) {

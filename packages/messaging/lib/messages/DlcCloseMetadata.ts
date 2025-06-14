@@ -37,10 +37,10 @@ export class DlcCloseMetadata {
   ): DlcCloseMetadata {
     const instance = new DlcCloseMetadata();
 
-    instance.offerFundingPubKey = dlcOffer.fundingPubKey;
-    instance.acceptFundingPubKey = dlcAccept.fundingPubKey;
-    instance.offerPayoutSPK = dlcOffer.payoutSPK;
-    instance.acceptPayoutSPK = dlcAccept.payoutSPK;
+    instance.offerFundingPubKey = dlcOffer.fundingPubkey;
+    instance.acceptFundingPubKey = dlcAccept.fundingPubkey;
+    instance.offerPayoutSPK = dlcOffer.payoutSpk;
+    instance.acceptPayoutSPK = dlcAccept.payoutSpk;
     instance.offerPayoutSerialId = dlcOffer.payoutSerialId;
     instance.acceptPayoutSerialId = dlcAccept.payoutSerialId;
     instance.feeRatePerVb = dlcOffer.feeRatePerVb;
@@ -94,10 +94,10 @@ export class DlcCloseMetadata {
     const dlcAccept = new DlcAccept();
     const dlcTxs = new DlcTransactionsV0();
 
-    dlcOffer.fundingPubKey = this.offerFundingPubKey;
-    dlcAccept.fundingPubKey = this.acceptFundingPubKey;
-    dlcOffer.payoutSPK = this.offerPayoutSPK;
-    dlcAccept.payoutSPK = this.acceptPayoutSPK;
+    dlcOffer.fundingPubkey = this.offerFundingPubKey;
+    dlcAccept.fundingPubkey = this.acceptFundingPubKey;
+    dlcOffer.payoutSpk = this.offerPayoutSPK;
+    dlcAccept.payoutSpk = this.acceptPayoutSPK;
     dlcOffer.payoutSerialId = this.offerPayoutSerialId;
     dlcAccept.payoutSerialId = this.acceptPayoutSerialId;
     dlcOffer.feeRatePerVb = this.feeRatePerVb;

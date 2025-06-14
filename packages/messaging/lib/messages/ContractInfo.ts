@@ -360,8 +360,6 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
     // Return enum variant format for Rust compatibility
     return {
       disjointContractInfo: {
-        type: this.type,
-        contractInfoType: this.contractInfoType,
         totalCollateral: Number(this.totalCollateral),
         contractInfos: this.contractOraclePairs.map((pair) => ({
           contractDescriptor: pair.contractDescriptor.toJSON(),
@@ -415,8 +413,8 @@ interface IContractOraclePairJSON {
 }
 
 export interface ISingleContractInfoJSON {
-  type: number;
-  contractInfoType: ContractInfoType;
+  type?: number; // Made optional for rust-dlc compatibility
+  contractInfoType?: ContractInfoType; // Made optional for rust-dlc compatibility
   totalCollateral: number;
   contractInfo: {
     contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
@@ -425,8 +423,8 @@ export interface ISingleContractInfoJSON {
 }
 
 export interface IDisjointContractInfoJSON {
-  type: number;
-  contractInfoType: ContractInfoType;
+  type?: number; // Made optional for rust-dlc compatibility
+  contractInfoType?: ContractInfoType; // Made optional for rust-dlc compatibility
   totalCollateral: number;
   contractOraclePairs: IContractOraclePairJSON[];
 }

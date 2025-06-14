@@ -1,28 +1,11 @@
 import { expect } from 'chai';
 
-import {
-  LOCKTIME_THRESHOLD,
-  MessageType,
-  OrderOfferContainer,
-  OrderPositionInfoV0,
-} from '../../lib';
 import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
-import {
-  ContractInfo,
-  SingleContractInfo,
-} from '../../lib/messages/ContractInfo';
+import { SingleContractInfo } from '../../lib/messages/ContractInfo';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
+import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
-import {
-  IOrderIrcInfoJSON,
-  OrderIrcInfoV0,
-} from '../../lib/messages/OrderIrcInfo';
-import {
-  IOrderMetadataJSON,
-  OrderMetadataV0,
-} from '../../lib/messages/OrderMetadata';
 import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
 
 describe('OrderOffer', () => {
@@ -90,7 +73,7 @@ describe('OrderOffer', () => {
 
       // Create oracle info (simplified)
       const oracleInfo = new SingleOracleInfo();
-      const announcement = new OracleAnnouncementV0();
+      const announcement = new OracleAnnouncement();
       announcement.announcementSig = Buffer.alloc(64);
       announcement.oraclePubkey = Buffer.alloc(32);
 

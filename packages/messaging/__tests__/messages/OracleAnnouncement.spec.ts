@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 
 import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
+import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 
-describe('OracleAnnouncementV0', () => {
+describe('OracleAnnouncement', () => {
   const announcementSig = Buffer.from(
     'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9' +
       '494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4',
@@ -23,7 +23,7 @@ describe('OracleAnnouncementV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleAnnouncementV0();
+      const instance = new OracleAnnouncement();
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
@@ -97,7 +97,7 @@ describe('OracleAnnouncementV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleAnnouncementV0.deserialize(buf);
+      const instance = OracleAnnouncement.deserialize(buf);
 
       expect(instance.length).to.deep.equal(BigInt(164));
       expect(instance.announcementSig).to.deep.equal(announcementSig);
@@ -123,7 +123,7 @@ describe('OracleAnnouncementV0', () => {
 
   describe('validation', () => {
     it('should validate when correct signature', () => {
-      const instance = new OracleAnnouncementV0();
+      const instance = new OracleAnnouncement();
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
@@ -154,7 +154,7 @@ describe('OracleAnnouncementV0', () => {
     });
 
     it('should invalidate when incorrect signature', () => {
-      const instance = new OracleAnnouncementV0();
+      const instance = new OracleAnnouncement();
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
@@ -196,7 +196,7 @@ describe('OracleAnnouncementV0', () => {
       'hex',
     );
 
-    const instance = OracleAnnouncementV0.deserialize(buf);
+    const instance = OracleAnnouncement.deserialize(buf);
 
     it('deserializes', async () => {
       expect(Number(instance.length)).to.equal(683);

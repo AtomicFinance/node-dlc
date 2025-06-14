@@ -205,7 +205,6 @@ export class OracleEventV0 implements IDlcMessage {
    */
   public toJSON(): IOracleEventV0JSON {
     return {
-      type: this.type,
       oracleNonces: this.oracleNonces.map((oracle) => oracle.toString('hex')),
       eventMaturityEpoch: this.eventMaturityEpoch,
       eventDescriptor: this.eventDescriptor.toJSON(),
@@ -240,7 +239,7 @@ export class OracleEventV0 implements IDlcMessage {
 }
 
 export interface IOracleEventV0JSON {
-  type: number;
+  type?: number; // Made optional for rust-dlc compatibility
   oracleNonces: string[];
   eventMaturityEpoch: number;
   eventDescriptor:

@@ -3,8 +3,8 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
-import { OracleAttestationV0 } from './OracleAttestationV0';
+import { OracleAnnouncement } from './OracleAnnouncement';
+import { OracleAttestation } from './OracleAttestation';
 
 /**
  * OracleEventContainer contains information about the oracles to be used in
@@ -32,9 +32,9 @@ export class OracleEventContainerV0 implements IDlcMessage {
     const uriBuf = reader.readBytes(Number(uriLength));
     instance.uri = uriBuf.toString();
 
-    instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncement.deserialize(getTlv(reader));
 
-    instance.attestation = OracleAttestationV0.deserialize(getTlv(reader));
+    instance.attestation = OracleAttestation.deserialize(getTlv(reader));
 
     const outcomeLength = reader.readBigSize();
     const outcomeBuf = reader.readBytes(Number(outcomeLength));
@@ -54,9 +54,9 @@ export class OracleEventContainerV0 implements IDlcMessage {
 
   public uri: string;
 
-  public announcement: OracleAnnouncementV0;
+  public announcement: OracleAnnouncement;
 
-  public attestation: OracleAttestationV0;
+  public attestation: OracleAttestation;
 
   public outcome: string;
 

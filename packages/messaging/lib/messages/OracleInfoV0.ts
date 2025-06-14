@@ -5,9 +5,9 @@ import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
-  OracleAnnouncementV0,
-  OracleAnnouncementV0JSON,
-} from './OracleAnnouncementV0';
+  OracleAnnouncement,
+  OracleAnnouncementJSON,
+} from './OracleAnnouncement';
 
 /**
  * OracleParams describe allowed differences between oracles in
@@ -86,7 +86,6 @@ export class OracleParams implements IDlcMessage {
 
   public toJSON(): OracleParamsJSON {
     return {
-      type: this.type,
       maxErrorExp: this.maxErrorExp,
       minFailExp: this.minFailExp,
       maximizeCoverage: this.maximizeCoverage,
@@ -141,7 +140,7 @@ export class SingleOracleInfo implements IDlcMessage {
     }
 
     // Parse announcement using proper fromJSON method
-    instance.announcement = OracleAnnouncementV0.fromJSON(announcementData);
+    instance.announcement = OracleAnnouncement.fromJSON(announcementData);
 
     return instance;
   }
@@ -158,7 +157,7 @@ export class SingleOracleInfo implements IDlcMessage {
     instance.length = reader.readBigSize(); // read length
 
     // Read the announcement data
-    instance.announcement = OracleAnnouncementV0.deserialize(
+    instance.announcement = OracleAnnouncement.deserialize(
       reader.readBytes(Number(instance.length)),
     );
 
@@ -169,7 +168,7 @@ export class SingleOracleInfo implements IDlcMessage {
   public length: bigint;
 
   /** The oracle announcement from the oracle. */
-  public announcement: OracleAnnouncementV0;
+  public announcement: OracleAnnouncement;
 
   /**
    * Returns the closest maturity date amongst all events
@@ -219,7 +218,7 @@ export class SingleOracleInfo implements IDlcMessage {
   public static deserializeBody(buf: Buffer): SingleOracleInfo {
     const instance = new SingleOracleInfo();
     // No type/length to read - just the announcement data directly
-    instance.announcement = OracleAnnouncementV0.deserialize(buf);
+    instance.announcement = OracleAnnouncement.deserialize(buf);
     return instance;
   }
 }
@@ -243,7 +242,7 @@ export class MultiOracleInfo implements IDlcMessage {
     const announcements =
       json.oracleAnnouncements || json.oracle_announcements || [];
     instance.announcements = announcements.map((announcementJson: any) =>
-      OracleAnnouncementV0.fromJSON(announcementJson),
+      OracleAnnouncement.fromJSON(announcementJson),
     );
 
     // Parse oracle params if present (null means explicitly absent)
@@ -276,7 +275,7 @@ export class MultiOracleInfo implements IDlcMessage {
     const numAnnouncements = Number(reader.readBigSize()); // Changed from readUInt16BE to readBigSize to match rust-dlc vec_cb
     for (let i = 0; i < numAnnouncements; i++) {
       instance.announcements.push(
-        OracleAnnouncementV0.deserialize(getTlv(reader)),
+        OracleAnnouncement.deserialize(getTlv(reader)),
       );
     }
 
@@ -296,7 +295,7 @@ export class MultiOracleInfo implements IDlcMessage {
   public threshold: number;
 
   /** The set of oracle announcements. */
-  public announcements: OracleAnnouncementV0[] = [];
+  public announcements: OracleAnnouncement[] = [];
 
   /** The parameters to be used when allowing differences between oracle outcomes in numerical outcome contracts. */
   public oracleParams?: OracleParams;
@@ -403,7 +402,7 @@ export class MultiOracleInfo implements IDlcMessage {
     const numAnnouncements = Number(reader.readBigSize()); // BigSize for announcements count
     for (let i = 0; i < numAnnouncements; i++) {
       instance.announcements.push(
-        OracleAnnouncementV0.deserialize(getTlv(reader)),
+        OracleAnnouncement.deserialize(getTlv(reader)),
       );
     }
 
@@ -496,21 +495,21 @@ export class OracleInfoV0 extends SingleOracleInfo {
 
 // JSON interfaces
 export interface OracleParamsJSON {
-  type: number;
+  type?: number; // Made optional for rust-dlc compatibility
   maxErrorExp: number;
   minFailExp: number;
   maximizeCoverage: boolean;
 }
 
 export interface SingleOracleInfoJSON {
-  type: number;
-  announcement: OracleAnnouncementV0JSON;
+  type?: number; // Made optional for rust-dlc compatibility
+  announcement: OracleAnnouncementJSON;
 }
 
 export interface MultiOracleInfoJSON {
-  type: number;
+  type?: number; // Made optional for rust-dlc compatibility
   threshold: number;
-  announcements: OracleAnnouncementV0JSON[];
+  announcements: OracleAnnouncementJSON[];
   oracleParams?: OracleParamsJSON;
 }
 

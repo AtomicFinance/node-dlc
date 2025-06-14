@@ -21,15 +21,16 @@ import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
  * from an un-trusted peer while being guaranteed that it originates from a
  * given oracle.
  */
-export class OracleAnnouncementV0 implements IDlcMessage {
-  public static type = MessageType.OracleAnnouncementV0;
+export class OracleAnnouncement implements IDlcMessage {
+  public static type = MessageType.OracleAnnouncement;
 
   /**
-   * Creates an OracleAnnouncementV0 from JSON data
+   * Creates an OracleAnnouncement from JSON data
    * @param json JSON object representing oracle announcement
    */
-  public static fromJSON(json: any): OracleAnnouncementV0 {
-    const instance = new OracleAnnouncementV0();
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OracleAnnouncement {
+    const instance = new OracleAnnouncement();
 
     // Handle different field name variations
     instance.announcementSig = Buffer.from(
@@ -50,11 +51,11 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 
   /**
-   * Deserializes an oracle_announcement_v0 message
+   * Deserializes an oracle_announcement message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleAnnouncementV0 {
-    const instance = new OracleAnnouncementV0();
+  public static deserialize(buf: Buffer): OracleAnnouncement {
+    const instance = new OracleAnnouncement();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -67,9 +68,9 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 
   /**
-   * The type for oracle_announcement_v0 message. oracle_announcement_v0 = 55332
+   * The type for oracle_announcement message. oracle_announcement = 55332
    */
-  public type = OracleAnnouncementV0.type;
+  public type = OracleAnnouncement.type;
 
   public length: bigint;
 
@@ -138,11 +139,10 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 
   /**
-   * Converts oracle_announcement_v0 to JSON (canonical rust-dlc format)
+   * Converts oracle_announcement to JSON (canonical rust-dlc format)
    */
-  public toJSON(): OracleAnnouncementV0JSON {
+  public toJSON(): OracleAnnouncementJSON {
     return {
-      type: this.type,
       announcementSignature: this.announcementSig.toString('hex'),
       oraclePublicKey: this.oraclePubkey.toString('hex'),
       oracleEvent: this.oracleEvent.toJSON(),
@@ -150,7 +150,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 
   /**
-   * Serializes the oracle_announcement_v0 message into a Buffer
+   * Serializes the oracle_announcement message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -168,8 +168,8 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 }
 
-export interface OracleAnnouncementV0JSON {
-  type: number;
+export interface OracleAnnouncementJSON {
+  type?: number; // Made optional for rust-dlc compatibility
   announcementSignature: string; // Canonical field name
   oraclePublicKey: string; // Canonical field name
   oracleEvent: IOracleEventV0JSON;

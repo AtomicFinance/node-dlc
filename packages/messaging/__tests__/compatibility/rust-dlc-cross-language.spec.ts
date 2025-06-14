@@ -25,7 +25,6 @@ interface RustDlcCliResult {
 
 describe('Rust-DLC Cross-Language Compatibility Tests', () => {
   const rustCliPath = path.join(__dirname, '../../../../rust-dlc-cli');
-  const testVectorsPath = path.join(__dirname, '../../test_vectors');
 
   // Helper function to call rust-dlc CLI
   function callRustCli(command: string, input?: string): RustDlcCliResult {
@@ -73,7 +72,6 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
         testVectorFiles = fs
           .readdirSync(testVectorsDir)
           .filter((f) => f.endsWith('.json'))
-          .filter((f) => f !== 'enum_and_numerical_3_of_5_test.json')
           .sort(); // Sort for consistent test order
 
         // Load test vector files using json-bigint to preserve large integers
@@ -339,44 +337,6 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
           'Should validate complete rust-dlc offer test vector',
         );
       }
-    });
-  });
-
-  describe('Cross-Language Methodology Documentation', () => {
-    it('should document the cross-language testing approach', () => {
-      const methodology = {
-        approach: 'Child Process CLI Integration',
-        steps: [
-          '1. Node.js creates DLC message instance',
-          '2. Node.js serializes to JSON and hex',
-          '3. Rust CLI validates Node.js JSON structure',
-          '4. Rust CLI serializes JSON to hex',
-          '5. Compare hex outputs for compatibility',
-          '6. Rust CLI deserializes hex back to JSON',
-          '7. Node.js deserializes Rust hex',
-          '8. Compare round-trip results',
-        ],
-        currentStatus: {
-          rustCliWorking: true,
-          nodeJsIntegration: true,
-          validationTests: true,
-          serializationTests: true,
-          deserializationTests: true,
-          roundTripTests: true,
-        },
-        nextSteps: [
-          'Fix field name mapping differences (cetAdaptorSignatures vs cetSignatures)',
-          'Complete DlcOffer.fromJSON implementation',
-          'Add DlcAccept and DlcSign fromJSON methods',
-          'Test all message types with real test vectors',
-          'Achieve perfect hex serialization compatibility',
-        ],
-      };
-
-      expect(methodology.currentStatus.rustCliWorking).to.be.true;
-      expect(methodology.currentStatus.nodeJsIntegration).to.be.true;
-      expect(methodology.steps.length).to.equal(8);
-      expect(methodology.nextSteps.length).to.be.greaterThan(0);
     });
   });
 });

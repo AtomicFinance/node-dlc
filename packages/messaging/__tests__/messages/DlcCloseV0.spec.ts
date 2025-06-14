@@ -1,8 +1,9 @@
+import { BufferReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import { DlcClose, DlcCloseV0 } from '../../lib/messages/DlcClose';
 import { FundingInputV0 } from '../../lib/messages/FundingInput';
-import { FundingSignaturesV0 } from '../../lib/messages/FundingSignaturesV0';
+import { FundingSignatures } from '../../lib/messages/FundingSignatures';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcClose', () => {
@@ -70,14 +71,19 @@ describe('DlcClose', () => {
     instance.acceptPayoutSatoshis = BigInt(100000000);
     instance.fundInputSerialId = BigInt(123456789);
     instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
-    instance.fundingSignatures = FundingSignaturesV0.deserialize(
-      fundingSignaturesV0,
+    // Extract the data part from TLV-encoded fundingSignaturesV0 using BufferReader
+    const reader = new BufferReader(fundingSignaturesV0);
+    const type = reader.readBigSize(); // Read the type (should be fda718)
+    const length = reader.readBigSize(); // Read the length (should be 70 = 112)
+    const fundingSignaturesData = reader.readBytes(Number(length));
+    instance.fundingSignatures = FundingSignatures.deserialize(
+      fundingSignaturesData,
     );
   });
 
   describe('deserialize', () => {
     it('should throw if incorrect type', () => {
-      instance.type = 0x123;
+      instance.type = 9999 as MessageType; // Invalid type for testing
       expect(function () {
         DlcClose.deserialize(instance.serialize());
       }).to.throw(Error);

@@ -4,10 +4,7 @@ import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
-import {
-  FundingSignaturesV0,
-  IFundingSignaturesV0JSON,
-} from './FundingSignaturesV0';
+import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
 
 export abstract class DlcClose {
   public static deserialize(buf: Buffer): DlcCloseV0 {
@@ -55,9 +52,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     for (let i = 0; i < fundingInputsLen; i++) {
       instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
     }
-    instance.fundingSignatures = FundingSignaturesV0.deserialize(
-      getTlv(reader),
-    );
+    instance.fundingSignatures = FundingSignatures.deserialize(getTlv(reader));
 
     return instance;
   }
@@ -79,7 +74,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   public fundingInputs: FundingInputV0[] = [];
 
-  public fundingSignatures: FundingSignaturesV0;
+  public fundingSignatures: FundingSignatures;
 
   /**
    * Serializes the close_dlc_v0 message into a Buffer
@@ -97,7 +92,12 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     for (const fundingInput of this.fundingInputs) {
       writer.writeBytes(fundingInput.serialize());
     }
-    writer.writeBytes(this.fundingSignatures.serialize());
+
+    // Serialize funding signatures with TLV wrapper
+    const fundingSigsData = this.fundingSignatures.serialize();
+    writer.writeBigSize(MessageType.FundingSignatures);
+    writer.writeBigSize(fundingSigsData.length);
+    writer.writeBytes(fundingSigsData);
 
     return writer.toBuffer();
   }
@@ -147,5 +147,5 @@ export interface IDlcCloseV0JSON {
   acceptPayoutSatoshis: number;
   fundInputSerialId: number;
   fundingInputs: IFundingInputV0JSON[];
-  fundingSignatures: IFundingSignaturesV0JSON;
+  fundingSignatures: IFundingSignaturesJSON;
 }

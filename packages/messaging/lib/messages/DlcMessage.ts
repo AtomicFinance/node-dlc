@@ -20,8 +20,8 @@ import { DlcSign } from './DlcSign';
 import { EventDescriptor } from './EventDescriptor';
 import { FundingInput } from './FundingInput';
 import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
-import { OracleAttestationV0 } from './OracleAttestationV0';
+import { OracleAnnouncement } from './OracleAnnouncement';
+import { OracleAttestation } from './OracleAttestation';
 import { OracleEventV0 } from './OracleEventV0';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
@@ -48,8 +48,8 @@ export abstract class DlcMessage {
     | DlcAccept
     | DlcSign
     | DlcClose
-    | OracleAttestationV0
-    | OracleAnnouncementV0
+    | OracleAttestation
+    | OracleAnnouncement
     | NodeAnnouncementMessage {
     const reader = new BufferReader(buf);
     const type = reader.readUInt16BE();
@@ -75,10 +75,10 @@ export abstract class DlcMessage {
         return DlcSign.deserialize(buf);
       case MessageType.DlcCloseV0:
         return DlcClose.deserialize(buf);
-      case MessageType.OracleAttestationV0:
-        return OracleAttestationV0.deserialize(buf);
-      case MessageType.OracleAnnouncementV0:
-        return OracleAnnouncementV0.deserialize(buf);
+      case MessageType.OracleAttestation:
+        return OracleAttestation.deserialize(buf);
+      case MessageType.OracleAnnouncement:
+        return OracleAnnouncement.deserialize(buf);
       case MessageType.NodeAnnouncement:
         return NodeAnnouncementMessage.deserialize(buf);
       default:

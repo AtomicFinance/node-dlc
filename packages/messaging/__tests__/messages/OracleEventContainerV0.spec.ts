@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
-import { OracleAttestationV0 } from '../../lib/messages/OracleAttestationV0';
+import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
+import { OracleAttestation } from '../../lib/messages/OracleAttestation';
 import { OracleEventContainerV0 } from '../../lib/messages/OracleEventContainerV0';
 import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 
 describe('OracleEventContainerV0', () => {
-  function createTestOracleAnnouncement(): OracleAnnouncementV0 {
-    const announcement = new OracleAnnouncementV0();
+  function createTestOracleAnnouncement(): OracleAnnouncement {
+    const announcement = new OracleAnnouncement();
     announcement.announcementSig = Buffer.from(
       'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4',
       'hex',
@@ -36,8 +36,8 @@ describe('OracleEventContainerV0', () => {
     return announcement;
   }
 
-  function createTestOracleAttestation(): OracleAttestationV0 {
-    const attestation = new OracleAttestationV0();
+  function createTestOracleAttestation(): OracleAttestation {
+    const attestation = new OracleAttestation();
     attestation.eventId = 'BTC-USD-OVER-50K-COINBASE';
     attestation.oraclePubkey = Buffer.from(
       '1d5dcdba2e64cb116cc0c375a0856298f0058b778f46bfe625ac6576204889e4',
@@ -87,8 +87,8 @@ describe('OracleEventContainerV0', () => {
       expect(Number(instance.length)).to.be.greaterThan(0); // Length is calculated automatically
       expect(instance.oracleName).to.equal('Atomic');
       expect(instance.uri).to.equal('');
-      expect(instance.announcement).to.be.instanceof(OracleAnnouncementV0);
-      expect(instance.attestation).to.be.instanceof(OracleAttestationV0);
+      expect(instance.announcement).to.be.instanceof(OracleAnnouncement);
+      expect(instance.attestation).to.be.instanceof(OracleAttestation);
       expect(instance.outcome).to.equal('45354');
     });
   });

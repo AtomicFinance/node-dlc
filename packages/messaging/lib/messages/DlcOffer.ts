@@ -1,5 +1,5 @@
-import { Script, Sequence, Tx } from '@node-dlc/bitcoin';
-import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
+import { Script } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { hash160 } from '@node-dlc/crypto';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
@@ -9,24 +9,17 @@ import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
-import { ContractDescriptor, EnumeratedDescriptor } from './ContractDescriptor';
 import {
   ContractInfo,
-  DisjointContractInfo,
   IDisjointContractInfoJSON,
   ISingleContractInfoJSON,
-  SingleContractInfo,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import { EnumEventDescriptorV0 } from './EventDescriptor';
 import {
   FundingInput,
   FundingInputV0,
   IFundingInputV0JSON,
 } from './FundingInput';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
-import { OracleEventV0 } from './OracleEventV0';
-import { MultiOracleInfo, OracleInfo, SingleOracleInfo } from './OracleInfoV0';
 import {
   IOrderIrcInfoJSON,
   OrderIrcInfo,
@@ -55,10 +48,12 @@ export class DlcOffer implements IDlcMessage {
    * Handles both our internal format and external test vector formats
    * @param json JSON object representing a DLC offer
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): DlcOffer {
     const instance = new DlcOffer();
 
     // Helper function to safely convert to BigInt from various input types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toBigInt = (value: any): bigint => {
       if (value === null || value === undefined) return BigInt(0);
       if (typeof value === 'bigint') return value;
@@ -80,12 +75,12 @@ export class DlcOffer implements IDlcMessage {
       'hex',
     );
 
-    instance.fundingPubKey = Buffer.from(
-      json.fundingPubKey || json.fundingPubkey || json.funding_pubkey,
+    instance.fundingPubkey = Buffer.from(
+      json.fundingPubkey || json.fundingPubKey || json.funding_pubkey,
       'hex',
     );
-    instance.payoutSPK = Buffer.from(
-      json.payoutSPK || json.payoutSpk || json.payout_spk,
+    instance.payoutSpk = Buffer.from(
+      json.payoutSpk || json.payoutSPK || json.payout_spk,
       'hex',
     );
 
@@ -94,14 +89,14 @@ export class DlcOffer implements IDlcMessage {
       json.payoutSerialId || json.payout_serial_id,
     );
 
-    instance.offerCollateralSatoshis = toBigInt(
-      json.offerCollateralSatoshis ||
-        json.offerCollateral ||
+    instance.offerCollateral = toBigInt(
+      json.offerCollateral ||
+        json.offerCollateralSatoshis ||
         json.offer_collateral,
     );
 
-    instance.changeSPK = Buffer.from(
-      json.changeSPK || json.changeSpk || json.change_spk,
+    instance.changeSpk = Buffer.from(
+      json.changeSpk || json.changeSPK || json.change_spk,
       'hex',
     );
     instance.changeSerialId = toBigInt(
@@ -120,11 +115,9 @@ export class DlcOffer implements IDlcMessage {
     );
 
     // Use FundingInput.fromJSON() for each funding input - proper delegation
-    instance.fundingInputs = (
-      json.fundingInputs ||
-      json.funding_inputs ||
-      []
-    ).map((inputJson: any) => FundingInput.fromJSON(inputJson));
+    instance.fundingInputs = (json.fundingInputs || json.funding_inputs || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((inputJson: any) => FundingInput.fromJSON(inputJson));
 
     return instance;
   }
@@ -185,11 +178,11 @@ export class DlcOffer implements IDlcMessage {
     // Skip past the ContractInfo we just read
     const contractInfoLength = instance.contractInfo.serialize().length;
     reader.position += contractInfoLength;
-    instance.fundingPubKey = reader.readBytes(33);
-    const payoutSPKLen = reader.readUInt16BE();
-    instance.payoutSPK = reader.readBytes(payoutSPKLen);
+    instance.fundingPubkey = reader.readBytes(33);
+    const payoutSpkLen = reader.readUInt16BE();
+    instance.payoutSpk = reader.readBytes(payoutSpkLen);
     instance.payoutSerialId = reader.readUInt64BE();
-    instance.offerCollateralSatoshis = reader.readUInt64BE();
+    instance.offerCollateral = reader.readUInt64BE();
 
     // Changed from u16 to bigsize as per dlcspecs PR #163
     const fundingInputsLen = Number(reader.readBigSize());
@@ -206,8 +199,8 @@ export class DlcOffer implements IDlcMessage {
       reader.position += fundingInputLength;
     }
 
-    const changeSPKLen = reader.readUInt16BE();
-    instance.changeSPK = reader.readBytes(changeSPKLen);
+    const changeSpkLen = reader.readUInt16BE();
+    instance.changeSpk = reader.readBytes(changeSpkLen);
     instance.changeSerialId = reader.readUInt64BE();
     instance.fundOutputSerialId = reader.readUInt64BE();
     instance.feeRatePerVb = reader.readUInt64BE();
@@ -266,17 +259,17 @@ export class DlcOffer implements IDlcMessage {
 
   public contractInfo: ContractInfo;
 
-  public fundingPubKey: Buffer;
+  public fundingPubkey: Buffer;
 
-  public payoutSPK: Buffer;
+  public payoutSpk: Buffer;
 
   public payoutSerialId: bigint;
 
-  public offerCollateralSatoshis: bigint;
+  public offerCollateral: bigint;
 
   public fundingInputs: FundingInput[] = [];
 
-  public changeSPK: Buffer;
+  public changeSpk: Buffer;
 
   public changeSerialId: bigint;
 
@@ -305,12 +298,12 @@ export class DlcOffer implements IDlcMessage {
    * @returns {IDlcOfferAddresses}
    */
   public getAddresses(network: BitcoinNetwork): IDlcOfferAddresses {
-    const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))
+    const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubkey))
       .serialize()
       .slice(1);
     const fundingAddress = address.fromOutputScript(fundingSPK, network);
-    const changeAddress = address.fromOutputScript(this.changeSPK, network);
-    const payoutAddress = address.fromOutputScript(this.payoutSPK, network);
+    const changeAddress = address.fromOutputScript(this.changeSpk, network);
+    const payoutAddress = address.fromOutputScript(this.payoutSpk, network);
 
     return {
       fundingAddress,
@@ -343,33 +336,31 @@ export class DlcOffer implements IDlcMessage {
     // 6. payout_spk and change_spk must be standard script pubkeys
 
     try {
-      address.fromOutputScript(this.payoutSPK);
+      address.fromOutputScript(this.payoutSpk);
     } catch (e) {
-      throw new Error('DlcOffer payoutSPK is invalid');
+      throw new Error('DlcOffer payoutSpk is invalid');
     }
 
     try {
-      address.fromOutputScript(this.changeSPK);
+      address.fromOutputScript(this.changeSpk);
     } catch (e) {
-      throw new Error('DlcOffer changeSPK is invalid');
+      throw new Error('DlcOffer changeSpk is invalid');
     }
 
     // 7. funding_pubkey must be a valid secp256k1 pubkey in compressed format
     // https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki#background-on-ecdsa-signatures
 
-    if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubKey))) {
-      if (this.fundingPubKey[0] != 0x02 && this.fundingPubKey[0] != 0x03) {
-        throw new Error('fundingPubKey must be in compressed format');
+    if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubkey))) {
+      if (this.fundingPubkey[0] != 0x02 && this.fundingPubkey[0] != 0x03) {
+        throw new Error('fundingPubkey must be in compressed format');
       }
     } else {
-      throw new Error('fundingPubKey is not a valid secp256k1 key');
+      throw new Error('fundingPubkey is not a valid secp256k1 key');
     }
 
-    // 8. offer_collateral_satoshis must be greater than or equal to 1000
-    if (this.offerCollateralSatoshis < 1000) {
-      throw new Error(
-        'offer_collateral_satoshis must be greater than or equal to 1000',
-      );
+    // 8. offer_collateral must be greater than or equal to 1000
+    if (this.offerCollateral < 1000) {
+      throw new Error('offer_collateral must be greater than or equal to 1000');
     }
 
     if (this.cetLocktime < 0) {
@@ -422,9 +413,7 @@ export class DlcOffer implements IDlcMessage {
     this.contractInfo.validate();
 
     // totalCollateral should be > offerCollateral (logical validation)
-    if (
-      this.contractInfo.getTotalCollateral() <= this.offerCollateralSatoshis
-    ) {
+    if (this.contractInfo.getTotalCollateral() <= this.offerCollateral) {
       throw new Error('totalCollateral should be greater than offerCollateral');
     }
 
@@ -433,10 +422,8 @@ export class DlcOffer implements IDlcMessage {
       const input = fundingInput as FundingInputV0;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
-    if (this.offerCollateralSatoshis >= fundingAmount) {
-      throw new Error(
-        'fundingAmount must be greater than offerCollateralSatoshis',
-      );
+    if (this.offerCollateral >= fundingAmount) {
+      throw new Error('fundingAmount must be greater than offerCollateral');
     }
   }
 
@@ -481,12 +468,12 @@ export class DlcOffer implements IDlcMessage {
       contractFlags: Number(this.contractFlags[0]),
       chainHash: this.chainHash.toString('hex'),
       contractInfo: this.contractInfo.toJSON(),
-      fundingPubkey: this.fundingPubKey.toString('hex'), // lowercase 'k'
-      payoutSpk: this.payoutSPK.toString('hex'), // lowercase
+      fundingPubkey: this.fundingPubkey.toString('hex'), // lowercase 'k'
+      payoutSpk: this.payoutSpk.toString('hex'), // lowercase
       payoutSerialId: bigIntToNumber(this.payoutSerialId),
-      offerCollateral: bigIntToNumber(this.offerCollateralSatoshis), // no "Satoshis"
+      offerCollateral: bigIntToNumber(this.offerCollateral), // no "Satoshis"
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-      changeSpk: this.changeSPK.toString('hex'), // lowercase
+      changeSpk: this.changeSpk.toString('hex'), // lowercase
       changeSerialId: bigIntToNumber(this.changeSerialId),
       fundOutputSerialId: bigIntToNumber(this.fundOutputSerialId),
       feeRatePerVb: bigIntToNumber(this.feeRatePerVb),
@@ -510,11 +497,11 @@ export class DlcOffer implements IDlcMessage {
     writer.writeBytes(this.temporaryContractId); // New field
 
     writer.writeBytes(this.contractInfo.serialize());
-    writer.writeBytes(this.fundingPubKey);
-    writer.writeUInt16BE(this.payoutSPK.length);
-    writer.writeBytes(this.payoutSPK);
+    writer.writeBytes(this.fundingPubkey);
+    writer.writeUInt16BE(this.payoutSpk.length);
+    writer.writeBytes(this.payoutSpk);
     writer.writeUInt64BE(this.payoutSerialId);
-    writer.writeUInt64BE(this.offerCollateralSatoshis);
+    writer.writeUInt64BE(this.offerCollateral);
 
     // Changed from u16 to bigsize as per dlcspecs PR #163
     writer.writeBigSize(this.fundingInputs.length);
@@ -524,8 +511,8 @@ export class DlcOffer implements IDlcMessage {
       writer.writeBytes(fundingInput.serializeBody());
     }
 
-    writer.writeUInt16BE(this.changeSPK.length);
-    writer.writeBytes(this.changeSPK);
+    writer.writeUInt16BE(this.changeSpk.length);
+    writer.writeBytes(this.changeSpk);
     writer.writeUInt64BE(this.changeSerialId);
     writer.writeUInt64BE(this.fundOutputSerialId);
     writer.writeUInt64BE(this.feeRatePerVb);
@@ -553,31 +540,31 @@ export class DlcOffer implements IDlcMessage {
 }
 
 export interface IDlcOfferJSON {
-  type: number;
+  type?: number; // Made optional for rust-dlc compatibility
   protocolVersion: number;
   temporaryContractId: string;
   contractFlags: number;
   chainHash: string;
   contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
-  fundingPubKey: string;
-  payoutSPK: string;
+  fundingPubkey: string;
+  payoutSpk: string;
   payoutSerialId: number;
-  offerCollateralSatoshis: number;
+  offerCollateral: number;
   fundingInputs: IFundingInputV0JSON[];
-  changeSPK: string;
+  changeSpk: string;
   changeSerialId: number;
   fundOutputSerialId: number;
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  serialized: string; // Hex serialization for compatibility testing
-  tlvs: (
+  serialized?: string; // Made optional - hex serialization for compatibility testing
+  tlvs?: (
     | IOrderMetadataJSON
     | IOrderIrcInfoJSON
     | IOrderPositionInfoJSON
     | IBatchFundingGroupJSON
     | any
-  )[]; // For unknown TLVs
+  )[]; // Made optional - for unknown TLVs
 }
 
 export interface IDlcOfferAddresses {

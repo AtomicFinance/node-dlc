@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
-import { OracleAttestationV0 } from '../../lib/messages/OracleAttestationV0';
+import { OracleAttestation } from '../../lib/messages/OracleAttestation';
 
-describe('OracleAttestationV0', () => {
+describe('OracleAttestation', () => {
   const attestationSig = Buffer.from(
     '424c11a44c2e522f90bbe4abab6ec1bc8ab44c9b29316ce6e1d0d7d08385a474' +
       'de6b75f1da183a2a4f9ad144b48bf1026cee9687221df58f04128db79ca17e2a',
@@ -21,7 +21,7 @@ describe('OracleAttestationV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleAttestationV0();
+      const instance = new OracleAttestation();
 
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
       instance.oraclePubkey = oraclePubkey;
@@ -38,7 +38,7 @@ describe('OracleAttestationV0', () => {
   describe('deserialize', () => {
     it('deserializes', () => {
       // Create a test instance and serialize it first for round-trip testing
-      const originalInstance = new OracleAttestationV0();
+      const originalInstance = new OracleAttestation();
       originalInstance.eventId = 'BTC-USD-OVER-50K-COINBASE';
       originalInstance.oraclePubkey = oraclePubkey;
       originalInstance.signatures.push(attestationSig);
@@ -46,7 +46,7 @@ describe('OracleAttestationV0', () => {
 
       // Serialize and then deserialize to ensure round-trip consistency
       const serialized = originalInstance.serialize();
-      const instance = OracleAttestationV0.deserialize(serialized);
+      const instance = OracleAttestation.deserialize(serialized);
 
       expect(Number(instance.length)).to.be.greaterThan(0); // Length is calculated automatically
       expect(instance.eventId).to.equal('BTC-USD-OVER-50K-COINBASE');
@@ -58,7 +58,7 @@ describe('OracleAttestationV0', () => {
 
   describe('validate', () => {
     it('should validate when correct outcome signatures', () => {
-      const instance = new OracleAttestationV0();
+      const instance = new OracleAttestation();
 
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
       instance.oraclePubkey = oraclePubkey;
@@ -71,7 +71,7 @@ describe('OracleAttestationV0', () => {
     });
 
     it('should invalidate when incorrect outcome signatures', () => {
-      const instance = new OracleAttestationV0();
+      const instance = new OracleAttestation();
 
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
       instance.oraclePubkey = invalidOraclePubkey;

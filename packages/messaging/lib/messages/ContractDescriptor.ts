@@ -298,14 +298,14 @@ interface IOutcomeJSON {
 }
 
 export interface EnumeratedDescriptorJSON {
-  type: number;
-  contractDescriptorType: ContractDescriptorType;
+  type?: number; // Made optional for rust-dlc compatibility
+  contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
   outcomes: IOutcomeJSON[];
 }
 
 export interface NumericalDescriptorJSON {
-  type: number;
-  contractDescriptorType: ContractDescriptorType;
+  type?: number; // Made optional for rust-dlc compatibility
+  contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
   numDigits: number;
   payoutFunction: PayoutFunctionV0JSON;
   roundingIntervals: IRoundingIntervalsV0JSON;

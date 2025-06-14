@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
 import { SingleContractInfo } from '../../lib/messages/ContractInfo';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
+import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
 import {
@@ -73,7 +73,7 @@ describe('OrderNegotiationFields', () => {
 
         // Create oracle info (simplified)
         const oracleInfo = new SingleOracleInfo();
-        const announcement = new OracleAnnouncementV0();
+        const announcement = new OracleAnnouncement();
         announcement.announcementSig = Buffer.alloc(64);
         announcement.oraclePubkey = Buffer.alloc(32);
 
@@ -134,7 +134,7 @@ describe('OrderNegotiationFields', () => {
 
         // Create oracle info (simplified)
         const oracleInfo = new SingleOracleInfo();
-        const announcement = new OracleAnnouncementV0();
+        const announcement = new OracleAnnouncement();
         announcement.announcementSig = Buffer.alloc(64);
         announcement.oraclePubkey = Buffer.alloc(32);
 
