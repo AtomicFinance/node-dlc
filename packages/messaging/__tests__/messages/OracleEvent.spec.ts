@@ -4,9 +4,9 @@ import {
   DigitDecompositionEventDescriptorV0,
   EnumEventDescriptorV0,
 } from '../../lib/messages/EventDescriptor';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { OracleEvent } from '../../lib/messages/OracleEvent';
 
-describe('OracleEventV0', () => {
+describe('OracleEvent', () => {
   const oracleNonce = Buffer.from(
     '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b',
     'hex',
@@ -16,7 +16,7 @@ describe('OracleEventV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleEventV0();
+      const instance = new OracleEvent();
 
       instance.length = BigInt(64);
       instance.oracleNonces.push(oracleNonce);
@@ -74,7 +74,7 @@ describe('OracleEventV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleEventV0.deserialize(buf);
+      const instance = OracleEvent.deserialize(buf);
 
       expect(instance.oracleNonces[0]).to.deep.equal(oracleNonce);
       expect(instance.eventMaturityEpoch).to.equal(0);
@@ -92,7 +92,7 @@ describe('OracleEventV0', () => {
   });
 
   describe('validate', () => {
-    const instance = new OracleEventV0();
+    const instance = new OracleEvent();
 
     beforeEach(() => {
       instance.length = BigInt(64);

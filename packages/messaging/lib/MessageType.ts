@@ -31,7 +31,8 @@ export enum MessageType {
   OracleAnnouncementV0 = OracleAnnouncement, // Backward compatibility alias
   OracleAttestation = 55400,
   OracleAttestationV0 = OracleAttestation, // Backward compatibility alias
-  OracleEventV0 = 55330,
+  OracleEvent = 55330,
+  OracleEventV0 = OracleEvent, // Backward compatibility alias
 
   OracleEventContainerV0 = 61632,
 
@@ -56,7 +57,8 @@ export enum MessageType {
   HyperbolaPayoutCurvePiece = 42794, // TODO: Temporary type
   OldHyperbolaPayoutCurvePiece = 42796, // TODO: Remove once all existing contracts have passed
 
-  RoundingIntervalsV0 = 42788,
+  RoundingIntervals = 42788,
+  RoundingIntervalsV0 = RoundingIntervals, // Backward compatibility alias
 
   DlcCloseV0 = 52170, // TODO: Temporary type
   DlcCancelV0 = 52172,

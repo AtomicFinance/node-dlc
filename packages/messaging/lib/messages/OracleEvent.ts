@@ -26,15 +26,16 @@ import {
  *   - the event ID which can be a name or categorization associated with
  *     the event by the oracle
  */
-export class OracleEventV0 implements IDlcMessage {
-  public static type = MessageType.OracleEventV0;
+export class OracleEvent implements IDlcMessage {
+  public static type = MessageType.OracleEvent;
 
   /**
-   * Creates an OracleEventV0 from JSON data
+   * Creates an OracleEvent from JSON data
    * @param json JSON object representing oracle event
    */
-  public static fromJSON(json: any): OracleEventV0 {
-    const instance = new OracleEventV0();
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OracleEvent {
+    const instance = new OracleEvent();
 
     // Parse oracle nonces array
     const nonces = json.oracleNonces || json.oracle_nonces || [];
@@ -59,8 +60,8 @@ export class OracleEventV0 implements IDlcMessage {
    * Deserializes an oracle_event message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleEventV0 {
-    const instance = new OracleEventV0();
+  public static deserialize(buf: Buffer): OracleEvent {
+    const instance = new OracleEvent();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -83,7 +84,7 @@ export class OracleEventV0 implements IDlcMessage {
   /**
    * The type for oracle_event message. oracle_event = 55330
    */
-  public type = OracleEventV0.type;
+  public type = OracleEvent.type;
 
   public length: bigint;
 
@@ -203,7 +204,7 @@ export class OracleEventV0 implements IDlcMessage {
   /**
    * Converts oracle_event to JSON
    */
-  public toJSON(): IOracleEventV0JSON {
+  public toJSON(): IOracleEventJSON {
     return {
       oracleNonces: this.oracleNonces.map((oracle) => oracle.toString('hex')),
       eventMaturityEpoch: this.eventMaturityEpoch,
@@ -238,7 +239,7 @@ export class OracleEventV0 implements IDlcMessage {
   }
 }
 
-export interface IOracleEventV0JSON {
+export interface IOracleEventJSON {
   type?: number; // Made optional for rust-dlc compatibility
   oracleNonces: string[];
   eventMaturityEpoch: number;

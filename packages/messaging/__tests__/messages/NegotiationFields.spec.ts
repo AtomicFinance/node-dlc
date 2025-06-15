@@ -6,7 +6,7 @@ import {
   NegotiationFieldsV1,
   NegotiationFieldsV2,
 } from '../../lib/messages/NegotiationFields';
-import { RoundingIntervalsV0 } from '../../lib/messages/RoundingIntervalsV0';
+import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
 import { MessageType } from '../../lib/MessageType';
 
 describe('NegotiationFields', () => {
@@ -48,8 +48,8 @@ describe('NegotiationFields', () => {
       it('serializes', () => {
         const instance = new NegotiationFieldsV1();
 
-        // Create RoundingIntervalsV0 programmatically for new dlcspecs PR #163 format
-        const roundingIntervals = new RoundingIntervalsV0();
+        // Create RoundingIntervals programmatically for new dlcspecs PR #163 format
+        const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
             beginInterval: BigInt(5000),
@@ -73,7 +73,7 @@ describe('NegotiationFields', () => {
         // Create a test instance and serialize it first for round-trip testing
         const originalInstance = new NegotiationFieldsV1();
 
-        const roundingIntervals = new RoundingIntervalsV0();
+        const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
             beginInterval: BigInt(5000),
@@ -96,7 +96,7 @@ describe('NegotiationFields', () => {
             Number(originalInstance.length),
           );
           expect(instance.roundingIntervals).to.be.instanceof(
-            RoundingIntervalsV0,
+            RoundingIntervals,
           );
           expect(instance.roundingIntervals.intervals.length).to.equal(1);
           expect(
@@ -117,7 +117,7 @@ describe('NegotiationFields', () => {
 
         // Create NegotiationFields instances programmatically
         const negotiationFieldsV1 = new NegotiationFieldsV1();
-        const roundingIntervals = new RoundingIntervalsV0();
+        const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
             beginInterval: BigInt(5000),
@@ -157,7 +157,7 @@ describe('NegotiationFields', () => {
         const originalInstance = new NegotiationFieldsV2();
 
         const negotiationFieldsV1 = new NegotiationFieldsV1();
-        const roundingIntervals = new RoundingIntervalsV0();
+        const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
             beginInterval: BigInt(5000),

@@ -4,7 +4,7 @@ import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleAttestation } from '../../lib/messages/OracleAttestation';
 import { OracleEventContainerV0 } from '../../lib/messages/OracleEventContainerV0';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { OracleEvent } from '../../lib/messages/OracleEvent';
 
 describe('OracleEventContainerV0', () => {
   function createTestOracleAnnouncement(): OracleAnnouncement {
@@ -18,7 +18,7 @@ describe('OracleEventContainerV0', () => {
       'hex',
     );
 
-    const oracleEvent = new OracleEventV0();
+    const oracleEvent = new OracleEvent();
     oracleEvent.oracleNonces = [
       Buffer.from(
         '3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b',

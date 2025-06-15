@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { OracleEvent } from '../../lib/messages/OracleEvent';
 
 describe('OracleAnnouncement', () => {
   const announcementSig = Buffer.from(
@@ -28,7 +28,7 @@ describe('OracleAnnouncement', () => {
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
       instance.oraclePubkey = oraclePubkey;
-      instance.oracleEvent = OracleEventV0.deserialize(
+      instance.oracleEvent = OracleEvent.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
             '40' + // length
@@ -128,7 +128,7 @@ describe('OracleAnnouncement', () => {
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
       instance.oraclePubkey = oraclePubkey;
-      instance.oracleEvent = OracleEventV0.deserialize(
+      instance.oracleEvent = OracleEvent.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
             '40' + // length
@@ -159,7 +159,7 @@ describe('OracleAnnouncement', () => {
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
       instance.oraclePubkey = invalidOraclePubkey;
-      instance.oracleEvent = OracleEventV0.deserialize(
+      instance.oracleEvent = OracleEvent.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
             '40' + // length

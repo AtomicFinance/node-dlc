@@ -24,6 +24,7 @@ export abstract class FundingInput {
    * Creates a FundingInput from JSON data (e.g., from test vectors)
    * @param json JSON object representing funding input
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): FundingInput {
     // For now, always create FundingInputV0
     return FundingInputV0.fromJSON(json);
@@ -50,10 +51,12 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
    * Creates a FundingInputV0 from JSON data
    * @param json JSON object representing funding input
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): FundingInputV0 {
     const instance = new FundingInputV0();
 
     // Helper function to safely convert to BigInt from various input types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toBigInt = (value: any): bigint => {
       if (value === null || value === undefined) return BigInt(0);
       if (typeof value === 'bigint') return value;
@@ -202,6 +205,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
         return Number(value);
       }
       // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return value as any;
     };
 

@@ -22,7 +22,7 @@ import { FundingInput } from './FundingInput';
 import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
 import { OracleAnnouncement } from './OracleAnnouncement';
 import { OracleAttestation } from './OracleAttestation';
-import { OracleEventV0 } from './OracleEventV0';
+import { OracleEvent } from './OracleEvent';
 import { OrderAcceptV0 } from './OrderAccept';
 import { OrderOfferV0 } from './OrderOffer';
 

@@ -4,7 +4,7 @@ import { math, verify } from 'bip-schnorr';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
+import { IOracleEventJSON, OracleEvent } from './OracleEvent';
 
 /**
  * Oracle announcement that describe an event and the way that an oracle will
@@ -43,7 +43,7 @@ export class OracleAnnouncement implements IDlcMessage {
       json.oraclePublicKey || json.oraclePubkey || json.oracle_public_key,
       'hex',
     );
-    instance.oracleEvent = OracleEventV0.fromJSON(
+    instance.oracleEvent = OracleEvent.fromJSON(
       json.oracleEvent || json.oracle_event,
     );
 
@@ -62,7 +62,7 @@ export class OracleAnnouncement implements IDlcMessage {
     instance.length = reader.readBigSize();
     instance.announcementSig = reader.readBytes(64);
     instance.oraclePubkey = reader.readBytes(32);
-    instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader));
+    instance.oracleEvent = OracleEvent.deserialize(getTlv(reader));
 
     return instance;
   }
@@ -81,7 +81,7 @@ export class OracleAnnouncement implements IDlcMessage {
   public oraclePubkey: Buffer;
 
   /** The description of the event and attesting. */
-  public oracleEvent: OracleEventV0;
+  public oracleEvent: OracleEvent;
 
   /**
    * Validates the oracle announcement according to rust-dlc specification.
@@ -172,5 +172,5 @@ export interface OracleAnnouncementJSON {
   type?: number; // Made optional for rust-dlc compatibility
   announcementSignature: string; // Canonical field name
   oraclePublicKey: string; // Canonical field name
-  oracleEvent: IOracleEventV0JSON;
+  oracleEvent: IOracleEventJSON;
 }

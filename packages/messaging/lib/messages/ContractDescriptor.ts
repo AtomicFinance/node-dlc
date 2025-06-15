@@ -3,10 +3,7 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { ContractDescriptorType, MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
-import {
-  IRoundingIntervalsV0JSON,
-  RoundingIntervalsV0,
-} from './RoundingIntervalsV0';
+import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
 export abstract class ContractDescriptor {
   public static deserialize(
@@ -31,6 +28,7 @@ export abstract class ContractDescriptor {
    * Creates a ContractDescriptor from JSON data (e.g., from test vectors)
    * @param json JSON object representing a contract descriptor
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): ContractDescriptor {
     if (!json) {
       throw new Error('contractDescriptor is required');
@@ -82,10 +80,12 @@ export class EnumeratedDescriptor
    * Creates an EnumeratedContractDescriptor from JSON data
    * @param json JSON object representing an enumerated contract descriptor
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): EnumeratedDescriptor {
     const instance = new EnumeratedDescriptor();
 
     const payouts = json.payouts || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance.outcomes = payouts.map((payout: any) => ({
       outcome: payout.outcome,
       localPayout: BigInt(payout.offerPayout || 0), // Use canonical offerPayout field
@@ -143,6 +143,7 @@ export class EnumeratedDescriptor
           offerPayout: Number(outcome.localPayout), // Use offerPayout to match Rust
         })),
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   }
 
@@ -190,7 +191,7 @@ export class NumericalDescriptor
     );
 
     // Parse rounding intervals using proper fromJSON method
-    instance.roundingIntervals = RoundingIntervalsV0.fromJSON(
+    instance.roundingIntervals = RoundingIntervals.fromJSON(
       json.roundingIntervals || json.rounding_intervals,
     );
 
@@ -220,7 +221,7 @@ export class NumericalDescriptor
     reader.position = payoutFunctionStartPos + payoutFunctionSize;
 
     // Parse remaining bytes as rounding intervals
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
+    instance.roundingIntervals = RoundingIntervals.deserialize(
       reader.buffer.subarray(reader.position),
     );
 
@@ -241,7 +242,7 @@ export class NumericalDescriptor
 
   public payoutFunction: PayoutFunction;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervals;
 
   /**
    * Validates correctness of all fields in the message
@@ -308,7 +309,7 @@ export interface NumericalDescriptorJSON {
   contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
   numDigits: number;
   payoutFunction: PayoutFunctionV0JSON;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsJSON;
 }
 
 // Legacy interfaces for backward compatibility

@@ -4,7 +4,7 @@ import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
 import { SingleContractInfo } from '../../lib/messages/ContractInfo';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { OracleEvent } from '../../lib/messages/OracleEvent';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
 import {
   OrderNegotiationFields,
@@ -77,7 +77,7 @@ describe('OrderNegotiationFields', () => {
         announcement.announcementSig = Buffer.alloc(64);
         announcement.oraclePubkey = Buffer.alloc(32);
 
-        const oracleEvent = new OracleEventV0();
+        const oracleEvent = new OracleEvent();
         oracleEvent.oracleNonces = [Buffer.alloc(32)];
         oracleEvent.eventMaturityEpoch = 0;
 
@@ -138,7 +138,7 @@ describe('OrderNegotiationFields', () => {
         announcement.announcementSig = Buffer.alloc(64);
         announcement.oraclePubkey = Buffer.alloc(32);
 
-        const oracleEvent = new OracleEventV0();
+        const oracleEvent = new OracleEvent();
         oracleEvent.oracleNonces = [Buffer.alloc(32)];
         oracleEvent.eventMaturityEpoch = 0;
 
