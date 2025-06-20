@@ -1,28 +1,11 @@
 import { expect } from 'chai';
 
-import {
-  LOCKTIME_THRESHOLD,
-  MessageType,
-  OrderOfferContainer,
-  OrderPositionInfoV0,
-} from '../../lib';
-import { EnumeratedContractDescriptor } from '../../lib/messages/ContractDescriptor';
-import {
-  ContractInfo,
-  SingleContractInfo,
-} from '../../lib/messages/ContractInfo';
+import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
+import { SingleContractInfo } from '../../lib/messages/ContractInfo';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
-import { OracleEventV0 } from '../../lib/messages/OracleEventV0';
+import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
+import { OracleEvent } from '../../lib/messages/OracleEvent';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
-import {
-  IOrderIrcInfoJSON,
-  OrderIrcInfoV0,
-} from '../../lib/messages/OrderIrcInfo';
-import {
-  IOrderMetadataJSON,
-  OrderMetadataV0,
-} from '../../lib/messages/OrderMetadata';
 import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
 
 describe('OrderOffer', () => {
@@ -82,7 +65,7 @@ describe('OrderOffer', () => {
       contractInfo.totalCollateral = BigInt(200000000);
 
       // Create enumerated contract descriptor
-      const contractDescriptor = new EnumeratedContractDescriptor();
+      const contractDescriptor = new EnumeratedDescriptor();
       contractDescriptor.outcomes = [
         { outcome: 'win', localPayout: BigInt(0) },
         { outcome: 'lose', localPayout: BigInt(200000000) },
@@ -90,11 +73,11 @@ describe('OrderOffer', () => {
 
       // Create oracle info (simplified)
       const oracleInfo = new SingleOracleInfo();
-      const announcement = new OracleAnnouncementV0();
+      const announcement = new OracleAnnouncement();
       announcement.announcementSig = Buffer.alloc(64);
       announcement.oraclePubkey = Buffer.alloc(32);
 
-      const oracleEvent = new OracleEventV0();
+      const oracleEvent = new OracleEvent();
       oracleEvent.oracleNonces = [Buffer.alloc(32)];
       oracleEvent.eventMaturityEpoch = 0;
 
