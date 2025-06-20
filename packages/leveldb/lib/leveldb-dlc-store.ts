@@ -90,22 +90,56 @@ export class LeveldbDlcStore extends LeveldbBase {
         if (key[0] === Prefix.DlcOfferV0) {
           const dlcOffer = DlcOffer.deserialize(value);
           if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
-            if (
-              (dlcOffer.contractInfo as ContractInfoV0).oracleInfo.announcement
-                .oracleEvent.eventId === eventId
-            ) {
-              results.push(dlcOffer);
+            const oracleInfo = (dlcOffer.contractInfo as ContractInfoV0)
+              .oracleInfo;
+            // Handle both SingleOracleInfo and MultiOracleInfo
+            if ('announcement' in oracleInfo) {
+              // SingleOracleInfo
+              const singleOracleInfo = oracleInfo as any;
+              if (
+                singleOracleInfo.announcement.oracleEvent.eventId === eventId
+              ) {
+                results.push(dlcOffer);
+              }
+            } else if ('announcements' in oracleInfo) {
+              // MultiOracleInfo
+              const multiOracleInfo = oracleInfo as any;
+              if (
+                multiOracleInfo.announcements.some(
+                  (ann: any) => ann.oracleEvent.eventId === eventId,
+                )
+              ) {
+                results.push(dlcOffer);
+              }
             }
           } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
             (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
               (pair) => {
-                if (
-                  pair.oracleInfo.announcement.oracleEvent.eventId === eventId
-                ) {
-                  results.push(dlcOffer);
-                  return true; // Returning true will stop the iteration since we've found a match
+                const oracleInfo = pair.oracleInfo;
+                // Handle both SingleOracleInfo and MultiOracleInfo
+                if ('announcement' in oracleInfo) {
+                  // SingleOracleInfo
+                  const singleOracleInfo = oracleInfo as any;
+                  if (
+                    singleOracleInfo.announcement.oracleEvent.eventId ===
+                    eventId
+                  ) {
+                    results.push(dlcOffer);
+                    return true;
+                  }
+                } else if ('announcements' in oracleInfo) {
+                  // MultiOracleInfo
+                  const multiOracleInfo = oracleInfo as any;
+                  if (
+                    multiOracleInfo.announcements.some(
+                      (ann: any) => ann.oracleEvent.eventId === eventId,
+                    )
+                  ) {
+                    results.push(dlcOffer);
+                    return true;
+                  }
                 }
-                return false; // Returning false will continue the iteration to check other pairs
+                return false;
               },
             );
           }
@@ -221,7 +255,7 @@ export class LeveldbDlcStore extends LeveldbBase {
       contractIds.map(async (contractId) => {
         const dlcAccept = await this.findDlcAccept(contractId, false);
         if (!dlcAccept) return;
-        return [contractId, dlcAccept.tempContractId] as [Buffer, Buffer];
+        return [contractId, dlcAccept.temporaryContractId] as [Buffer, Buffer];
       }),
     );
 
@@ -231,11 +265,11 @@ export class LeveldbDlcStore extends LeveldbBase {
   }
 
   public async saveDlcAccept(dlcAccept: DlcAccept): Promise<void> {
-    const dlcOffer = await this.findDlcOffer(dlcAccept.tempContractId);
+    const dlcOffer = await this.findDlcOffer(dlcAccept.temporaryContractId);
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
     const fundingTxid = tx.txId.serialize();
-    const contractId = xor(fundingTxid, dlcAccept.tempContractId);
+    const contractId = xor(fundingTxid, dlcAccept.temporaryContractId);
     const value = dlcAccept.serialize();
     const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     await this._db.put(key, value);
@@ -257,7 +291,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     const key3 = Buffer.concat([
       Buffer.from([Prefix.TempContractId]),
-      dlcAccept.tempContractId,
+      dlcAccept.temporaryContractId,
     ]);
     await this._db.put(key3, contractId);
   }
@@ -266,14 +300,16 @@ export class LeveldbDlcStore extends LeveldbBase {
   public async saveDlcAccepts(dlcAccepts: DlcAccept[]): Promise<void> {
     const dlcOffers: DlcOffer[] = [];
     for (let i = 0; i < dlcAccepts.length; i++) {
-      const dlcOffer = await this.findDlcOffer(dlcAccepts[i].tempContractId);
+      const dlcOffer = await this.findDlcOffer(
+        dlcAccepts[i].temporaryContractId,
+      );
       dlcOffers.push(dlcOffer);
     }
     const txBuilder = new BatchDlcTxBuilder(dlcOffers, dlcAccepts);
     const tx = txBuilder.buildFundingTransaction();
     const fundingTxId = tx.txId.serialize();
-    const contractIds = dlcAccepts.map((dlcAccepts) =>
-      xor(fundingTxId, dlcAccepts.tempContractId),
+    const contractIds = dlcAccepts.map((dlcAccept) =>
+      xor(fundingTxId, dlcAccept.temporaryContractId),
     );
     for (let i = 0; i < dlcAccepts.length; i++) {
       const value = dlcAccepts[i].serialize();
@@ -300,7 +336,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
       const key3 = Buffer.concat([
         Buffer.from([Prefix.TempContractId]),
-        dlcAccepts[i].tempContractId,
+        dlcAccepts[i].temporaryContractId,
       ]);
       await this._db.put(key3, contractIds[i]);
     }
