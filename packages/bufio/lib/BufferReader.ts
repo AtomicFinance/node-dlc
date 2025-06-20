@@ -114,6 +114,13 @@ export class BufferReader {
   }
 
   /**
+   * Read a 64-bit double (f64) in big-endian format
+   */
+  public readDoubleBE(): number {
+    return this._readStandard(this.readDoubleBE.name, 8);
+  }
+
+  /**
    * Reads a variable length unsigned integer as specified in the protocol
    * documentation and aways returns a BN to maintain a consistant call
    * signature.
