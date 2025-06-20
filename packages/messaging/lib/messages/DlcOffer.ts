@@ -41,7 +41,7 @@ export const LOCKTIME_THRESHOLD = 500000000;
  * Updated to support dlcspecs PR #163 format.
  */
 export class DlcOffer implements IDlcMessage {
-  public static type = MessageType.DlcOfferV0;
+  public static type = MessageType.DlcOffer;
 
   /**
    * Creates a DlcOffer from JSON data (e.g., from test vectors)
@@ -133,10 +133,10 @@ export class DlcOffer implements IDlcMessage {
 
     const type = reader.readUInt16BE(); // read type
 
-    // Validate type matches expected DlcOfferV0 type
-    if (type !== MessageType.DlcOfferV0) {
+    // Validate type matches expected DlcOffer type
+    if (type !== MessageType.DlcOffer) {
       throw new Error(
-        `Invalid message type. Expected ${MessageType.DlcOfferV0}, got ${type}`,
+        `Invalid message type. Expected ${MessageType.DlcOffer}, got ${type}`,
       );
     }
 

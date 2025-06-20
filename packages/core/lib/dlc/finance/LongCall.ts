@@ -49,16 +49,21 @@ const buildPayoutFunction = (
   );
 
   const payoutFunction = new PayoutFunctionV0();
-  payoutFunction.endpoint0 = BigInt(0);
-  payoutFunction.endpointPayout0 = BigInt(0);
-  payoutFunction.extraPrecision0 = 0;
 
-  payoutFunction.pieces.push({
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: maxOutcome,
+      outcomePayout: totalCollateral,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
-    endpoint: maxOutcome,
-    endpointPayout: totalCollateral,
-    extraPrecision: 0,
   });
+
+  payoutFunction.lastEndpoint = {
+    eventOutcome: maxOutcome,
+    outcomePayout: totalCollateral,
+    extraPrecision: 0,
+  };
 
   return {
     payoutFunction,

@@ -10,15 +10,15 @@ import { OracleAttestation } from './OracleAttestation';
  * OracleEventContainer contains information about the oracles to be used in
  * executing a DLC.
  */
-export class OracleEventContainerV0 implements IDlcMessage {
-  public static type = MessageType.OracleEventContainerV0;
+export class OracleEventContainer implements IDlcMessage {
+  public static type = MessageType.OracleEventContainer;
 
   /**
    * Deserializes an oracle_info_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleEventContainerV0 {
-    const instance = new OracleEventContainerV0();
+  public static deserialize(buf: Buffer): OracleEventContainer {
+    const instance = new OracleEventContainer();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -46,7 +46,7 @@ export class OracleEventContainerV0 implements IDlcMessage {
   /**
    * The type for oracle_info_v0 message. oracle_info_v0 = 42770
    */
-  public type = OracleEventContainerV0.type;
+  public type = OracleEventContainer.type;
 
   public length: bigint;
 

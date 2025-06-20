@@ -20,7 +20,7 @@ import { ScriptWitnessV0 } from './ScriptWitnessV0';
  * Updated to support dlcspecs PR #163 format.
  */
 export class DlcSign implements IDlcMessage {
-  public static type = MessageType.DlcSignV0;
+  public static type = MessageType.DlcSign;
 
   /**
    * Creates a DlcSign from JSON data (e.g., from test vectors)

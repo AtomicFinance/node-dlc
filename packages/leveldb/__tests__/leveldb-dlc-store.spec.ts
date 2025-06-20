@@ -4,11 +4,11 @@ import { OutPoint, Value } from '@node-dlc/bitcoin';
 import { DlcTxBuilder } from '@node-dlc/core';
 import { sha256, xor } from '@node-dlc/crypto';
 import {
-  DlcAcceptV0,
+  DlcAccept,
   DlcCancelV0,
   DlcCloseV0,
-  DlcOfferV0,
-  DlcSignV0,
+  DlcOffer,
+  DlcSign,
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
@@ -93,7 +93,7 @@ describe('LeveldbDlcStore', () => {
     , "hex"
   ); // prettier-ignore
 
-  const dlcOffer = DlcOfferV0.deserialize(dlcOfferHex);
+  const dlcOffer = DlcOffer.deserialize(dlcOfferHex);
 
   const dlcAcceptHex = Buffer.from(
     "a71c" + // type accept_dlc_v0
@@ -130,7 +130,7 @@ describe('LeveldbDlcStore', () => {
     , "hex"
   ); // prettier-ignore
 
-  const dlcAccept = DlcAcceptV0.deserialize(dlcAcceptHex);
+  const dlcAccept = DlcAccept.deserialize(dlcAcceptHex);
 
   const tempContractId = sha256(dlcOfferHex);
 
@@ -163,7 +163,7 @@ describe('LeveldbDlcStore', () => {
     , "hex"
   ); // prettier-ignore
 
-  const dlcSign = DlcSignV0.deserialize(dlcSignHex);
+  const dlcSign = DlcSign.deserialize(dlcSignHex);
 
   const dlcTxsHex = Buffer.from(
     'ef2e5beedf007afc0528fadd297df3ad2568ab23b777cc1f1cbc36ee42aad5fdc83b00c502000000027d271264eaa899ce808a151b67a05a5e138bc59bff4a81acc606bbcc2054c33a0000000000ffffffff49956aee0f04ebeed5935729a2d6d5dc6abb5342acaa0248090c78b049e4d4e30000000000ffffffff0355a8980400000000220020543ff4768635379e2d3101d97f5a2a5e15d2acba04a6bd1322970241de8c593ce11f530700000000160014dddb7840134737de920ac4337cfd700a94d40ee6f2b1eb0b000000001600141b77056446c159cd6228632173c6117d67ed7df200000000000000005293da71b1c64a177c6d9cef747ba44c7e05b476663ba1c2af423ee15077287a00000b460000000000710200000001b2beedb20c5df1ab779b521a3a8fdb217784b76c76de505db3686b3b788f9d080000000000feffffff02e1999804000000001600144b71dd93c0727574dfd8403ed5f375922c6e3813d007000000000000160014cc6f10246659b11e40bc8c7d346f43aae79cf2d78c1064600100710200000001b2beedb20c5df1ab779b521a3a8fdb217784b76c76de505db3686b3b788f9d080000000000ffffffff02e0739804000000001600144b71dd93c0727574dfd8403ed5f375922c6e3813d12d000000000000160014cc6f10246659b11e40bc8c7d346f43aae79cf2d70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
@@ -214,15 +214,15 @@ describe('LeveldbDlcStore', () => {
   // Batch Dlc Messages
 
   // Increase funding input amount to match minimum collateral for batch
-  const dlcOfferForBatch = DlcOfferV0.deserialize(dlcOffer.serialize());
+  const dlcOfferForBatch = DlcOffer.deserialize(dlcOffer.serialize());
   (dlcOfferForBatch
     .fundingInputs[0] as FundingInputV0).prevTx.outputs[0].value = Value.fromBitcoin(
     4,
   );
 
   // Increase funding input amount to match minimum collateral for batch
-  const dlcAcceptForBatch = DlcAcceptV0.deserialize(dlcAccept.serialize());
-  dlcAcceptForBatch.tempContractId = sha256(dlcOfferForBatch.serialize());
+  const dlcAcceptForBatch = DlcAccept.deserialize(dlcAccept.serialize());
+  dlcAcceptForBatch.temporaryContractId = sha256(dlcOfferForBatch.serialize());
   (dlcAcceptForBatch
     .fundingInputs[0] as FundingInputV0).prevTx.outputs[0].value = Value.fromBitcoin(
     4,
@@ -308,7 +308,9 @@ describe('LeveldbDlcStore', () => {
       expect(
         actual.fundingInputs[0].prevTx.serialize().toString('hex'),
       ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
-      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
+      expect(actual.cetAdaptorSignatures).to.deep.equal(
+        dlcAccept.cetAdaptorSignatures,
+      );
     });
   });
 
@@ -323,21 +325,25 @@ describe('LeveldbDlcStore', () => {
       expect(
         actual.fundingInputs[0].prevTx.serialize().toString('hex'),
       ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
-      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
+      expect(actual.cetAdaptorSignatures).to.deep.equal(
+        dlcAccept.cetAdaptorSignatures,
+      );
     });
   });
 
   describe('find dlc_accept by temp_contract_id', () => {
     it('should return dlc accept object', async () => {
       const actualContractId = await sut.findContractIdFromTemp(
-        dlcAccept.tempContractId,
+        dlcAccept.temporaryContractId,
       );
       const actual = await sut.findDlcAccept(actualContractId);
 
       expect(
         actual.fundingInputs[0].prevTx.serialize().toString('hex'),
       ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
-      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
+      expect(actual.cetAdaptorSignatures).to.deep.equal(
+        dlcAccept.cetAdaptorSignatures,
+      );
     });
   });
 
@@ -371,7 +377,9 @@ describe('LeveldbDlcStore', () => {
       expect(
         actual.fundingInputs[0].prevTx.serialize().toString('hex'),
       ).to.equal(dlcAccept.fundingInputs[0].prevTx.serialize().toString('hex'));
-      expect(actual.cetSignatures).to.deep.equal(dlcAccept.cetSignatures);
+      expect(actual.cetAdaptorSignatures).to.deep.equal(
+        dlcAccept.cetAdaptorSignatures,
+      );
     });
   });
 

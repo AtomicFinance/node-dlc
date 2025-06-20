@@ -3,7 +3,7 @@
 import { sha256 } from '@node-dlc/crypto';
 import {
   DlcIdsV0,
-  OracleEventContainerV0,
+  OracleEventContainer,
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
@@ -52,7 +52,7 @@ describe('LeveldbOracleStore', () => {
       'hex'
   ); // prettier-ignore
 
-  const oracleEventContainer = OracleEventContainerV0.deserialize(
+  const oracleEventContainer = OracleEventContainer.deserialize(
     oracleEventContainerHex,
   );
 

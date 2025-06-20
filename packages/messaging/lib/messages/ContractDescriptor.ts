@@ -180,6 +180,7 @@ export class NumericalDescriptor
    * Creates a NumericOutcomeContractDescriptor from JSON data
    * @param json JSON object representing a numeric outcome contract descriptor
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): NumericalDescriptor {
     const instance = new NumericalDescriptor();
 

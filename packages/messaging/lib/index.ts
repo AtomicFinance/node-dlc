@@ -25,7 +25,7 @@ export * from './messages/NegotiationFields';
 export * from './messages/NodeAnnouncementMessage';
 export * from './messages/OracleAnnouncement';
 export * from './messages/OracleAttestation';
-export * from './messages/OracleEventContainerV0';
+export * from './messages/OracleEventContainer';
 export * from './messages/OracleEvent';
 export * from './messages/OracleIdentifierV0';
 export * from './messages/OracleInfoV0';

@@ -2,29 +2,24 @@ import { BufferReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
 import {
-  ContractDescriptor,
   EnumeratedDescriptor,
   NumericalDescriptor,
 } from './ContractDescriptor';
 import {
-  ContractInfo,
-  ContractInfoV0,
-  ContractInfoV1,
+  DisjointContractInfo,
   IContractInfoV0JSON,
   IContractInfoV1JSON,
+  SingleContractInfo,
 } from './ContractInfo';
 import { DlcAccept } from './DlcAccept';
 import { DlcClose } from './DlcClose';
 import { DlcOffer } from './DlcOffer';
 import { DlcSign } from './DlcSign';
-import { EventDescriptor } from './EventDescriptor';
-import { FundingInput } from './FundingInput';
 import { NodeAnnouncementMessage } from './NodeAnnouncementMessage';
 import { OracleAnnouncement } from './OracleAnnouncement';
 import { OracleAttestation } from './OracleAttestation';
-import { OracleEvent } from './OracleEvent';
-import { OrderAcceptV0 } from './OrderAccept';
-import { OrderOfferV0 } from './OrderOffer';
+import { OrderAccept } from './OrderAccept';
+import { OrderOffer } from './OrderOffer';
 
 export interface IDlcMessage {
   type: number;
@@ -40,10 +35,10 @@ export abstract class DlcMessage {
   ):
     | EnumeratedDescriptor
     | NumericalDescriptor
-    | ContractInfoV0
-    | ContractInfoV1
-    | OrderOfferV0
-    | OrderAcceptV0
+    | SingleContractInfo
+    | DisjointContractInfo
+    | OrderOffer
+    | OrderAccept
     | DlcOffer
     | DlcAccept
     | DlcSign
@@ -59,21 +54,21 @@ export abstract class DlcMessage {
         return EnumeratedDescriptor.deserialize(buf);
       case MessageType.ContractDescriptorV1:
         return NumericalDescriptor.deserialize(buf);
-      case MessageType.ContractInfoV0:
-        return ContractInfoV0.deserialize(buf);
-      case MessageType.ContractInfoV1:
-        return ContractInfoV1.deserialize(buf);
-      case MessageType.OrderOfferV0:
-        return OrderOfferV0.deserialize(buf);
-      case MessageType.OrderAcceptV0:
-        return OrderAcceptV0.deserialize(buf);
-      case MessageType.DlcOfferV0:
+      case MessageType.SingleContractInfo:
+        return SingleContractInfo.deserialize(buf);
+      case MessageType.DisjointContractInfo:
+        return DisjointContractInfo.deserialize(buf);
+      case MessageType.OrderOffer:
+        return OrderOffer.deserialize(buf);
+      case MessageType.OrderAccept:
+        return OrderAccept.deserialize(buf);
+      case MessageType.DlcOffer:
         return DlcOffer.deserialize(buf);
-      case MessageType.DlcAcceptV0:
+      case MessageType.DlcAccept:
         return DlcAccept.deserialize(buf);
-      case MessageType.DlcSignV0:
+      case MessageType.DlcSign:
         return DlcSign.deserialize(buf);
-      case MessageType.DlcCloseV0:
+      case MessageType.DlcClose:
         return DlcClose.deserialize(buf);
       case MessageType.OracleAttestation:
         return OracleAttestation.deserialize(buf);

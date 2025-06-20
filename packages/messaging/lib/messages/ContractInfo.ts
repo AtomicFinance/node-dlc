@@ -11,7 +11,6 @@ import {
   MultiOracleInfo,
   MultiOracleInfoJSON,
   OracleInfo,
-  OracleInfoV0,
   SingleOracleInfo,
   SingleOracleInfoJSON,
 } from './OracleInfoV0';
@@ -85,6 +84,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
    * Creates a SingleContractInfo from JSON data
    * @param json JSON object representing single contract info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): SingleContractInfo {
     const instance = new SingleContractInfo();
 

@@ -34,7 +34,7 @@ import {
  * Updated to support dlcspecs PR #163 format.
  */
 export class DlcAccept implements IDlcMessage {
-  public static type = MessageType.DlcAcceptV0;
+  public static type = MessageType.DlcAccept;
 
   /**
    * Creates a DlcAccept from JSON data (e.g., from test vectors)

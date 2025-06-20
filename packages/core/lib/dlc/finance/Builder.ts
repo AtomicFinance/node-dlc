@@ -4,12 +4,12 @@ import {
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   MessageType,
-  OracleAnnouncementV0,
+  OracleAnnouncement,
   OracleInfoV0,
-  OrderOfferV0,
+  OrderOffer,
   OrderPositionInfoV0,
   PayoutFunctionV0,
-  RoundingIntervalsV0,
+  RoundingIntervals,
 } from '@node-dlc/messaging';
 import {
   BitcoinNetwork,
@@ -103,11 +103,11 @@ export const computeRoundingModulus = (
 /**
  * Get digit decomposition event descriptor from oracle announcement
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @returns {DigitDecompositionEventDescriptorV0} event descriptor
  */
 export const getDigitDecompositionEventDescriptor = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
 ): DigitDecompositionEventDescriptorV0 => {
   if (
     announcement.oracleEvent.eventDescriptor.type !==
@@ -124,24 +124,24 @@ export const getDigitDecompositionEventDescriptor = (
 /**
  * Build an orderoffer for ContractDescriptorV1
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {bigint} totalCollateral total collateral in satoshis
  * @param {bigint} offerCollateral offer collateral in satoshis
  * @param {PayoutFunctionV0} payoutFunction
- * @param {RoundingIntervalsV0} roundingIntervals
+ * @param {RoundingIntervals} roundingIntervals
  * @param {bigint} feePerByte sats/vbyte
  * @param {NetworkName} network
- * @returns {OrderOfferV0} Returns order offer
+ * @returns {OrderOffer} Returns order offer
  */
 export const buildOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   totalCollateral: bigint,
   offerCollateral: bigint,
   payoutFunction: PayoutFunctionV0,
-  roundingIntervals: RoundingIntervalsV0,
+  roundingIntervals: RoundingIntervals,
   feePerByte: bigint,
   network: string,
-): OrderOfferV0 => {
+): OrderOffer => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
   const contractDescriptor = new ContractDescriptorV1();
@@ -157,7 +157,7 @@ export const buildOrderOffer = (
   contractInfo.contractDescriptor = contractDescriptor;
   contractInfo.oracleInfo = oracleInfo;
 
-  const orderOffer = new OrderOfferV0();
+  const orderOffer = new OrderOffer();
 
   orderOffer.chainHash = chainHashFromNetwork(BitcoinNetworks[network]);
   orderOffer.contractInfo = contractInfo;
@@ -173,7 +173,7 @@ export const buildOrderOffer = (
 /**
  * Builds an order offer for a covered call or short put
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {number} contractSize contract size in satoshis
  * @param {number} strikePrice strike price of contract
  * @param {number} premium premium of contract in satoshis
@@ -182,10 +182,10 @@ export const buildOrderOffer = (
  * @param {string} network bitcoin network type
  * @param {string} type call or put
  * @param {number} _totalCollateral total collateral in satoshis (applicable only for short put)
- * @returns {OrderOfferV0} Returns order offer
+ * @returns {OrderOffer} Returns order offer
  */
 export const buildOptionOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   contractSize: Value,
   strikePrice: number,
   premium: Value,
@@ -195,7 +195,7 @@ export const buildOptionOrderOffer = (
   type: 'call' | 'put',
   direction: 'long' | 'short',
   _totalCollateral?: Value,
-): OrderOfferV0 => {
+): OrderOffer => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
   let totalCollateral: bigint;
@@ -204,7 +204,7 @@ export const buildOptionOrderOffer = (
     totalCollateral?: bigint;
   };
 
-  const roundingIntervals = new RoundingIntervalsV0();
+  const roundingIntervals = new RoundingIntervals();
   const roundingMod = computeRoundingModulus(rounding, contractSize);
 
   if (direction === 'short') {
@@ -310,24 +310,24 @@ export const buildOptionOrderOffer = (
 /**
  * Builds an order offer for a covered call
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {number} contractSize contract size in satoshis
  * @param {number} strikePrice strike price of contract
  * @param {number} premium premium of contract in satoshis
  * @param {number} feePerByte sats/vbyte
  * @param {number} rounding rounding interval
  * @param {string} network bitcoin network type
- * @returns {OrderOfferV0} Returns order offer
+ * @returns {OrderOffer} Returns order offer
  */
 export const buildCoveredCallOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   contractSize: Value,
   strikePrice: number,
   premium: Value,
   feePerByte: number,
   rounding: number,
   network: string,
-): OrderOfferV0 => {
+): OrderOffer => {
   return buildOptionOrderOffer(
     announcement,
     contractSize,
@@ -344,7 +344,7 @@ export const buildCoveredCallOrderOffer = (
 /**
  * Builds an order offer for a short put
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {number} contractSize contract size in satoshis
  * @param {number} strikePrice strike price of contract
  * @param {number} totalCollateral total collateral in satoshis
@@ -352,10 +352,10 @@ export const buildCoveredCallOrderOffer = (
  * @param {number} feePerByte sats/vbyte
  * @param {number} rounding rounding interval
  * @param {string} network bitcoin network type
- * @returns {OrderOfferV0} Returns order offer
+ * @returns {OrderOffer} Returns order offer
  */
 export const buildShortPutOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   contractSize: Value,
   strikePrice: number,
   totalCollateral: Value,
@@ -363,7 +363,7 @@ export const buildShortPutOrderOffer = (
   feePerByte: number,
   rounding: number,
   network: string,
-): OrderOfferV0 => {
+): OrderOffer => {
   return buildOptionOrderOffer(
     announcement,
     contractSize,
@@ -381,7 +381,7 @@ export const buildShortPutOrderOffer = (
 /**
  * Builds an order offer for a long call
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {number} contractSize contract size in satoshis
  * @param {number} strikePrice strike price of contract
  * @param {number} maxGain maximum amount that can be gained (totalCollateral)
@@ -389,10 +389,10 @@ export const buildShortPutOrderOffer = (
  * @param {number} feePerByte sats/vbyte
  * @param {number} rounding rounding interval
  * @param {string} network bitcoin network type
- * @returns {OrderOfferV0} Returns order offer
+ * @returns {OrderOffer} Returns order offer
  */
 export const buildLongCallOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   contractSize: Value,
   strikePrice: number,
   maxGain: Value,
@@ -400,7 +400,7 @@ export const buildLongCallOrderOffer = (
   feePerByte: number,
   rounding: number,
   network: string,
-): OrderOfferV0 => {
+): OrderOffer => {
   return buildOptionOrderOffer(
     announcement,
     contractSize,
@@ -418,7 +418,7 @@ export const buildLongCallOrderOffer = (
 /**
  * Builds an order offer for a long put
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {number} contractSize contract size in satoshis
  * @param {number} strikePrice strike price of contract
  * @param {number} maxGain maximum amount that can be gained (totalCollateral)
@@ -426,10 +426,10 @@ export const buildLongCallOrderOffer = (
  * @param {number} feePerByte sats/vbyte
  * @param {number} rounding rounding interval
  * @param {string} network bitcoin network type
- * @returns {OrderOfferV0} Returns order offer
+ * @returns {OrderOffer} Returns order offer
  */
 export const buildLongPutOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   contractSize: Value,
   strikePrice: number,
   maxGain: Value,
@@ -437,7 +437,7 @@ export const buildLongPutOrderOffer = (
   feePerByte: number,
   rounding: number,
   network: string,
-): OrderOfferV0 => {
+): OrderOffer => {
   return buildOptionOrderOffer(
     announcement,
     contractSize,
@@ -455,7 +455,7 @@ export const buildLongPutOrderOffer = (
 /**
  * Builds an order offer for a linear curve
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {Value} offerCollateral offer collateral amount
  * @param {Value} minPayout minimum payout
  * @param {Value} maxPayout maximum payout (also total collateral)
@@ -466,21 +466,21 @@ export const buildLongPutOrderOffer = (
  * @param {BitcoinNetwork} network bitcoin, bitcoin_testnet or bitcoin_regtest
  * @param {DlcParty} [shiftForFees] shift for offerer, acceptor or neither (who should pay fees)
  * @param {Value} [fees] fees to shift
- * @returns {OrderOfferV0}
+ * @returns {OrderOffer}
  */
 export const buildLinearOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   offerCollateral: Value,
   minPayout: Value,
   maxPayout: Value,
   startOutcome: bigint,
   endOutcome: bigint,
   feePerByte: bigint,
-  roundingIntervals: RoundingIntervalsV0,
+  roundingIntervals: RoundingIntervals,
   network: BitcoinNetwork,
   shiftForFees: DlcParty = 'neither',
   fees: Value = Value.fromSats(0),
-): OrderOfferV0 => {
+): OrderOffer => {
   if (maxPayout.lt(minPayout))
     throw Error('maxPayout must be greater than minPayout');
   if (endOutcome < startOutcome)
@@ -530,7 +530,7 @@ export const buildLinearOrderOffer = (
  * numContracts refers to the number of DLCs in the funding transaction
  * if it's not a batch dlc funding transaction, then this is not relevant
  *
- * @param {OracleAnnouncementV0} announcement oracle announcement
+ * @param {OracleAnnouncement} announcement oracle announcement
  * @param {Value} contractSize contract size
  * @param {Value} normalizedMaxLoss maximum amount that can be lost based on 1 BTC contract
  * @param {Value} normalizedMaxGain maximum amount that can be gained based on 1 BTC contract
@@ -543,15 +543,15 @@ export const buildLinearOrderOffer = (
  * @param {number} [numOfferInputs] number of inputs to use
  * @param {number} [numContracts] number of DLCs in the funding transaction
  *
- * @returns {OrderOfferV0}
+ * @returns {OrderOffer}
  */
 export const buildCustomStrategyOrderOffer = (
-  announcement: OracleAnnouncementV0,
+  announcement: OracleAnnouncement,
   contractSize: Value,
   normalizedMaxLoss: Value,
   normalizedMaxGain: Value,
   feePerByte: bigint,
-  roundingIntervals: RoundingIntervalsV0,
+  roundingIntervals: RoundingIntervals,
   network: BitcoinNetwork,
   shiftForFees: DlcParty = 'neither',
   fees_: Value = Value.fromSats(0), // NOTE: fees should be divided before doing batch transaction
@@ -559,7 +559,7 @@ export const buildCustomStrategyOrderOffer = (
   numOfferInputs = 1,
   numContracts = 1,
   skipValidation = false,
-): OrderOfferV0 => {
+): OrderOffer => {
   if (contractSize.eq(Value.zero())) {
     throw Error('contractSize must be greater than 0');
   }
@@ -700,8 +700,8 @@ interface IInterval {
 export const buildRoundingIntervalsFromIntervals = (
   contractSize: Value,
   intervals: IInterval[],
-): RoundingIntervalsV0 => {
-  const roundingIntervals = new RoundingIntervalsV0();
+): RoundingIntervals => {
+  const roundingIntervals = new RoundingIntervals();
 
   roundingIntervals.intervals = intervals.map((interval) => {
     const roundingMod = computeRoundingModulus(interval.rounding, contractSize);

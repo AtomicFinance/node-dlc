@@ -3,10 +3,10 @@ import { expect } from 'chai';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleAttestation } from '../../lib/messages/OracleAttestation';
-import { OracleEventContainerV0 } from '../../lib/messages/OracleEventContainerV0';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
+import { OracleEventContainer } from '../../lib/messages/OracleEventContainer';
 
-describe('OracleEventContainerV0', () => {
+describe('OracleEventContainer', () => {
   function createTestOracleAnnouncement(): OracleAnnouncement {
     const announcement = new OracleAnnouncement();
     announcement.announcementSig = Buffer.from(
@@ -55,7 +55,7 @@ describe('OracleEventContainerV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleEventContainerV0();
+      const instance = new OracleEventContainer();
 
       instance.oracleName = 'Atomic';
       instance.uri = '';
@@ -73,7 +73,7 @@ describe('OracleEventContainerV0', () => {
   describe('deserialize', () => {
     it('deserializes', () => {
       // Create a test instance and serialize it first for round-trip testing
-      const originalInstance = new OracleEventContainerV0();
+      const originalInstance = new OracleEventContainer();
       originalInstance.oracleName = 'Atomic';
       originalInstance.uri = '';
       originalInstance.announcement = createTestOracleAnnouncement();
@@ -82,7 +82,7 @@ describe('OracleEventContainerV0', () => {
 
       // Serialize and then deserialize to ensure round-trip consistency
       const serialized = originalInstance.serialize();
-      const instance = OracleEventContainerV0.deserialize(serialized);
+      const instance = OracleEventContainer.deserialize(serialized);
 
       expect(Number(instance.length)).to.be.greaterThan(0); // Length is calculated automatically
       expect(instance.oracleName).to.equal('Atomic');

@@ -9,13 +9,15 @@ export const PROTOCOL_VERSION = 1;
 // Wire message types (remain unchanged for backward compatibility)
 export enum MessageType {
   // Core DLC Message Types (remain as wire format with u16 prefix)
-  DlcOfferV0 = 42778,
-  DlcAcceptV0 = 42780,
-  DlcSignV0 = 42782,
+  DlcOffer = 42778,
+  DlcAccept = 42780,
+  DlcSign = 42782,
 
   // Legacy contract types (keeping for backward compatibility during transition)
   ContractInfoV0 = 55342,
+  SingleContractInfo = 55342,
   ContractInfoV1 = 55344,
+  DisjointContractInfo = 55344,
 
   ContractDescriptorV0 = 42768,
   ContractDescriptorV1 = 42784,
@@ -34,7 +36,7 @@ export enum MessageType {
   OracleEvent = 55330,
   OracleEventV0 = OracleEvent, // Backward compatibility alias
 
-  OracleEventContainerV0 = 61632,
+  OracleEventContainer = 61632,
 
   EnumEventDescriptorV0 = 55302,
   DigitDecompositionEventDescriptorV0 = 55306,
@@ -60,8 +62,8 @@ export enum MessageType {
   RoundingIntervals = 42788,
   RoundingIntervalsV0 = RoundingIntervals, // Backward compatibility alias
 
-  DlcCloseV0 = 52170, // TODO: Temporary type
-  DlcCancelV0 = 52172,
+  DlcClose = 52170, // TODO: Temporary type
+  DlcCancel = 52172,
 
   /**
    * Dlc Storage Types
@@ -78,8 +80,8 @@ export enum MessageType {
   /**
    * Order Message Types
    */
-  OrderOfferV0 = 62770,
-  OrderAcceptV0 = 62772,
+  OrderOffer = 62770,
+  OrderAccept = 62772,
   OrderMetadataV0 = 62774,
   OrderIrcInfoV0 = 62776,
   OrderPositionInfoV0 = 62778,

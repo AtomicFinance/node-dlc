@@ -15,10 +15,10 @@ export abstract class DlcClose {
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
-      case MessageType.DlcCloseV0:
+      case MessageType.DlcClose:
         return DlcCloseV0.deserialize(buf);
       default:
-        throw new Error(`DLC Close message type must be DlcCloseV0`); // This is a temporary measure while protocol is being developed
+        throw new Error(`DLC Close message type must be DlcClose`); // This is a temporary measure while protocol is being developed
     }
   }
 
@@ -35,7 +35,7 @@ export abstract class DlcClose {
  * Updated to follow DlcOffer architectural patterns.
  */
 export class DlcCloseV0 extends DlcClose implements IDlcMessage {
-  public static type = MessageType.DlcCloseV0;
+  public static type = MessageType.DlcClose;
 
   /**
    * Creates a DlcCloseV0 from JSON data (e.g., from test vectors)
@@ -130,10 +130,10 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
     const type = reader.readUInt16BE(); // read type
 
-    // Validate type matches expected DlcCloseV0 type
-    if (type !== MessageType.DlcCloseV0) {
+    // Validate type matches expected DlcClose type
+    if (type !== MessageType.DlcClose) {
       throw new Error(
-        `Invalid message type. Expected ${MessageType.DlcCloseV0}, got ${type}`,
+        `Invalid message type. Expected ${MessageType.DlcClose}, got ${type}`,
       );
     }
 
