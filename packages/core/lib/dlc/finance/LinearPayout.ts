@@ -47,30 +47,39 @@ const buildPayoutFunction = (
   ]);
 
   const payoutFunction = new PayoutFunctionV0();
-  payoutFunction.endpoint0 = BigInt(0);
-  payoutFunction.endpointPayout0 = minPayout;
-  payoutFunction.extraPrecision0 = 0;
 
-  payoutFunction.pieces.push({
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: startOutcome,
+      outcomePayout: minPayout,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurveMaxLoss.toPayoutCurvePiece(),
-    endpoint: startOutcome,
-    endpointPayout: minPayout,
-    extraPrecision: 0,
   });
 
-  payoutFunction.pieces.push({
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: endOutcome,
+      outcomePayout: maxPayout,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
-    endpoint: endOutcome,
-    endpointPayout: maxPayout,
-    extraPrecision: 0,
   });
 
-  payoutFunction.pieces.push({
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: maxOutcome,
+      outcomePayout: maxPayout,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurveMaxGain.toPayoutCurvePiece(),
-    endpoint: maxOutcome,
-    endpointPayout: maxPayout,
-    extraPrecision: 0,
   });
+
+  payoutFunction.lastEndpoint = {
+    eventOutcome: maxOutcome,
+    outcomePayout: maxPayout,
+    extraPrecision: 0,
+  };
 
   return {
     payoutFunction,
