@@ -3,7 +3,7 @@ import { math, verify } from 'bip-schnorr';
 
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
+import { OracleAnnouncement } from './OracleAnnouncement';
 
 /**
  * Oracle attestation providing signatures over an outcome value.
@@ -13,15 +13,15 @@ import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
  * An attestation from an oracle providing signatures over an outcome value.
  * This is what the oracle publishes when they want to attest to a specific outcome.
  */
-export class OracleAttestationV0 implements IDlcMessage {
-  public static type = MessageType.OracleAttestationV0;
+export class OracleAttestation implements IDlcMessage {
+  public static type = MessageType.OracleAttestation;
 
   /**
-   * Deserializes an oracle_attestation_v0 message
+   * Deserializes an oracle_attestation message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleAttestationV0 {
-    const instance = new OracleAttestationV0();
+  public static deserialize(buf: Buffer): OracleAttestation {
+    const instance = new OracleAttestation();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -51,9 +51,9 @@ export class OracleAttestationV0 implements IDlcMessage {
   }
 
   /**
-   * The type for oracle_attestation_v0 message. oracle_attestation_v0 = 55400
+   * The type for oracle_attestation message. oracle_attestation = 55400
    */
-  public type = OracleAttestationV0.type;
+  public type = OracleAttestation.type;
 
   public length: bigint;
 
@@ -75,7 +75,7 @@ export class OracleAttestationV0 implements IDlcMessage {
    * @param announcement The corresponding oracle announcement for validation (optional)
    * @throws Will throw an error if validation fails
    */
-  public validate(announcement?: OracleAnnouncementV0): void {
+  public validate(announcement?: OracleAnnouncement): void {
     // Basic structure validation
     if (this.signatures.length !== this.outcomes.length) {
       throw new Error('Number of signatures must match number of outcomes');
@@ -136,9 +136,7 @@ export class OracleAttestationV0 implements IDlcMessage {
    * @param announcement The oracle announcement to validate against
    * @throws Will throw an error if validation fails
    */
-  private validateAgainstAnnouncement(
-    announcement: OracleAnnouncementV0,
-  ): void {
+  private validateAgainstAnnouncement(announcement: OracleAnnouncement): void {
     // Validate oracle public key matches announcement
     if (!this.oraclePubkey.equals(announcement.oraclePubkey)) {
       throw new Error('Oracle public key must match announcement');
@@ -181,9 +179,9 @@ export class OracleAttestationV0 implements IDlcMessage {
   }
 
   /**
-   * Converts oracle_attestation_v0 to JSON
+   * Converts oracle_attestation to JSON
    */
-  public toJSON(): OracleAttestationV0JSON {
+  public toJSON(): OracleAttestationJSON {
     return {
       type: this.type,
       eventId: this.eventId,
@@ -194,7 +192,7 @@ export class OracleAttestationV0 implements IDlcMessage {
   }
 
   /**
-   * Serializes the oracle_attestation_v0 message into a Buffer
+   * Serializes the oracle_attestation message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -223,7 +221,7 @@ export class OracleAttestationV0 implements IDlcMessage {
   }
 }
 
-export interface OracleAttestationV0JSON {
+export interface OracleAttestationJSON {
   type: number;
   eventId: string;
   oraclePubkey: string;

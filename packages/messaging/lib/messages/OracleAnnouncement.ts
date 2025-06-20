@@ -4,7 +4,7 @@ import { math, verify } from 'bip-schnorr';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
+import { IOracleEventJSON, OracleEvent } from './OracleEvent';
 
 /**
  * Oracle announcement that describe an event and the way that an oracle will
@@ -21,30 +21,56 @@ import { IOracleEventV0JSON, OracleEventV0 } from './OracleEventV0';
  * from an un-trusted peer while being guaranteed that it originates from a
  * given oracle.
  */
-export class OracleAnnouncementV0 implements IDlcMessage {
-  public static type = MessageType.OracleAnnouncementV0;
+export class OracleAnnouncement implements IDlcMessage {
+  public static type = MessageType.OracleAnnouncement;
 
   /**
-   * Deserializes an oracle_announcement_v0 message
+   * Creates an OracleAnnouncement from JSON data
+   * @param json JSON object representing oracle announcement
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OracleAnnouncement {
+    const instance = new OracleAnnouncement();
+
+    // Handle different field name variations
+    instance.announcementSig = Buffer.from(
+      json.announcementSignature ||
+        json.announcementSig ||
+        json.announcement_signature,
+      'hex',
+    );
+    instance.oraclePubkey = Buffer.from(
+      json.oraclePublicKey || json.oraclePubkey || json.oracle_public_key,
+      'hex',
+    );
+    instance.oracleEvent = OracleEvent.fromJSON(
+      json.oracleEvent || json.oracle_event,
+    );
+
+    return instance;
+  }
+
+  /**
+   * Deserializes an oracle_announcement message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleAnnouncementV0 {
-    const instance = new OracleAnnouncementV0();
+  public static deserialize(buf: Buffer): OracleAnnouncement {
+    const instance = new OracleAnnouncement();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
     instance.announcementSig = reader.readBytes(64);
     instance.oraclePubkey = reader.readBytes(32);
-    instance.oracleEvent = OracleEventV0.deserialize(getTlv(reader));
+    instance.oracleEvent = OracleEvent.deserialize(getTlv(reader));
 
     return instance;
   }
 
   /**
-   * The type for oracle_announcement_v0 message. oracle_announcement_v0 = 55332
+   * The type for oracle_announcement message. oracle_announcement = 55332
    */
-  public type = OracleAnnouncementV0.type;
+  public type = OracleAnnouncement.type;
 
   public length: bigint;
 
@@ -55,7 +81,7 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   public oraclePubkey: Buffer;
 
   /** The description of the event and attesting. */
-  public oracleEvent: OracleEventV0;
+  public oracleEvent: OracleEvent;
 
   /**
    * Validates the oracle announcement according to rust-dlc specification.
@@ -113,19 +139,18 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 
   /**
-   * Converts oracle_announcement_v0 to JSON
+   * Converts oracle_announcement to JSON (canonical rust-dlc format)
    */
-  public toJSON(): OracleAnnouncementV0JSON {
+  public toJSON(): OracleAnnouncementJSON {
     return {
-      type: this.type,
-      announcementSig: this.announcementSig.toString('hex'),
-      oraclePubkey: this.oraclePubkey.toString('hex'),
+      announcementSignature: this.announcementSig.toString('hex'),
+      oraclePublicKey: this.oraclePubkey.toString('hex'),
       oracleEvent: this.oracleEvent.toJSON(),
     };
   }
 
   /**
-   * Serializes the oracle_announcement_v0 message into a Buffer
+   * Serializes the oracle_announcement message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -143,9 +168,9 @@ export class OracleAnnouncementV0 implements IDlcMessage {
   }
 }
 
-export interface OracleAnnouncementV0JSON {
-  type: number;
-  announcementSig: string;
-  oraclePubkey: string;
-  oracleEvent: IOracleEventV0JSON;
+export interface OracleAnnouncementJSON {
+  type?: number; // Made optional for rust-dlc compatibility
+  announcementSignature: string; // Canonical field name
+  oraclePublicKey: string; // Canonical field name
+  oracleEvent: IOracleEventJSON;
 }

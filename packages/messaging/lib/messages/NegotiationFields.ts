@@ -1,10 +1,9 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
-import { IRoundingIntervalsV0JSON } from './RoundingIntervalsV0';
+import { RoundingIntervals } from './RoundingIntervals';
+import { IRoundingIntervalsJSON } from './RoundingIntervals';
 
 export abstract class NegotiationFields {
   public static deserialize(
@@ -111,11 +110,9 @@ export class NegotiationFieldsV1
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
 
-    // Read remaining bytes as raw RoundingIntervalsV0 data (not TLV wrapped)
+    // Read remaining bytes as raw RoundingIntervals data (not TLV wrapped)
     const remainingBytes = reader.readBytes();
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      remainingBytes,
-    );
+    instance.roundingIntervals = RoundingIntervals.deserialize(remainingBytes);
 
     return instance;
   }
@@ -127,7 +124,7 @@ export class NegotiationFieldsV1
 
   public length: bigint;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervals;
 
   /**
    * Converts negotiation_fields_v1 to JSON
@@ -244,7 +241,7 @@ export interface INegotiationFieldsV0JSON {
 
 export interface INegotiationFieldsV1JSON {
   type: number;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsJSON;
 }
 
 export interface INegotiationFieldsV2JSON {

@@ -23,6 +23,29 @@ export abstract class EventDescriptor {
     }
   }
 
+  /**
+   * Creates an EventDescriptor from JSON data
+   * @param json JSON object representing event descriptor
+   */
+  public static fromJSON(json: any): EventDescriptor {
+    if (!json) {
+      throw new Error('eventDescriptor is required');
+    }
+
+    // Check if it's an enum event or digit decomposition event
+    if (json.enumEvent || json.enum_event) {
+      return EnumEventDescriptorV0.fromJSON(json.enumEvent || json.enum_event);
+    } else if (json.digitDecompositionEvent || json.digit_decomposition_event) {
+      return DigitDecompositionEventDescriptorV0.fromJSON(
+        json.digitDecompositionEvent || json.digit_decomposition_event,
+      );
+    } else {
+      throw new Error(
+        'eventDescriptor must have either enumEvent or digitDecompositionEvent',
+      );
+    }
+  }
+
   public abstract type: number;
 
   public abstract length: bigint;
@@ -41,6 +64,16 @@ export class EnumEventDescriptorV0
   extends EventDescriptor
   implements IDlcMessage {
   public static type = MessageType.EnumEventDescriptorV0;
+
+  /**
+   * Creates an EnumEventDescriptorV0 from JSON data
+   * @param json JSON object representing enum event descriptor
+   */
+  public static fromJSON(json: any): EnumEventDescriptorV0 {
+    const instance = new EnumEventDescriptorV0();
+    instance.outcomes = json.outcomes || [];
+    return instance;
+  }
 
   /**
    * Deserializes an enum_event_descriptor_v0 message
@@ -73,13 +106,14 @@ export class EnumEventDescriptorV0
   public outcomes: string[] = [];
 
   /**
-   * Converts enum_event_descriptor_v0 to JSON
+   * Converts enum_event_descriptor_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IEnumEventDescriptorV0JSON {
     return {
-      type: this.type,
-      outcomes: this.outcomes,
-    };
+      enumEvent: {
+        outcomes: this.outcomes,
+      },
+    } as any;
   }
 
   /**
@@ -111,6 +145,20 @@ export class DigitDecompositionEventDescriptorV0
   extends EventDescriptor
   implements IDlcMessage {
   public static type = MessageType.DigitDecompositionEventDescriptorV0;
+
+  /**
+   * Creates a DigitDecompositionEventDescriptorV0 from JSON data
+   * @param json JSON object representing digit decomposition event descriptor
+   */
+  public static fromJSON(json: any): DigitDecompositionEventDescriptorV0 {
+    const instance = new DigitDecompositionEventDescriptorV0();
+    instance.base = json.base || 10;
+    instance.isSigned = json.isSigned || json.is_signed || false;
+    instance.unit = json.unit || '';
+    instance.precision = json.precision || 0;
+    instance.nbDigits = json.nbDigits || json.nb_digits || 0;
+    return instance;
+  }
 
   /**
    * Deserializes an digit_decomposition_event_descriptor_v0 message
@@ -173,17 +221,18 @@ export class DigitDecompositionEventDescriptorV0
   }
 
   /**
-   * Converts digit_decomposition_event_descriptor_v0 to JSON
+   * Converts digit_decomposition_event_descriptor_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
     return {
-      type: this.type,
-      base: this.base,
-      isSigned: this.isSigned,
-      unit: this.unit,
-      precision: this.precision,
-      nbDigits: this.nbDigits,
-    };
+      digitDecompositionEvent: {
+        base: this.base,
+        isSigned: this.isSigned,
+        unit: this.unit,
+        precision: this.precision,
+        nbDigits: this.nbDigits,
+      },
+    } as any;
   }
 
   /**

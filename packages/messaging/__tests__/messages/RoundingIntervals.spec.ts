@@ -1,11 +1,11 @@
 import { expect } from 'chai';
 
-import { RoundingIntervalsV0 } from '../../lib';
+import { RoundingIntervals } from '../../lib';
 
-describe('RoundingIntervalsV0', () => {
+describe('RoundingIntervals', () => {
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new RoundingIntervalsV0();
+      const instance = new RoundingIntervals();
 
       const intervals = [
         { beginInterval: 1n, roundingMod: 2n },
@@ -33,7 +33,7 @@ describe('RoundingIntervalsV0', () => {
         '0000000000000004'   // rounding_mod (u64)
       , 'hex'); // prettier-ignore
 
-      const instance = RoundingIntervalsV0.deserialize(buf);
+      const instance = RoundingIntervals.deserialize(buf);
 
       expect(instance.intervals.length).to.eq(2); // Check number of intervals instead of instance.length
       expect(instance.intervals[0].beginInterval).to.eq(1n);
@@ -44,7 +44,7 @@ describe('RoundingIntervalsV0', () => {
   });
 
   describe('validate', () => {
-    const instance = new RoundingIntervalsV0();
+    const instance = new RoundingIntervals();
 
     beforeEach(() => {
       const intervals = [

@@ -3,22 +3,22 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { OracleAnnouncementV0 } from './OracleAnnouncementV0';
-import { OracleAttestationV0 } from './OracleAttestationV0';
+import { OracleAnnouncement } from './OracleAnnouncement';
+import { OracleAttestation } from './OracleAttestation';
 
 /**
  * OracleEventContainer contains information about the oracles to be used in
  * executing a DLC.
  */
-export class OracleEventContainerV0 implements IDlcMessage {
-  public static type = MessageType.OracleEventContainerV0;
+export class OracleEventContainer implements IDlcMessage {
+  public static type = MessageType.OracleEventContainer;
 
   /**
    * Deserializes an oracle_info_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleEventContainerV0 {
-    const instance = new OracleEventContainerV0();
+  public static deserialize(buf: Buffer): OracleEventContainer {
+    const instance = new OracleEventContainer();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -32,9 +32,9 @@ export class OracleEventContainerV0 implements IDlcMessage {
     const uriBuf = reader.readBytes(Number(uriLength));
     instance.uri = uriBuf.toString();
 
-    instance.announcement = OracleAnnouncementV0.deserialize(getTlv(reader));
+    instance.announcement = OracleAnnouncement.deserialize(getTlv(reader));
 
-    instance.attestation = OracleAttestationV0.deserialize(getTlv(reader));
+    instance.attestation = OracleAttestation.deserialize(getTlv(reader));
 
     const outcomeLength = reader.readBigSize();
     const outcomeBuf = reader.readBytes(Number(outcomeLength));
@@ -46,7 +46,7 @@ export class OracleEventContainerV0 implements IDlcMessage {
   /**
    * The type for oracle_info_v0 message. oracle_info_v0 = 42770
    */
-  public type = OracleEventContainerV0.type;
+  public type = OracleEventContainer.type;
 
   public length: bigint;
 
@@ -54,9 +54,9 @@ export class OracleEventContainerV0 implements IDlcMessage {
 
   public uri: string;
 
-  public announcement: OracleAnnouncementV0;
+  public announcement: OracleAnnouncement;
 
-  public attestation: OracleAttestationV0;
+  public attestation: OracleAttestation;
 
   public outcome: string;
 

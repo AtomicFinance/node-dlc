@@ -2,8 +2,8 @@ import { sha256 } from '@node-dlc/crypto';
 import {
   DlcMessage,
   NodeAnnouncementMessage,
-  OrderAcceptV0,
-  OrderOfferV0,
+  OrderAccept,
+  OrderOffer,
 } from '@node-dlc/messaging';
 
 import { ChannelType } from './ChannelType';
@@ -39,18 +39,18 @@ export class IrcOrderManager extends IrcManager {
   }
 
   public send(
-    msg: OrderOfferV0 | OrderAcceptV0 | NodeAnnouncementMessage,
+    msg: OrderOffer | OrderAccept | NodeAnnouncementMessage,
     tempOrderId?: Buffer,
   ): void {
     switch (msg.type) {
-      case OrderOfferV0.type:
+      case OrderOffer.type:
         this.say(msg.serialize());
         break;
-      case OrderAcceptV0.type:
+      case OrderAccept.type:
         this.say(
           msg.serialize(),
           this.receivedOrders.get(
-            (msg as OrderAcceptV0).tempOrderId.toString('hex'),
+            (msg as OrderAccept).tempOrderId.toString('hex'),
           ),
         );
         break;
@@ -72,11 +72,11 @@ export class IrcOrderManager extends IrcManager {
       const dlcMessage = DlcMessage.deserialize(buf);
 
       switch (dlcMessage.type) {
-        case OrderOfferV0.type:
+        case OrderOffer.type:
           this.receivedOrders.set(sha256(buf).toString('hex'), from);
           this.emit('orderoffermessage', from, to, msg);
           break;
-        case OrderAcceptV0.type:
+        case OrderAccept.type:
           this.emit('orderacceptmessage', from, to, msg);
           break;
         case NodeAnnouncementMessage.type:

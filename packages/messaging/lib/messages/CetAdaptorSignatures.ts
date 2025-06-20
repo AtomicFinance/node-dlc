@@ -4,25 +4,24 @@ import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
 /**
- * CetAdaptorSignatures V0 contains CET signatures and any necessary
+ * CetAdaptorSignatures contains CET signatures and any necessary
  * information linking the signatures to their corresponding outcome
  */
-export class CetAdaptorSignaturesV0 implements IDlcMessage {
-  public static type = MessageType.CetAdaptorSignaturesV0;
+export class CetAdaptorSignatures implements IDlcMessage {
+  public static type = MessageType.CetAdaptorSignatures;
 
   /**
-   * Deserializes a cet_adaptor_signature_v0 message
+   * Deserializes a cet_adaptor_signature message
    * @param buf
    */
-  public static deserialize(buf: Buffer): CetAdaptorSignaturesV0 {
-    const instance = new CetAdaptorSignaturesV0();
+  public static deserialize(buf: Buffer): CetAdaptorSignatures {
+    const instance = new CetAdaptorSignatures();
     const reader = new BufferReader(buf);
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    reader.readBigSize(); // nb_signatures
+    const nbSignatures = Number(reader.readBigSize()); // nb_signatures
 
-    while (!reader.eof) {
+    // Read exactly nbSignatures * (65 + 97) bytes to match serialize format
+    for (let i = 0; i < nbSignatures; i++) {
       const encryptedSig = reader.readBytes(65);
       const dleqProof = reader.readBytes(97);
       instance.sigs.push({ encryptedSig, dleqProof });
@@ -34,22 +33,22 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
   /**
    * The type for cet_adaptor_signature message. cet_adaptor_signature = 42774
    */
-  public type = CetAdaptorSignaturesV0.type;
+  public type = CetAdaptorSignatures.type;
 
   public length: bigint;
 
   public sigs: ISig[] = [];
 
   /**
-   * Converts cet_adaptor_signature to JSON
+   * Converts cet_adaptor_signature to JSON (canonical rust-dlc format)
    */
-  public toJSON(): ICetAdaptorSignaturesV0JSON {
+  public toJSON(): ICetAdaptorSignaturesJSON {
     return {
-      type: this.type,
-      sigs: this.sigs.map((sig) => {
+      ecdsaAdaptorSignatures: this.sigs.map((sig) => {
+        // Combine encryptedSig and dleqProof into single signature field as expected by rust-dlc
+        const signature = Buffer.concat([sig.encryptedSig, sig.dleqProof]);
         return {
-          encryptedSig: sig.encryptedSig.toString('hex'),
-          dleqProof: sig.dleqProof.toString('hex'),
+          signature: signature.toString('hex'),
         };
       }),
     };
@@ -60,7 +59,7 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
+    // writer.writeBigSize(this.type);
 
     const dataWriter = new BufferWriter();
     dataWriter.writeBigSize(this.sigs.length);
@@ -70,7 +69,7 @@ export class CetAdaptorSignaturesV0 implements IDlcMessage {
       dataWriter.writeBytes(sig.dleqProof);
     }
 
-    writer.writeBigSize(dataWriter.size);
+    // writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
     return writer.toBuffer();
   }
@@ -81,12 +80,10 @@ interface ISig {
   dleqProof: Buffer;
 }
 
-export interface ICetAdaptorSignaturesV0JSON {
-  type: number;
-  sigs: ISigJSON[];
+export interface ICetAdaptorSignaturesJSON {
+  ecdsaAdaptorSignatures: ISigJSON[];
 }
 
 export interface ISigJSON {
-  encryptedSig: string;
-  dleqProof: string;
+  signature: string;
 }

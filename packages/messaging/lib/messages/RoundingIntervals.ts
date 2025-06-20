@@ -7,15 +7,44 @@ import { IDlcMessage } from './DlcMessage';
  * RoundingIntervals defines rounding intervals for numeric outcome contracts.
  * Updated to match dlcspecs format (no longer uses TLV).
  */
-export class RoundingIntervalsV0 implements IDlcMessage {
-  public static type = MessageType.RoundingIntervalsV0;
+export class RoundingIntervals implements IDlcMessage {
+  public static type = MessageType.RoundingIntervals;
+
+  /**
+   * Creates a RoundingIntervals from JSON data
+   * @param json JSON object representing rounding intervals
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): RoundingIntervals {
+    const instance = new RoundingIntervals();
+
+    // Helper function to safely convert to BigInt from various input types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toBigInt = (value: any): bigint => {
+      if (value === null || value === undefined) return BigInt(0);
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(value);
+      return BigInt(0);
+    };
+
+    const intervals = json.intervals || [];
+    instance.intervals = intervals.map((interval: any) => ({
+      beginInterval: toBigInt(
+        interval.beginInterval || interval.begin_interval,
+      ),
+      roundingMod: toBigInt(interval.roundingMod || interval.rounding_mod),
+    }));
+
+    return instance;
+  }
 
   /**
    * Deserializes a rounding_intervals message
    * @param buf
    */
-  public static deserialize(buf: Buffer): RoundingIntervalsV0 {
-    const instance = new RoundingIntervalsV0();
+  public static deserialize(buf: Buffer): RoundingIntervals {
+    const instance = new RoundingIntervals();
     const reader = new BufferReader(buf);
 
     const numRoundingIntervals = Number(reader.readBigSize());
@@ -33,7 +62,7 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   /**
    * The type for rounding_intervals message. rounding_intervals = 42788
    */
-  public type = RoundingIntervalsV0.type;
+  public type = RoundingIntervals.type;
 
   public intervals: IInterval[] = [];
 
@@ -63,9 +92,8 @@ export class RoundingIntervalsV0 implements IDlcMessage {
   /**
    * Converts rounding_intervals to JSON
    */
-  public toJSON(): IRoundingIntervalsV0JSON {
+  public toJSON(): IRoundingIntervalsJSON {
     return {
-      type: this.type,
       intervals: this.intervals.map((interval) => {
         return {
           beginInterval: Number(interval.beginInterval),
@@ -102,7 +130,7 @@ interface IIntervalJSON {
   roundingMod: number;
 }
 
-export interface IRoundingIntervalsV0JSON {
-  type: number;
+export interface IRoundingIntervalsJSON {
+  type?: number; // Optional for rust-dlc compatibility
   intervals: IIntervalJSON[];
 }

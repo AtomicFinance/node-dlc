@@ -3,23 +3,20 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { ContractDescriptorType, MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 import { PayoutFunction, PayoutFunctionV0JSON } from './PayoutFunction';
-import {
-  IRoundingIntervalsV0JSON,
-  RoundingIntervalsV0,
-} from './RoundingIntervalsV0';
+import { IRoundingIntervalsJSON, RoundingIntervals } from './RoundingIntervals';
 
 export abstract class ContractDescriptor {
   public static deserialize(
     buf: Buffer,
-  ): EnumeratedContractDescriptor | NumericOutcomeContractDescriptor {
+  ): EnumeratedDescriptor | NumericalDescriptor {
     const reader = new BufferReader(buf);
     const typeId = Number(reader.readBigSize());
 
     switch (typeId) {
       case ContractDescriptorType.Enumerated:
-        return EnumeratedContractDescriptor.deserialize(buf);
+        return EnumeratedDescriptor.deserialize(buf);
       case ContractDescriptorType.NumericOutcome:
-        return NumericOutcomeContractDescriptor.deserialize(buf);
+        return NumericalDescriptor.deserialize(buf);
       default:
         throw new Error(
           `Contract descriptor type must be Enumerated (0) or NumericOutcome (1), got ${typeId}`,
@@ -27,11 +24,45 @@ export abstract class ContractDescriptor {
     }
   }
 
+  /**
+   * Creates a ContractDescriptor from JSON data (e.g., from test vectors)
+   * @param json JSON object representing a contract descriptor
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): ContractDescriptor {
+    if (!json) {
+      throw new Error('contractDescriptor is required');
+    }
+
+    // Handle enumerated contract descriptor
+    if (
+      json.enumeratedContractDescriptor ||
+      json.enumerated_contract_descriptor
+    ) {
+      return EnumeratedDescriptor.fromJSON(
+        json.enumeratedContractDescriptor ||
+          json.enumerated_contract_descriptor,
+      );
+    }
+    // Handle numeric outcome contract descriptor
+    else if (
+      json.numericOutcomeContractDescriptor ||
+      json.numeric_outcome_contract_descriptor
+    ) {
+      return NumericalDescriptor.fromJSON(
+        json.numericOutcomeContractDescriptor ||
+          json.numeric_outcome_contract_descriptor,
+      );
+    } else {
+      throw new Error(
+        'contractDescriptor must have either enumeratedContractDescriptor or numericOutcomeContractDescriptor',
+      );
+    }
+  }
+
   public abstract contractDescriptorType: ContractDescriptorType;
   public abstract type: number; // For backward compatibility
-  public abstract toJSON():
-    | EnumeratedContractDescriptorJSON
-    | NumericOutcomeContractDescriptorJSON;
+  public abstract toJSON(): EnumeratedDescriptorJSON | NumericalDescriptorJSON;
   public abstract serialize(): Buffer;
 }
 
@@ -40,17 +71,35 @@ export abstract class ContractDescriptor {
  * and their corresponding payouts (for enumerated outcomes).
  * This corresponds to the previous ContractDescriptorV0.
  */
-export class EnumeratedContractDescriptor
+export class EnumeratedDescriptor
   extends ContractDescriptor
   implements IDlcMessage {
   public static contractDescriptorType = ContractDescriptorType.Enumerated;
 
   /**
+   * Creates an EnumeratedContractDescriptor from JSON data
+   * @param json JSON object representing an enumerated contract descriptor
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): EnumeratedDescriptor {
+    const instance = new EnumeratedDescriptor();
+
+    const payouts = json.payouts || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    instance.outcomes = payouts.map((payout: any) => ({
+      outcome: payout.outcome,
+      localPayout: BigInt(payout.offerPayout || 0), // Use canonical offerPayout field
+    }));
+
+    return instance;
+  }
+
+  /**
    * Deserializes an enumerated_contract_descriptor message
    * @param buf
    */
-  public static deserialize(buf: Buffer): EnumeratedContractDescriptor {
-    const instance = new EnumeratedContractDescriptor();
+  public static deserialize(buf: Buffer): EnumeratedDescriptor {
+    const instance = new EnumeratedDescriptor();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type (0)
@@ -85,17 +134,17 @@ export class EnumeratedContractDescriptor
   /**
    * Converts enumerated_contract_descriptor to JSON
    */
-  public toJSON(): EnumeratedContractDescriptorJSON {
+  public toJSON(): EnumeratedDescriptorJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      contractDescriptorType: this.contractDescriptorType,
-      outcomes: this.outcomes.map((outcome) => {
-        return {
+      enumeratedContractDescriptor: {
+        payouts: this.outcomes.map((outcome) => ({
           outcome: outcome.outcome,
-          localPayout: Number(outcome.localPayout),
-        };
-      }),
-    };
+          offerPayout: Number(outcome.localPayout), // Use offerPayout to match Rust
+        })),
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
   }
 
   /**
@@ -122,17 +171,40 @@ export class EnumeratedContractDescriptor
  * and their corresponding payouts (for numeric outcomes).
  * This corresponds to the previous ContractDescriptorV1.
  */
-export class NumericOutcomeContractDescriptor
+export class NumericalDescriptor
   extends ContractDescriptor
   implements IDlcMessage {
   public static contractDescriptorType = ContractDescriptorType.NumericOutcome;
 
   /**
+   * Creates a NumericOutcomeContractDescriptor from JSON data
+   * @param json JSON object representing a numeric outcome contract descriptor
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): NumericalDescriptor {
+    const instance = new NumericalDescriptor();
+
+    instance.numDigits = json.numDigits || json.num_digits || 0;
+
+    // Parse payout function using proper fromJSON method
+    instance.payoutFunction = PayoutFunction.fromJSON(
+      json.payoutFunction || json.payout_function,
+    );
+
+    // Parse rounding intervals using proper fromJSON method
+    instance.roundingIntervals = RoundingIntervals.fromJSON(
+      json.roundingIntervals || json.rounding_intervals,
+    );
+
+    return instance;
+  }
+
+  /**
    * Deserializes a numeric_outcome_contract_descriptor message
    * @param buf
    */
-  public static deserialize(buf: Buffer): NumericOutcomeContractDescriptor {
-    const instance = new NumericOutcomeContractDescriptor();
+  public static deserialize(buf: Buffer): NumericalDescriptor {
+    const instance = new NumericalDescriptor();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type (1)
@@ -141,7 +213,7 @@ export class NumericOutcomeContractDescriptor
     // Parse payout function - need to calculate its size to avoid consuming all bytes
     const payoutFunctionStartPos = reader.position;
     const tempPayoutFunction = PayoutFunction.deserialize(
-      reader.buffer.slice(reader.position),
+      reader.buffer.subarray(reader.position),
     );
     instance.payoutFunction = tempPayoutFunction;
 
@@ -150,8 +222,8 @@ export class NumericOutcomeContractDescriptor
     reader.position = payoutFunctionStartPos + payoutFunctionSize;
 
     // Parse remaining bytes as rounding intervals
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      reader.buffer.slice(reader.position),
+    instance.roundingIntervals = RoundingIntervals.deserialize(
+      reader.buffer.subarray(reader.position),
     );
 
     return instance;
@@ -171,7 +243,7 @@ export class NumericOutcomeContractDescriptor
 
   public payoutFunction: PayoutFunction;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervals;
 
   /**
    * Validates correctness of all fields in the message
@@ -185,14 +257,15 @@ export class NumericOutcomeContractDescriptor
   /**
    * Converts numeric_outcome_contract_descriptor to JSON
    */
-  public toJSON(): NumericOutcomeContractDescriptorJSON {
+  public toJSON(): NumericalDescriptorJSON {
+    // Return enum variant format for Rust compatibility
     return {
-      type: this.type,
-      contractDescriptorType: this.contractDescriptorType,
-      numDigits: this.numDigits,
-      payoutFunction: this.payoutFunction.toJSON(),
-      roundingIntervals: this.roundingIntervals.toJSON(),
-    };
+      numericOutcomeContractDescriptor: {
+        numDigits: this.numDigits,
+        payoutFunction: this.payoutFunction.toJSON(),
+        roundingIntervals: this.roundingIntervals.toJSON(),
+      },
+    } as any;
   }
 
   /**
@@ -211,10 +284,10 @@ export class NumericOutcomeContractDescriptor
 }
 
 // Legacy support - keeping old class names as aliases
-export const ContractDescriptorV0 = EnumeratedContractDescriptor;
-export const ContractDescriptorV1 = NumericOutcomeContractDescriptor;
-export type ContractDescriptorV0 = EnumeratedContractDescriptor;
-export type ContractDescriptorV1 = NumericOutcomeContractDescriptor;
+export const ContractDescriptorV0 = EnumeratedDescriptor;
+export const ContractDescriptorV1 = NumericalDescriptor;
+export type ContractDescriptorV0 = EnumeratedDescriptor;
+export type ContractDescriptorV1 = NumericalDescriptor;
 
 interface IOutcome {
   outcome: string;
@@ -226,20 +299,20 @@ interface IOutcomeJSON {
   localPayout: number;
 }
 
-export interface EnumeratedContractDescriptorJSON {
-  type: number;
-  contractDescriptorType: ContractDescriptorType;
+export interface EnumeratedDescriptorJSON {
+  type?: number; // Made optional for rust-dlc compatibility
+  contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
   outcomes: IOutcomeJSON[];
 }
 
-export interface NumericOutcomeContractDescriptorJSON {
-  type: number;
-  contractDescriptorType: ContractDescriptorType;
+export interface NumericalDescriptorJSON {
+  type?: number; // Made optional for rust-dlc compatibility
+  contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
   numDigits: number;
   payoutFunction: PayoutFunctionV0JSON;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsJSON;
 }
 
 // Legacy interfaces for backward compatibility
-export type ContractDescriptorV0JSON = EnumeratedContractDescriptorJSON;
-export type ContractDescriptorV1JSON = NumericOutcomeContractDescriptorJSON;
+export type ContractDescriptorV0JSON = EnumeratedDescriptorJSON;
+export type ContractDescriptorV1JSON = NumericalDescriptorJSON;

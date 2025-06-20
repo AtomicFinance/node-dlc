@@ -9,13 +9,15 @@ export const PROTOCOL_VERSION = 1;
 // Wire message types (remain unchanged for backward compatibility)
 export enum MessageType {
   // Core DLC Message Types (remain as wire format with u16 prefix)
-  DlcOfferV0 = 42778,
-  DlcAcceptV0 = 42780,
-  DlcSignV0 = 42782,
+  DlcOffer = 42778,
+  DlcAccept = 42780,
+  DlcSign = 42782,
 
   // Legacy contract types (keeping for backward compatibility during transition)
   ContractInfoV0 = 55342,
+  SingleContractInfo = 55342,
   ContractInfoV1 = 55344,
+  DisjointContractInfo = 55344,
 
   ContractDescriptorV0 = 42768,
   ContractDescriptorV1 = 42784,
@@ -27,11 +29,14 @@ export enum MessageType {
   OracleParamsV0 = 55338,
 
   // Oracle message types (remain as TLV for backward compatibility)
-  OracleAnnouncementV0 = 55332,
-  OracleAttestationV0 = 55400,
-  OracleEventV0 = 55330,
+  OracleAnnouncement = 55332,
+  OracleAnnouncementV0 = OracleAnnouncement, // Backward compatibility alias
+  OracleAttestation = 55400,
+  OracleAttestationV0 = OracleAttestation, // Backward compatibility alias
+  OracleEvent = 55330,
+  OracleEventV0 = OracleEvent, // Backward compatibility alias
 
-  OracleEventContainerV0 = 61632,
+  OracleEventContainer = 61632,
 
   EnumEventDescriptorV0 = 55302,
   DigitDecompositionEventDescriptorV0 = 55306,
@@ -42,9 +47,11 @@ export enum MessageType {
 
   FundingInputV0 = 42772,
 
-  CetAdaptorSignaturesV0 = 42774,
+  CetAdaptorSignatures = 42774,
+  CetAdaptorSignaturesV0 = CetAdaptorSignatures, // Backward compatibility alias
 
-  FundingSignaturesV0 = 42776,
+  FundingSignatures = 42776,
+  FundingSignaturesV0 = FundingSignatures, // Backward compatibility alias
 
   PayoutFunctionV0 = 42790,
 
@@ -52,10 +59,11 @@ export enum MessageType {
   HyperbolaPayoutCurvePiece = 42794, // TODO: Temporary type
   OldHyperbolaPayoutCurvePiece = 42796, // TODO: Remove once all existing contracts have passed
 
-  RoundingIntervalsV0 = 42788,
+  RoundingIntervals = 42788,
+  RoundingIntervalsV0 = RoundingIntervals, // Backward compatibility alias
 
-  DlcCloseV0 = 52170, // TODO: Temporary type
-  DlcCancelV0 = 52172,
+  DlcClose = 52170, // TODO: Temporary type
+  DlcCancel = 52172,
 
   /**
    * Dlc Storage Types
@@ -72,8 +80,8 @@ export enum MessageType {
   /**
    * Order Message Types
    */
-  OrderOfferV0 = 62770,
-  OrderAcceptV0 = 62772,
+  OrderOffer = 62770,
+  OrderAccept = 62772,
   OrderMetadataV0 = 62774,
   OrderIrcInfoV0 = 62776,
   OrderPositionInfoV0 = 62778,

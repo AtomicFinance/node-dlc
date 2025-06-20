@@ -41,10 +41,90 @@ export const LOCKTIME_THRESHOLD = 500000000;
  * Updated to support dlcspecs PR #163 format.
  */
 export class DlcOffer implements IDlcMessage {
-  public static type = MessageType.DlcOfferV0;
+  public static type = MessageType.DlcOffer;
 
   /**
-   * Deserializes an offer_dlc message
+   * Creates a DlcOffer from JSON data (e.g., from test vectors)
+   * Handles both our internal format and external test vector formats
+   * @param json JSON object representing a DLC offer
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): DlcOffer {
+    const instance = new DlcOffer();
+
+    // Helper function to safely convert to BigInt from various input types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toBigInt = (value: any): bigint => {
+      if (value === null || value === undefined) return BigInt(0);
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(value);
+      return BigInt(0);
+    };
+
+    // Basic fields with field name variations
+    instance.protocolVersion =
+      json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
+    instance.contractFlags = Buffer.from(
+      json.contractFlags || json.contract_flags || '00',
+      'hex',
+    );
+    instance.chainHash = Buffer.from(json.chainHash || json.chain_hash, 'hex');
+    instance.temporaryContractId = Buffer.from(
+      json.temporaryContractId || json.temporary_contract_id,
+      'hex',
+    );
+
+    instance.fundingPubkey = Buffer.from(
+      json.fundingPubkey || json.fundingPubKey || json.funding_pubkey,
+      'hex',
+    );
+    instance.payoutSpk = Buffer.from(
+      json.payoutSpk || json.payoutSPK || json.payout_spk,
+      'hex',
+    );
+
+    // Use toBigInt helper to handle BigInt values from json-bigint
+    instance.payoutSerialId = toBigInt(
+      json.payoutSerialId || json.payout_serial_id,
+    );
+
+    instance.offerCollateral = toBigInt(
+      json.offerCollateral ||
+        json.offerCollateralSatoshis ||
+        json.offer_collateral,
+    );
+
+    instance.changeSpk = Buffer.from(
+      json.changeSpk || json.changeSPK || json.change_spk,
+      'hex',
+    );
+    instance.changeSerialId = toBigInt(
+      json.changeSerialId || json.change_serial_id,
+    );
+    instance.fundOutputSerialId = toBigInt(
+      json.fundOutputSerialId || json.fund_output_serial_id,
+    );
+    instance.feeRatePerVb = toBigInt(json.feeRatePerVb || json.fee_rate_per_vb);
+    instance.cetLocktime = json.cetLocktime || json.cet_locktime || 0;
+    instance.refundLocktime = json.refundLocktime || json.refund_locktime || 0;
+
+    // Use ContractInfo.fromJSON() - proper delegation
+    instance.contractInfo = ContractInfo.fromJSON(
+      json.contractInfo || json.contract_info,
+    );
+
+    // Use FundingInput.fromJSON() for each funding input - proper delegation
+    instance.fundingInputs = (json.fundingInputs || json.funding_inputs || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((inputJson: any) => FundingInput.fromJSON(inputJson));
+
+    return instance;
+  }
+
+  /**
+   * Deserializes an offer_dlc message with backward compatibility
+   * Detects old format (without protocol_version) vs new format (with protocol_version)
    * @param buf
    */
   public static deserialize(buf: Buffer): DlcOffer {
@@ -53,49 +133,74 @@ export class DlcOffer implements IDlcMessage {
 
     const type = reader.readUInt16BE(); // read type
 
-    // Validate type matches expected DlcOfferV0 type
-    if (type !== MessageType.DlcOfferV0) {
+    // Validate type matches expected DlcOffer type
+    if (type !== MessageType.DlcOffer) {
       throw new Error(
-        `Invalid message type. Expected ${MessageType.DlcOfferV0}, got ${type}`,
+        `Invalid message type. Expected ${MessageType.DlcOffer}, got ${type}`,
       );
     }
 
-    // New fields as per dlcspecs PR #163
-    instance.protocolVersion = reader.readUInt32BE();
-    instance.contractFlags = reader.readBytes(1);
+    // BACKWARD COMPATIBILITY: Detect old vs new format
+    // New format: [type][protocol_version: 4 bytes][contract_flags: 1 byte][chain_hash: 32 bytes]
+    // Old format: [type][contract_flags: 1 byte][chain_hash: 32 bytes]
+
+    const nextBytes = reader.buffer.subarray(
+      reader.position,
+      reader.position + 5,
+    );
+    const possibleProtocolVersion = nextBytes.readUInt32BE(0);
+    const possibleContractFlags = nextBytes.readUInt8(4);
+
+    // Heuristic: protocol_version should be 1, contract_flags should be 0
+    // If first 4 bytes are reasonable protocol version (1-10) and next byte is 0, assume new format
+    const isNewFormat =
+      possibleProtocolVersion >= 1 &&
+      possibleProtocolVersion <= 10 &&
+      possibleContractFlags === 0;
+
+    if (isNewFormat) {
+      // New format with protocol_version
+      instance.protocolVersion = reader.readUInt32BE();
+      instance.contractFlags = reader.readBytes(1);
+    } else {
+      // Old format without protocol_version
+      instance.protocolVersion = 1; // Default to version 1
+      instance.contractFlags = reader.readBytes(1);
+    }
+
     instance.chainHash = reader.readBytes(32);
-    instance.temporaryContractId = reader.readBytes(32); // New field
+    instance.temporaryContractId = reader.readBytes(32);
 
     // ContractInfo is serialized as sibling type in dlcspecs PR #163 format
     instance.contractInfo = ContractInfo.deserialize(
-      reader.buffer.slice(reader.position),
+      reader.buffer.subarray(reader.position),
     );
     // Skip past the ContractInfo we just read
     const contractInfoLength = instance.contractInfo.serialize().length;
     reader.position += contractInfoLength;
-    instance.fundingPubKey = reader.readBytes(33);
-    const payoutSPKLen = reader.readUInt16BE();
-    instance.payoutSPK = reader.readBytes(payoutSPKLen);
+    instance.fundingPubkey = reader.readBytes(33);
+    const payoutSpkLen = reader.readUInt16BE();
+    instance.payoutSpk = reader.readBytes(payoutSpkLen);
     instance.payoutSerialId = reader.readUInt64BE();
-    instance.offerCollateralSatoshis = reader.readUInt64BE();
+    instance.offerCollateral = reader.readUInt64BE();
 
     // Changed from u16 to bigsize as per dlcspecs PR #163
     const fundingInputsLen = Number(reader.readBigSize());
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      // FundingInput is serialized as sibling type in dlcspecs PR #163 format
-      const fundingInput = FundingInput.deserialize(
-        reader.buffer.slice(reader.position),
+      // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
+      const fundingInput = FundingInputV0.deserializeBody(
+        reader.buffer.subarray(reader.position),
       );
       instance.fundingInputs.push(fundingInput);
 
       // Skip past the FundingInput we just read
-      const fundingInputLength = fundingInput.serialize().length;
+      const fundingInputLength = fundingInput.serializeBody().length;
       reader.position += fundingInputLength;
     }
 
-    const changeSPKLen = reader.readUInt16BE();
-    instance.changeSPK = reader.readBytes(changeSPKLen);
+    const changeSpkLen = reader.readUInt16BE();
+    instance.changeSpk = reader.readBytes(changeSpkLen);
     instance.changeSerialId = reader.readUInt64BE();
     instance.fundOutputSerialId = reader.readUInt64BE();
     instance.feeRatePerVb = reader.readUInt64BE();
@@ -154,17 +259,17 @@ export class DlcOffer implements IDlcMessage {
 
   public contractInfo: ContractInfo;
 
-  public fundingPubKey: Buffer;
+  public fundingPubkey: Buffer;
 
-  public payoutSPK: Buffer;
+  public payoutSpk: Buffer;
 
   public payoutSerialId: bigint;
 
-  public offerCollateralSatoshis: bigint;
+  public offerCollateral: bigint;
 
   public fundingInputs: FundingInput[] = [];
 
-  public changeSPK: Buffer;
+  public changeSpk: Buffer;
 
   public changeSerialId: bigint;
 
@@ -193,12 +298,12 @@ export class DlcOffer implements IDlcMessage {
    * @returns {IDlcOfferAddresses}
    */
   public getAddresses(network: BitcoinNetwork): IDlcOfferAddresses {
-    const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubKey))
+    const fundingSPK = Script.p2wpkhLock(hash160(this.fundingPubkey))
       .serialize()
       .slice(1);
     const fundingAddress = address.fromOutputScript(fundingSPK, network);
-    const changeAddress = address.fromOutputScript(this.changeSPK, network);
-    const payoutAddress = address.fromOutputScript(this.payoutSPK, network);
+    const changeAddress = address.fromOutputScript(this.changeSpk, network);
+    const payoutAddress = address.fromOutputScript(this.payoutSpk, network);
 
     return {
       fundingAddress,
@@ -231,33 +336,31 @@ export class DlcOffer implements IDlcMessage {
     // 6. payout_spk and change_spk must be standard script pubkeys
 
     try {
-      address.fromOutputScript(this.payoutSPK);
+      address.fromOutputScript(this.payoutSpk);
     } catch (e) {
-      throw new Error('DlcOffer payoutSPK is invalid');
+      throw new Error('DlcOffer payoutSpk is invalid');
     }
 
     try {
-      address.fromOutputScript(this.changeSPK);
+      address.fromOutputScript(this.changeSpk);
     } catch (e) {
-      throw new Error('DlcOffer changeSPK is invalid');
+      throw new Error('DlcOffer changeSpk is invalid');
     }
 
     // 7. funding_pubkey must be a valid secp256k1 pubkey in compressed format
     // https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki#background-on-ecdsa-signatures
 
-    if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubKey))) {
-      if (this.fundingPubKey[0] != 0x02 && this.fundingPubKey[0] != 0x03) {
-        throw new Error('fundingPubKey must be in compressed format');
+    if (secp256k1.publicKeyVerify(Buffer.from(this.fundingPubkey))) {
+      if (this.fundingPubkey[0] != 0x02 && this.fundingPubkey[0] != 0x03) {
+        throw new Error('fundingPubkey must be in compressed format');
       }
     } else {
-      throw new Error('fundingPubKey is not a valid secp256k1 key');
+      throw new Error('fundingPubkey is not a valid secp256k1 key');
     }
 
-    // 8. offer_collateral_satoshis must be greater than or equal to 1000
-    if (this.offerCollateralSatoshis < 1000) {
-      throw new Error(
-        'offer_collateral_satoshis must be greater than or equal to 1000',
-      );
+    // 8. offer_collateral must be greater than or equal to 1000
+    if (this.offerCollateral < 1000) {
+      throw new Error('offer_collateral must be greater than or equal to 1000');
     }
 
     if (this.cetLocktime < 0) {
@@ -310,9 +413,7 @@ export class DlcOffer implements IDlcMessage {
     this.contractInfo.validate();
 
     // totalCollateral should be > offerCollateral (logical validation)
-    if (
-      this.contractInfo.getTotalCollateral() <= this.offerCollateralSatoshis
-    ) {
+    if (this.contractInfo.getTotalCollateral() <= this.offerCollateral) {
       throw new Error('totalCollateral should be greater than offerCollateral');
     }
 
@@ -321,15 +422,13 @@ export class DlcOffer implements IDlcMessage {
       const input = fundingInput as FundingInputV0;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
-    if (this.offerCollateralSatoshis >= fundingAmount) {
-      throw new Error(
-        'fundingAmount must be greater than offerCollateralSatoshis',
-      );
+    if (this.offerCollateral >= fundingAmount) {
+      throw new Error('fundingAmount must be greater than offerCollateral');
     }
   }
 
   /**
-   * Converts dlc_offer to JSON
+   * Converts dlc_offer to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDlcOfferJSON {
     const tlvs = [];
@@ -349,26 +448,38 @@ export class DlcOffer implements IDlcMessage {
       );
     }
 
+    // Helper function to safely convert BigInt to number, preserving precision
+    const bigIntToNumber = (value: bigint): number => {
+      // For values within safe integer range, convert to number
+      if (
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      ) {
+        return Number(value);
+      }
+      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
+      return value as any;
+    };
+
+    // Return canonical rust-dlc format only
     return {
-      type: this.type,
       protocolVersion: this.protocolVersion,
       temporaryContractId: this.temporaryContractId.toString('hex'),
-      contractFlags: this.contractFlags.toString('hex'),
+      contractFlags: Number(this.contractFlags[0]),
       chainHash: this.chainHash.toString('hex'),
       contractInfo: this.contractInfo.toJSON(),
-      fundingPubKey: this.fundingPubKey.toString('hex'),
-      payoutSPK: this.payoutSPK.toString('hex'),
-      payoutSerialId: Number(this.payoutSerialId),
-      offerCollateralSatoshis: Number(this.offerCollateralSatoshis),
+      fundingPubkey: this.fundingPubkey.toString('hex'), // lowercase 'k'
+      payoutSpk: this.payoutSpk.toString('hex'), // lowercase
+      payoutSerialId: bigIntToNumber(this.payoutSerialId),
+      offerCollateral: bigIntToNumber(this.offerCollateral), // no "Satoshis"
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
-      changeSPK: this.changeSPK.toString('hex'),
-      changeSerialId: Number(this.changeSerialId),
-      fundOutputSerialId: Number(this.fundOutputSerialId),
-      feeRatePerVb: Number(this.feeRatePerVb),
+      changeSpk: this.changeSpk.toString('hex'), // lowercase
+      changeSerialId: bigIntToNumber(this.changeSerialId),
+      fundOutputSerialId: bigIntToNumber(this.fundOutputSerialId),
+      feeRatePerVb: bigIntToNumber(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
-      tlvs,
-    };
+    } as any; // Allow different field names from interface
   }
 
   /**
@@ -386,21 +497,22 @@ export class DlcOffer implements IDlcMessage {
     writer.writeBytes(this.temporaryContractId); // New field
 
     writer.writeBytes(this.contractInfo.serialize());
-    writer.writeBytes(this.fundingPubKey);
-    writer.writeUInt16BE(this.payoutSPK.length);
-    writer.writeBytes(this.payoutSPK);
+    writer.writeBytes(this.fundingPubkey);
+    writer.writeUInt16BE(this.payoutSpk.length);
+    writer.writeBytes(this.payoutSpk);
     writer.writeUInt64BE(this.payoutSerialId);
-    writer.writeUInt64BE(this.offerCollateralSatoshis);
+    writer.writeUInt64BE(this.offerCollateral);
 
     // Changed from u16 to bigsize as per dlcspecs PR #163
     writer.writeBigSize(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {
-      writer.writeBytes(fundingInput.serialize());
+      // Use serializeBody() to match rust-dlc behavior - funding inputs in vec are serialized without TLV wrapper
+      writer.writeBytes(fundingInput.serializeBody());
     }
 
-    writer.writeUInt16BE(this.changeSPK.length);
-    writer.writeBytes(this.changeSPK);
+    writer.writeUInt16BE(this.changeSpk.length);
+    writer.writeBytes(this.changeSpk);
     writer.writeUInt64BE(this.changeSerialId);
     writer.writeUInt64BE(this.fundOutputSerialId);
     writer.writeUInt64BE(this.feeRatePerVb);
@@ -428,30 +540,31 @@ export class DlcOffer implements IDlcMessage {
 }
 
 export interface IDlcOfferJSON {
-  type: number;
+  type?: number; // Made optional for rust-dlc compatibility
   protocolVersion: number;
   temporaryContractId: string;
-  contractFlags: string;
+  contractFlags: number;
   chainHash: string;
   contractInfo: ISingleContractInfoJSON | IDisjointContractInfoJSON;
-  fundingPubKey: string;
-  payoutSPK: string;
+  fundingPubkey: string;
+  payoutSpk: string;
   payoutSerialId: number;
-  offerCollateralSatoshis: number;
+  offerCollateral: number;
   fundingInputs: IFundingInputV0JSON[];
-  changeSPK: string;
+  changeSpk: string;
   changeSerialId: number;
   fundOutputSerialId: number;
   feeRatePerVb: number;
   cetLocktime: number;
   refundLocktime: number;
-  tlvs: (
+  serialized?: string; // Made optional - hex serialization for compatibility testing
+  tlvs?: (
     | IOrderMetadataJSON
     | IOrderIrcInfoJSON
     | IOrderPositionInfoJSON
     | IBatchFundingGroupJSON
     | any
-  )[]; // For unknown TLVs
+  )[]; // Made optional - for unknown TLVs
 }
 
 export interface IDlcOfferAddresses {

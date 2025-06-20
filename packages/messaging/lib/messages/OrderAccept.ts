@@ -9,44 +9,51 @@ import {
   OrderNegotiationFields,
 } from './OrderNegotiationFields';
 
-export abstract class OrderAccept {
-  public static deserialize(buf: Buffer): OrderAccept {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.OrderAcceptV0:
-        return OrderAcceptV0.deserialize(buf);
-      default:
-        throw new Error(`Order accept TLV type must be OrderAcceptV0`);
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract toJSON(): IOrderAcceptV0JSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
  * OrderAccept contains information about a node and indicates its
  * acceptance of the new order offer. This is the second step towards
  * order negotiation.
  */
-export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
-  public static type = MessageType.OrderAcceptV0;
+export class OrderAccept implements IDlcMessage {
+  public static type = MessageType.OrderAccept;
 
   /**
-   * Deserializes an order_accept_v0 message
+   * Creates an OrderAccept from JSON data
+   * @param json JSON object representing an order accept
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OrderAccept {
+    const instance = new OrderAccept();
+
+    instance.tempOrderId = Buffer.from(
+      json.tempOrderId || json.temp_order_id,
+      'hex',
+    );
+
+    // Handle OrderNegotiationFields - will be parsed during deserialization if needed
+    instance.negotiationFields =
+      json.negotiationFields || json.negotiation_fields;
+
+    return instance;
+  }
+
+  /**
+   * Deserializes an order_accept message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OrderAcceptV0 {
-    const instance = new OrderAcceptV0();
+  public static deserialize(buf: Buffer): OrderAccept {
+    const instance = new OrderAccept();
     const reader = new BufferReader(buf);
 
-    reader.readUInt16BE(); // read type
+    const type = reader.readUInt16BE(); // read type
+
+    // Validate type matches expected OrderAccept type
+    if (type !== MessageType.OrderAccept) {
+      throw new Error(
+        `Invalid message type. Expected ${MessageType.OrderAccept}, got ${type}`,
+      );
+    }
+
     instance.tempOrderId = reader.readBytes(32);
     instance.negotiationFields = OrderNegotiationFields.deserialize(
       getTlv(reader),
@@ -56,18 +63,18 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
   }
 
   /**
-   * The type for order_accept_v0 message. order_accept_v0 = 62772
+   * The type for order_accept message. order_accept = 62772
    */
-  public type = OrderAcceptV0.type;
+  public type = OrderAccept.type;
 
   public tempOrderId: Buffer;
 
   public negotiationFields: OrderNegotiationFields;
 
   /**
-   * Converts order_negotiation_fields_v0 to JSON
+   * Converts order_accept to JSON
    */
-  public toJSON(): IOrderAcceptV0JSON {
+  public toJSON(): IOrderAcceptJSON {
     return {
       type: this.type,
       tempOrderId: this.tempOrderId.toString('hex'),
@@ -76,7 +83,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
   }
 
   /**
-   * Serializes the order_accept_v0 message into a Buffer
+   * Serializes the order_accept message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -88,7 +95,7 @@ export class OrderAcceptV0 extends OrderAccept implements IDlcMessage {
   }
 }
 
-export interface IOrderAcceptV0JSON {
+export interface IOrderAcceptJSON {
   type: number;
   tempOrderId: string;
   negotiationFields:
@@ -144,7 +151,7 @@ export class OrderAcceptContainer {
     for (let i = 0; i < acceptsCount; i++) {
       const acceptLength = reader.readBigSize();
       const acceptBuf = reader.readBytes(Number(acceptLength));
-      const accept = OrderAccept.deserialize(acceptBuf); // Adjust based on actual implementation.
+      const accept = OrderAccept.deserialize(acceptBuf);
       container.addAccept(accept);
     }
     return container;

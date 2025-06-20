@@ -26,15 +26,42 @@ import {
  *   - the event ID which can be a name or categorization associated with
  *     the event by the oracle
  */
-export class OracleEventV0 implements IDlcMessage {
-  public static type = MessageType.OracleEventV0;
+export class OracleEvent implements IDlcMessage {
+  public static type = MessageType.OracleEvent;
+
+  /**
+   * Creates an OracleEvent from JSON data
+   * @param json JSON object representing oracle event
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OracleEvent {
+    const instance = new OracleEvent();
+
+    // Parse oracle nonces array
+    const nonces = json.oracleNonces || json.oracle_nonces || [];
+    instance.oracleNonces = nonces.map((nonce: string) =>
+      Buffer.from(nonce, 'hex'),
+    );
+
+    instance.eventMaturityEpoch =
+      json.eventMaturityEpoch || json.event_maturity_epoch || 0;
+
+    // Parse event descriptor
+    instance.eventDescriptor = EventDescriptor.fromJSON(
+      json.eventDescriptor || json.event_descriptor,
+    );
+
+    instance.eventId = json.eventId || json.event_id || '';
+
+    return instance;
+  }
 
   /**
    * Deserializes an oracle_event message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleEventV0 {
-    const instance = new OracleEventV0();
+  public static deserialize(buf: Buffer): OracleEvent {
+    const instance = new OracleEvent();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -57,7 +84,7 @@ export class OracleEventV0 implements IDlcMessage {
   /**
    * The type for oracle_event message. oracle_event = 55330
    */
-  public type = OracleEventV0.type;
+  public type = OracleEvent.type;
 
   public length: bigint;
 
@@ -177,9 +204,8 @@ export class OracleEventV0 implements IDlcMessage {
   /**
    * Converts oracle_event to JSON
    */
-  public toJSON(): IOracleEventV0JSON {
+  public toJSON(): IOracleEventJSON {
     return {
-      type: this.type,
       oracleNonces: this.oracleNonces.map((oracle) => oracle.toString('hex')),
       eventMaturityEpoch: this.eventMaturityEpoch,
       eventDescriptor: this.eventDescriptor.toJSON(),
@@ -213,8 +239,8 @@ export class OracleEventV0 implements IDlcMessage {
   }
 }
 
-export interface IOracleEventV0JSON {
-  type: number;
+export interface IOracleEventJSON {
+  type?: number; // Made optional for rust-dlc compatibility
   oracleNonces: string[];
   eventMaturityEpoch: number;
   eventDescriptor:
