@@ -4,8 +4,8 @@ import {
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   DlcOffer,
-  OracleAnnouncementV0,
-  OracleEventV0,
+  OracleAnnouncement,
+  OracleEvent,
   OracleInfoV0,
   PayoutFunctionV0,
   PolynomialPayoutCurvePiece,
@@ -37,11 +37,11 @@ const buildOracleAnnouncement = (oracleDigits: number, expiry: Date) => {
   eventDescriptor.precision = 0;
   eventDescriptor.nbDigits = oracleDigits;
 
-  const oracleEvent = new OracleEventV0();
+  const oracleEvent = new OracleEvent();
   oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
   oracleEvent.eventDescriptor = eventDescriptor;
 
-  const oracleAnnouncement = new OracleAnnouncementV0();
+  const oracleAnnouncement = new OracleAnnouncement();
   oracleAnnouncement.oracleEvent = oracleEvent;
 
   return oracleAnnouncement;
@@ -69,8 +69,38 @@ const buildCsoDlcOfferFixture = (
   contractInfo.oracleInfo = oracleInfo;
 
   const dlcOffer = new DlcOffer();
+
+  // Set all required properties following DlcOffer.spec.ts pattern
+  dlcOffer.contractFlags = Buffer.from('00', 'hex');
+  dlcOffer.chainHash = Buffer.from(
+    '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
+    'hex',
+  );
+  dlcOffer.temporaryContractId = Buffer.from(
+    '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    'hex',
+  );
+  dlcOffer.fundingPubkey = Buffer.from(
+    '0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3',
+    'hex',
+  );
+  dlcOffer.payoutSpk = Buffer.from(
+    '00142bbdec425007dc360523b0294d2c64d2213af498',
+    'hex',
+  );
+  dlcOffer.payoutSerialId = BigInt(11555292);
+  dlcOffer.changeSpk = Buffer.from(
+    '0014afa16f949f3055f38bd3a73312bed00b61558884',
+    'hex',
+  );
+  dlcOffer.changeSerialId = BigInt(2008045);
+  dlcOffer.fundOutputSerialId = BigInt(5411962);
+  dlcOffer.feeRatePerVb = BigInt(1);
+  dlcOffer.cetLocktime = 100;
+  dlcOffer.refundLocktime = 200;
+
   dlcOffer.contractInfo = contractInfo;
-  dlcOffer.offerCollateralSatoshis = offerCollateral;
+  dlcOffer.offerCollateral = offerCollateral;
 
   return dlcOffer;
 };
@@ -103,7 +133,7 @@ describe('CsoInfo', () => {
   const mediumPrecisionRounding = Value.fromSats(100000);
   const lowPrecisionRounding = Value.fromSats(200000);
 
-  const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+  const oracleAnnouncement = OracleAnnouncement.deserialize(
     Buffer.from(
       'fdd824fd0344340d5e431a385a8bb3819c0410c749b2a11ae5bebdd363e2dc23af057c6cbd3fd097fffa8e6beef46cb02389fb6ef102d3653a281dda5ff0d6e3f4d42a14df6830bbf19aa3a986ed4e5640240b507901d6e03d6bbd71a281ed356a145516c655fdd822fd02de0015b4ced0696e0c7b8636b816e8742944cfd652f3366d659694add4d186da20f06e1750ce25afb96aee7aedbc5a3981b7e62a22baf768f94fe0ffd455cb6ccb4da1a07fadc76aada50705e583aa77b664f1217212d4537f9d5398630716cd26e5fcdba1a300388860a9f5feed894ca9d5caf9daffaca23f53fd46071f69007b286050e798293f7524223f1882667d5e282be7b09faada3179496630053a060c1af1d2c80d212dc871bf56a846a6b70cfca17b47d2fcb86e57cef165215f2a526cc40215c3c6002fbeb5f0a9d545379004fd108a8a5ee96ac0bd33d1495c609724e6554fe1bf90fe92e679df8883df6df9173e8c476b5e83493f55bf2e20e9c85acd21f7f710a9a380233fc28254077fb751c4ffbd5124639421cc05ae2e3886bbc29177c02ad5ab569b5a89c4dd5da2e131ab41ac4ce2347f5425230b8822198cd805047b1a35fa00cd3877fdc902857293f94fcad3f0e418448b0756e99ce6cc46d1a4cf8673823a89819a9bd9d4c3506975d37835a5310a1bee056887124b6d0fc0ae8974371e1e12e13d68f844878bd9fa51bfdb2455f6bb6c93e49998b37e4fa2b01ff31c665b16313015311007d624fe77df48ac69d8475ca06500d618fbff38ab6f50575d4b0fd3efe4fd6e561797070ec365ecda8a62e6dcb993b8eff16a2e5af7ad7b93cb6a028cdab351251e368c4f188d620ad86fa43886ee57f91be033feab89cd381c486b9cb9c102ae2d3d3cc15068ecb5e0822e8f5ff5a2faef2598308ec40acc4f122023722e8e6758034f98bb45136117154cb7690a2c04b9504a747ce3f69be7d29299462181fcf721d795233aacf010309af5b1709309cb5c2ceae7926ea0868b1c8a2573554284f86310d1df7ed82e6be49d417ec494da9f15f9fac757bdee7cb49c3e7fdcfabc28801bde8f90b90cf3eb37784bb91d9c35662b5f00fdd80a0e00020004626974730000000000152561746f6d69632d656e67696e652d6d6f6e74686c792d323646454232342d32364150523234',
       'hex',
@@ -188,7 +218,7 @@ describe('CsoInfo', () => {
         offerCollateralValue,
       );
 
-      dlcOffer.offerCollateralSatoshis -= BigInt(10000);
+      dlcOffer.offerCollateral -= BigInt(10000);
 
       expect(() => getCsoInfoFromOffer(dlcOffer)).to.throw(Error);
     });
@@ -480,7 +510,7 @@ describe('CsoInfo', () => {
     );
 
     // Subtract 1 from outcomePayout to create gap in point outcome payout
-    (payoutFunction.pieces[0]
+    (payoutFunction.payoutFunctionPieces[0]
       .payoutCurvePiece as PolynomialPayoutCurvePiece).points[1].outcomePayout -= BigInt(
       1,
     );
@@ -489,7 +519,7 @@ describe('CsoInfo', () => {
   });
 
   describe('CsoInfo collateral', () => {
-    const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+    const oracleAnnouncement = OracleAnnouncement.deserialize(
       Buffer.from(
         'fdd824fd0344340d5e431a385a8bb3819c0410c749b2a11ae5bebdd363e2dc23af057c6cbd3fd097fffa8e6beef46cb02389fb6ef102d3653a281dda5ff0d6e3f4d42a14df6830bbf19aa3a986ed4e5640240b507901d6e03d6bbd71a281ed356a145516c655fdd822fd02de0015b4ced0696e0c7b8636b816e8742944cfd652f3366d659694add4d186da20f06e1750ce25afb96aee7aedbc5a3981b7e62a22baf768f94fe0ffd455cb6ccb4da1a07fadc76aada50705e583aa77b664f1217212d4537f9d5398630716cd26e5fcdba1a300388860a9f5feed894ca9d5caf9daffaca23f53fd46071f69007b286050e798293f7524223f1882667d5e282be7b09faada3179496630053a060c1af1d2c80d212dc871bf56a846a6b70cfca17b47d2fcb86e57cef165215f2a526cc40215c3c6002fbeb5f0a9d545379004fd108a8a5ee96ac0bd33d1495c609724e6554fe1bf90fe92e679df8883df6df9173e8c476b5e83493f55bf2e20e9c85acd21f7f710a9a380233fc28254077fb751c4ffbd5124639421cc05ae2e3886bbc29177c02ad5ab569b5a89c4dd5da2e131ab41ac4ce2347f5425230b8822198cd805047b1a35fa00cd3877fdc902857293f94fcad3f0e418448b0756e99ce6cc46d1a4cf8673823a89819a9bd9d4c3506975d37835a5310a1bee056887124b6d0fc0ae8974371e1e12e13d68f844878bd9fa51bfdb2455f6bb6c93e49998b37e4fa2b01ff31c665b16313015311007d624fe77df48ac69d8475ca06500d618fbff38ab6f50575d4b0fd3efe4fd6e561797070ec365ecda8a62e6dcb993b8eff16a2e5af7ad7b93cb6a028cdab351251e368c4f188d620ad86fa43886ee57f91be033feab89cd381c486b9cb9c102ae2d3d3cc15068ecb5e0822e8f5ff5a2faef2598308ec40acc4f122023722e8e6758034f98bb45136117154cb7690a2c04b9504a747ce3f69be7d29299462181fcf721d795233aacf010309af5b1709309cb5c2ceae7926ea0868b1c8a2573554284f86310d1df7ed82e6be49d417ec494da9f15f9fac757bdee7cb49c3e7fdcfabc28801bde8f90b90cf3eb37784bb91d9c35662b5f00fdd80a0e00020004626974730000000000152561746f6d69632d656e67696e652d6d6f6e74686c792d323646454232342d32364150523234',
         'hex',
