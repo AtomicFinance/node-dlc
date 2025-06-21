@@ -16,6 +16,7 @@ import {
   BitcoinNetworks,
   chainHashFromNetwork,
 } from 'bitcoin-networks';
+import { randomFillSync } from 'crypto';
 import Decimal from 'decimal.js';
 
 import { dustThreshold } from '../CoinSelect';
@@ -159,6 +160,11 @@ export const buildOrderOffer = (
 
   const orderOffer = new OrderOffer();
 
+  // Generate a 32-byte temporary contract ID (new field from dlcspecs PR #163)
+  orderOffer.temporaryContractId = Buffer.alloc(32);
+  randomFillSync(orderOffer.temporaryContractId);
+
+  // Set the basic OrderOffer fields (no funding-related fields)
   orderOffer.chainHash = chainHashFromNetwork(BitcoinNetworks[network]);
   orderOffer.contractInfo = contractInfo;
   orderOffer.offerCollateralSatoshis = offerCollateral;

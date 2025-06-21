@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { BufferReader, BufferWriter, F64 } from '@node-dlc/bufio';
 
 import { MessageType, PayoutCurvePieceType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
@@ -198,6 +198,16 @@ export class HyperbolaPayoutCurvePiece
   public static fromJSON(json: any): HyperbolaPayoutCurvePiece {
     const instance = new HyperbolaPayoutCurvePiece();
 
+    // Helper function to safely convert to F64 from various input types
+    const toF64 = (value: any): F64 => {
+      if (value === null || value === undefined) return F64.zero();
+      if (value instanceof F64) return value;
+      if (typeof value === 'number') return F64.fromNumber(value);
+      if (typeof value === 'string') return F64.fromString(value);
+      if (typeof value === 'bigint') return F64.fromBigInt(value);
+      return F64.zero();
+    };
+
     // These will be set by PayoutFunction when creating from test data
     instance.leftEndPoint = {
       eventOutcome: BigInt(0),
@@ -214,17 +224,17 @@ export class HyperbolaPayoutCurvePiece
     instance.usePositivePiece =
       json.usePositivePiece || json.use_positive_piece || false;
 
-    // Parse f64 values directly to match rust-dlc implementation
-    instance.translateOutcome = Number(
+    // Store as F64 for arbitrary precision
+    instance.translateOutcome = toF64(
       json.translateOutcome || json.translate_outcome || 0,
     );
-    instance.translatePayout = Number(
+    instance.translatePayout = toF64(
       json.translatePayout || json.translate_payout || 0,
     );
-    instance.a = Number(json.a || 0);
-    instance.b = Number(json.b || 0);
-    instance.c = Number(json.c || 0);
-    instance.d = Number(json.d || 0);
+    instance.a = toF64(json.a || 0);
+    instance.b = toF64(json.b || 0);
+    instance.c = toF64(json.c || 0);
+    instance.d = toF64(json.d || 0);
 
     return instance;
   }
@@ -240,13 +250,13 @@ export class HyperbolaPayoutCurvePiece
     reader.readBigSize(); // read type (1)
     instance.usePositivePiece = reader.readUInt8() === 1;
 
-    // Read f64 values directly to match rust-dlc implementation
-    instance.translateOutcome = reader.readDoubleBE();
-    instance.translatePayout = reader.readDoubleBE();
-    instance.a = reader.readDoubleBE();
-    instance.b = reader.readDoubleBE();
-    instance.c = reader.readDoubleBE();
-    instance.d = reader.readDoubleBE();
+    // Read f64 values from wire directly as F64 instances
+    instance.translateOutcome = reader.readF64BE();
+    instance.translatePayout = reader.readF64BE();
+    instance.a = reader.readF64BE();
+    instance.b = reader.readF64BE();
+    instance.c = reader.readF64BE();
+    instance.d = reader.readF64BE();
 
     // Note: leftEndPoint and rightEndPoint are not part of the serialization
     // They will be set by PayoutFunction when creating from JSON
@@ -272,16 +282,16 @@ export class HyperbolaPayoutCurvePiece
 
   public payoutCurvePieceType = HyperbolaPayoutCurvePiece.payoutCurvePieceType;
 
-  // Match rust-dlc implementation exactly: direct f64 parameters
+  // Store as F64 for arbitrary precision, serialize as f64 for rust-dlc compatibility
   public leftEndPoint: IPayoutPoint;
   public rightEndPoint: IPayoutPoint;
   public usePositivePiece: boolean;
-  public translateOutcome: number; // f64 - matches rust-dlc
-  public translatePayout: number; // f64 - matches rust-dlc
-  public a: number; // f64 - matches rust-dlc
-  public b: number; // f64 - matches rust-dlc
-  public c: number; // f64 - matches rust-dlc
-  public d: number; // f64 - matches rust-dlc
+  public translateOutcome: F64; // F64 precision, serialized as f64
+  public translatePayout: F64; // F64 precision, serialized as f64
+  public a: F64; // F64 precision, serialized as f64
+  public b: F64; // F64 precision, serialized as f64
+  public c: F64; // F64 precision, serialized as f64
+  public d: F64; // F64 precision, serialized as f64
 
   /**
    * Converts hyperbola_payout_curve_piece to JSON
@@ -290,34 +300,64 @@ export class HyperbolaPayoutCurvePiece
     return {
       hyperbolaPayoutCurvePiece: {
         usePositivePiece: this.usePositivePiece,
-        translateOutcome: this.translateOutcome,
-        translatePayout: this.translatePayout,
-        a: this.a,
-        b: this.b,
-        c: this.c,
-        d: this.d,
+        translateOutcome: this.translateOutcome.toNumber(),
+        translatePayout: this.translatePayout.toNumber(),
+        a: this.a.toNumber(),
+        b: this.b.toNumber(),
+        c: this.c.toNumber(),
+        d: this.d.toNumber(),
       },
     };
   }
 
   /**
    * Serializes the hyperbola_payout_curve_piece message into a Buffer
+   * Uses f64 serialization to match rust-dlc implementation
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
 
+    // Validate values are within safe f64 range for rust-dlc compatibility
+    this._validateF64Precision();
+
     writer.writeBigSize(this.payoutCurvePieceType);
     writer.writeUInt8(this.usePositivePiece ? 1 : 0);
 
-    // Write f64 values directly to match rust-dlc implementation
-    writer.writeDoubleBE(this.translateOutcome);
-    writer.writeDoubleBE(this.translatePayout);
-    writer.writeDoubleBE(this.a);
-    writer.writeDoubleBE(this.b);
-    writer.writeDoubleBE(this.c);
-    writer.writeDoubleBE(this.d);
+    // Use F64 serialization for f64 wire format to match rust-dlc
+    writer.writeF64BE(this.translateOutcome);
+    writer.writeF64BE(this.translatePayout);
+    writer.writeF64BE(this.a);
+    writer.writeF64BE(this.b);
+    writer.writeF64BE(this.c);
+    writer.writeF64BE(this.d);
 
     return writer.toBuffer();
+  }
+
+  /**
+   * Validates that all F64 values are within safe f64 precision limits
+   * to prevent precision loss during rust-dlc compatibility serialization
+   */
+  private _validateF64Precision(): void {
+    const MAX_SAFE = F64.fromNumber(Number.MAX_SAFE_INTEGER); // 2^53 - 1
+    const MIN_SAFE = F64.fromNumber(Number.MIN_SAFE_INTEGER); // -(2^53 - 1)
+
+    const values = [
+      { name: 'translateOutcome', value: this.translateOutcome },
+      { name: 'translatePayout', value: this.translatePayout },
+      { name: 'a', value: this.a },
+      { name: 'b', value: this.b },
+      { name: 'c', value: this.c },
+      { name: 'd', value: this.d },
+    ];
+
+    for (const { name, value } of values) {
+      if (value.gt(MAX_SAFE) || value.lt(MIN_SAFE)) {
+        throw new Error(
+          `HyperbolaPayoutCurvePiece.${name} value ${value.toString()} exceeds f64 precision limits (±${MAX_SAFE.toString()}) for rust-dlc compatibility`,
+        );
+      }
+    }
   }
 }
 
@@ -336,12 +376,6 @@ interface IPointJSON {
 interface IPayoutPoint {
   eventOutcome: bigint;
   outcomePayout: bigint;
-  extraPrecision: number;
-}
-
-interface IPayoutPointJSON {
-  eventOutcome: number;
-  outcomePayout: number;
   extraPrecision: number;
 }
 

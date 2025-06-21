@@ -19,11 +19,7 @@ import {
   roundUpToNearestMultiplier,
   UNIT_MULTIPLIER,
 } from './Builder';
-import {
-  HasContractInfo,
-  HasOfferCollateralSatoshis,
-  HasType,
-} from './OptionInfo';
+import { HasContractInfo, HasOfferCollateral, HasType } from './OptionInfo';
 
 export interface CsoInfo {
   normalizedMaxGain: Value; // Max Gain Relative to 1 BTC Contract
@@ -374,10 +370,7 @@ export const getCsoInfoFromContractInfo = (
  * @returns {CsoInfo}
  */
 export const getCsoInfoFromOffer = (
-  offer: HasContractInfo &
-    HasType &
-    HasOfferCollateralSatoshis &
-    MaybeHasPositionInfo,
+  offer: HasContractInfo & HasType & HasOfferCollateral & MaybeHasPositionInfo,
   csoVersion: 'v0' | 'v1' = 'v1',
 ): CsoInfo => {
   if (
@@ -406,7 +399,7 @@ export const getCsoInfoFromOffer = (
     csoVersion,
   );
 
-  if (positionInfo.offerCollateral.sats !== offer.offerCollateralSatoshis)
+  if (positionInfo.offerCollateral.sats !== offer.offerCollateral)
     throw Error('Offer was not generated with CSO ContractInfo');
 
   return positionInfo;

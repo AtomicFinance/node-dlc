@@ -21,8 +21,8 @@ export interface OptionInfo {
   expiry: Date;
 }
 
-export type HasOfferCollateralSatoshis = {
-  offerCollateralSatoshis: bigint;
+export type HasOfferCollateral = {
+  offerCollateral: bigint;
 };
 
 export type HasContractInfo = {
@@ -104,7 +104,7 @@ export function getOptionInfoFromContractInfo(
     payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
   )
     throw Error('Must be HyperbolaPayoutCurvePiece');
-  if (payoutCurvePiece.b !== 0 || payoutCurvePiece.c !== 0)
+  if (!payoutCurvePiece.b.eq(0) || !payoutCurvePiece.c.eq(0))
     throw Error('b and c HyperbolaPayoutCurvePiece values must be 0');
 
   const curve = HyperbolaPayoutCurve.fromPayoutCurvePiece(payoutCurvePiece);
@@ -121,11 +121,22 @@ export function getOptionInfoFromContractInfo(
   const totalCollateral = contractInfo.totalCollateral;
 
   // if curve is ascending, assume it is a put.
-  const contractSize = isAscending
-    ? BigInt(payoutCurvePiece.translatePayout) - totalCollateral
-    : totalCollateral + BigInt(payoutCurvePiece.translatePayout);
+  const translatePayoutBigInt = BigInt(
+    Math.round(payoutCurvePiece.translatePayout.toNumber()),
+  );
+  const dBigInt = BigInt(Math.round(payoutCurvePiece.d.toNumber()));
 
-  const strikePrice = BigInt(payoutCurvePiece.d) / contractSize;
+  const contractSize = isAscending
+    ? translatePayoutBigInt - totalCollateral
+    : totalCollateral - translatePayoutBigInt;
+
+  // Use precise calculation to avoid integer division precision loss
+  // Instead of strikePrice = d / contractSize, calculate the exact fractional strikePrice
+  // that when multiplied by contractSize gives back the original d value
+  const strikePriceBN = new BN(dBigInt.toString()).dividedBy(
+    new BN(contractSize.toString()),
+  );
+  const strikePrice = BigInt(strikePriceBN.integerValue().toString());
 
   // rebuild payout curve from option info and perform a sanity check
   const { payoutCurve: sanityCurve } = isAscending
@@ -144,16 +155,29 @@ export function getOptionInfoFromContractInfo(
       );
   const type = isAscending ? 'put' : 'call';
 
-  if (!curve.equals(sanityCurve))
+  // Check if curves are approximately equal using F64 equality methods
+  const originalPiece = curve.toPayoutCurvePiece();
+  const rebuiltPiece = sanityCurve.toPayoutCurvePiece();
+
+  const curvesMatch =
+    originalPiece.a.eq(rebuiltPiece.a) &&
+    originalPiece.b.eq(rebuiltPiece.b) &&
+    originalPiece.c.eq(rebuiltPiece.c) &&
+    originalPiece.d.eq(rebuiltPiece.d) &&
+    originalPiece.translateOutcome.eq(rebuiltPiece.translateOutcome) &&
+    originalPiece.translatePayout.eq(rebuiltPiece.translatePayout);
+
+  if (!curvesMatch) {
     throw new Error(
       'Payout curve built from extracted OptionInfo does not match original payout curve',
     );
+  }
 
   return { contractSize, strikePrice, expiry, type };
 }
 
 export function getOptionInfoFromOffer(
-  offer: HasOfferCollateralSatoshis & HasContractInfo & HasType,
+  offer: HasOfferCollateral & HasContractInfo & HasType,
 ): OptionInfo {
   if (
     offer.type !== MessageType.DlcOffer &&
@@ -161,8 +185,7 @@ export function getOptionInfoFromOffer(
   )
     throw Error('Only DlcOffer and OrderOffer currently supported');
 
-  const premium =
-    offer.contractInfo.totalCollateral - offer.offerCollateralSatoshis;
+  const premium = offer.contractInfo.totalCollateral - offer.offerCollateral;
 
   return {
     ...getOptionInfoFromContractInfo(offer.contractInfo),

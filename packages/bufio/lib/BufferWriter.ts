@@ -1,3 +1,5 @@
+import { F64 } from './F64';
+
 /**
  * Utility class for writing arbitrary data into a Buffer. This class will
  * automatically expand the underlying Buffer and return a trimmed view
@@ -118,6 +120,56 @@ export class BufferWriter {
     this._expand(8);
     this._buffer.writeDoubleBE(val, this._position);
     this._position += 8;
+  }
+
+  /**
+   * Write a Decimal.js value as 64-bit double (f64) in big-endian format
+   * This handles the precision conversion from arbitrary-precision Decimal to f64
+   * @param val Decimal.js value
+   */
+  public writeDecimalAsDoubleBE(val: any): void {
+    // Handle both Decimal.js instances and regular numbers
+    let numValue: number;
+
+    if (val && typeof val.toNumber === 'function') {
+      // It's a Decimal.js instance
+      numValue = val.toNumber();
+
+      // Optional: Add validation for precision loss
+      if (!val.isFinite() || val.abs().gt(Number.MAX_SAFE_INTEGER)) {
+        // For DLC compatibility, we allow this but could warn
+        // console.warn(`Decimal value ${val.toString()} may lose precision when converted to f64`);
+      }
+    } else {
+      // It's already a number
+      numValue = Number(val);
+    }
+
+    this.writeDoubleBE(numValue);
+  }
+
+  /**
+   * Write an F64 value as 64-bit double (f64) in big-endian format
+   * This is the preferred method for F64 serialization to rust-dlc
+   * @param val F64 instance, Decimal, number, or bigint
+   */
+  public writeF64BE(val: any): void {
+    if (val instanceof F64) {
+      // Direct F64 instance - write the raw buffer
+      this.writeBytes(val.serialize());
+    } else if (val && typeof val.toNumber === 'function') {
+      // Decimal.js or similar - convert via F64 to preserve precision
+      const f64 = F64.fromDecimal(val);
+      this.writeBytes(f64.serialize());
+    } else if (typeof val === 'bigint') {
+      // BigInt - convert via F64
+      const f64 = F64.fromBigInt(val);
+      this.writeBytes(f64.serialize());
+    } else {
+      // Regular number or string - convert via F64
+      const f64 = F64.fromNumber(Number(val));
+      this.writeBytes(f64.serialize());
+    }
   }
 
   /**

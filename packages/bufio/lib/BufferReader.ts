@@ -1,5 +1,7 @@
 import assert from 'assert';
 
+import { F64 } from './F64';
+
 /**
  * BufferReader class is used to simplify reading information from a Buffer
  */
@@ -118,6 +120,23 @@ export class BufferReader {
    */
   public readDoubleBE(): number {
     return this._readStandard(this.readDoubleBE.name, 8);
+  }
+
+  /**
+   * Read a 64-bit double (f64) in big-endian format and return as number
+   * Use this when you need the raw f64 value for Decimal.js construction
+   */
+  public readDoubleForDecimal(): number {
+    return this.readDoubleBE();
+  }
+
+  /**
+   * Read a 64-bit double (f64) in big-endian format and return as F64 instance
+   * This is the preferred method for F64 deserialization from rust-dlc
+   */
+  public readF64BE(): F64 {
+    const buffer = this.readBytes(8);
+    return F64.deserialize(buffer);
   }
 
   /**

@@ -54,17 +54,38 @@ export class PolynomialPayoutCurve {
    * @returns The outcome for the payout
    */
   getOutcomeForPayout(payout: BigNumber): bigint {
-    const { left, slope } = this;
+    const { left, right, slope } = this;
     const y = new BigNumber(Number(payout));
+
+    // Handle flat line case (slope = 0)
+    if (slope.isZero()) {
+      // For a flat line, any outcome on the line is valid, return the left outcome
+      return BigInt(left.outcome.toString());
+    }
+
+    // Handle infinite slope (vertical line) - shouldn't happen in practice
+    if (!slope.isFinite()) {
+      throw new Error(
+        'Invalid slope: cannot have vertical line in payout curve',
+      );
+    }
 
     // Find the x value for the given y
     // slope = (y2 - y1) / (x2 - x1)
-    // x1 = (y2 - y1) / slope + x2
+    // Rearranging: x = (y - y1) / slope + x1
     const outcome = y
       .minus(left.payout)
       .dividedBy(slope)
       .plus(left.outcome)
       .integerValue();
+
+    // Validate that the result is finite
+    if (!outcome.isFinite()) {
+      throw new Error(
+        `Invalid outcome calculation: result is not finite. Payout: ${payout}, Left: {${left.outcome}, ${left.payout}}, Right: {${right.outcome}, ${right.payout}}, Slope: ${slope}`,
+      );
+    }
+
     return BigInt(outcome.toString());
   }
 
@@ -144,47 +165,43 @@ export class PolynomialPayoutCurve {
 
     const CETS: CETPayout[] = [];
 
-    // 1. Add the first piece to the list
-    const { payoutCurvePiece } = payoutFunction.payoutFunctionPieces[0];
+    // Process pieces sequentially, but use the curve to determine the correct fromPayout
+    let previousOutcome = BigInt(0);
 
-    const curve = this.fromPayoutCurvePiece(
-      payoutCurvePiece as PolynomialPayoutCurvePiece,
-    );
-
-    // For the first piece, we'll use the first piece's endpoint as both start and end initially
-    const firstPiece = payoutFunction.payoutFunctionPieces[0];
-
-    CETS.push(
-      ...splitIntoRanges(
-        firstPiece.endPoint.eventOutcome,
-        firstPiece.endPoint.eventOutcome,
-        firstPiece.endPoint.outcomePayout,
-        firstPiece.endPoint.outcomePayout,
-        totalCollateral,
-        curve,
-        roundingIntervals.intervals,
-      ),
-    );
-
-    // 2. If there are subsequent pieces, add them to the list
-    for (let i = 1; i < payoutFunction.payoutFunctionPieces.length; i++) {
-      const { payoutCurvePiece } = payoutFunction.payoutFunctionPieces[i];
+    for (let i = 0; i < payoutFunction.payoutFunctionPieces.length; i++) {
+      const piece = payoutFunction.payoutFunctionPieces[i];
+      const { payoutCurvePiece } = piece;
 
       const curve = this.fromPayoutCurvePiece(
         payoutCurvePiece as PolynomialPayoutCurvePiece,
       );
 
-      CETS.push(
-        ...splitIntoRanges(
-          payoutFunction.payoutFunctionPieces[i - 1].endPoint.eventOutcome,
-          payoutFunction.payoutFunctionPieces[i].endPoint.eventOutcome,
-          payoutFunction.payoutFunctionPieces[i - 1].endPoint.outcomePayout,
-          payoutFunction.payoutFunctionPieces[i].endPoint.outcomePayout,
-          totalCollateral,
-          curve,
-          roundingIntervals.intervals,
-        ),
+      const fromOutcome = previousOutcome;
+      const toOutcome = piece.endPoint.eventOutcome;
+      const toPayout = piece.endPoint.outcomePayout;
+
+      // Calculate the fromPayout using the curve for this piece
+      const fromPayout = BigInt(
+        curve.getPayout(fromOutcome).integerValue().toString(),
       );
+
+      // Only add ranges where to > from
+      if (toOutcome > fromOutcome) {
+        CETS.push(
+          ...splitIntoRanges(
+            fromOutcome,
+            toOutcome,
+            fromPayout,
+            toPayout,
+            totalCollateral,
+            curve,
+            roundingIntervals.intervals,
+          ),
+        );
+      }
+
+      // Update for next iteration
+      previousOutcome = toOutcome;
     }
 
     return mergePayouts(CETS);

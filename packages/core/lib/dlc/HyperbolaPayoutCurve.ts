@@ -91,13 +91,13 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     const piece = new HyperbolaPayoutCurvePiece();
     piece.usePositivePiece = positive;
 
-    // Use direct f64 values as per the new API
-    piece.translateOutcome = Number(translateOutcome.toString());
-    piece.translatePayout = Number(translatePayout.toString());
-    piece.a = Number(a.toString());
-    piece.b = Number(b.toString());
-    piece.c = Number(c.toString());
-    piece.d = Number(d.toString());
+    // Store as BigInt for internal precision
+    piece.translateOutcome = BigInt(translateOutcome.integerValue().toString());
+    piece.translatePayout = BigInt(translatePayout.integerValue().toString());
+    piece.a = BigInt(a.integerValue().toString());
+    piece.b = BigInt(b.integerValue().toString());
+    piece.c = BigInt(c.integerValue().toString());
+    piece.d = BigInt(d.integerValue().toString());
 
     return piece;
   }

@@ -53,11 +53,10 @@ describe('OrderNegotiationFields', () => {
       it('serializes', () => {
         const instance = new OrderNegotiationFieldsV1();
 
-        // Create OrderOfferV0 programmatically for new dlcspecs PR #163 format
+        // Create OrderOffer programmatically for new dlcspecs PR #163 format
         const orderOffer = new OrderOffer();
 
-        // Set all required properties following DlcOffer.spec.ts pattern
-        orderOffer.contractFlags = Buffer.from('00', 'hex');
+        // Set basic OrderOffer properties (no funding-related fields)
         orderOffer.chainHash = Buffer.from(
           '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
           'hex',
@@ -66,21 +65,6 @@ describe('OrderNegotiationFields', () => {
           '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
           'hex',
         );
-        orderOffer.fundingPubkey = Buffer.from(
-          '0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3',
-          'hex',
-        );
-        orderOffer.payoutSpk = Buffer.from(
-          '00142bbdec425007dc360523b0294d2c64d2213af498',
-          'hex',
-        );
-        orderOffer.payoutSerialId = BigInt(11555292);
-        orderOffer.changeSpk = Buffer.from(
-          '0014afa16f949f3055f38bd3a73312bed00b61558884',
-          'hex',
-        );
-        orderOffer.changeSerialId = BigInt(2008045);
-        orderOffer.fundOutputSerialId = BigInt(5411962);
 
         // Create a simple contract info with enumerated outcomes
         const contractInfo = new SingleContractInfo();
@@ -136,11 +120,10 @@ describe('OrderNegotiationFields', () => {
         // Create a test instance and serialize it first for round-trip testing
         const originalInstance = new OrderNegotiationFieldsV1();
 
-        // Create OrderOfferV0 programmatically for new dlcspecs PR #163 format
+        // Create OrderOffer programmatically for new dlcspecs PR #163 format
         const orderOffer = new OrderOffer();
 
-        // Set all required properties following DlcOffer.spec.ts pattern
-        orderOffer.contractFlags = Buffer.from('00', 'hex');
+        // Set basic OrderOffer properties (no funding-related fields)
         orderOffer.chainHash = Buffer.from(
           '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
           'hex',
@@ -149,21 +132,6 @@ describe('OrderNegotiationFields', () => {
           '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
           'hex',
         );
-        orderOffer.fundingPubkey = Buffer.from(
-          '0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3',
-          'hex',
-        );
-        orderOffer.payoutSpk = Buffer.from(
-          '00142bbdec425007dc360523b0294d2c64d2213af498',
-          'hex',
-        );
-        orderOffer.payoutSerialId = BigInt(11555292);
-        orderOffer.changeSpk = Buffer.from(
-          '0014afa16f949f3055f38bd3a73312bed00b61558884',
-          'hex',
-        );
-        orderOffer.changeSerialId = BigInt(2008045);
-        orderOffer.fundOutputSerialId = BigInt(5411962);
 
         // Create a simple contract info with enumerated outcomes
         const contractInfo = new SingleContractInfo();

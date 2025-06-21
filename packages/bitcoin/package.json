@@ -23,7 +23,8 @@
   },
   "dependencies": {
     "@node-dlc/bufio": "^0.24.1",
-    "@node-dlc/crypto": "^0.24.1"
+    "@node-dlc/crypto": "^0.24.1",
+    "decimal.js": "^10.5.0"
   },
   "publishConfig": {
     "access": "public"
