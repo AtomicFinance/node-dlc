@@ -144,7 +144,7 @@ describe('DlcAccept', () => {
 
       it('has correct type', () => {
         expect(DlcAccept.deserialize(instance.serialize()).type).to.equal(
-          MessageType.DlcAcceptV0,
+          MessageType.DlcAccept,
         );
       });
     });

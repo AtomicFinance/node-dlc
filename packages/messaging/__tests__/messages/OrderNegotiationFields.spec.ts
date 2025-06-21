@@ -11,7 +11,7 @@ import {
   OrderNegotiationFieldsV0,
   OrderNegotiationFieldsV1,
 } from '../../lib/messages/OrderNegotiationFields';
-import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
+import { OrderOffer } from '../../lib/messages/OrderOffer';
 import { MessageType } from '../../lib/MessageType';
 
 describe('OrderNegotiationFields', () => {
@@ -54,7 +54,7 @@ describe('OrderNegotiationFields', () => {
         const instance = new OrderNegotiationFieldsV1();
 
         // Create OrderOfferV0 programmatically for new dlcspecs PR #163 format
-        const orderOffer = new OrderOfferV0();
+        const orderOffer = new OrderOffer();
         orderOffer.chainHash = Buffer.from(
           '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
           'hex',
@@ -115,7 +115,7 @@ describe('OrderNegotiationFields', () => {
         const originalInstance = new OrderNegotiationFieldsV1();
 
         // Create OrderOfferV0 programmatically for new dlcspecs PR #163 format
-        const orderOffer = new OrderOfferV0();
+        const orderOffer = new OrderOffer();
         orderOffer.chainHash = Buffer.from(
           '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
           'hex',
@@ -173,10 +173,10 @@ describe('OrderNegotiationFields', () => {
           expect(Number(instance.length)).to.equal(
             Number(originalInstance.length),
           );
-          expect(instance.orderOffer).to.be.instanceof(OrderOfferV0);
+          expect(instance.orderOffer).to.be.instanceof(OrderOffer);
 
           // Type cast to access OrderOfferV0 properties
-          const deserializedOffer = instance.orderOffer as OrderOfferV0;
+          const deserializedOffer = instance.orderOffer as OrderOffer;
           expect(deserializedOffer.chainHash).to.deep.equal(
             orderOffer.chainHash,
           );

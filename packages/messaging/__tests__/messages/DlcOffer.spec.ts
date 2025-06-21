@@ -239,7 +239,7 @@ describe('DlcOffer', () => {
       it('has correct type', () => {
         const serialized = instance.serialize();
         expect(DlcOffer.deserialize(serialized).type).to.equal(
-          MessageType.DlcOfferV0,
+          MessageType.DlcOffer,
         );
       });
 

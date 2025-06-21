@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
 import {
+  OrderAccept,
   OrderAcceptContainer,
-  OrderAcceptV0,
 } from '../../lib/messages/OrderAccept';
 import { OrderNegotiationFieldsV0 } from '../../lib/messages/OrderNegotiationFields';
 
@@ -19,7 +19,7 @@ describe('OrderAccept', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OrderAcceptV0();
+      const instance = new OrderAccept();
 
       instance.tempOrderId = tempOrderId;
       instance.negotiationFields = OrderNegotiationFieldsV0.deserialize(
@@ -43,7 +43,7 @@ describe('OrderAccept', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OrderAcceptV0.deserialize(buf);
+      const instance = OrderAccept.deserialize(buf);
 
       expect(instance.tempOrderId).to.deep.equal(tempOrderId);
       expect(instance.negotiationFields.serialize().toString('hex')).to.equal(
@@ -54,7 +54,7 @@ describe('OrderAccept', () => {
 
   describe('OrderAcceptContainer', () => {
     it('should serialize and deserialize', () => {
-      const orderAccept = new OrderAcceptV0();
+      const orderAccept = new OrderAccept();
 
       orderAccept.tempOrderId = tempOrderId;
       orderAccept.negotiationFields = OrderNegotiationFieldsV0.deserialize(
@@ -62,7 +62,7 @@ describe('OrderAccept', () => {
       );
 
       // swap payout and change spk to differentiate between dlcoffers
-      const orderAccept2 = OrderAcceptV0.deserialize(orderAccept.serialize());
+      const orderAccept2 = OrderAccept.deserialize(orderAccept.serialize());
       orderAccept2.tempOrderId = tempOrderId2;
 
       const container = new OrderAcceptContainer();

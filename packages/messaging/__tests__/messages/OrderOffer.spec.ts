@@ -6,7 +6,7 @@ import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
-import { OrderOfferV0 } from '../../lib/messages/OrderOffer';
+import { OrderOffer } from '../../lib/messages/OrderOffer';
 
 describe('OrderOffer', () => {
   const chainHash = Buffer.from(
@@ -54,10 +54,10 @@ describe('OrderOffer', () => {
   ); // prettier-ignore
 
   describe('basic functionality', () => {
-    let instance: OrderOfferV0;
+    let instance: OrderOffer;
 
     beforeEach(() => {
-      instance = new OrderOfferV0();
+      instance = new OrderOffer();
       instance.chainHash = chainHash;
 
       // Create a simple contract info with enumerated outcomes
@@ -113,7 +113,7 @@ describe('OrderOffer', () => {
       expect(serialized).to.be.instanceof(Buffer);
       expect(serialized.length).to.be.greaterThan(0);
 
-      const deserialized = OrderOfferV0.deserialize(serialized);
+      const deserialized = OrderOffer.deserialize(serialized);
       expect(deserialized.chainHash).to.deep.equal(instance.chainHash);
       expect(deserialized.offerCollateralSatoshis).to.equal(
         instance.offerCollateralSatoshis,

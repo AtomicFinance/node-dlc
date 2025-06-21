@@ -92,7 +92,7 @@ describe('DlcClose', () => {
         expect(serialized.length).to.be.greaterThan(0);
 
         // Verify the type is correct at the beginning
-        expect(serialized.readUInt16BE(0)).to.equal(MessageType.DlcCloseV0);
+        expect(serialized.readUInt16BE(0)).to.equal(MessageType.DlcClose);
       });
     });
 
@@ -134,7 +134,7 @@ describe('DlcClose', () => {
 
         const serialized = simpleInstance.serialize();
         const deserialized = DlcCloseV0.deserialize(serialized);
-        expect(deserialized.type).to.equal(MessageType.DlcCloseV0);
+        expect(deserialized.type).to.equal(MessageType.DlcClose);
       });
     });
 
@@ -304,7 +304,7 @@ describe('DlcClose', () => {
 
         // Basic structural checks
         const reader = new BufferReader(serialized);
-        expect(reader.readUInt16BE()).to.equal(MessageType.DlcCloseV0);
+        expect(reader.readUInt16BE()).to.equal(MessageType.DlcClose);
         expect(reader.readBytes(32)).to.deep.equal(contractId);
         expect(reader.readBytes(64)).to.deep.equal(closeSignature);
       });
