@@ -82,7 +82,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
 
             // Check format version based on serialization
             const messageType = inputBuffer.readUInt16BE(0);
-            expect(messageType).to.equal(MessageType.DlcOfferV0);
+            expect(messageType).to.equal(MessageType.DlcOffer);
 
             // Detect old vs new format
             const nextBytes = inputBuffer.slice(2, 7);
@@ -101,7 +101,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
 
             const offer = DlcOffer.deserialize(inputBuffer);
 
-            expect(offer.type).to.equal(MessageType.DlcOfferV0);
+            expect(offer.type).to.equal(MessageType.DlcOffer);
 
             if (expectedMessage.protocolVersion) {
               expect(offer.protocolVersion).to.equal(
@@ -160,7 +160,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
 
             const accept = DlcAccept.deserialize(inputBuffer);
 
-            expect(accept.type).to.equal(MessageType.DlcAcceptV0);
+            expect(accept.type).to.equal(MessageType.DlcAccept);
 
             if (expectedMessage.protocolVersion) {
               expect(accept.protocolVersion).to.equal(
@@ -212,7 +212,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
 
             const sign = DlcSign.deserialize(inputBuffer);
 
-            expect(sign.type).to.equal(MessageType.DlcSignV0);
+            expect(sign.type).to.equal(MessageType.DlcSign);
 
             if (expectedMessage.protocolVersion) {
               expect(sign.protocolVersion).to.equal(
