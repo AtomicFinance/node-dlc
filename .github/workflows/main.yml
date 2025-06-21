@@ -29,6 +29,24 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-dlc-cli/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust-dlc-cli/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y libzmq3-dev build-essential
 
@@ -37,6 +55,17 @@ jobs:
 
       - name: Bootstrap packages
         run: yarn bootstrap
+
+      - name: Build rust-dlc-cli for compatibility tests
+        run: |
+          if [ -d "rust-dlc-cli" ]; then
+            echo "Building rust-dlc-cli for compatibility tests..."
+            cd rust-dlc-cli
+            cargo build --release
+          else
+            echo "rust-dlc-cli directory not found, skipping Rust CLI build"
+          fi
+        timeout-minutes: 10
 
       - name: Run tests
         run: yarn test
