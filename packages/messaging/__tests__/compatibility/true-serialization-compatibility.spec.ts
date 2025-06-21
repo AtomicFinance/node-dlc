@@ -34,7 +34,7 @@ function callRustCli(command: string, input?: string): RustDlcCliResult {
       input: input || '',
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 30000,
+      timeout: 300000, // 5 minutes to handle Rust compilation and execution
     });
 
     return JSON.parse(result.trim());
