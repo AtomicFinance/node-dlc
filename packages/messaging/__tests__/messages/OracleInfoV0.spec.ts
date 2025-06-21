@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { OracleAnnouncementV0 } from '../../lib/messages/OracleAnnouncementV0';
+import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleInfoV0 } from '../../lib/messages/OracleInfoV0';
 
 describe('OracleInfoV0', () => {
@@ -9,7 +9,7 @@ describe('OracleInfoV0', () => {
       const instance = new OracleInfoV0();
 
       instance.length = BigInt(168);
-      instance.announcement = OracleAnnouncementV0.deserialize(
+      instance.announcement = OracleAnnouncement.deserialize(
         Buffer.from(
           'fdd824' + // type oracle_announcement
             'a4' + // length

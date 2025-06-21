@@ -1,6 +1,9 @@
 import { Tx } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
-import { DlcAcceptV0, DlcOfferV0, DlcTransactionsV0 } from '..';
+import { DlcAccept, DlcOffer, DlcTransactionsV0 } from '..';
+import { MessageType } from '../MessageType';
+import { IDlcMessage } from './DlcMessage';
 
 /**
  * DlcClose Metadata object contains information required for verifying DlcClose
@@ -28,16 +31,16 @@ export class DlcCloseMetadata {
   }
 
   public static fromDlcMessages(
-    dlcOffer: DlcOfferV0,
-    dlcAccept: DlcAcceptV0,
+    dlcOffer: DlcOffer,
+    dlcAccept: DlcAccept,
     dlcTxs: DlcTransactionsV0,
   ): DlcCloseMetadata {
     const instance = new DlcCloseMetadata();
 
-    instance.offerFundingPubKey = dlcOffer.fundingPubKey;
-    instance.acceptFundingPubKey = dlcAccept.fundingPubKey;
-    instance.offerPayoutSPK = dlcOffer.payoutSPK;
-    instance.acceptPayoutSPK = dlcAccept.payoutSPK;
+    instance.offerFundingPubKey = dlcOffer.fundingPubkey;
+    instance.acceptFundingPubKey = dlcAccept.fundingPubkey;
+    instance.offerPayoutSPK = dlcOffer.payoutSpk;
+    instance.acceptPayoutSPK = dlcAccept.payoutSpk;
     instance.offerPayoutSerialId = dlcOffer.payoutSerialId;
     instance.acceptPayoutSerialId = dlcAccept.payoutSerialId;
     instance.feeRatePerVb = dlcOffer.feeRatePerVb;
@@ -83,18 +86,18 @@ export class DlcCloseMetadata {
   }
 
   public toDlcMessages(): {
-    dlcOffer: DlcOfferV0;
-    dlcAccept: DlcAcceptV0;
+    dlcOffer: DlcOffer;
+    dlcAccept: DlcAccept;
     dlcTxs: DlcTransactionsV0;
   } {
-    const dlcOffer = new DlcOfferV0();
-    const dlcAccept = new DlcAcceptV0();
+    const dlcOffer = new DlcOffer();
+    const dlcAccept = new DlcAccept();
     const dlcTxs = new DlcTransactionsV0();
 
-    dlcOffer.fundingPubKey = this.offerFundingPubKey;
-    dlcAccept.fundingPubKey = this.acceptFundingPubKey;
-    dlcOffer.payoutSPK = this.offerPayoutSPK;
-    dlcAccept.payoutSPK = this.acceptPayoutSPK;
+    dlcOffer.fundingPubkey = this.offerFundingPubKey;
+    dlcAccept.fundingPubkey = this.acceptFundingPubKey;
+    dlcOffer.payoutSpk = this.offerPayoutSPK;
+    dlcAccept.payoutSpk = this.acceptPayoutSPK;
     dlcOffer.payoutSerialId = this.offerPayoutSerialId;
     dlcAccept.payoutSerialId = this.acceptPayoutSerialId;
     dlcOffer.feeRatePerVb = this.feeRatePerVb;

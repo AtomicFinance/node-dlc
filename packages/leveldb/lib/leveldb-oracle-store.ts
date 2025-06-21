@@ -1,27 +1,27 @@
 import { sha256 } from '@node-dlc/crypto';
 import {
   DlcIdsV0,
-  OracleEventContainerV0,
+  OracleEventContainer,
   OracleIdentifierV0,
 } from '@node-dlc/messaging';
 
 import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
-  OracleEventContainerV0 = 80,
+  OracleEventContainer = 80,
   OracleNoncesV0 = 81,
   OracleIdentifierV0 = 82,
 }
 
 export class LeveldbOracleStore extends LeveldbBase {
-  public async findOracleEventContainers(): Promise<OracleEventContainerV0[]> {
-    const results: OracleEventContainerV0[] = [];
+  public async findOracleEventContainers(): Promise<OracleEventContainer[]> {
+    const results: OracleEventContainer[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.OracleEventContainerV0) {
-          results.push(OracleEventContainerV0.deserialize(value));
+        if (key[0] === Prefix.OracleEventContainer) {
+          results.push(OracleEventContainer.deserialize(value));
         }
       }
     } finally {
@@ -33,25 +33,25 @@ export class LeveldbOracleStore extends LeveldbBase {
 
   public async findOracleEventContainer(
     announcementId: Buffer,
-  ): Promise<OracleEventContainerV0> {
+  ): Promise<OracleEventContainer> {
     const key = Buffer.concat([
-      Buffer.from([Prefix.OracleEventContainerV0]),
+      Buffer.from([Prefix.OracleEventContainer]),
       announcementId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return OracleEventContainerV0.deserialize(raw);
+    return OracleEventContainer.deserialize(raw);
   }
 
   public async saveOracleEventContainer(
-    oracleEventContainer: OracleEventContainerV0,
+    oracleEventContainer: OracleEventContainer,
   ): Promise<void> {
     const value = oracleEventContainer.serialize();
     const announcementId = sha256(
       oracleEventContainer.announcement.serialize(),
     );
     const key = Buffer.concat([
-      Buffer.from([Prefix.OracleEventContainerV0]),
+      Buffer.from([Prefix.OracleEventContainer]),
       announcementId,
     ]);
     await this._db.put(key, value);
@@ -61,7 +61,7 @@ export class LeveldbOracleStore extends LeveldbBase {
     announcementId: Buffer,
   ): Promise<void> {
     const key = Buffer.concat([
-      Buffer.from([Prefix.OracleEventContainerV0]),
+      Buffer.from([Prefix.OracleEventContainer]),
       announcementId,
     ]);
     await this._db.del(key);

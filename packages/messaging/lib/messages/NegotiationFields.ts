@@ -1,10 +1,9 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
-import { RoundingIntervalsV0 } from './RoundingIntervalsV0';
-import { IRoundingIntervalsV0JSON } from './RoundingIntervalsV0';
+import { RoundingIntervals } from './RoundingIntervals';
+import { IRoundingIntervalsJSON } from './RoundingIntervals';
 
 export abstract class NegotiationFields {
   public static deserialize(
@@ -110,9 +109,10 @@ export class NegotiationFieldsV1
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    instance.roundingIntervals = RoundingIntervalsV0.deserialize(
-      getTlv(reader),
-    );
+
+    // Read remaining bytes as raw RoundingIntervals data (not TLV wrapped)
+    const remainingBytes = reader.readBytes();
+    instance.roundingIntervals = RoundingIntervals.deserialize(remainingBytes);
 
     return instance;
   }
@@ -124,7 +124,7 @@ export class NegotiationFieldsV1
 
   public length: bigint;
 
-  public roundingIntervals: RoundingIntervalsV0;
+  public roundingIntervals: RoundingIntervals;
 
   /**
    * Converts negotiation_fields_v1 to JSON
@@ -163,7 +163,7 @@ export class NegotiationFieldsV2
   public static type = MessageType.NegotiationFieldsV2;
 
   /**
-   * Deserializes an negotiation_fields_v1 message
+   * Deserializes an negotiation_fields_v2 message
    * @param buf
    */
   public static deserialize(buf: Buffer): NegotiationFieldsV2 {
@@ -172,11 +172,22 @@ export class NegotiationFieldsV2
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
-    reader.readBigSize(); // num_disjoint_events
+    const numDisjointEvents = Number(reader.readBigSize());
 
-    while (!reader.eof) {
+    for (let i = 0; i < numDisjointEvents; i++) {
+      // Read the serialized NegotiationFields data directly (not TLV wrapped)
+      const fieldType = Number(reader.readBigSize());
+      const fieldLength = Number(reader.readBigSize());
+      const fieldData = reader.readBytes(fieldLength);
+
+      // Recreate the full buffer with type + length + data for deserialization
+      const fieldWriter = new BufferWriter();
+      fieldWriter.writeBigSize(fieldType);
+      fieldWriter.writeBigSize(fieldLength);
+      fieldWriter.writeBytes(fieldData);
+
       instance.negotiationFieldsList.push(
-        NegotiationFields.deserialize(getTlv(reader)),
+        NegotiationFields.deserialize(fieldWriter.toBuffer()),
       );
     }
 
@@ -230,7 +241,7 @@ export interface INegotiationFieldsV0JSON {
 
 export interface INegotiationFieldsV1JSON {
   type: number;
-  roundingIntervals: IRoundingIntervalsV0JSON;
+  roundingIntervals: IRoundingIntervalsJSON;
 }
 
 export interface INegotiationFieldsV2JSON {

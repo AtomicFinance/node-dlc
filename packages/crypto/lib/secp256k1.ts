@@ -94,6 +94,20 @@ export function isDERSig(sig: Buffer): boolean {
 }
 
 /**
+ * Parses a DER-encoded signature and returns the raw 64-byte signature (r,s)
+ * @param derSig DER-encoded signature buffer
+ * @returns 64-byte buffer containing raw (r,s) signature
+ */
+export function sigFromDER(derSig: Buffer): Buffer {
+  try {
+    const rawSig = secp256k1.signatureImport(derSig);
+    return Buffer.from(rawSig);
+  } catch (ex) {
+    throw new Error(`Invalid DER signature: ${ex.message}`);
+  }
+}
+
+/**
  * Recovers the public key from the signature and recovery identifier
  * for the signed message.
  * @param signature 64-byte signature

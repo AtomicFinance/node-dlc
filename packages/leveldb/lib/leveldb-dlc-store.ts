@@ -4,11 +4,11 @@ import { sha256, xor } from '@node-dlc/crypto';
 import {
   ContractInfoV0,
   ContractInfoV1,
-  DlcAcceptV0,
+  DlcAccept,
   DlcCancelV0,
   DlcCloseV0,
-  DlcOfferV0,
-  DlcSignV0,
+  DlcOffer,
+  DlcSign,
   DlcTransactionsV0,
   FundingInputV0,
 } from '@node-dlc/messaging';
@@ -28,14 +28,14 @@ enum Prefix {
 }
 
 export class LeveldbDlcStore extends LeveldbBase {
-  public async findDlcOffers(): Promise<DlcOfferV0[]> {
-    const results: DlcOfferV0[] = [];
+  public async findDlcOffers(): Promise<DlcOffer[]> {
+    const results: DlcOffer[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcOfferV0) {
-          results.push(DlcOfferV0.deserialize(value));
+          results.push(DlcOffer.deserialize(value));
         }
       }
     } finally {
@@ -60,19 +60,19 @@ export class LeveldbDlcStore extends LeveldbBase {
     return num;
   }
 
-  public async findDlcOffer(tempContractId: Buffer): Promise<DlcOfferV0> {
+  public async findDlcOffer(tempContractId: Buffer): Promise<DlcOffer> {
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcOfferV0]),
       tempContractId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcOfferV0.deserialize(raw);
+    return DlcOffer.deserialize(raw);
   }
 
   public async findDlcOffersByTempContractIds(
     tempContractIds: Buffer[],
-  ): Promise<DlcOfferV0[]> {
+  ): Promise<DlcOffer[]> {
     const dlcOffers = await Promise.all(
       tempContractIds.map((tempContractId) =>
         this.findDlcOffer(tempContractId),
@@ -81,31 +81,65 @@ export class LeveldbDlcStore extends LeveldbBase {
     return dlcOffers.filter((dlcOffer) => !!dlcOffer);
   }
 
-  public async findDlcOffersByEventId(eventId: string): Promise<DlcOfferV0[]> {
-    const results: DlcOfferV0[] = [];
+  public async findDlcOffersByEventId(eventId: string): Promise<DlcOffer[]> {
+    const results: DlcOffer[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcOfferV0) {
-          const dlcOffer = DlcOfferV0.deserialize(value);
+          const dlcOffer = DlcOffer.deserialize(value);
           if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
-            if (
-              (dlcOffer.contractInfo as ContractInfoV0).oracleInfo.announcement
-                .oracleEvent.eventId === eventId
-            ) {
-              results.push(dlcOffer);
+            const oracleInfo = (dlcOffer.contractInfo as ContractInfoV0)
+              .oracleInfo;
+            // Handle both SingleOracleInfo and MultiOracleInfo
+            if ('announcement' in oracleInfo) {
+              // SingleOracleInfo
+              const singleOracleInfo = oracleInfo as any;
+              if (
+                singleOracleInfo.announcement.oracleEvent.eventId === eventId
+              ) {
+                results.push(dlcOffer);
+              }
+            } else if ('announcements' in oracleInfo) {
+              // MultiOracleInfo
+              const multiOracleInfo = oracleInfo as any;
+              if (
+                multiOracleInfo.announcements.some(
+                  (ann: any) => ann.oracleEvent.eventId === eventId,
+                )
+              ) {
+                results.push(dlcOffer);
+              }
             }
           } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
             (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
               (pair) => {
-                if (
-                  pair.oracleInfo.announcement.oracleEvent.eventId === eventId
-                ) {
-                  results.push(dlcOffer);
-                  return true; // Returning true will stop the iteration since we've found a match
+                const oracleInfo = pair.oracleInfo;
+                // Handle both SingleOracleInfo and MultiOracleInfo
+                if ('announcement' in oracleInfo) {
+                  // SingleOracleInfo
+                  const singleOracleInfo = oracleInfo as any;
+                  if (
+                    singleOracleInfo.announcement.oracleEvent.eventId ===
+                    eventId
+                  ) {
+                    results.push(dlcOffer);
+                    return true;
+                  }
+                } else if ('announcements' in oracleInfo) {
+                  // MultiOracleInfo
+                  const multiOracleInfo = oracleInfo as any;
+                  if (
+                    multiOracleInfo.announcements.some(
+                      (ann: any) => ann.oracleEvent.eventId === eventId,
+                    )
+                  ) {
+                    results.push(dlcOffer);
+                    return true;
+                  }
                 }
-                return false; // Returning false will continue the iteration to check other pairs
+                return false;
               },
             );
           }
@@ -118,7 +152,7 @@ export class LeveldbDlcStore extends LeveldbBase {
     return results;
   }
 
-  public async saveDlcOffer(dlcOffer: DlcOfferV0): Promise<void> {
+  public async saveDlcOffer(dlcOffer: DlcOffer): Promise<void> {
     const value = dlcOffer.serialize();
     const tempContractId = sha256(value);
     const key = Buffer.concat([
@@ -136,14 +170,14 @@ export class LeveldbDlcStore extends LeveldbBase {
     await this._db.del(key);
   }
 
-  public async findDlcAccepts(): Promise<DlcAcceptV0[]> {
-    const results: DlcAcceptV0[] = [];
+  public async findDlcAccepts(): Promise<DlcAccept[]> {
+    const results: DlcAccept[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcAcceptV0) {
-          results.push(DlcAcceptV0.deserialize(value));
+          results.push(DlcAccept.deserialize(value));
         }
       }
     } finally {
@@ -153,14 +187,14 @@ export class LeveldbDlcStore extends LeveldbBase {
     return results;
   }
 
-  public async findFirstDlcAccept(): Promise<DlcAcceptV0> {
-    let result: DlcAcceptV0;
+  public async findFirstDlcAccept(): Promise<DlcAccept> {
+    let result: DlcAccept;
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcAcceptV0 && !result) {
-          result = DlcAcceptV0.deserialize(value);
+          result = DlcAccept.deserialize(value);
           break;
         }
       }
@@ -189,16 +223,14 @@ export class LeveldbDlcStore extends LeveldbBase {
   public async findDlcAccept(
     contractId: Buffer,
     parseCets = true,
-  ): Promise<DlcAcceptV0> {
+  ): Promise<DlcAccept> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcAcceptV0.deserialize(raw, parseCets);
+    return DlcAccept.deserialize(raw, parseCets);
   }
 
-  public async findDlcAcceptByOutpoint(
-    outpoint: OutPoint,
-  ): Promise<DlcAcceptV0> {
+  public async findDlcAcceptByOutpoint(outpoint: OutPoint): Promise<DlcAccept> {
     const key = Buffer.concat([
       Buffer.from([Prefix.Outpoint]),
       Buffer.from(outpoint.toString()),
@@ -223,7 +255,7 @@ export class LeveldbDlcStore extends LeveldbBase {
       contractIds.map(async (contractId) => {
         const dlcAccept = await this.findDlcAccept(contractId, false);
         if (!dlcAccept) return;
-        return [contractId, dlcAccept.tempContractId] as [Buffer, Buffer];
+        return [contractId, dlcAccept.temporaryContractId] as [Buffer, Buffer];
       }),
     );
 
@@ -232,12 +264,12 @@ export class LeveldbDlcStore extends LeveldbBase {
     );
   }
 
-  public async saveDlcAccept(dlcAccept: DlcAcceptV0): Promise<void> {
-    const dlcOffer = await this.findDlcOffer(dlcAccept.tempContractId);
+  public async saveDlcAccept(dlcAccept: DlcAccept): Promise<void> {
+    const dlcOffer = await this.findDlcOffer(dlcAccept.temporaryContractId);
     const txBuilder = new DlcTxBuilder(dlcOffer, dlcAccept.withoutSigs());
     const tx = txBuilder.buildFundingTransaction();
     const fundingTxid = tx.txId.serialize();
-    const contractId = xor(fundingTxid, dlcAccept.tempContractId);
+    const contractId = xor(fundingTxid, dlcAccept.temporaryContractId);
     const value = dlcAccept.serialize();
     const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
     await this._db.put(key, value);
@@ -259,23 +291,25 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     const key3 = Buffer.concat([
       Buffer.from([Prefix.TempContractId]),
-      dlcAccept.tempContractId,
+      dlcAccept.temporaryContractId,
     ]);
     await this._db.put(key3, contractId);
   }
 
   // NOTE: ONLY USE FOR BATCH FUNDED DLCs
-  public async saveDlcAccepts(dlcAccepts: DlcAcceptV0[]): Promise<void> {
-    const dlcOffers: DlcOfferV0[] = [];
+  public async saveDlcAccepts(dlcAccepts: DlcAccept[]): Promise<void> {
+    const dlcOffers: DlcOffer[] = [];
     for (let i = 0; i < dlcAccepts.length; i++) {
-      const dlcOffer = await this.findDlcOffer(dlcAccepts[i].tempContractId);
+      const dlcOffer = await this.findDlcOffer(
+        dlcAccepts[i].temporaryContractId,
+      );
       dlcOffers.push(dlcOffer);
     }
     const txBuilder = new BatchDlcTxBuilder(dlcOffers, dlcAccepts);
     const tx = txBuilder.buildFundingTransaction();
     const fundingTxId = tx.txId.serialize();
-    const contractIds = dlcAccepts.map((dlcAccepts) =>
-      xor(fundingTxId, dlcAccepts.tempContractId),
+    const contractIds = dlcAccepts.map((dlcAccept) =>
+      xor(fundingTxId, dlcAccept.temporaryContractId),
     );
     for (let i = 0; i < dlcAccepts.length; i++) {
       const value = dlcAccepts[i].serialize();
@@ -302,7 +336,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
       const key3 = Buffer.concat([
         Buffer.from([Prefix.TempContractId]),
-        dlcAccepts[i].tempContractId,
+        dlcAccepts[i].temporaryContractId,
       ]);
       await this._db.put(key3, contractIds[i]);
     }
@@ -313,14 +347,14 @@ export class LeveldbDlcStore extends LeveldbBase {
     await this._db.del(key);
   }
 
-  public async findDlcSigns(): Promise<DlcSignV0[]> {
-    const results: DlcSignV0[] = [];
+  public async findDlcSigns(): Promise<DlcSign[]> {
+    const results: DlcSign[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcSignV0) {
-          results.push(DlcSignV0.deserialize(value));
+          results.push(DlcSign.deserialize(value));
         }
       }
     } finally {
@@ -345,14 +379,14 @@ export class LeveldbDlcStore extends LeveldbBase {
     return num;
   }
 
-  public async findDlcSign(contractId: Buffer): Promise<DlcSignV0> {
+  public async findDlcSign(contractId: Buffer): Promise<DlcSign> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcSignV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcSignV0.deserialize(raw);
+    return DlcSign.deserialize(raw);
   }
 
-  public async saveDlcSign(dlcSign: DlcSignV0): Promise<void> {
+  public async saveDlcSign(dlcSign: DlcSign): Promise<void> {
     const value = dlcSign.serialize();
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcSignV0]),

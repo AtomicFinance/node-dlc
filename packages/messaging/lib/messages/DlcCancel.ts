@@ -10,10 +10,10 @@ export abstract class DlcCancel {
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
-      case MessageType.DlcCancelV0:
+      case MessageType.DlcCancel:
         return DlcCancelV0.deserialize(buf);
       default:
-        throw new Error(`DLC Cancel message type must be DlcCancelV0`); // This is a temporary measure while protocol is being developed
+        throw new Error(`DLC Cancel message type must be DlcCancel`); // This is a temporary measure while protocol is being developed
     }
   }
 
@@ -28,7 +28,7 @@ export abstract class DlcCancel {
  * creating the funding transaction and CETs.
  */
 export class DlcCancelV0 extends DlcCancel implements IDlcMessage {
-  public static type = MessageType.DlcCancelV0;
+  public static type = MessageType.DlcCancel;
 
   /**
    * Deserializes an offer_dlc_v0 message
