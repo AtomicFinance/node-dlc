@@ -104,7 +104,7 @@ export function getOptionInfoFromContractInfo(
     payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
   )
     throw Error('Must be HyperbolaPayoutCurvePiece');
-  if (payoutCurvePiece.b !== 0 || payoutCurvePiece.c !== 0)
+  if (!payoutCurvePiece.b.isZero() || !payoutCurvePiece.c.isZero())
     throw Error('b and c HyperbolaPayoutCurvePiece values must be 0');
 
   const curve = HyperbolaPayoutCurve.fromPayoutCurvePiece(payoutCurvePiece);
@@ -122,10 +122,13 @@ export function getOptionInfoFromContractInfo(
 
   // if curve is ascending, assume it is a put.
   const contractSize = isAscending
-    ? BigInt(payoutCurvePiece.translatePayout) - totalCollateral
-    : totalCollateral + BigInt(payoutCurvePiece.translatePayout);
+    ? BigInt(payoutCurvePiece.translatePayout.toDecimal().toString()) -
+      totalCollateral
+    : totalCollateral -
+      BigInt(payoutCurvePiece.translatePayout.toDecimal().toString());
 
-  const strikePrice = BigInt(payoutCurvePiece.d) / contractSize;
+  const strikePrice =
+    BigInt(payoutCurvePiece.d.toDecimal().toString()) / contractSize;
 
   // rebuild payout curve from option info and perform a sanity check
   const { payoutCurve: sanityCurve } = isAscending

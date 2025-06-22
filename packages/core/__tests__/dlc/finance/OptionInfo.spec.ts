@@ -1,3 +1,4 @@
+import { F64 } from '@node-dlc/bufio';
 import {
   DigitDecompositionEventDescriptorV0,
   DlcOffer,
@@ -93,7 +94,7 @@ describe('OptionInfo', () => {
       const hyperbolaPiece = payoutFunc.payoutFunctionPieces[0]
         .payoutCurvePiece as HyperbolaPayoutCurvePiece;
 
-      hyperbolaPiece.translateOutcome = 4;
+      hyperbolaPiece.translateOutcome = F64.fromNumber(4);
 
       expect(() => {
         getOptionInfoFromOffer(invalidDlcOffer);
@@ -176,7 +177,7 @@ describe('OptionInfo', () => {
       const hyperbolaPiece = payoutFunc.payoutFunctionPieces[0]
         .payoutCurvePiece as HyperbolaPayoutCurvePiece;
 
-      hyperbolaPiece.translateOutcome = 4;
+      hyperbolaPiece.translateOutcome = F64.fromNumber(4);
 
       expect(() => {
         getOptionInfoFromOffer(invalidDlcOffer);

@@ -151,20 +151,23 @@ export class PolynomialPayoutCurve {
       payoutCurvePiece as PolynomialPayoutCurvePiece,
     );
 
-    // For the first piece, we'll use the first piece's endpoint as both start and end initially
+    // For the first piece, start from 0 and go to the first endpoint
     const firstPiece = payoutFunction.payoutFunctionPieces[0];
 
-    CETS.push(
-      ...splitIntoRanges(
-        firstPiece.endPoint.eventOutcome,
-        firstPiece.endPoint.eventOutcome,
-        firstPiece.endPoint.outcomePayout,
-        firstPiece.endPoint.outcomePayout,
-        totalCollateral,
-        curve,
-        roundingIntervals.intervals,
-      ),
-    );
+    // Only add ranges if there's actually a range to cover
+    if (firstPiece.endPoint.eventOutcome > 0) {
+      CETS.push(
+        ...splitIntoRanges(
+          BigInt(0), // Start from 0
+          firstPiece.endPoint.eventOutcome,
+          firstPiece.endPoint.outcomePayout, // Start payout (assuming same as end for first piece)
+          firstPiece.endPoint.outcomePayout,
+          totalCollateral,
+          curve,
+          roundingIntervals.intervals,
+        ),
+      );
+    }
 
     // 2. If there are subsequent pieces, add them to the list
     for (let i = 1; i < payoutFunction.payoutFunctionPieces.length; i++) {

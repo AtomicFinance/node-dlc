@@ -1,14 +1,16 @@
 import { Value } from '@node-dlc/bitcoin';
 import {
   ContractDescriptorV1,
+  ContractInfo,
   ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   MessageType,
   OracleAnnouncement,
+  OracleInfo,
   OracleInfoV0,
   OrderOffer,
   OrderPositionInfoV0,
-  PayoutFunctionV0,
+  PayoutFunction,
   RoundingIntervals,
 } from '@node-dlc/messaging';
 import {
@@ -127,7 +129,7 @@ export const getDigitDecompositionEventDescriptor = (
  * @param {OracleAnnouncement} announcement oracle announcement
  * @param {bigint} totalCollateral total collateral in satoshis
  * @param {bigint} offerCollateral offer collateral in satoshis
- * @param {PayoutFunctionV0} payoutFunction
+ * @param {PayoutFunction} payoutFunction
  * @param {RoundingIntervals} roundingIntervals
  * @param {bigint} feePerByte sats/vbyte
  * @param {NetworkName} network
@@ -137,7 +139,7 @@ export const buildOrderOffer = (
   announcement: OracleAnnouncement,
   totalCollateral: bigint,
   offerCollateral: bigint,
-  payoutFunction: PayoutFunctionV0,
+  payoutFunction: PayoutFunction,
   roundingIntervals: RoundingIntervals,
   feePerByte: bigint,
   network: string,
@@ -159,13 +161,15 @@ export const buildOrderOffer = (
 
   const orderOffer = new OrderOffer();
 
+  // Set required fields for OrderOffer
+  orderOffer.contractFlags = Buffer.from('00', 'hex'); // Default contract flags
   // Generate a random 32-byte temporary contract ID
   orderOffer.temporaryContractId = Buffer.from(
     Array.from({ length: 32 }, () => Math.floor(Math.random() * 256)),
   );
   orderOffer.chainHash = chainHashFromNetwork(BitcoinNetworks[network]);
   orderOffer.contractInfo = contractInfo;
-  orderOffer.offerCollateralSatoshis = offerCollateral;
+  orderOffer.offerCollateral = offerCollateral; // Use correct property name
   orderOffer.feeRatePerVb = feePerByte;
   orderOffer.cetLocktime = Math.floor(new Date().getTime() / 1000); // set to current time
   orderOffer.refundLocktime =
@@ -204,7 +208,7 @@ export const buildOptionOrderOffer = (
 
   let totalCollateral: bigint;
   let payoutFunctionInfo: {
-    payoutFunction: PayoutFunctionV0;
+    payoutFunction: PayoutFunction;
     totalCollateral?: bigint;
   };
 
