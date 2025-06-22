@@ -1,3 +1,4 @@
+import { F64 } from '@node-dlc/bufio';
 import {
   HyperbolaPayoutCurvePiece,
   MessageType,
@@ -5,6 +6,7 @@ import {
   RoundingIntervals,
 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
+import Decimal from 'decimal.js';
 
 import { CETPayout } from '..';
 import { fromPrecision, getPrecision } from '../utils/Precision';
@@ -91,13 +93,13 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     const piece = new HyperbolaPayoutCurvePiece();
     piece.usePositivePiece = positive;
 
-    // Use direct f64 values as per the new API
-    piece.translateOutcome = Number(translateOutcome.toString());
-    piece.translatePayout = Number(translatePayout.toString());
-    piece.a = Number(a.toString());
-    piece.b = Number(b.toString());
-    piece.c = Number(c.toString());
-    piece.d = Number(d.toString());
+    // Convert BigNumber values to F64 using fromString() which preserves precision
+    piece.translateOutcome = F64.fromString(translateOutcome.toString());
+    piece.translatePayout = F64.fromString(translatePayout.toString());
+    piece.a = F64.fromString(a.toString());
+    piece.b = F64.fromString(b.toString());
+    piece.c = F64.fromString(c.toString());
+    piece.d = F64.fromString(d.toString());
 
     return piece;
   }
@@ -117,12 +119,17 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
   static fromPayoutCurvePiece(
     piece: HyperbolaPayoutCurvePiece,
   ): HyperbolaPayoutCurve {
-    const a = new BigNumber(piece.a);
-    const b = new BigNumber(piece.b);
-    const c = new BigNumber(piece.c);
-    const d = new BigNumber(piece.d);
-    const translateOutcome = new BigNumber(piece.translateOutcome);
-    const translatePayout = new BigNumber(piece.translatePayout);
+    // Convert F64 values to BigNumber using toDecimal().toString() to preserve precision
+    const a = new BigNumber(piece.a.toDecimal().toString());
+    const b = new BigNumber(piece.b.toDecimal().toString());
+    const c = new BigNumber(piece.c.toDecimal().toString());
+    const d = new BigNumber(piece.d.toDecimal().toString());
+    const translateOutcome = new BigNumber(
+      piece.translateOutcome.toDecimal().toString(),
+    );
+    const translatePayout = new BigNumber(
+      piece.translatePayout.toDecimal().toString(),
+    );
 
     return new HyperbolaPayoutCurve(
       a,
