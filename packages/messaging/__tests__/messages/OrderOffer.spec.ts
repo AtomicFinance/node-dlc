@@ -59,28 +59,13 @@ describe('OrderOffer', () => {
     beforeEach(() => {
       instance = new OrderOffer();
 
-      // Set all required properties following DlcOffer.spec.ts pattern
+      // Set required properties for simplified OrderOffer
       instance.contractFlags = Buffer.from('00', 'hex');
       instance.chainHash = chainHash;
       instance.temporaryContractId = Buffer.from(
         '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
         'hex',
       );
-      instance.fundingPubkey = Buffer.from(
-        '0327efea09ff4dfb13230e887cbab8821d5cc249c7ff28668c6633ff9f4b4c08e3',
-        'hex',
-      );
-      instance.payoutSpk = Buffer.from(
-        '00142bbdec425007dc360523b0294d2c64d2213af498',
-        'hex',
-      );
-      instance.payoutSerialId = BigInt(11555292);
-      instance.changeSpk = Buffer.from(
-        '0014afa16f949f3055f38bd3a73312bed00b61558884',
-        'hex',
-      );
-      instance.changeSerialId = BigInt(2008045);
-      instance.fundOutputSerialId = BigInt(5411962);
 
       // Create a simple contract info with enumerated outcomes
       const contractInfo = new SingleContractInfo();
@@ -124,6 +109,12 @@ describe('OrderOffer', () => {
 
     it('creates and validates instance', () => {
       expect(instance.chainHash).to.deep.equal(chainHash);
+      expect(instance.temporaryContractId).to.deep.equal(
+        Buffer.from(
+          '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+          'hex',
+        ),
+      );
       expect(Number(instance.offerCollateralSatoshis)).to.equal(100000000);
       expect(Number(instance.feeRatePerVb)).to.equal(1);
       expect(instance.cetLocktime).to.equal(100);
@@ -137,6 +128,9 @@ describe('OrderOffer', () => {
 
       const deserialized = OrderOffer.deserialize(serialized);
       expect(deserialized.chainHash).to.deep.equal(instance.chainHash);
+      expect(deserialized.temporaryContractId).to.deep.equal(
+        instance.temporaryContractId,
+      );
       expect(deserialized.offerCollateralSatoshis).to.equal(
         instance.offerCollateralSatoshis,
       );
@@ -149,6 +143,9 @@ describe('OrderOffer', () => {
       const json = instance.toJSON();
       expect(json.type).to.equal(instance.type);
       expect(json.chainHash).to.equal(instance.chainHash.toString('hex'));
+      expect(json.temporaryContractId).to.equal(
+        instance.temporaryContractId.toString('hex'),
+      );
       expect(json.offerCollateralSatoshis).to.equal(
         Number(instance.offerCollateralSatoshis),
       );

@@ -1,11 +1,11 @@
 import {
   ContractDescriptorV1,
   ContractInfo,
-  ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   HyperbolaPayoutCurvePiece,
   MessageType,
-  PayoutFunctionV0,
+  PayoutFunction,
+  SingleContractInfo,
 } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
 
@@ -21,8 +21,8 @@ export interface OptionInfo {
   expiry: Date;
 }
 
-export type HasOfferCollateralSatoshis = {
-  offerCollateralSatoshis: bigint;
+export type HasOfferCollateral = {
+  offerCollateral: bigint;
 };
 
 export type HasContractInfo = {
@@ -38,10 +38,10 @@ export type OptionType = 'put' | 'call';
 export function getOptionInfoFromContractInfo(
   _contractInfo: ContractInfo,
 ): OptionInfo {
-  if (_contractInfo.type !== MessageType.ContractInfoV0)
-    throw Error('Only ContractInfoV0 currently supported');
+  if (_contractInfo.type !== MessageType.SingleContractInfo)
+    throw Error('Only SingleContractInfo currently supported');
 
-  const contractInfo = _contractInfo as ContractInfoV0;
+  const contractInfo = _contractInfo as SingleContractInfo;
   if (contractInfo.contractDescriptor.type !== MessageType.ContractDescriptorV1)
     throw Error('Only ContractDescriptorV1 currently supported');
 
@@ -91,7 +91,7 @@ export function getOptionInfoFromContractInfo(
   if (contractDescriptor.payoutFunction.type !== MessageType.PayoutFunctionV0)
     throw Error('Only PayoutFunctionV0 currently supported');
 
-  const payoutFunction = contractDescriptor.payoutFunction as PayoutFunctionV0;
+  const payoutFunction = contractDescriptor.payoutFunction as PayoutFunction;
   if (payoutFunction.payoutFunctionPieces.length === 0)
     throw Error('PayoutFunction must have at least once PayoutFunctionPiece');
   if (payoutFunction.payoutFunctionPieces.length > 1)
@@ -153,7 +153,7 @@ export function getOptionInfoFromContractInfo(
 }
 
 export function getOptionInfoFromOffer(
-  offer: HasOfferCollateralSatoshis & HasContractInfo & HasType,
+  offer: HasOfferCollateral & HasContractInfo & HasType,
 ): OptionInfo {
   if (
     offer.type !== MessageType.DlcOffer &&
@@ -161,8 +161,7 @@ export function getOptionInfoFromOffer(
   )
     throw Error('Only DlcOffer and OrderOffer currently supported');
 
-  const premium =
-    offer.contractInfo.totalCollateral - offer.offerCollateralSatoshis;
+  const premium = offer.contractInfo.totalCollateral - offer.offerCollateral;
 
   return {
     ...getOptionInfoFromContractInfo(offer.contractInfo),
