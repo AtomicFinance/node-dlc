@@ -4,4 +4,4 @@
     "types": ["mocha", "chai", "node"]
   },
   "include": ["**/*.spec.ts", "**/*.test.ts"]
-} 
+}
