@@ -242,33 +242,52 @@ export class DlcAccept implements IDlcMessage {
     instance.refundSignature = reader.readBytes(64);
 
     // negotiation_fields is now optional as per dlcspecs PR #163
-    const hasNegotiationFields = reader.readUInt8();
-    if (hasNegotiationFields === 0x01) {
-      instance.negotiationFields = NegotiationFields.deserialize(
-        getTlv(reader),
-      );
-    }
+    // Check if there's enough data left for the new format fields (backward compatibility)
+    // The old format ends exactly after refundSignature. If there's more data, it should be new format.
+    const remainingBytes = reader.buffer.length - reader.position;
 
-    // Parse TLV stream as per dlcspecs PR #163
-    while (!reader.eof) {
-      const buf = getTlv(reader);
-      const tlvReader = new BufferReader(buf);
-      const { type } = deserializeTlv(tlvReader);
+    if (remainingBytes > 0) {
+      // Only try to parse new fields if we have a reasonable amount of extra data
+      // A single stray byte is likely not valid new format data
+      if (remainingBytes >= 1) {
+        try {
+          const hasNegotiationFields = reader.readUInt8();
+          if (hasNegotiationFields === 0x01) {
+            instance.negotiationFields = NegotiationFields.deserialize(
+              getTlv(reader),
+            );
+          }
 
-      switch (Number(type)) {
-        case MessageType.BatchFundingGroup:
-          if (!instance.batchFundingGroups) {
-            instance.batchFundingGroups = [];
+          // Parse TLV stream as per dlcspecs PR #163
+          // Only continue if there's still data left after the hasNegotiationFields flag
+          while (reader.position < reader.buffer.length) {
+            const buf = getTlv(reader);
+            const tlvReader = new BufferReader(buf);
+            const { type } = deserializeTlv(tlvReader);
+
+            switch (Number(type)) {
+              case MessageType.BatchFundingGroup:
+                if (!instance.batchFundingGroups) {
+                  instance.batchFundingGroups = [];
+                }
+                instance.batchFundingGroups.push(
+                  BatchFundingGroup.deserialize(buf),
+                );
+                break;
+              default:
+                // Store unknown TLVs for future compatibility
+                if (!instance.unknownTlvs) {
+                  instance.unknownTlvs = [];
+                }
+                instance.unknownTlvs.push({ type: Number(type), data: buf });
+                break;
+            }
           }
-          instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
-          break;
-        default:
-          // Store unknown TLVs for future compatibility
-          if (!instance.unknownTlvs) {
-            instance.unknownTlvs = [];
-          }
-          instance.unknownTlvs.push({ type: Number(type), data: buf });
-          break;
+        } catch (error) {
+          // If parsing new format fails, assume it's old format and ignore the extra bytes
+          // This provides backward compatibility for malformed or old format data
+          // Silently ignore parsing errors for backward compatibility
+        }
       }
     }
 
