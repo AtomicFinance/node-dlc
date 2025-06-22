@@ -6,14 +6,14 @@ import { IDlcMessage } from './DlcMessage';
 export abstract class EventDescriptor {
   public static deserialize(
     buf: Buffer,
-  ): EnumEventDescriptorV0 | DigitDecompositionEventDescriptorV0 {
+  ): EnumEventDescriptor | DigitDecompositionEventDescriptorV0 {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
       case MessageType.EnumEventDescriptorV0:
-        return EnumEventDescriptorV0.deserialize(buf);
+        return EnumEventDescriptor.deserialize(buf);
       case MessageType.DigitDecompositionEventDescriptorV0:
         return DigitDecompositionEventDescriptorV0.deserialize(buf);
       default:
@@ -34,7 +34,7 @@ export abstract class EventDescriptor {
 
     // Check if it's an enum event or digit decomposition event
     if (json.enumEvent || json.enum_event) {
-      return EnumEventDescriptorV0.fromJSON(json.enumEvent || json.enum_event);
+      return EnumEventDescriptor.fromJSON(json.enumEvent || json.enum_event);
     } else if (json.digitDecompositionEvent || json.digit_decomposition_event) {
       return DigitDecompositionEventDescriptorV0.fromJSON(
         json.digitDecompositionEvent || json.digit_decomposition_event,
@@ -51,26 +51,27 @@ export abstract class EventDescriptor {
   public abstract length: bigint;
 
   public abstract toJSON():
-    | IEnumEventDescriptorV0JSON
+    | IEnumEventDescriptorJSON
     | IDigitDecompositionEventDescriptorV0JSON;
 
   public abstract serialize(): Buffer;
 }
 
 /**
- * EnumEventDescriptor V0 is a simple enumeration of outcomes
+ * EnumEventDescriptor message contains the event outcomes for enumerated events.
+ * Simplified class name (removed V0 suffix).
  */
-export class EnumEventDescriptorV0
+export class EnumEventDescriptor
   extends EventDescriptor
   implements IDlcMessage {
   public static type = MessageType.EnumEventDescriptorV0;
 
   /**
-   * Creates an EnumEventDescriptorV0 from JSON data
-   * @param json JSON object representing enum event descriptor
+   * Creates an EnumEventDescriptor from JSON data
+   * @param json JSON object representing an enum event descriptor
    */
-  public static fromJSON(json: any): EnumEventDescriptorV0 {
-    const instance = new EnumEventDescriptorV0();
+  public static fromJSON(json: any): EnumEventDescriptor {
+    const instance = new EnumEventDescriptor();
     instance.outcomes = json.outcomes || [];
     return instance;
   }
@@ -79,18 +80,19 @@ export class EnumEventDescriptorV0
    * Deserializes an enum_event_descriptor_v0 message
    * @param buf
    */
-  public static deserialize(buf: Buffer): EnumEventDescriptorV0 {
-    const instance = new EnumEventDescriptorV0();
+  public static deserialize(buf: Buffer): EnumEventDescriptor {
+    const instance = new EnumEventDescriptor();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize(); // need to fix this
-    reader.readUInt16BE(); // num_outcomes
+    const numOutcomes = reader.readUInt16BE(); // num_outcomes
 
-    while (!reader.eof) {
+    for (let i = 0; i < numOutcomes; i++) {
       const outcomeLen = reader.readBigSize();
-      const outcomeBuf = reader.readBytes(Number(outcomeLen));
-      instance.outcomes.push(outcomeBuf.toString());
+      const outcome = reader.readBytes(Number(outcomeLen)).toString();
+
+      instance.outcomes.push(outcome);
     }
 
     return instance;
@@ -99,21 +101,21 @@ export class EnumEventDescriptorV0
   /**
    * The type for enum_event_descriptor_v0 message. enum_event_descriptor_v0 = 55302
    */
-  public type = EnumEventDescriptorV0.type;
+  public type = EnumEventDescriptor.type;
 
-  public length: bigint;
+  public length = BigInt(0); // Required by EventDescriptor parent class
 
   public outcomes: string[] = [];
 
   /**
-   * Converts enum_event_descriptor_v0 to JSON (canonical rust-dlc format)
+   * Converts enum_event_descriptor to JSON
    */
-  public toJSON(): IEnumEventDescriptorV0JSON {
+  public toJSON(): IEnumEventDescriptorJSON {
     return {
       enumEvent: {
         outcomes: this.outcomes,
       },
-    } as any;
+    };
   }
 
   /**
@@ -137,6 +139,10 @@ export class EnumEventDescriptorV0
     return writer.toBuffer();
   }
 }
+
+// Legacy support - keep V0 alias for backward compatibility
+export const EnumEventDescriptorV0 = EnumEventDescriptor;
+export type EnumEventDescriptorV0 = EnumEventDescriptor;
 
 /**
  * DigitDecompositionEventDescriptorV0 V0 is a simple enumeration of outcomes
@@ -257,9 +263,10 @@ export class DigitDecompositionEventDescriptorV0
   }
 }
 
-export interface IEnumEventDescriptorV0JSON {
-  type: number;
-  outcomes: string[];
+export interface IEnumEventDescriptorJSON {
+  enumEvent: {
+    outcomes: string[];
+  };
 }
 
 export interface IDigitDecompositionEventDescriptorV0JSON {
@@ -270,3 +277,6 @@ export interface IDigitDecompositionEventDescriptorV0JSON {
   precision: number;
   nbDigits: number;
 }
+
+// Legacy interface
+export type IEnumEventDescriptorV0JSON = IEnumEventDescriptorJSON;

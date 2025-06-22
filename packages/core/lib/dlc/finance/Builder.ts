@@ -159,6 +159,10 @@ export const buildOrderOffer = (
 
   const orderOffer = new OrderOffer();
 
+  // Generate a random 32-byte temporary contract ID
+  orderOffer.temporaryContractId = Buffer.from(
+    Array.from({ length: 32 }, () => Math.floor(Math.random() * 256)),
+  );
   orderOffer.chainHash = chainHashFromNetwork(BitcoinNetworks[network]);
   orderOffer.contractInfo = contractInfo;
   orderOffer.offerCollateralSatoshis = offerCollateral;
