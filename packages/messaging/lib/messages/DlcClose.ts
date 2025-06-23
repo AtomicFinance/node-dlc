@@ -3,6 +3,7 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
+import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
@@ -46,15 +47,6 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   public static fromJSON(json: any): DlcCloseV0 {
     const instance = new DlcCloseV0();
 
-    // Helper function to safely convert to BigInt from various input types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
 
     // Basic fields with field name variations
     instance.contractId = Buffer.from(
@@ -233,18 +225,6 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
    * Converts dlc_close_v0 to JSON (canonical format)
    */
   public toJSON(): IDlcCloseV0JSON {
-    // Helper function to safely convert BigInt to number, preserving precision
-    const bigIntToNumber = (value: bigint): number => {
-      // For values within safe integer range, convert to number
-      if (
-        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
-        value >= BigInt(Number.MIN_SAFE_INTEGER)
-      ) {
-        return Number(value);
-      }
-      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
-      return value as any;
-    };
 
     return {
       type: this.type,

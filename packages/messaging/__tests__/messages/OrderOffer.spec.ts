@@ -14,45 +14,6 @@ describe('OrderOffer', () => {
     'hex',
   );
 
-  // Test data for legacy compatibility tests
-  const buf = Buffer.from(
-    "f532" + // type
-    "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f" + // chain_hash
-    "00" + // type single_contract_info (0)
-    "000000000bebc200" + // total_collateral
-    "00" + // type enumerated_contract_descriptor (0)
-    "02" + // num_outcomes (reduced to 2)
-    "03" + "77696e" + // outcome_1: "win" (length=3, data="win")
-    "0000000000000000" + // payout_1
-    "04" + "6c6f7365" + // outcome_2: "lose" (length=4, data="lose")
-    "000000000bebc200" + // payout_2
-    "00" + // type single_oracle_info (0)
-    "fdd824" + // type oracle_announcement
-    "a4" + // length
-    "fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9" + // announcement_signature_r
-    "494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4" + // announcement_signature_s
-    "da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b" + // oracle_public_key
-    "fdd822" + // type oracle_event
-    "40" + // length
-    "0001" + // nb_nonces
-    "3cfba011378411b20a5ab773cb95daab93e9bcd1e4cce44986a7dda84e01841b" + // oracle_nonces
-    "00000000" + // event_maturity_epoch
-    "fdd806" + // type enum_event_descriptor
-    "10" + // length
-    "0002" + // num_outcomes
-    "06" + // outcome_1_len
-    "64756d6d7931" + // outcome_1
-    "06" + // outcome_2_len
-    "64756d6d7932" + // outcome_2
-    "05" + // event_id_length
-    "64756d6d79" + // event_id
-    "0000000005f5e100" + // total_collateral_satoshis
-    "0000000000000001" + // fee_rate_per_vb
-    "00000064" + // cet_locktime
-    "000000c8" // refund_locktime
-    , "hex"
-  ); // prettier-ignore
-
   describe('basic functionality', () => {
     let instance: OrderOffer;
 

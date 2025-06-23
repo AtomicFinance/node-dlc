@@ -1,6 +1,7 @@
 import { BufferReader, BufferWriter, F64 } from '@node-dlc/bufio';
 
 import { MessageType, PayoutCurvePieceType } from '../MessageType';
+import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class PayoutCurvePiece {
@@ -75,15 +76,6 @@ export class PolynomialPayoutCurvePiece
   public static fromJSON(json: any): PolynomialPayoutCurvePiece {
     const instance = new PolynomialPayoutCurvePiece();
 
-    // Helper function to safely convert to BigInt from various input types
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
-
     const points = json.payoutPoints || json.points || [];
     instance.points = points.map((point: any) => ({
       eventOutcome: toBigInt(point.eventOutcome || point.event_outcome),
@@ -136,19 +128,6 @@ export class PolynomialPayoutCurvePiece
    * Converts polynomial_payout_curve_piece to JSON
    */
   public toJSON(): PolynomialPayoutCurvePieceJSON {
-    // Helper function to safely convert BigInt to number, preserving precision
-    const bigIntToNumber = (value: bigint): number => {
-      // For values within safe integer range, convert to number
-      if (
-        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
-        value >= BigInt(Number.MIN_SAFE_INTEGER)
-      ) {
-        return Number(value);
-      }
-      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
-      return value as any;
-    };
-
     return {
       polynomialPayoutCurvePiece: {
         payoutPoints: this.points.map((point) => {

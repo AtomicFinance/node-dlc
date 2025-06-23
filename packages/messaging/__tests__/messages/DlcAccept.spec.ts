@@ -1,4 +1,3 @@
-import { BitcoinNetworks } from 'bitcoin-networks';
 import { expect } from 'chai';
 
 import { CetAdaptorSignatures } from '../../lib/messages/CetAdaptorSignatures';
@@ -7,7 +6,6 @@ import { FundingInputV0 } from '../../lib/messages/FundingInput';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcAccept', () => {
-  const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;
   let instance: DlcAccept;
 
   const temporaryContractId = Buffer.from(

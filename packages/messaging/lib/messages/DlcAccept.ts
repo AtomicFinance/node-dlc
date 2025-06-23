@@ -8,6 +8,7 @@ import secp256k1 from 'secp256k1';
 import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv, skipTlv } from '../serialize/getTlv';
+import { bigIntToNumber, toBigInt } from '../util';
 import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
 import {
   CetAdaptorSignatures,
@@ -73,14 +74,6 @@ export class DlcAccept implements IDlcMessage {
       'hex',
     );
 
-    // Helper function to safely convert to BigInt from various input types
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
 
     instance.acceptCollateral = toBigInt(
       json.acceptCollateral ||
@@ -421,18 +414,6 @@ export class DlcAccept implements IDlcMessage {
    * Converts accept_dlc to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDlcAcceptJSON {
-    // Helper function to safely convert BigInt to number, preserving precision
-    const bigIntToNumber = (value: bigint): number => {
-      // For values within safe integer range, convert to number
-      if (
-        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
-        value >= BigInt(Number.MIN_SAFE_INTEGER)
-      ) {
-        return Number(value);
-      }
-      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
-      return value as any;
-    };
 
     // Convert raw signature back to DER format for canonical rust-dlc JSON
     const derRefundSignature = secp256k1.signatureExport(this.refundSignature);

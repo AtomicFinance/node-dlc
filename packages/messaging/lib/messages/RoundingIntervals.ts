@@ -1,6 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
+import { toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
 /**
@@ -18,15 +19,6 @@ export class RoundingIntervals implements IDlcMessage {
   public static fromJSON(json: any): RoundingIntervals {
     const instance = new RoundingIntervals();
 
-    // Helper function to safely convert to BigInt from various input types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
 
     const intervals = json.intervals || [];
     instance.intervals = intervals.map((interval: any) => ({

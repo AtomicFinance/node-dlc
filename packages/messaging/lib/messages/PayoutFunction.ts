@@ -1,6 +1,7 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
+import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 import {
   HyperbolaPayoutCurvePiece,
@@ -23,14 +24,6 @@ export class PayoutFunction implements IDlcMessage {
   public static fromJSON(json: any): PayoutFunction {
     const instance = new PayoutFunction();
 
-    // Helper function to safely convert to BigInt from various input types
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
 
     // Parse payout function pieces
     const pieces =
@@ -157,18 +150,6 @@ export class PayoutFunction implements IDlcMessage {
    * Converts payout_function to JSON
    */
   public toJSON(): PayoutFunctionJSON {
-    // Helper function to safely convert BigInt to number, preserving precision
-    const bigIntToNumber = (value: bigint): number => {
-      // For values within safe integer range, convert to number
-      if (
-        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
-        value >= BigInt(Number.MIN_SAFE_INTEGER)
-      ) {
-        return Number(value);
-      }
-      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
-      return value as any;
-    };
 
     return {
       payoutFunctionPieces: this.payoutFunctionPieces.map((piece) => ({

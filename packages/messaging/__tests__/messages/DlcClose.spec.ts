@@ -1,4 +1,4 @@
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
+import { BufferReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import { DlcClose, DlcCloseV0 } from '../../lib/messages/DlcClose';

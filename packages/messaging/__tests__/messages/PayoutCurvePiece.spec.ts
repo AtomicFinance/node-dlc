@@ -1,3 +1,4 @@
+import { F64 } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import {
@@ -5,16 +6,6 @@ import {
   PayoutCurvePiece,
   PolynomialPayoutCurvePiece,
 } from '../../lib/messages/PayoutCurvePiece';
-
-// Helper to safely import F64 with fallback
-function getF64Class(): any {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('../../../bufio/lib/F64').F64;
-  } catch {
-    return null;
-  }
-}
 
 describe('PayoutCurvePiece', () => {
   describe('PolynomialPayoutCurvePiece', () => {
@@ -75,12 +66,6 @@ describe('PayoutCurvePiece', () => {
 
   describe('HyperbolaPayoutCurvePiece', () => {
     it('serializes and deserializes correctly with normal values', () => {
-      const F64 = getF64Class();
-      if (!F64) {
-        // Skip test if F64 is not available due to import issues
-        return;
-      }
-
       const instance = new HyperbolaPayoutCurvePiece();
       instance.usePositivePiece = true;
       instance.translateOutcome = F64.fromNumber(100.5);
@@ -103,11 +88,6 @@ describe('PayoutCurvePiece', () => {
     });
 
     it('handles very large f64 values without precision loss', () => {
-      const F64 = getF64Class();
-      if (!F64) {
-        return; // Skip if F64 not available
-      }
-
       // Test values that exceed JavaScript MAX_SAFE_INTEGER
       const testCases = [
         {
@@ -152,11 +132,6 @@ describe('PayoutCurvePiece', () => {
     });
 
     it('handles JSON with string values (for very large numbers)', () => {
-      const F64 = getF64Class();
-      if (!F64) {
-        return; // Skip if F64 not available
-      }
-
       // Test JSON with string values for large numbers
       const jsonWithStrings = {
         usePositivePiece: true,
@@ -180,11 +155,6 @@ describe('PayoutCurvePiece', () => {
     });
 
     it('JSON round-trip maintains values within JavaScript precision limits', () => {
-      const F64 = getF64Class();
-      if (!F64) {
-        return; // Skip if F64 not available
-      }
-
       const instance = new HyperbolaPayoutCurvePiece();
       instance.usePositivePiece = true;
       instance.translateOutcome = F64.fromNumber(50000.5);
@@ -212,11 +182,6 @@ describe('PayoutCurvePiece', () => {
     });
 
     it('demonstrates precision limits with very large numbers in JSON', () => {
-      const F64 = getF64Class();
-      if (!F64) {
-        return; // Skip if F64 not available
-      }
-
       // This test demonstrates the precision tradeoff we're making
       const veryLargeNumber = 1.2345678901234567e100;
 

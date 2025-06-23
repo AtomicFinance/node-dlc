@@ -2,6 +2,7 @@ import { Sequence, Tx } from '@node-dlc/bitcoin';
 import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
+import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
 export abstract class FundingInput {
@@ -55,15 +56,6 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   public static fromJSON(json: any): FundingInputV0 {
     const instance = new FundingInputV0();
 
-    // Helper function to safely convert to BigInt from various input types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
 
     instance.inputSerialId = toBigInt(
       json.inputSerialId || json.input_serial_id,
@@ -195,19 +187,6 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
    * Converts funding_input_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IFundingInputV0JSON {
-    // Helper function to safely convert BigInt to number, preserving precision
-    const bigIntToNumber = (value: bigint): number => {
-      // For values within safe integer range, convert to number
-      if (
-        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
-        value >= BigInt(Number.MIN_SAFE_INTEGER)
-      ) {
-        return Number(value);
-      }
-      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return value as any;
-    };
 
     return {
       inputSerialId: bigIntToNumber(this.inputSerialId),

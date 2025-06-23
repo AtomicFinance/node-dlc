@@ -5,6 +5,7 @@ import { IOrderMetadataJSON } from '..';
 import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
+import { bigIntToNumber, toBigInt } from '../util';
 import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
 import {
   ContractInfo,
@@ -38,15 +39,6 @@ export class OrderOffer implements IDlcMessage {
   public static fromJSON(json: any): OrderOffer {
     const instance = new OrderOffer();
 
-    // Helper function to safely convert to BigInt from various input types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const toBigInt = (value: any): bigint => {
-      if (value === null || value === undefined) return BigInt(0);
-      if (typeof value === 'bigint') return value;
-      if (typeof value === 'string') return BigInt(value);
-      if (typeof value === 'number') return BigInt(value);
-      return BigInt(0);
-    };
 
     // Basic fields with field name variations
     instance.protocolVersion =
@@ -294,18 +286,6 @@ export class OrderOffer implements IDlcMessage {
       );
     }
 
-    // Helper function to safely convert BigInt to number, preserving precision
-    const bigIntToNumber = (value: bigint): number => {
-      // For values within safe integer range, convert to number
-      if (
-        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
-        value >= BigInt(Number.MIN_SAFE_INTEGER)
-      ) {
-        return Number(value);
-      }
-      // For larger values, we need to preserve as BigInt (json-bigint will handle serialization)
-      return value as any;
-    };
 
     return {
       type: this.type,
