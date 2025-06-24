@@ -4,6 +4,7 @@ import {
   DigitDecompositionEventDescriptorV0,
   HyperbolaPayoutCurvePiece,
   MessageType,
+  PayoutCurvePieceType,
   PayoutFunction,
   SingleContractInfo,
 } from '@node-dlc/messaging';
@@ -100,6 +101,7 @@ export function getOptionInfoFromContractInfo(
   const payoutCurvePiece = payoutFunction.payoutFunctionPieces[0]
     .payoutCurvePiece as HyperbolaPayoutCurvePiece;
   if (
+    payoutCurvePiece.payoutCurvePieceType !== PayoutCurvePieceType.Hyperbola &&
     payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
     payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
   )

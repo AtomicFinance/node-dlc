@@ -74,7 +74,6 @@ export class DlcAccept implements IDlcMessage {
       'hex',
     );
 
-
     instance.acceptCollateral = toBigInt(
       json.acceptCollateral ||
         json.acceptCollateralSatoshis ||
@@ -177,9 +176,7 @@ export class DlcAccept implements IDlcMessage {
   private static parseNegotiationFieldsFromJSON(
     negotiationJson: any,
   ): NegotiationFields {
-    // For now, return a basic implementation
-    // TODO: Implement proper NegotiationFields parsing from JSON
-    throw new Error('NegotiationFields.fromJSON not yet implemented');
+    return NegotiationFields.fromJSON(negotiationJson);
   }
 
   /**
@@ -414,7 +411,6 @@ export class DlcAccept implements IDlcMessage {
    * Converts accept_dlc to JSON (canonical rust-dlc format)
    */
   public toJSON(): IDlcAcceptJSON {
-
     // Convert raw signature back to DER format for canonical rust-dlc JSON
     const derRefundSignature = secp256k1.signatureExport(this.refundSignature);
 

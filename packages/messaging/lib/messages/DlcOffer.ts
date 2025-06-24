@@ -53,7 +53,6 @@ export class DlcOffer implements IDlcMessage {
   public static fromJSON(json: any): DlcOffer {
     const instance = new DlcOffer();
 
-
     // Basic fields with field name variations
     instance.protocolVersion =
       json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
@@ -439,7 +438,6 @@ export class DlcOffer implements IDlcMessage {
         tlvs.push({ type: tlv.type, data: tlv.data.toString('hex') }),
       );
     }
-
 
     // Return canonical rust-dlc format only
     return {

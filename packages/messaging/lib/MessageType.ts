@@ -55,9 +55,10 @@ export enum MessageType {
 
   PayoutFunctionV0 = 42790,
 
-  PolynomialPayoutCurvePiece = 42792, // TODO: Temporary type
-  HyperbolaPayoutCurvePiece = 42794, // TODO: Temporary type
-  OldHyperbolaPayoutCurvePiece = 42796, // TODO: Remove once all existing contracts have passed
+  // PayoutCurvePiece types - kept for backward compatibility
+  PolynomialPayoutCurvePiece = 42792,
+  HyperbolaPayoutCurvePiece = 42794,
+  OldHyperbolaPayoutCurvePiece = 42796, // Legacy support
 
   RoundingIntervals = 42788,
   RoundingIntervalsV0 = RoundingIntervals, // Backward compatibility alias

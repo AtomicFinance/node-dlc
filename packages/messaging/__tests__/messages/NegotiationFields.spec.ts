@@ -1,54 +1,19 @@
 import { expect } from 'chai';
 
 import {
+  DisjointNegotiationFields,
   NegotiationFields,
-  NegotiationFieldsV0,
-  NegotiationFieldsV1,
-  NegotiationFieldsV2,
+  SingleNegotiationFields,
 } from '../../lib/messages/NegotiationFields';
 import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
-import { MessageType } from '../../lib/MessageType';
 
 describe('NegotiationFields', () => {
-  describe('NegotiationFieldsV0', () => {
+  describe('SingleNegotiationFields', () => {
     describe('serialize', () => {
       it('serializes', () => {
-        const instance = new NegotiationFieldsV0();
+        const instance = new SingleNegotiationFields();
 
-        instance.length = BigInt(0);
-
-        expect(instance.serialize().toString('hex')).to.equal(
-          'fdd826' + // type negotiation_fields_v0
-            '00', // length
-        );
-      });
-    });
-
-    describe('deserialize', () => {
-      it('deserializes', () => {
-        const buf = Buffer.from(
-          "fdd826" + // type negotiation_fields_v0
-          "00" // length
-          , "hex"
-        ); // prettier-ignore
-
-        const unknownInstance = NegotiationFields.deserialize(buf);
-
-        if (unknownInstance.type === MessageType.NegotiationFieldsV0) {
-          const instance = unknownInstance as NegotiationFieldsV0;
-
-          expect(Number(instance.length)).to.equal(0);
-        }
-      });
-    });
-  });
-
-  describe('NegotiationFieldsV1', () => {
-    describe('serialize', () => {
-      it('serializes', () => {
-        const instance = new NegotiationFieldsV1();
-
-        // Create RoundingIntervals programmatically for new dlcspecs PR #163 format
+        // Create RoundingIntervals programmatically
         const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
@@ -58,20 +23,20 @@ describe('NegotiationFields', () => {
         ];
         instance.roundingIntervals = roundingIntervals;
 
-        // Let serialization calculate the length automatically
-        instance.length = BigInt(roundingIntervals.serialize().length);
-
-        // Test that it serializes without errors (new dlcspecs PR #163 format)
+        // Test that it serializes without errors
         const serialized = instance.serialize();
         expect(serialized).to.be.instanceof(Buffer);
         expect(serialized.length).to.be.greaterThan(0);
+
+        // Should start with discriminator 0 (Single)
+        expect(serialized[0]).to.equal(0);
       });
     });
 
     describe('deserialize', () => {
       it('deserializes', () => {
         // Create a test instance and serialize it first for round-trip testing
-        const originalInstance = new NegotiationFieldsV1();
+        const originalInstance = new SingleNegotiationFields();
 
         const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
@@ -82,19 +47,14 @@ describe('NegotiationFields', () => {
         ];
         originalInstance.roundingIntervals = roundingIntervals;
 
-        // Let serialization calculate the length automatically
-        originalInstance.length = BigInt(roundingIntervals.serialize().length);
-
         // Serialize and then deserialize to ensure round-trip consistency
         const serialized = originalInstance.serialize();
-        const unknownInstance = NegotiationFields.deserialize(serialized);
+        const instance = NegotiationFields.deserialize(serialized);
 
-        if (unknownInstance.type === MessageType.NegotiationFieldsV1) {
-          const instance = unknownInstance as NegotiationFieldsV1;
-
-          expect(Number(instance.length)).to.equal(
-            Number(originalInstance.length),
-          );
+        expect(instance).to.be.instanceof(SingleNegotiationFields);
+        if (instance instanceof SingleNegotiationFields) {
+          expect(instance.variant).to.equal('Single');
+          expect(instance.discriminator).to.equal(0);
           expect(instance.roundingIntervals).to.be.instanceof(
             RoundingIntervals,
           );
@@ -108,15 +68,10 @@ describe('NegotiationFields', () => {
         }
       });
     });
-  });
 
-  describe('NegotiationFieldsV2', () => {
-    describe('serialize', () => {
-      it('serializes', () => {
-        const instance = new NegotiationFieldsV2();
-
-        // Create NegotiationFields instances programmatically
-        const negotiationFieldsV1 = new NegotiationFieldsV1();
+    describe('toJSON', () => {
+      it('converts to JSON', () => {
+        const instance = new SingleNegotiationFields();
         const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
@@ -124,39 +79,126 @@ describe('NegotiationFields', () => {
             roundingMod: BigInt(10000),
           },
         ];
-        negotiationFieldsV1.roundingIntervals = roundingIntervals;
-        negotiationFieldsV1.length = BigInt(
-          roundingIntervals.serialize().length,
+        instance.roundingIntervals = roundingIntervals;
+
+        const json = instance.toJSON();
+        expect(json.variant).to.equal('Single');
+        expect(json.roundingIntervals).to.exist;
+      });
+    });
+
+    describe('fromJSON', () => {
+      it('creates from JSON', () => {
+        const json = {
+          variant: 'Single',
+          roundingIntervals: {
+            intervals: [
+              {
+                beginInterval: 5000,
+                roundingMod: 10000,
+              },
+            ],
+          },
+        };
+
+        const instance = SingleNegotiationFields.fromJSON(json);
+        expect(instance.variant).to.equal('Single');
+        expect(instance.roundingIntervals.intervals.length).to.equal(1);
+        expect(instance.roundingIntervals.intervals[0].beginInterval).to.equal(
+          BigInt(5000),
         );
+      });
+    });
+  });
 
-        const negotiationFieldsV0 = new NegotiationFieldsV0();
-        negotiationFieldsV0.length = BigInt(0);
+  describe('DisjointNegotiationFields', () => {
+    describe('serialize', () => {
+      it('serializes', () => {
+        const instance = new DisjointNegotiationFields();
 
-        instance.negotiationFieldsList = [
-          negotiationFieldsV1,
-          negotiationFieldsV0,
+        // Create nested SingleNegotiationFields instances
+        const single1 = new SingleNegotiationFields();
+        const roundingIntervals1 = new RoundingIntervals();
+        roundingIntervals1.intervals = [
+          {
+            beginInterval: BigInt(5000),
+            roundingMod: BigInt(10000),
+          },
         ];
+        single1.roundingIntervals = roundingIntervals1;
 
-        // Calculate the total length based on actual data
-        const totalDataLength =
-          negotiationFieldsV1.serialize().length +
-          negotiationFieldsV0.serialize().length +
-          1; // +1 for num_disjoint_events
-        instance.length = BigInt(totalDataLength);
+        const single2 = new SingleNegotiationFields();
+        const roundingIntervals2 = new RoundingIntervals();
+        roundingIntervals2.intervals = [
+          {
+            beginInterval: BigInt(1000),
+            roundingMod: BigInt(5000),
+          },
+        ];
+        single2.roundingIntervals = roundingIntervals2;
 
-        // Test that it serializes without errors (new dlcspecs PR #163 format)
+        instance.negotiationFields = [single1, single2];
+
+        // Test that it serializes without errors
         const serialized = instance.serialize();
         expect(serialized).to.be.instanceof(Buffer);
         expect(serialized.length).to.be.greaterThan(0);
+
+        // Should start with discriminator 1 (Disjoint)
+        expect(serialized[0]).to.equal(1);
       });
     });
 
     describe('deserialize', () => {
       it('deserializes', () => {
         // Create a test instance and serialize it first for round-trip testing
-        const originalInstance = new NegotiationFieldsV2();
+        const originalInstance = new DisjointNegotiationFields();
 
-        const negotiationFieldsV1 = new NegotiationFieldsV1();
+        const single1 = new SingleNegotiationFields();
+        const roundingIntervals1 = new RoundingIntervals();
+        roundingIntervals1.intervals = [
+          {
+            beginInterval: BigInt(5000),
+            roundingMod: BigInt(10000),
+          },
+        ];
+        single1.roundingIntervals = roundingIntervals1;
+
+        const single2 = new SingleNegotiationFields();
+        const roundingIntervals2 = new RoundingIntervals();
+        roundingIntervals2.intervals = [
+          {
+            beginInterval: BigInt(1000),
+            roundingMod: BigInt(5000),
+          },
+        ];
+        single2.roundingIntervals = roundingIntervals2;
+
+        originalInstance.negotiationFields = [single1, single2];
+
+        // Serialize and then deserialize to ensure round-trip consistency
+        const serialized = originalInstance.serialize();
+        const instance = NegotiationFields.deserialize(serialized);
+
+        expect(instance).to.be.instanceof(DisjointNegotiationFields);
+        if (instance instanceof DisjointNegotiationFields) {
+          expect(instance.variant).to.equal('Disjoint');
+          expect(instance.discriminator).to.equal(1);
+          expect(instance.negotiationFields.length).to.equal(2);
+          expect(instance.negotiationFields[0]).to.be.instanceof(
+            SingleNegotiationFields,
+          );
+          expect(instance.negotiationFields[1]).to.be.instanceof(
+            SingleNegotiationFields,
+          );
+        }
+      });
+    });
+
+    describe('toJSON', () => {
+      it('converts to JSON', () => {
+        const instance = new DisjointNegotiationFields();
+        const single = new SingleNegotiationFields();
         const roundingIntervals = new RoundingIntervals();
         roundingIntervals.intervals = [
           {
@@ -164,44 +206,122 @@ describe('NegotiationFields', () => {
             roundingMod: BigInt(10000),
           },
         ];
-        negotiationFieldsV1.roundingIntervals = roundingIntervals;
-        negotiationFieldsV1.length = BigInt(
-          roundingIntervals.serialize().length,
+        single.roundingIntervals = roundingIntervals;
+        instance.negotiationFields = [single];
+
+        const json = instance.toJSON();
+        expect(json.variant).to.equal('Disjoint');
+        expect(json.negotiationFields).to.be.an('array');
+        expect(json.negotiationFields.length).to.equal(1);
+      });
+    });
+
+    describe('fromJSON', () => {
+      it('creates from JSON', () => {
+        const json = {
+          variant: 'Disjoint',
+          negotiationFields: [
+            {
+              variant: 'Single',
+              roundingIntervals: {
+                intervals: [
+                  {
+                    beginInterval: 5000,
+                    roundingMod: 10000,
+                  },
+                ],
+              },
+            },
+          ],
+        };
+
+        const instance = DisjointNegotiationFields.fromJSON(json);
+        expect(instance.variant).to.equal('Disjoint');
+        expect(instance.negotiationFields.length).to.equal(1);
+        expect(instance.negotiationFields[0]).to.be.instanceof(
+          SingleNegotiationFields,
         );
+      });
+    });
+  });
 
-        const negotiationFieldsV0 = new NegotiationFieldsV0();
-        negotiationFieldsV0.length = BigInt(0);
-
-        originalInstance.negotiationFieldsList = [
-          negotiationFieldsV1,
-          negotiationFieldsV0,
+  describe('NegotiationFields static methods', () => {
+    describe('deserialize', () => {
+      it('deserializes Single variant', () => {
+        const single = new SingleNegotiationFields();
+        const roundingIntervals = new RoundingIntervals();
+        roundingIntervals.intervals = [
+          {
+            beginInterval: BigInt(5000),
+            roundingMod: BigInt(10000),
+          },
         ];
+        single.roundingIntervals = roundingIntervals;
 
-        // Calculate the total length based on actual data
-        const totalDataLength =
-          negotiationFieldsV1.serialize().length +
-          negotiationFieldsV0.serialize().length +
-          1; // +1 for num_disjoint_events
-        originalInstance.length = BigInt(totalDataLength);
+        const serialized = single.serialize();
+        const deserialized = NegotiationFields.deserialize(serialized);
 
-        // Serialize and then deserialize to ensure round-trip consistency
-        const serialized = originalInstance.serialize();
-        const unknownInstance = NegotiationFields.deserialize(serialized);
+        expect(deserialized).to.be.instanceof(SingleNegotiationFields);
+      });
 
-        if (unknownInstance.type === MessageType.NegotiationFieldsV2) {
-          const instance = unknownInstance as NegotiationFieldsV2;
+      it('deserializes Disjoint variant', () => {
+        const disjoint = new DisjointNegotiationFields();
+        const single = new SingleNegotiationFields();
+        const roundingIntervals = new RoundingIntervals();
+        roundingIntervals.intervals = [
+          {
+            beginInterval: BigInt(5000),
+            roundingMod: BigInt(10000),
+          },
+        ];
+        single.roundingIntervals = roundingIntervals;
+        disjoint.negotiationFields = [single];
 
-          expect(Number(instance.length)).to.equal(
-            Number(originalInstance.length),
-          );
-          expect(instance.negotiationFieldsList.length).to.equal(2);
-          expect(instance.negotiationFieldsList[0]).to.be.instanceof(
-            NegotiationFieldsV1,
-          );
-          expect(instance.negotiationFieldsList[1]).to.be.instanceof(
-            NegotiationFieldsV0,
-          );
-        }
+        const serialized = disjoint.serialize();
+        const deserialized = NegotiationFields.deserialize(serialized);
+
+        expect(deserialized).to.be.instanceof(DisjointNegotiationFields);
+      });
+    });
+
+    describe('fromJSON', () => {
+      it('creates Single variant from JSON', () => {
+        const json = {
+          variant: 'Single',
+          roundingIntervals: {
+            intervals: [
+              {
+                beginInterval: 5000,
+                roundingMod: 10000,
+              },
+            ],
+          },
+        };
+
+        const instance = NegotiationFields.fromJSON(json);
+        expect(instance).to.be.instanceof(SingleNegotiationFields);
+      });
+
+      it('creates Disjoint variant from JSON', () => {
+        const json = {
+          variant: 'Disjoint',
+          negotiationFields: [
+            {
+              variant: 'Single',
+              roundingIntervals: {
+                intervals: [
+                  {
+                    beginInterval: 5000,
+                    roundingMod: 10000,
+                  },
+                ],
+              },
+            },
+          ],
+        };
+
+        const instance = NegotiationFields.fromJSON(json);
+        expect(instance).to.be.instanceof(DisjointNegotiationFields);
       });
     });
   });

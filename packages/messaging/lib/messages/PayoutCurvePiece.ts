@@ -113,9 +113,9 @@ export class PolynomialPayoutCurvePiece
   }
 
   /**
-   * The type for polynomial_payout_curve_piece message - using MessageType for IDlcMessage compatibility
+   * The type for polynomial_payout_curve_piece message - Note: this is a sub-component, not a standalone wire message
    */
-  public type = MessageType.PolynomialPayoutCurvePiece; // For IDlcMessage compatibility
+  public type = MessageType.PolynomialPayoutCurvePiece;
 
   /**
    * The payout curve piece type for new format
@@ -310,7 +310,7 @@ export class HyperbolaPayoutCurvePiece
   }
 
   /**
-   * The type for hyperbola_payout_curve_piece message
+   * The type for hyperbola_payout_curve_piece message - Note: this is a sub-component, not a standalone wire message
    */
   public type = MessageType.HyperbolaPayoutCurvePiece;
 

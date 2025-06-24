@@ -2,6 +2,7 @@ import { F64 } from '@node-dlc/bufio';
 import {
   HyperbolaPayoutCurvePiece,
   MessageType,
+  PayoutCurvePieceType,
   PayoutFunctionV0,
   RoundingIntervals,
 } from '@node-dlc/messaging';
@@ -155,6 +156,7 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     } = payoutFunction.payoutFunctionPieces[0];
 
     if (
+      payoutCurvePiece.payoutCurvePieceType !== PayoutCurvePieceType.Hyperbola &&
       payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
       payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
     )
