@@ -1,11 +1,11 @@
-import { expect } from "chai";
-import { serializeAddress as sut } from "../../../lib/serialize/address/serializeAddress";
+import { expect } from 'chai';
 
-import { Address } from "../../../lib";
-import { AddressIPv4 } from "../../../lib/domain/AddressIPv4";
-import { AddressIPv6 } from "../../../lib/domain/AddressIPv6";
-import { AddressTor2 } from "../../../lib/domain/AddressTor2";
-import { AddressTor3 } from "../../../lib/domain/AddressTor3";
+import { Address } from '../../../lib';
+import { AddressIPv4 } from '../../../lib/domain/AddressIPv4';
+import { AddressIPv6 } from '../../../lib/domain/AddressIPv6';
+import { AddressTor2 } from '../../../lib/domain/AddressTor2';
+import { AddressTor3 } from '../../../lib/domain/AddressTor3';
+import { serializeAddress as sut } from '../../../lib/serialize/address/serializeAddress';
 
 const tests: Array<[string, Address, Buffer]> = [
   [
@@ -40,11 +40,11 @@ const tests: Array<[string, Address, Buffer]> = [
   ],
 ]; // prettier-ignore
 
-describe("serializeAddress", () => {
-    for (const [title, input, expected] of tests) {
-        it(title, () => {
-            const actual = sut(input);
-            expect(actual).to.deep.equal(expected);
-        });
-    }
+describe('serializeAddress', () => {
+  for (const [title, input, expected] of tests) {
+    it(title, () => {
+      const actual = sut(input);
+      expect(actual).to.deep.equal(expected);
+    });
+  }
 });

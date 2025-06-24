@@ -19,7 +19,6 @@ export class RoundingIntervals implements IDlcMessage {
   public static fromJSON(json: any): RoundingIntervals {
     const instance = new RoundingIntervals();
 
-
     const intervals = json.intervals || [];
     instance.intervals = intervals.map((interval: any) => ({
       beginInterval: toBigInt(

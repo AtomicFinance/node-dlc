@@ -1,5 +1,6 @@
-import { expect } from "chai";
-import { torStringToBuffer } from "../../../lib/serialize/address/torStringToBuffer";
+import { expect } from 'chai';
+
+import { torStringToBuffer } from '../../../lib/serialize/address/torStringToBuffer';
 
 const tests: Array<[string, string, Buffer]> = [
   [
@@ -14,11 +15,11 @@ const tests: Array<[string, string, Buffer]> = [
   ],
 ]; // prettier-ignore
 
-describe("torStringToBuffer", () => {
-    for (const [title, input, expected] of tests) {
-        it(title, () => {
-            const actual = torStringToBuffer(input);
-            expect(actual).to.deep.equal(expected);
-        });
-    }
+describe('torStringToBuffer', () => {
+  for (const [title, input, expected] of tests) {
+    it(title, () => {
+      const actual = torStringToBuffer(input);
+      expect(actual).to.deep.equal(expected);
+    });
+  }
 });

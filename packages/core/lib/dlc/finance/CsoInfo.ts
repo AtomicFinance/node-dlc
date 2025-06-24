@@ -425,8 +425,9 @@ export const validateCsoPayoutFunction = (
   );
   for (const [i, piece] of payoutFunction.payoutFunctionPieces.entries()) {
     assert(
-      piece.payoutCurvePiece.payoutCurvePieceType === PayoutCurvePieceType.Polynomial ||
-      piece.payoutCurvePiece.type === MessageType.PolynomialPayoutCurvePiece,
+      piece.payoutCurvePiece.payoutCurvePieceType ===
+        PayoutCurvePieceType.Polynomial ||
+        piece.payoutCurvePiece.type === MessageType.PolynomialPayoutCurvePiece,
       'CSO Payout Function PayoutCurvePieces must be PolynomialCurvePieces',
     );
 

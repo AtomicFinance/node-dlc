@@ -47,7 +47,6 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   public static fromJSON(json: any): DlcCloseV0 {
     const instance = new DlcCloseV0();
 
-
     // Basic fields with field name variations
     instance.contractId = Buffer.from(
       json.contractId || json.contract_id,
@@ -225,7 +224,6 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
    * Converts dlc_close_v0 to JSON (canonical format)
    */
   public toJSON(): IDlcCloseV0JSON {
-
     return {
       type: this.type,
       contractId: this.contractId.toString('hex'),

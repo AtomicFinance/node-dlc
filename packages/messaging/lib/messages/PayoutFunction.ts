@@ -24,7 +24,6 @@ export class PayoutFunction implements IDlcMessage {
   public static fromJSON(json: any): PayoutFunction {
     const instance = new PayoutFunction();
 
-
     // Parse payout function pieces
     const pieces =
       json.payoutFunctionPieces || json.payout_function_pieces || [];
@@ -150,7 +149,6 @@ export class PayoutFunction implements IDlcMessage {
    * Converts payout_function to JSON
    */
   public toJSON(): PayoutFunctionJSON {
-
     return {
       payoutFunctionPieces: this.payoutFunctionPieces.map((piece) => ({
         endPoint: {

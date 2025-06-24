@@ -56,6 +56,12 @@ jobs:
       - name: Bootstrap packages
         run: yarn bootstrap
 
+      - name: Check code formatting
+        run: yarn format
+
+      - name: Run linting
+        run: yarn lint
+
       - name: Build rust-dlc-cli for compatibility tests
         run: |
           if [ -d "rust-dlc-cli" ]; then

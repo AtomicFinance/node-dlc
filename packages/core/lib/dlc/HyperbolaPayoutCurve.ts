@@ -156,7 +156,8 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     } = payoutFunction.payoutFunctionPieces[0];
 
     if (
-      payoutCurvePiece.payoutCurvePieceType !== PayoutCurvePieceType.Hyperbola &&
+      payoutCurvePiece.payoutCurvePieceType !==
+        PayoutCurvePieceType.Hyperbola &&
       payoutCurvePiece.type !== MessageType.HyperbolaPayoutCurvePiece &&
       payoutCurvePiece.type !== MessageType.OldHyperbolaPayoutCurvePiece
     )

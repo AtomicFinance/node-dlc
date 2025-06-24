@@ -39,7 +39,6 @@ export class OrderOffer implements IDlcMessage {
   public static fromJSON(json: any): OrderOffer {
     const instance = new OrderOffer();
 
-
     // Basic fields with field name variations
     instance.protocolVersion =
       json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
@@ -285,7 +284,6 @@ export class OrderOffer implements IDlcMessage {
         tlvs.push({ type: tlv.type, data: tlv.data.toString('hex') }),
       );
     }
-
 
     return {
       type: this.type,

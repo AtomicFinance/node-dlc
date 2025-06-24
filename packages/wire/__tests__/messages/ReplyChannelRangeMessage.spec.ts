@@ -1,5 +1,6 @@
 import { ShortChannelId } from '@node-dlc/common';
 import { expect } from 'chai';
+
 import { ReplyChannelRangeMessage } from '../../lib/messages/ReplyChannelRangeMessage';
 
 describe('ReplyChannelRangeMessage', () => {

@@ -17,7 +17,7 @@ npm install @node-dlc/leveldb
 The package provides several store classes for different types of data:
 
 - `LeveldbDlcStore` - For DLC offers, accepts, signs, cancels, closes, and transactions
-- `LeveldbOracleStore` - For oracle events and identifiers 
+- `LeveldbOracleStore` - For oracle events and identifiers
 - `LeveldbOrderStore` - For order offers and accepts
 - `LeveldbWalletStore` - For wallet seed and address cache storage
 - `LeveldbIrcStore` - For IRC-related DLC data

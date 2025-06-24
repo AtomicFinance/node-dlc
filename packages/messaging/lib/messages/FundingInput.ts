@@ -56,7 +56,6 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   public static fromJSON(json: any): FundingInputV0 {
     const instance = new FundingInputV0();
 
-
     instance.inputSerialId = toBigInt(
       json.inputSerialId || json.input_serial_id,
     );
@@ -187,7 +186,6 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
    * Converts funding_input_v0 to JSON (canonical rust-dlc format)
    */
   public toJSON(): IFundingInputV0JSON {
-
     return {
       inputSerialId: bigIntToNumber(this.inputSerialId),
       prevTx: this.prevTx.serialize().toString('hex'),

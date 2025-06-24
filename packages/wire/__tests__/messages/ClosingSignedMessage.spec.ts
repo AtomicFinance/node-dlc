@@ -1,6 +1,7 @@
-import { ChannelId } from '@node-dlc/common';
 import { Value } from '@node-dlc/bitcoin';
+import { ChannelId } from '@node-dlc/common';
 import { expect } from 'chai';
+
 import { ClosingSignedMessage } from '../../lib/messages/ClosingSignedMessage';
 
 describe('ClosingSignedMessage', () => {

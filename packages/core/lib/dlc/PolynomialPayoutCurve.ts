@@ -138,7 +138,8 @@ export class PolynomialPayoutCurve {
 
     payoutFunction.payoutFunctionPieces.forEach((piece) => {
       if (
-        piece.payoutCurvePiece.payoutCurvePieceType !== PayoutCurvePieceType.Polynomial &&
+        piece.payoutCurvePiece.payoutCurvePieceType !==
+          PayoutCurvePieceType.Polynomial &&
         piece.payoutCurvePiece.type !== MessageType.PolynomialPayoutCurvePiece
       )
         throw new Error('Payout curve piece must be a polynomial');
