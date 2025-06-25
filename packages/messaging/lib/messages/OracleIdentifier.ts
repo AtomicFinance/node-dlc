@@ -3,15 +3,15 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
-export class OracleIdentifierV0 implements IDlcMessage {
-  public static type = MessageType.OracleIdentifierV0;
+export class OracleIdentifier implements IDlcMessage {
+  public static type = MessageType.OracleIdentifier;
 
   /**
    * Deserializes an oracle_event message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OracleIdentifierV0 {
-    const instance = new OracleIdentifierV0();
+  public static deserialize(buf: Buffer): OracleIdentifier {
+    const instance = new OracleIdentifier();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -28,7 +28,7 @@ export class OracleIdentifierV0 implements IDlcMessage {
   /**
    * The type for oracle_identifier message. oracle_identifier = 61472
    */
-  public type = OracleIdentifierV0.type;
+  public type = OracleIdentifier.type;
 
   public length: bigint;
 
@@ -43,7 +43,7 @@ export class OracleIdentifierV0 implements IDlcMessage {
   /**
    * Converts oracle_event to JSON
    */
-  public toJSON(): IOracleIdentifierV0JSON {
+  public toJSON(): IOracleIdentifierJSON {
     return {
       type: this.type,
       oracleName: this.oracleName,
@@ -71,7 +71,7 @@ export class OracleIdentifierV0 implements IDlcMessage {
   }
 }
 
-export interface IOracleIdentifierV0JSON {
+export interface IOracleIdentifierJSON {
   type: number;
   oracleName: string;
   oraclePubkey: string;

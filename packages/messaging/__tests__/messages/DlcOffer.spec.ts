@@ -19,7 +19,7 @@ import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { FundingInput } from '../../lib/messages/FundingInput';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
-import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
+import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { MessageType, PROTOCOL_VERSION } from '../../lib/MessageType';
 
 describe('DlcOffer', () => {

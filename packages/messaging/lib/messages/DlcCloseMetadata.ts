@@ -1,7 +1,7 @@
 import { Tx } from '@node-dlc/bitcoin';
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
-import { DlcAccept, DlcOffer, DlcTransactionsV0 } from '..';
+import { DlcAccept, DlcOffer, DlcTransactions } from '..';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
@@ -33,7 +33,7 @@ export class DlcCloseMetadata {
   public static fromDlcMessages(
     dlcOffer: DlcOffer,
     dlcAccept: DlcAccept,
-    dlcTxs: DlcTransactionsV0,
+    dlcTxs: DlcTransactions,
   ): DlcCloseMetadata {
     const instance = new DlcCloseMetadata();
 
@@ -88,11 +88,11 @@ export class DlcCloseMetadata {
   public toDlcMessages(): {
     dlcOffer: DlcOffer;
     dlcAccept: DlcAccept;
-    dlcTxs: DlcTransactionsV0;
+    dlcTxs: DlcTransactions;
   } {
     const dlcOffer = new DlcOffer();
     const dlcAccept = new DlcAccept();
-    const dlcTxs = new DlcTransactionsV0();
+    const dlcTxs = new DlcTransactions();
 
     dlcOffer.fundingPubkey = this.offerFundingPubKey;
     dlcAccept.fundingPubkey = this.acceptFundingPubKey;

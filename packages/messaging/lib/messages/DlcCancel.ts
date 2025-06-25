@@ -3,39 +3,19 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class DlcCancel {
-  public static deserialize(buf: Buffer): DlcCancelV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.DlcCancel:
-        return DlcCancelV0.deserialize(buf);
-      default:
-        throw new Error(`DLC Cancel message type must be DlcCancel`); // This is a temporary measure while protocol is being developed
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
- * DlcOffer message contains information about a node and indicates its
- * desire to enter into a new contract. This is the first step toward
- * creating the funding transaction and CETs.
+ * DlcCancel message contains information about a node's desire to cancel
+ * a DLC contract negotiation.
  */
-export class DlcCancelV0 extends DlcCancel implements IDlcMessage {
+export class DlcCancel implements IDlcMessage {
   public static type = MessageType.DlcCancel;
 
   /**
-   * Deserializes an offer_dlc_v0 message
+   * Deserializes a dlc_cancel message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcCancelV0 {
-    const instance = new DlcCancelV0();
+  public static deserialize(buf: Buffer): DlcCancel {
+    const instance = new DlcCancel();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -46,16 +26,16 @@ export class DlcCancelV0 extends DlcCancel implements IDlcMessage {
   }
 
   /**
-   * The type for cancel_dlc_v0 message. cancel_dlc_v0 = 52172
+   * The type for dlc_cancel message. dlc_cancel = 52172
    */
-  public type = DlcCancelV0.type;
+  public type = DlcCancel.type;
 
   public contractId: Buffer;
 
   public cancelType: CancelType = 0;
 
   /**
-   * Serializes the offer_dlc_v0 message into a Buffer
+   * Serializes the dlc_cancel message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -72,3 +52,6 @@ export enum CancelType {
   Market = 1,
   Error = 2,
 }
+
+// Backward compatibility alias
+export const DlcCancelV0 = DlcCancel;

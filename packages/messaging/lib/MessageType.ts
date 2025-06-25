@@ -23,7 +23,9 @@ export enum MessageType {
   ContractDescriptorV1 = 42784,
 
   OracleInfoV0 = 42770,
+  SingleOracleInfo = 42770,
   OracleInfoV1 = 42786,
+  MultiOracleInfo = 42786,
   OracleInfoV2 = 55340,
 
   OracleParamsV0 = 55338,
@@ -54,7 +56,8 @@ export enum MessageType {
   FundingSignatures = 42776,
   FundingSignaturesV0 = FundingSignatures, // Backward compatibility alias
 
-  PayoutFunctionV0 = 42790,
+  PayoutFunction = 42790,
+  PayoutFunctionV0 = PayoutFunction, // Backward compatibility alias
 
   // PayoutCurvePiece types - kept for backward compatibility
   PolynomialPayoutCurvePiece = 42792,
@@ -70,14 +73,18 @@ export enum MessageType {
   /**
    * Dlc Storage Types
    */
-  DlcTransactionsV0 = 61230,
-  DlcIdsV0 = 61232,
-  DlcInfoV0 = 61234,
+  DlcTransactions = 61230,
+  DlcTransactionsV0 = DlcTransactions, // Backward compatibility alias
+  DlcIds = 61232,
+  DlcIdsV0 = DlcIds, // Backward compatibility alias
+  DlcInfo = 61234,
+  DlcInfoV0 = DlcInfo, // Backward compatibility alias
 
   /**
    * Oracle Identifier
    */
-  OracleIdentifierV0 = 61472,
+  OracleIdentifier = 61472,
+  OracleIdentifierV0 = OracleIdentifier, // Backward compatibility alias
 
   /**
    * Order Message Types

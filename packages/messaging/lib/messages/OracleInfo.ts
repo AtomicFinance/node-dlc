@@ -1,7 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
-import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
@@ -20,6 +19,7 @@ export class OracleParams implements IDlcMessage {
    * Creates an OracleParams from JSON data
    * @param json JSON object representing oracle params
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): OracleParams {
     const instance = new OracleParams();
     instance.maxErrorExp = json.maxErrorExp || json.max_error_exp || 0;
@@ -123,12 +123,13 @@ export class OracleParams implements IDlcMessage {
  * SingleOracleInfo contains information about a single oracle.
  */
 export class SingleOracleInfo implements IDlcMessage {
-  public static type = MessageType.OracleInfoV0; // Using existing type for single oracle
+  public static type = MessageType.SingleOracleInfo;
 
   /**
    * Creates a SingleOracleInfo from JSON data
    * @param json JSON object representing single oracle info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): SingleOracleInfo {
     const instance = new SingleOracleInfo();
 
@@ -227,12 +228,13 @@ export class SingleOracleInfo implements IDlcMessage {
  * MultiOracleInfo contains information about multiple oracles used in multi-oracle based contracts.
  */
 export class MultiOracleInfo implements IDlcMessage {
-  public static type = MessageType.OracleInfoV1; // Using V1 for multi-oracle
+  public static type = MessageType.MultiOracleInfo;
 
   /**
    * Creates a MultiOracleInfo from JSON data
    * @param json JSON object representing multi oracle info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): MultiOracleInfo {
     const instance = new MultiOracleInfo();
 
@@ -427,9 +429,9 @@ export abstract class OracleInfo implements IDlcMessage {
     const type = Number(reader.readBigSize());
 
     switch (type) {
-      case MessageType.OracleInfoV0:
+      case MessageType.SingleOracleInfo:
         return SingleOracleInfo.deserialize(buf);
-      case MessageType.OracleInfoV1:
+      case MessageType.MultiOracleInfo:
         return MultiOracleInfo.deserialize(buf);
       default:
         throw new Error(`Unknown oracle info type: ${type}`);

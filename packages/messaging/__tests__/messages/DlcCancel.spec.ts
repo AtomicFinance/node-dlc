@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { DlcCancelV0 } from '../../lib/messages/DlcCancel';
+import { DlcCancel } from '../../lib/messages/DlcCancel';
 
 describe('DlcCancelV0', () => {
   const contractId = Buffer.from(
@@ -10,7 +10,7 @@ describe('DlcCancelV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new DlcCancelV0();
+      const instance = new DlcCancel();
 
       instance.contractId = contractId;
 
@@ -33,7 +33,7 @@ describe('DlcCancelV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = DlcCancelV0.deserialize(buf);
+      const instance = DlcCancel.deserialize(buf);
 
       expect(instance.contractId).to.deep.equal(contractId);
       expect(instance.cancelType).to.equal(0);

@@ -16,11 +16,11 @@ import {
   CetAdaptorSignatures,
   ContractInfoType,
   DlcAccept,
-  DlcCancelV0,
+  DlcCancel,
   DlcClose,
   DlcOffer,
   DlcSign,
-  DlcTransactionsV0,
+  DlcTransactions,
   EnumeratedDescriptor,
   EnumEventDescriptor,
   FundingInput,
@@ -315,7 +315,7 @@ describe('LeveldbDlcStore', () => {
     return dlcSign;
   }
 
-  function createTestDlcTransactions(contractId: Buffer): DlcTransactionsV0 {
+  function createTestDlcTransactions(contractId: Buffer): DlcTransactions {
     // Create minimal funding transaction
     const fundTx = new Tx(
       2, // version
@@ -413,7 +413,7 @@ describe('LeveldbDlcStore', () => {
     );
 
     // Create DLC transactions
-    const dlcTxs = new DlcTransactionsV0();
+    const dlcTxs = new DlcTransactions();
     dlcTxs.contractId = contractId;
     dlcTxs.fundTx = fundTx;
     dlcTxs.fundTxVout = 0;
@@ -423,8 +423,8 @@ describe('LeveldbDlcStore', () => {
     return dlcTxs;
   }
 
-  function createTestDlcCancel(contractId: Buffer): DlcCancelV0 {
-    const dlcCancel = new DlcCancelV0();
+  function createTestDlcCancel(contractId: Buffer): DlcCancel {
+    const dlcCancel = new DlcCancel();
     dlcCancel.contractId = contractId;
     return dlcCancel;
   }

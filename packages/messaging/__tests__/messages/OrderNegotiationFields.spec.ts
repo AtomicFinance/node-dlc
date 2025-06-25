@@ -5,7 +5,7 @@ import { SingleContractInfo } from '../../lib/messages/ContractInfo';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
-import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
+import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import {
   OrderNegotiationFields,
   OrderNegotiationFieldsV0,

@@ -13,7 +13,7 @@ import {
   OracleInfo,
   SingleOracleInfo,
   SingleOracleInfoJSON,
-} from './OracleInfoV0';
+} from './OracleInfo';
 
 export abstract class ContractInfo extends DlcMessage {
   public static deserialize(
@@ -78,7 +78,7 @@ export abstract class ContractInfo extends DlcMessage {
  */
 export class SingleContractInfo extends ContractInfo implements IDlcMessage {
   public static contractInfoType = ContractInfoType.Single;
-  public static type = MessageType.ContractInfoV0; // For backward compatibility
+  public static type = MessageType.SingleContractInfo;
 
   /**
    * Creates a SingleContractInfo from JSON data
@@ -150,7 +150,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
   /**
    * The type for single_contract_info message - using MessageType for IDlcMessage compatibility
    */
-  public type = MessageType.ContractInfoV0; // For IDlcMessage compatibility
+  public type = MessageType.SingleContractInfo;
 
   /**
    * The contract info type for new format
@@ -228,7 +228,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
  */
 export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
   public static contractInfoType = ContractInfoType.Disjoint;
-  public static type = MessageType.ContractInfoV1; // For backward compatibility
+  public static type = MessageType.DisjointContractInfo;
 
   /**
    * Creates a DisjointContractInfo from JSON data
@@ -311,7 +311,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
   /**
    * The type for disjoint_contract_info message - using MessageType for IDlcMessage compatibility
    */
-  public type = MessageType.ContractInfoV1; // For IDlcMessage compatibility
+  public type = MessageType.DisjointContractInfo;
 
   /**
    * The contract info type for new format

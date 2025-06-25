@@ -2,13 +2,10 @@ import { Tx } from '@node-dlc/bitcoin';
 import { StreamReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
-import {
-  DlcTransactions,
-  DlcTransactionsV0,
-} from '../../lib/messages/DlcTransactions';
+import { DlcTransactions } from '../../lib/messages/DlcTransactions';
 import { MessageType } from '../../lib/MessageType';
 
-describe('DlcTransactionsV0', () => {
+describe('DlcTransactions', () => {
   const contractId = Buffer.from(
     '6010a7e779c5079493ad06abbcaca06b8a04d501890cd724104d1df6e20968e8',
     'hex',
@@ -54,7 +51,7 @@ describe('DlcTransactionsV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new DlcTransactionsV0();
+      const instance = new DlcTransactions();
 
       instance.contractId = contractId;
       instance.fundTx = fundTx;
@@ -102,8 +99,8 @@ describe('DlcTransactionsV0', () => {
     it('deserializes', () => {
       const unknownInstance = DlcTransactions.deserialize(buf);
 
-      if (unknownInstance.type === MessageType.DlcTransactionsV0) {
-        const instance = unknownInstance as DlcTransactionsV0;
+      if (unknownInstance.type === MessageType.DlcTransactions) {
+        const instance = unknownInstance as DlcTransactions;
 
         expect(instance.fundTx.serialize()).to.deep.equal(fundTx.serialize());
         expect(Number(instance.fundTxVout)).to.deep.equal(Number(fundTxVout));
@@ -121,8 +118,8 @@ describe('DlcTransactionsV0', () => {
       // Set parseCets to false
       const unknownInstance = DlcTransactions.deserialize(buf, false);
 
-      if (unknownInstance.type === MessageType.DlcTransactionsV0) {
-        const instance = unknownInstance as DlcTransactionsV0;
+      if (unknownInstance.type === MessageType.DlcTransactions) {
+        const instance = unknownInstance as DlcTransactions;
 
         expect(instance.fundTx.serialize()).to.deep.equal(fundTx.serialize());
         expect(Number(instance.fundTxVout)).to.deep.equal(Number(fundTxVout));
@@ -138,7 +135,7 @@ describe('DlcTransactionsV0', () => {
 
   describe('toJSON', () => {
     it('convert to JSON', async () => {
-      const instance = new DlcTransactionsV0();
+      const instance = new DlcTransactions();
 
       instance.contractId = contractId;
       instance.fundTx = fundTx;

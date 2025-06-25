@@ -2,7 +2,7 @@ import { sha256 } from '@node-dlc/crypto';
 import {
   DlcIdsV0,
   OracleEventContainer,
-  OracleIdentifierV0,
+  OracleIdentifier,
 } from '@node-dlc/messaging';
 
 import { LeveldbBase } from './leveldb-base';
@@ -10,7 +10,7 @@ import { LeveldbBase } from './leveldb-base';
 enum Prefix {
   OracleEventContainer = 80,
   OracleNoncesV0 = 81,
-  OracleIdentifierV0 = 82,
+  OracleIdentifier = 82,
 }
 
 export class LeveldbOracleStore extends LeveldbBase {
@@ -97,14 +97,14 @@ export class LeveldbOracleStore extends LeveldbBase {
     await this._db.del(key);
   }
 
-  public async findOracleIdentifiers(): Promise<OracleIdentifierV0[]> {
-    const results: OracleIdentifierV0[] = [];
+  public async findOracleIdentifiers(): Promise<OracleIdentifier[]> {
+    const results: OracleIdentifier[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.OracleIdentifierV0) {
-          results.push(OracleIdentifierV0.deserialize(value));
+        if (key[0] === Prefix.OracleIdentifier) {
+          results.push(OracleIdentifier.deserialize(value));
         }
       }
     } finally {
@@ -116,22 +116,22 @@ export class LeveldbOracleStore extends LeveldbBase {
 
   public async findOracleIdentifier(
     oraclePubkey: Buffer,
-  ): Promise<OracleIdentifierV0> {
+  ): Promise<OracleIdentifier> {
     const key = Buffer.concat([
-      Buffer.from([Prefix.OracleIdentifierV0]),
+      Buffer.from([Prefix.OracleIdentifier]),
       oraclePubkey,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return OracleIdentifierV0.deserialize(raw);
+    return OracleIdentifier.deserialize(raw);
   }
 
   public async saveOracleIdentifier(
-    oracleIdentifier: OracleIdentifierV0,
+    oracleIdentifier: OracleIdentifier,
   ): Promise<void> {
     const value = oracleIdentifier.serialize();
     const key = Buffer.concat([
-      Buffer.from([Prefix.OracleIdentifierV0]),
+      Buffer.from([Prefix.OracleIdentifier]),
       oracleIdentifier.oraclePubkey,
     ]);
     await this._db.put(key, value);
@@ -139,7 +139,7 @@ export class LeveldbOracleStore extends LeveldbBase {
 
   public async deleteOracleIdentifier(oraclePubkey: Buffer): Promise<void> {
     const key = Buffer.concat([
-      Buffer.from([Prefix.OracleIdentifierV0]),
+      Buffer.from([Prefix.OracleIdentifier]),
       oraclePubkey,
     ]);
     await this._db.del(key);

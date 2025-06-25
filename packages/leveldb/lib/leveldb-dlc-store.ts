@@ -2,28 +2,28 @@ import { OutPoint, Script } from '@node-dlc/bitcoin';
 import { BatchDlcTxBuilder, DlcTxBuilder } from '@node-dlc/core';
 import { sha256, xor } from '@node-dlc/crypto';
 import {
-  ContractInfoV0,
-  ContractInfoV1,
+  DisjointContractInfo,
   DlcAccept,
-  DlcCancelV0,
+  DlcCancel,
   DlcClose,
   DlcOffer,
   DlcSign,
-  DlcTransactionsV0,
+  DlcTransactions,
   FundingInput,
+  SingleContractInfo,
 } from '@node-dlc/messaging';
 
 import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
-  DlcOfferV0 = 50,
-  DlcAcceptV0 = 51,
-  DlcSignV0 = 52,
-  DlcTransactionsV0 = 53,
+  DlcOffer = 50,
+  DlcAccept = 51,
+  DlcSign = 52,
+  DlcTransactions = 53,
   Outpoint = 54,
   ScriptPubKey = 55,
-  DlcCancelV0 = 56,
-  DlcCloseV0 = 57,
+  DlcCancel = 56,
+  DlcClose = 57,
   TempContractId = 58,
 }
 
@@ -34,7 +34,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcOfferV0) {
+        if (key[0] === Prefix.DlcOffer) {
           results.push(DlcOffer.deserialize(value));
         }
       }
@@ -51,7 +51,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key] of iterator) {
-        if (key[0] === Prefix.DlcOfferV0) num++;
+        if (key[0] === Prefix.DlcOffer) num++;
       }
     } finally {
       await iterator.close();
@@ -61,10 +61,7 @@ export class LeveldbDlcStore extends LeveldbBase {
   }
 
   public async findDlcOffer(tempContractId: Buffer): Promise<DlcOffer> {
-    const key = Buffer.concat([
-      Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcOffer]), tempContractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcOffer.deserialize(raw);
@@ -87,10 +84,10 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcOfferV0) {
+        if (key[0] === Prefix.DlcOffer) {
           const dlcOffer = DlcOffer.deserialize(value);
-          if (dlcOffer.contractInfo.type === ContractInfoV0.type) {
-            const oracleInfo = (dlcOffer.contractInfo as ContractInfoV0)
+          if (dlcOffer.contractInfo.type === SingleContractInfo.type) {
+            const oracleInfo = (dlcOffer.contractInfo as SingleContractInfo)
               .oracleInfo;
             // Handle both SingleOracleInfo and MultiOracleInfo
             if ('announcement' in oracleInfo) {
@@ -112,8 +109,8 @@ export class LeveldbDlcStore extends LeveldbBase {
                 results.push(dlcOffer);
               }
             }
-          } else if (dlcOffer.contractInfo.type === ContractInfoV1.type) {
-            (dlcOffer.contractInfo as ContractInfoV1).contractOraclePairs.some(
+          } else if (dlcOffer.contractInfo.type === DisjointContractInfo.type) {
+            (dlcOffer.contractInfo as DisjointContractInfo).contractOraclePairs.some(
               (pair) => {
                 const oracleInfo = pair.oracleInfo;
                 // Handle both SingleOracleInfo and MultiOracleInfo
@@ -155,18 +152,12 @@ export class LeveldbDlcStore extends LeveldbBase {
   public async saveDlcOffer(dlcOffer: DlcOffer): Promise<void> {
     const value = dlcOffer.serialize();
     const tempContractId = sha256(value);
-    const key = Buffer.concat([
-      Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcOffer]), tempContractId]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcOffer(tempContractId: Buffer): Promise<void> {
-    const key = Buffer.concat([
-      Buffer.from([Prefix.DlcOfferV0]),
-      tempContractId,
-    ]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcOffer]), tempContractId]);
     await this._db.del(key);
   }
 
@@ -176,7 +167,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcAcceptV0) {
+        if (key[0] === Prefix.DlcAccept) {
           results.push(DlcAccept.deserialize(value));
         }
       }
@@ -193,7 +184,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcAcceptV0 && !result) {
+        if (key[0] === Prefix.DlcAccept && !result) {
           result = DlcAccept.deserialize(value);
           break;
         }
@@ -211,7 +202,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key] of iterator) {
-        if (key[0] === Prefix.DlcAcceptV0) num++;
+        if (key[0] === Prefix.DlcAccept) num++;
       }
     } finally {
       await iterator.close();
@@ -224,7 +215,7 @@ export class LeveldbDlcStore extends LeveldbBase {
     contractId: Buffer,
     parseCets = true,
   ): Promise<DlcAccept> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcAccept]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcAccept.deserialize(raw, parseCets);
@@ -271,7 +262,7 @@ export class LeveldbDlcStore extends LeveldbBase {
     const fundingTxid = tx.txId.serialize();
     const contractId = xor(fundingTxid, dlcAccept.temporaryContractId);
     const value = dlcAccept.serialize();
-    const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcAccept]), contractId]);
     await this._db.put(key, value);
 
     // store funding input outpoint reference
@@ -314,7 +305,7 @@ export class LeveldbDlcStore extends LeveldbBase {
     for (let i = 0; i < dlcAccepts.length; i++) {
       const value = dlcAccepts[i].serialize();
       const key = Buffer.concat([
-        Buffer.from([Prefix.DlcAcceptV0]),
+        Buffer.from([Prefix.DlcAccept]),
         contractIds[i],
       ]);
       await this._db.put(key, value);
@@ -343,7 +334,7 @@ export class LeveldbDlcStore extends LeveldbBase {
   }
 
   public async deleteDlcAccept(contractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcAcceptV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcAccept]), contractId]);
     await this._db.del(key);
   }
 
@@ -353,7 +344,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcSignV0) {
+        if (key[0] === Prefix.DlcSign) {
           results.push(DlcSign.deserialize(value));
         }
       }
@@ -370,7 +361,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key] of iterator) {
-        if (key[0] === Prefix.DlcSignV0) num++;
+        if (key[0] === Prefix.DlcSign) num++;
       }
     } finally {
       await iterator.close();
@@ -380,7 +371,7 @@ export class LeveldbDlcStore extends LeveldbBase {
   }
 
   public async findDlcSign(contractId: Buffer): Promise<DlcSign> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcSignV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcSign]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcSign.deserialize(raw);
@@ -389,25 +380,25 @@ export class LeveldbDlcStore extends LeveldbBase {
   public async saveDlcSign(dlcSign: DlcSign): Promise<void> {
     const value = dlcSign.serialize();
     const key = Buffer.concat([
-      Buffer.from([Prefix.DlcSignV0]),
+      Buffer.from([Prefix.DlcSign]),
       dlcSign.contractId,
     ]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcSign(contractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcSignV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcSign]), contractId]);
     await this._db.del(key);
   }
 
-  public async findDlcCancels(): Promise<DlcCancelV0[]> {
-    const results: DlcCancelV0[] = [];
+  public async findDlcCancels(): Promise<DlcCancel[]> {
+    const results: DlcCancel[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcCancelV0) {
-          results.push(DlcCancelV0.deserialize(value));
+        if (key[0] === Prefix.DlcCancel) {
+          results.push(DlcCancel.deserialize(value));
         }
       }
     } finally {
@@ -417,24 +408,24 @@ export class LeveldbDlcStore extends LeveldbBase {
     return results;
   }
 
-  public async findDlcCancel(contractId: Buffer): Promise<DlcCancelV0> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcCancelV0]), contractId]);
+  public async findDlcCancel(contractId: Buffer): Promise<DlcCancel> {
+    const key = Buffer.concat([Buffer.from([Prefix.DlcCancel]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcCancelV0.deserialize(raw);
+    return DlcCancel.deserialize(raw);
   }
 
-  public async saveDlcCancel(dlcCancel: DlcCancelV0): Promise<void> {
+  public async saveDlcCancel(dlcCancel: DlcCancel): Promise<void> {
     const value = dlcCancel.serialize();
     const key = Buffer.concat([
-      Buffer.from([Prefix.DlcCancelV0]),
+      Buffer.from([Prefix.DlcCancel]),
       dlcCancel.contractId,
     ]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcCancel(contractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcCancelV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcCancel]), contractId]);
     await this._db.del(key);
   }
 
@@ -444,7 +435,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcCloseV0) {
+        if (key[0] === Prefix.DlcClose) {
           results.push(DlcClose.deserialize(value));
         }
       }
@@ -456,7 +447,7 @@ export class LeveldbDlcStore extends LeveldbBase {
   }
 
   public async findDlcClose(contractId: Buffer): Promise<DlcClose> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcCloseV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcClose]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcClose.deserialize(raw);
@@ -465,26 +456,26 @@ export class LeveldbDlcStore extends LeveldbBase {
   public async saveDlcClose(dlcClose: DlcClose): Promise<void> {
     const value = dlcClose.serialize();
     const key = Buffer.concat([
-      Buffer.from([Prefix.DlcCloseV0]),
+      Buffer.from([Prefix.DlcClose]),
       dlcClose.contractId,
     ]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcClose(contractId: Buffer): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcCloseV0]), contractId]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcClose]), contractId]);
     await this._db.del(key);
   }
 
-  public async findDlcTransactionsList(): Promise<DlcTransactionsV0[]> {
-    const results: DlcTransactionsV0[] = [];
+  public async findDlcTransactionsList(): Promise<DlcTransactions[]> {
+    const results: DlcTransactions[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
-        if (key[0] === Prefix.DlcTransactionsV0) {
+        if (key[0] === Prefix.DlcTransactions) {
           // Don't parse cets to avoid java heap out of memory
-          const dlcTxs = DlcTransactionsV0.deserialize(value, false);
+          const dlcTxs = DlcTransactions.deserialize(value, false);
           results.push(dlcTxs);
         }
       }
@@ -501,7 +492,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     try {
       for await (const [key] of iterator) {
-        if (key[0] === Prefix.DlcTransactionsV0) num++;
+        if (key[0] === Prefix.DlcTransactions) num++;
       }
     } finally {
       await iterator.close();
@@ -512,19 +503,19 @@ export class LeveldbDlcStore extends LeveldbBase {
 
   public async findDlcTransactions(
     contractId: Buffer,
-  ): Promise<DlcTransactionsV0> {
+  ): Promise<DlcTransactions> {
     const key = Buffer.concat([
-      Buffer.from([Prefix.DlcTransactionsV0]),
+      Buffer.from([Prefix.DlcTransactions]),
       contractId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcTransactionsV0.deserialize(raw);
+    return DlcTransactions.deserialize(raw);
   }
 
   public async findDlcTransactionsByOutpoint(
     outpoint: OutPoint,
-  ): Promise<DlcTransactionsV0> {
+  ): Promise<DlcTransactions> {
     const key = Buffer.concat([
       Buffer.from([Prefix.Outpoint]),
       Buffer.from(outpoint.toString()),
@@ -535,7 +526,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
   public async findDlcTransactionsByScriptPubKey(
     scriptPubKey: Script,
-  ): Promise<DlcTransactionsV0> {
+  ): Promise<DlcTransactions> {
     const key = Buffer.concat([
       Buffer.from([Prefix.ScriptPubKey]),
       scriptPubKey.serialize(),
@@ -545,11 +536,11 @@ export class LeveldbDlcStore extends LeveldbBase {
   }
 
   public async saveDlcTransactions(
-    dlcTransactions: DlcTransactionsV0,
+    dlcTransactions: DlcTransactions,
   ): Promise<void> {
     const value = dlcTransactions.serialize();
     const key = Buffer.concat([
-      Buffer.from([Prefix.DlcTransactionsV0]),
+      Buffer.from([Prefix.DlcTransactions]),
       dlcTransactions.contractId,
     ]);
     await this._db.put(key, value);
@@ -579,7 +570,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
   public async deleteDlcTransactions(contractId: Buffer): Promise<void> {
     const key = Buffer.concat([
-      Buffer.from([Prefix.DlcTransactionsV0]),
+      Buffer.from([Prefix.DlcTransactions]),
       contractId,
     ]);
     await this._db.del(key);

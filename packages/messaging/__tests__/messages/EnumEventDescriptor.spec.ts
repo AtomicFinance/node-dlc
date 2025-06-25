@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import { EnumEventDescriptor } from '../../lib/messages/EventDescriptor';
 
 describe('EnumEventDescriptorV0', () => {
   const outcomeOne = Buffer.from('64756d6d7931', 'hex').toString();
@@ -9,7 +9,7 @@ describe('EnumEventDescriptorV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new EnumEventDescriptorV0();
+      const instance = new EnumEventDescriptor();
 
       instance.length = BigInt(16);
       instance.outcomes = [outcomeOne, outcomeTwo];
@@ -39,7 +39,7 @@ describe('EnumEventDescriptorV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = EnumEventDescriptorV0.deserialize(buf);
+      const instance = EnumEventDescriptor.deserialize(buf);
 
       expect(Number(instance.outcomes[0].length)).to.equal(outcomeOne.length);
       expect(instance.outcomes[0]).to.deep.equal(outcomeOne);

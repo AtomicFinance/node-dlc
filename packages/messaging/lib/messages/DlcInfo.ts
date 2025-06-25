@@ -3,37 +3,31 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class DlcInfo {
-  public static deserialize(buf: Buffer): DlcInfoV0 {
+/**
+ * DlcInfo message contains list of buffers
+ */
+export class DlcInfo implements IDlcMessage {
+  public static type = MessageType.DlcInfo;
+
+  public static deserialize(buf: Buffer): DlcInfo {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcInfoV0:
-        return DlcInfoV0.deserialize(buf);
+        return DlcInfo.deserializeV0(buf);
       default:
-        throw new Error(`DLC IDs message type must be DlcInfoV0`);
+        throw new Error(`DLC Info message type must be DlcInfoV0`);
     }
   }
 
-  public abstract type: number;
-
-  public abstract serialize(): Buffer;
-}
-
-/**
- * DlcInfo message contains list of buffers
- */
-export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
-  public static type = MessageType.DlcInfoV0;
-
   /**
-   * Deserializes an dlc_ids_v0 message
+   * Deserializes an dlc_info message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcInfoV0 {
-    const instance = new DlcInfoV0();
+  private static deserializeV0(buf: Buffer): DlcInfo {
+    const instance = new DlcInfo();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -49,9 +43,9 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
   }
 
   /**
-   * The type for dlc_info_v0 message
+   * The type for dlc_info message
    */
-  public type = DlcInfoV0.type;
+  public type = DlcInfo.type;
 
   public numDlcOffers: number;
 
@@ -66,7 +60,7 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
   public numDlcTransactions: number;
 
   /**
-   * Serializes the dlc_info_v0 message into a Buffer
+   * Serializes the dlc_info message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -81,3 +75,7 @@ export class DlcInfoV0 extends DlcInfo implements IDlcMessage {
     return writer.toBuffer();
   }
 }
+
+// Legacy support - keeping old class name as alias
+export const DlcInfoV0 = DlcInfo;
+export type DlcInfoV0 = DlcInfo;

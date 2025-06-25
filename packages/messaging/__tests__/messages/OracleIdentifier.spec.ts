@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { OracleIdentifierV0 } from '../../lib/messages/OracleIdentifierV0';
+import { OracleIdentifier } from '../../lib/messages/OracleIdentifier';
 
 describe('OracleIdentifierV0', () => {
   const oraclePubkey = Buffer.from(
@@ -12,7 +12,7 @@ describe('OracleIdentifierV0', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleIdentifierV0();
+      const instance = new OracleIdentifier();
 
       instance.length = BigInt(64);
       instance.oracleName = oracleName;
@@ -39,7 +39,7 @@ describe('OracleIdentifierV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleIdentifierV0.deserialize(buf);
+      const instance = OracleIdentifier.deserialize(buf);
 
       expect(instance.oracleName).to.equal(oracleName);
       expect(instance.oraclePubkey).to.deep.equal(oraclePubkey);

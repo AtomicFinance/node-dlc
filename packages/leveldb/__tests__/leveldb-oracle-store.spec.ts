@@ -8,7 +8,7 @@ import {
   OracleAttestation,
   OracleEvent,
   OracleEventContainer,
-  OracleIdentifierV0,
+  OracleIdentifier,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
@@ -163,7 +163,7 @@ describe('LeveldbOracleStore', () => {
 
   const oracleName = 'atomic';
 
-  const oracleIdentifier = new OracleIdentifierV0();
+  const oracleIdentifier = new OracleIdentifier();
   oracleIdentifier.oracleName = oracleName;
   oracleIdentifier.oraclePubkey = oraclePubkey;
 

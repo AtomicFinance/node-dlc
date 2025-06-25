@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
-import { OracleInfoV0 } from '../../lib/messages/OracleInfoV0';
+import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 
-describe('OracleInfoV0', () => {
+describe('SingleOracleInfo', () => {
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OracleInfoV0();
+      const instance = new SingleOracleInfo();
 
       instance.length = BigInt(168);
       instance.announcement = OracleAnnouncement.deserialize(
@@ -87,7 +87,7 @@ describe('OracleInfoV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = OracleInfoV0.deserialize(buf);
+      const instance = SingleOracleInfo.deserialize(buf);
 
       expect(instance.length).to.deep.equal(BigInt(168));
       expect(instance.announcement.serialize().toString('hex')).to.equal(
