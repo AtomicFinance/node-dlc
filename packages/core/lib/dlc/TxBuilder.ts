@@ -9,7 +9,7 @@ import {
 import {
   DlcAcceptWithoutSigs,
   DlcOffer,
-  FundingInputV0,
+  FundingInput,
   MessageType,
 } from '@node-dlc/messaging';
 import Decimal from 'decimal.js';
@@ -76,11 +76,11 @@ export class BatchDlcTxBuilder {
     );
 
     this.dlcOffers[0].fundingInputs.forEach((input) => {
-      if (input.type !== MessageType.FundingInputV0)
-        throw Error('FundingInput must be V0');
+      if (input.type !== MessageType.FundingInput)
+        throw new Error('Input is not a funding input');
     });
-    const offerFundingInputs: FundingInputV0[] = this.dlcOffers[0].fundingInputs.map(
-      (input) => input as FundingInputV0,
+    const offerFundingInputs: FundingInput[] = this.dlcOffers[0].fundingInputs.map(
+      (input) => input as FundingInput,
     );
 
     const offerTotalFunding = offerFundingInputs.reduce((total, input) => {
@@ -94,7 +94,7 @@ export class BatchDlcTxBuilder {
       BigInt(0),
     );
 
-    const fundingInputs: FundingInputV0[] = [
+    const fundingInputs: FundingInput[] = [
       ...offerFundingInputs,
       ...this.dlcAccepts[0].fundingInputs,
     ];

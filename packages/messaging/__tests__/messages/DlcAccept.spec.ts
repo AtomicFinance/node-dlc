@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { CetAdaptorSignatures } from '../../lib/messages/CetAdaptorSignatures';
 import { DlcAccept, DlcAcceptContainer } from '../../lib/messages/DlcAccept';
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { FundingInput } from '../../lib/messages/FundingInput';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcAccept', () => {
@@ -23,7 +23,7 @@ describe('DlcAccept', () => {
     'hex',
   );
 
-  const fundingInputV0 = Buffer.from(
+  const fundingInput = Buffer.from(
     'fda714' + // type funding_input_v0
       '3f' + // length
       '000000000000dae8' + // input_serial_id
@@ -51,7 +51,7 @@ describe('DlcAccept', () => {
     instance.fundingPubkey = fundingPubkey;
     instance.payoutSpk = payoutSpk;
     instance.payoutSerialId = BigInt(1594186);
-    instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+    instance.fundingInputs = [FundingInput.deserialize(fundingInput)];
     instance.changeSpk = changeSpk;
     instance.changeSerialId = BigInt(885015);
 
@@ -202,8 +202,8 @@ describe('DlcAccept', () => {
       });
       it('should throw if inputSerialIds arent unique', () => {
         instance.fundingInputs = [
-          FundingInputV0.deserialize(fundingInputV0),
-          FundingInputV0.deserialize(fundingInputV0),
+          FundingInput.deserialize(fundingInput),
+          FundingInput.deserialize(fundingInput),
         ];
         expect(function () {
           instance.validate();

@@ -6,11 +6,11 @@ import {
   ContractInfoV1,
   DlcAccept,
   DlcCancelV0,
-  DlcCloseV0,
+  DlcClose,
   DlcOffer,
   DlcSign,
   DlcTransactionsV0,
-  FundingInputV0,
+  FundingInput,
 } from '@node-dlc/messaging';
 
 import { LeveldbBase } from './leveldb-base';
@@ -276,7 +276,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
     // store funding input outpoint reference
     for (let i = 0; i < dlcAccept.fundingInputs.length; i++) {
-      const fundingInput = dlcAccept.fundingInputs[i] as FundingInputV0;
+      const fundingInput = dlcAccept.fundingInputs[i] as FundingInput;
 
       const outpoint = OutPoint.fromString(
         `${fundingInput.prevTx.txId.toString()}:${fundingInput.prevTxVout}`,
@@ -321,7 +321,7 @@ export class LeveldbDlcStore extends LeveldbBase {
 
       // store funding input outpoint reference
       for (let i = 0; i < dlcAccepts[i].fundingInputs.length; i++) {
-        const fundingInput = dlcAccepts[i].fundingInputs[i] as FundingInputV0;
+        const fundingInput = dlcAccepts[i].fundingInputs[i] as FundingInput;
 
         const outpoint = OutPoint.fromString(
           `${fundingInput.prevTx.txId.toString()}:${fundingInput.prevTxVout}`,
@@ -438,14 +438,14 @@ export class LeveldbDlcStore extends LeveldbBase {
     await this._db.del(key);
   }
 
-  public async findDlcCloses(): Promise<DlcCloseV0[]> {
-    const results: DlcCloseV0[] = [];
+  public async findDlcCloses(): Promise<DlcClose[]> {
+    const results: DlcClose[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcCloseV0) {
-          results.push(DlcCloseV0.deserialize(value));
+          results.push(DlcClose.deserialize(value));
         }
       }
     } finally {
@@ -455,14 +455,14 @@ export class LeveldbDlcStore extends LeveldbBase {
     return results;
   }
 
-  public async findDlcClose(contractId: Buffer): Promise<DlcCloseV0> {
+  public async findDlcClose(contractId: Buffer): Promise<DlcClose> {
     const key = Buffer.concat([Buffer.from([Prefix.DlcCloseV0]), contractId]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return DlcCloseV0.deserialize(raw);
+    return DlcClose.deserialize(raw);
   }
 
-  public async saveDlcClose(dlcClose: DlcCloseV0): Promise<void> {
+  public async saveDlcClose(dlcClose: DlcClose): Promise<void> {
     const value = dlcClose.serialize();
     const key = Buffer.concat([
       Buffer.from([Prefix.DlcCloseV0]),

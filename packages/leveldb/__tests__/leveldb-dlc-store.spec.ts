@@ -17,13 +17,13 @@ import {
   ContractInfoType,
   DlcAccept,
   DlcCancelV0,
-  DlcCloseV0,
+  DlcClose,
   DlcOffer,
   DlcSign,
   DlcTransactionsV0,
   EnumeratedDescriptor,
   EnumEventDescriptor,
-  FundingInputV0,
+  FundingInput,
   FundingSignatures,
   OracleAnnouncement,
   OracleEvent,
@@ -83,7 +83,7 @@ describe('LeveldbDlcStore', () => {
     contractInfo.oracleInfo = oracleInfo;
 
     // Create funding input
-    const fundingInput = new FundingInputV0();
+    const fundingInput = new FundingInput();
     fundingInput.inputSerialId = BigInt(64081);
     fundingInput.prevTxVout = 0;
     fundingInput.sequence = Sequence.default();
@@ -149,7 +149,7 @@ describe('LeveldbDlcStore', () => {
 
   function createTestDlcAccept(tempContractId: Buffer): DlcAccept {
     // Create funding input for accept
-    const fundingInput = new FundingInputV0();
+    const fundingInput = new FundingInput();
     fundingInput.inputSerialId = BigInt(56040);
     fundingInput.prevTxVout = 0;
     fundingInput.sequence = Sequence.default();
@@ -429,9 +429,9 @@ describe('LeveldbDlcStore', () => {
     return dlcCancel;
   }
 
-  function createTestDlcClose(contractId: Buffer): DlcCloseV0 {
+  function createTestDlcClose(contractId: Buffer): DlcClose {
     // Create funding input for close
-    const fundingInput = new FundingInputV0();
+    const fundingInput = new FundingInput();
     fundingInput.inputSerialId = BigInt(56040);
     fundingInput.prevTxVout = 0;
     fundingInput.sequence = Sequence.default();
@@ -484,7 +484,7 @@ describe('LeveldbDlcStore', () => {
       ],
     ];
 
-    const dlcClose = new DlcCloseV0();
+    const dlcClose = new DlcClose();
     dlcClose.contractId = contractId;
     dlcClose.closeSignature = Buffer.from(
       '7c8ad6de287b62a1ed1d74ed9116a5158abc7f97376d201caa88e0f9daad68fcda4c271cc003512e768f403a57e5242bd1f6aa1750d7f3597598094a43b1c7bb',
@@ -521,7 +521,7 @@ describe('LeveldbDlcStore', () => {
   const dlcOfferForBatch = createTestDlcOffer();
   // Increase funding input amount to match minimum collateral for batch
   (dlcOfferForBatch
-    .fundingInputs[0] as FundingInputV0).prevTx.outputs[0].value = Value.fromBitcoin(
+    .fundingInputs[0] as FundingInput).prevTx.outputs[0].value = Value.fromBitcoin(
     4,
   );
 
@@ -531,7 +531,7 @@ describe('LeveldbDlcStore', () => {
   const dlcAcceptForBatch = createTestDlcAccept(tempContractIdForBatch);
   // Increase funding input amount to match minimum collateral for batch
   (dlcAcceptForBatch
-    .fundingInputs[0] as FundingInputV0).prevTx.outputs[0].value = Value.fromBitcoin(
+    .fundingInputs[0] as FundingInput).prevTx.outputs[0].value = Value.fromBitcoin(
     4,
   );
 
@@ -561,8 +561,8 @@ describe('LeveldbDlcStore', () => {
       const expectedSerialized = dlcOffer.serialize();
       const expected = DlcOffer.deserialize(expectedSerialized);
 
-      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
-      const expectedFundingInputs = expected.fundingInputs as FundingInputV0[];
+      const actualFundingInputs = actual.fundingInputs as FundingInput[];
+      const expectedFundingInputs = expected.fundingInputs as FundingInput[];
 
       expect(
         actualFundingInputs[0].prevTx.serialize().toString('hex'),
@@ -583,8 +583,8 @@ describe('LeveldbDlcStore', () => {
       const expectedSerialized = dlcOffer.serialize();
       const expected = DlcOffer.deserialize(expectedSerialized);
 
-      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
-      const expectedFundingInputs = expected.fundingInputs as FundingInputV0[];
+      const actualFundingInputs = actual.fundingInputs as FundingInput[];
+      const expectedFundingInputs = expected.fundingInputs as FundingInput[];
 
       expect(
         actualFundingInputs[0].prevTx.serialize().toString('hex'),
@@ -694,8 +694,8 @@ describe('LeveldbDlcStore', () => {
       const expectedSerialized = dlcOffer.serialize();
       const expected = DlcOffer.deserialize(expectedSerialized);
 
-      const actualFundingInputs = actual.fundingInputs as FundingInputV0[];
-      const expectedFundingInputs = expected.fundingInputs as FundingInputV0[];
+      const actualFundingInputs = actual.fundingInputs as FundingInput[];
+      const expectedFundingInputs = expected.fundingInputs as FundingInput[];
 
       expect(
         actualFundingInputs[0].prevTx.serialize().toString('hex'),
@@ -805,7 +805,7 @@ describe('LeveldbDlcStore', () => {
 
       // Use round-trip testing for consistency - serialize and deserialize the expected object
       const expectedSerialized = dlcClose.serialize();
-      const expected = DlcCloseV0.deserialize(expectedSerialized);
+      const expected = DlcClose.deserialize(expectedSerialized);
 
       expect(actual.serialize()).to.deep.equal(expected.serialize());
     });

@@ -1,4 +1,4 @@
-import { FundingInputV0 } from '@node-dlc/messaging';
+import { FundingInput } from '@node-dlc/messaging';
 
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
@@ -34,7 +34,7 @@ export const dualFees = (
   numInputs: number,
   numContracts: number,
 ): bigint => {
-  const input = new FundingInputV0();
+  const input = new FundingInput();
   input.maxWitnessLen = 108;
   input.redeemScript = Buffer.from('', 'hex');
 

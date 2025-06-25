@@ -16,11 +16,7 @@ import {
   ISingleContractInfoJSON,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
-import {
-  FundingInput,
-  FundingInputV0,
-  IFundingInputV0JSON,
-} from './FundingInput';
+import { FundingInput, IFundingInputJSON } from './FundingInput';
 import {
   IOrderIrcInfoJSON,
   OrderIrcInfo,
@@ -180,7 +176,7 @@ export class DlcOffer implements IDlcMessage {
 
     for (let i = 0; i < fundingInputsLen; i++) {
       // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
-      const fundingInput = FundingInputV0.deserializeBody(
+      const fundingInput = FundingInput.deserializeBody(
         reader.buffer.subarray(reader.position),
       );
       instance.fundingInputs.push(fundingInput);
@@ -385,7 +381,7 @@ export class DlcOffer implements IDlcMessage {
     // 11. inputSerialId must be unique for each input
 
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInput) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -410,7 +406,7 @@ export class DlcOffer implements IDlcMessage {
 
     // validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
-      const input = fundingInput as FundingInputV0;
+      const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.offerCollateral >= fundingAmount) {
@@ -528,7 +524,7 @@ export interface IDlcOfferJSON {
   payoutSpk: string;
   payoutSerialId: number;
   offerCollateral: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputJSON[];
   changeSpk: string;
   changeSerialId: number;
   fundOutputSerialId: number;

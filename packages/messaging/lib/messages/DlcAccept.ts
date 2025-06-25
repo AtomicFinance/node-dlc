@@ -15,11 +15,7 @@ import {
   ICetAdaptorSignaturesJSON,
 } from './CetAdaptorSignatures';
 import { IDlcMessage } from './DlcMessage';
-import {
-  FundingInput,
-  FundingInputV0,
-  IFundingInputV0JSON,
-} from './FundingInput';
+import { FundingInput, IFundingInputJSON } from './FundingInput';
 import {
   INegotiationFieldsV0JSON,
   INegotiationFieldsV1JSON,
@@ -131,10 +127,10 @@ export class DlcAccept implements IDlcMessage {
    */
   private static parseFundingInputsFromJSON(
     fundingInputsJson: any[],
-  ): FundingInputV0[] {
+  ): FundingInput[] {
     return fundingInputsJson.map((inputJson) => {
       // Use the existing FundingInput.fromJSON method which handles all the field mapping correctly
-      return FundingInput.fromJSON(inputJson) as FundingInputV0;
+      return FundingInput.fromJSON(inputJson) as FundingInput;
     });
   }
 
@@ -202,7 +198,7 @@ export class DlcAccept implements IDlcMessage {
     const fundingInputsLen = Number(reader.readBigSize());
     for (let i = 0; i < fundingInputsLen; i++) {
       // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
-      const fundingInput = FundingInputV0.deserializeBody(
+      const fundingInput = FundingInput.deserializeBody(
         reader.buffer.subarray(reader.position),
       );
       instance.fundingInputs.push(fundingInput);
@@ -303,7 +299,7 @@ export class DlcAccept implements IDlcMessage {
 
   public payoutSerialId: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInput[] = [];
 
   public changeSpk: Buffer;
 
@@ -387,7 +383,7 @@ export class DlcAccept implements IDlcMessage {
 
     // 6. inputSerialId must be unique for each input
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInput) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -395,11 +391,11 @@ export class DlcAccept implements IDlcMessage {
     }
 
     // 7. Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
+    this.fundingInputs.forEach((input: FundingInput) => input.validate());
 
     // 8. validate funding amount
     const fundingAmount = this.fundingInputs.reduce((acc, fundingInput) => {
-      const input = fundingInput as FundingInputV0;
+      const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
     if (this.acceptCollateral >= fundingAmount) {
@@ -510,7 +506,7 @@ export class DlcAcceptWithoutSigs {
     readonly fundingPubkey: Buffer,
     readonly payoutSpk: Buffer,
     readonly payoutSerialId: bigint,
-    readonly fundingInputs: FundingInputV0[],
+    readonly fundingInputs: FundingInput[],
     readonly changeSpk: Buffer,
     readonly changeSerialId: bigint,
     readonly negotiationFields?: NegotiationFields,
@@ -525,7 +521,7 @@ export interface IDlcAcceptJSON {
   fundingPubkey: string;
   payoutSpk: string;
   payoutSerialId: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputJSON[];
   changeSpk: string;
   changeSerialId: number;
   cetAdaptorSignatures: ICetAdaptorSignaturesJSON;

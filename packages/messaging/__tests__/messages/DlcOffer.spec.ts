@@ -16,7 +16,7 @@ import {
   LOCKTIME_THRESHOLD,
 } from '../../lib/messages/DlcOffer';
 import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { FundingInput } from '../../lib/messages/FundingInput';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfoV0';
@@ -26,8 +26,6 @@ describe('DlcOffer', () => {
   const bitcoinNetwork = BitcoinNetworks.bitcoin_regtest;
 
   let instance: DlcOffer;
-  const type = Buffer.from('a71a', 'hex');
-  const protocolVersion = Buffer.from('00000001', 'hex'); // protocol_version: 1
   const contractFlags = Buffer.from('00', 'hex');
   const chainHash = Buffer.from(
     '06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f',
@@ -91,17 +89,12 @@ describe('DlcOffer', () => {
     'hex',
   );
 
-  const payoutSpkLen = Buffer.from('0016', 'hex');
   const payoutSpk = Buffer.from(
     '00142bbdec425007dc360523b0294d2c64d2213af498',
     'hex',
   );
 
-  const payoutSerialID = Buffer.from('0000000000b051dc', 'hex');
-  const offerCollateral = Buffer.from('0000000005f5e0FF', 'hex'); // 99999999
-  const fundingInputsLen = Buffer.from('01', 'hex'); // Changed from u16 to bigsize (0001 -> 01)
-
-  const fundingInputV0 = Buffer.from(
+  const fundingInput = Buffer.from(
     'fda714' +
       '3f' + // length
       '000000000000fa51' + // input_serial_id
@@ -114,17 +107,10 @@ describe('DlcOffer', () => {
     'hex',
   );
 
-  const changeSpkLen = Buffer.from('0016', 'hex');
   const changeSpk = Buffer.from(
     '0014afa16f949f3055f38bd3a73312bed00b61558884',
     'hex',
   );
-
-  const changeSerialID = Buffer.from('00000000001ea3ed', 'hex');
-  const fundOutputSerialID = Buffer.from('000000000052947a', 'hex');
-  const feeRatePerVb = Buffer.from('0000000000000001', 'hex');
-  const cetLocktime = Buffer.from('00000064', 'hex');
-  const refundLocktime = Buffer.from('000000c8', 'hex');
 
   // Use round-trip testing approach for new dlcspecs PR #163 format
   function createTestDlcOfferHex(): Buffer {
@@ -138,7 +124,7 @@ describe('DlcOffer', () => {
     testInstance.payoutSpk = payoutSpk;
     testInstance.payoutSerialId = BigInt(11555292);
     testInstance.offerCollateral = BigInt(99999999);
-    testInstance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+    testInstance.fundingInputs = [FundingInput.deserialize(fundingInput)];
     testInstance.changeSpk = changeSpk;
     testInstance.changeSerialId = BigInt(2008045);
     testInstance.fundOutputSerialId = BigInt(5411962);
@@ -161,7 +147,7 @@ describe('DlcOffer', () => {
     instance.payoutSpk = payoutSpk;
     instance.payoutSerialId = BigInt(11555292);
     instance.offerCollateral = BigInt(99999999);
-    instance.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+    instance.fundingInputs = [FundingInput.deserialize(fundingInput)];
     instance.changeSpk = changeSpk;
     instance.changeSerialId = BigInt(2008045);
     instance.fundOutputSerialId = BigInt(5411962);
@@ -408,8 +394,8 @@ describe('DlcOffer', () => {
 
       it('should throw if inputSerialIds arent unique', () => {
         instance.fundingInputs = [
-          FundingInputV0.deserialize(fundingInputV0),
-          FundingInputV0.deserialize(fundingInputV0),
+          FundingInput.deserialize(fundingInput),
+          FundingInput.deserialize(fundingInput),
         ];
         expect(function () {
           instance.validate();
@@ -476,7 +462,7 @@ describe('DlcOffer', () => {
       testOffer.payoutSpk = payoutSpk;
       testOffer.payoutSerialId = BigInt(11555292);
       testOffer.offerCollateral = BigInt(99999999);
-      testOffer.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+      testOffer.fundingInputs = [FundingInput.deserialize(fundingInput)];
       testOffer.changeSpk = changeSpk;
       testOffer.changeSerialId = BigInt(2008045);
       testOffer.fundOutputSerialId = BigInt(5411962);
@@ -500,7 +486,7 @@ describe('DlcOffer', () => {
       dlcOffer.payoutSpk = payoutSpk;
       dlcOffer.payoutSerialId = BigInt(29829);
       dlcOffer.offerCollateral = BigInt(16649967);
-      dlcOffer.fundingInputs = [FundingInputV0.deserialize(fundingInputV0)];
+      dlcOffer.fundingInputs = [FundingInput.deserialize(fundingInput)];
       dlcOffer.changeSpk = changeSpk;
       dlcOffer.changeSerialId = BigInt(94880);
       dlcOffer.fundOutputSerialId = BigInt(44394);

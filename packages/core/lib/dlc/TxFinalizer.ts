@@ -1,4 +1,4 @@
-import { FundingInput, FundingInputV0, MessageType } from '@node-dlc/messaging';
+import { FundingInput, MessageType } from '@node-dlc/messaging';
 import { Decimal } from 'decimal.js';
 
 const BATCH_FUND_TX_BASE_WEIGHT = 42;
@@ -23,11 +23,11 @@ export class DualFundingTxFinalizer {
     numContracts: number,
   ): IFees {
     _inputs.forEach((input) => {
-      if (input.type !== MessageType.FundingInputV0)
-        throw Error('FundingInput must be V0');
+      if (input.type !== MessageType.FundingInput)
+        throw new Error('Input is not a funding input');
     });
-    const inputs: FundingInputV0[] = _inputs.map(
-      (input) => input as FundingInputV0,
+    const inputs: FundingInput[] = _inputs.map(
+      (input) => input as FundingInput,
     );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
     const futureFeeWeight = 249 + 4 * payoutSPK.length;
@@ -107,11 +107,11 @@ export class DualClosingTxFinalizer {
 
   private computeFees(payoutSPK: Buffer, _inputs: FundingInput[] = []): bigint {
     _inputs.forEach((input) => {
-      if (input.type !== MessageType.FundingInputV0)
-        throw Error('FundingInput must be V0');
+      if (input.type !== MessageType.FundingInput)
+        throw new Error('Input is not a funding input');
     });
-    const inputs: FundingInputV0[] = _inputs.map(
-      (input) => input as FundingInputV0,
+    const inputs: FundingInput[] = _inputs.map(
+      (input) => input as FundingInput,
     );
     // https://gist.github.com/matthewjablack/08c36baa513af9377508111405b22e03
     const inputWeight = inputs.reduce((total, input) => {
@@ -165,11 +165,11 @@ interface IFees {
 
 export const getFinalizer = (
   feeRate: bigint,
-  offerInputs?: FundingInputV0[],
-  acceptInputs?: FundingInputV0[],
+  offerInputs?: FundingInput[],
+  acceptInputs?: FundingInput[],
   numContracts?: number,
 ): DualFundingTxFinalizer => {
-  const input = new FundingInputV0();
+  const input = new FundingInput();
   input.maxWitnessLen = 108;
   input.redeemScript = Buffer.from('', 'hex');
 
@@ -200,7 +200,7 @@ export const getFinalizerByCount = (
   numAcceptInputs: number,
   numContracts: number,
 ): DualFundingTxFinalizer => {
-  const input = new FundingInputV0();
+  const input = new FundingInput();
   input.maxWitnessLen = 108;
   input.redeemScript = Buffer.from('', 'hex');
 

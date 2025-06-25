@@ -1,14 +1,14 @@
 import { BufferReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
-import { DlcClose, DlcCloseV0 } from '../../lib/messages/DlcClose';
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { DlcClose } from '../../lib/messages/DlcClose';
+import { FundingInput } from '../../lib/messages/FundingInput';
 import { FundingSignatures } from '../../lib/messages/FundingSignatures';
 import { ScriptWitnessV0 } from '../../lib/messages/ScriptWitnessV0';
 import { MessageType } from '../../lib/MessageType';
 
 describe('DlcClose', () => {
-  let instance: DlcCloseV0;
+  let instance: DlcClose;
 
   const contractId = Buffer.from(
     'c1c79e1e9e2fa2840b2514902ea244f39eb3001a4037a52ea43c797d4f841269',
@@ -21,7 +21,7 @@ describe('DlcClose', () => {
   );
 
   beforeEach(() => {
-    instance = new DlcCloseV0();
+    instance = new DlcClose();
     instance.contractId = contractId;
     instance.closeSignature = closeSignature;
     instance.offerPayoutSatoshis = BigInt(100000000);
@@ -39,7 +39,7 @@ describe('DlcClose', () => {
       maxWitnessLen: 107,
       redeemScript: '',
     };
-    instance.fundingInputs = [FundingInputV0.fromJSON(fundingInputJson)];
+    instance.fundingInputs = [FundingInput.fromJSON(fundingInputJson)];
 
     // Create funding signatures using proper TLV format
     instance.fundingSignatures = new FundingSignatures();
@@ -68,7 +68,7 @@ describe('DlcClose', () => {
 
     it('has correct type', () => {
       // Create a simpler test without complex TLV issues
-      const simpleInstance = new DlcCloseV0();
+      const simpleInstance = new DlcClose();
       simpleInstance.contractId = contractId;
       simpleInstance.closeSignature = closeSignature;
       simpleInstance.offerPayoutSatoshis = BigInt(100000000);
@@ -99,7 +99,7 @@ describe('DlcClose', () => {
     describe('deserialize', () => {
       it('deserializes', () => {
         // Test with simpler data to avoid TLV complexity
-        const simpleInstance = new DlcCloseV0();
+        const simpleInstance = new DlcClose();
         simpleInstance.contractId = contractId;
         simpleInstance.closeSignature = closeSignature;
         simpleInstance.offerPayoutSatoshis = BigInt(100000000);
@@ -110,7 +110,7 @@ describe('DlcClose', () => {
         simpleInstance.fundingSignatures.witnessElements = [];
 
         const serialized = simpleInstance.serialize();
-        const deserialized = DlcCloseV0.deserialize(serialized);
+        const deserialized = DlcClose.deserialize(serialized);
 
         expect(deserialized.contractId).to.deep.equal(contractId);
         expect(deserialized.closeSignature).to.deep.equal(closeSignature);
@@ -122,7 +122,7 @@ describe('DlcClose', () => {
       });
 
       it('has correct type', () => {
-        const simpleInstance = new DlcCloseV0();
+        const simpleInstance = new DlcClose();
         simpleInstance.contractId = contractId;
         simpleInstance.closeSignature = closeSignature;
         simpleInstance.offerPayoutSatoshis = BigInt(100000000);
@@ -133,7 +133,7 @@ describe('DlcClose', () => {
         simpleInstance.fundingSignatures.witnessElements = [];
 
         const serialized = simpleInstance.serialize();
-        const deserialized = DlcCloseV0.deserialize(serialized);
+        const deserialized = DlcClose.deserialize(serialized);
         expect(deserialized.type).to.equal(MessageType.DlcClose);
       });
     });
@@ -189,7 +189,7 @@ describe('DlcClose', () => {
           },
         };
 
-        const fromJsonInstance = DlcCloseV0.fromJSON(json);
+        const fromJsonInstance = DlcClose.fromJSON(json);
         expect(fromJsonInstance.contractId).to.deep.equal(contractId);
         expect(fromJsonInstance.closeSignature).to.deep.equal(closeSignature);
         expect(Number(fromJsonInstance.offerPayoutSatoshis)).to.equal(
@@ -232,8 +232,8 @@ describe('DlcClose', () => {
           redeemScript: '',
         };
         instance.fundingInputs = [
-          FundingInputV0.fromJSON(fundingInputJson),
-          FundingInputV0.fromJSON(fundingInputJson), // Same serial ID
+          FundingInput.fromJSON(fundingInputJson),
+          FundingInput.fromJSON(fundingInputJson), // Same serial ID
         ];
         expect(() => instance.validate()).to.throw(
           'inputSerialIds must be unique',
@@ -244,7 +244,7 @@ describe('DlcClose', () => {
     describe('round-trip compatibility', () => {
       it('should maintain data integrity through serialize/deserialize cycle', () => {
         // Test with simpler data to avoid TLV complexity
-        const simpleInstance = new DlcCloseV0();
+        const simpleInstance = new DlcClose();
         simpleInstance.contractId = contractId;
         simpleInstance.closeSignature = closeSignature;
         simpleInstance.offerPayoutSatoshis = BigInt(100000000);
@@ -255,7 +255,7 @@ describe('DlcClose', () => {
         simpleInstance.fundingSignatures.witnessElements = [];
 
         const serialized = simpleInstance.serialize();
-        const deserialized = DlcCloseV0.deserialize(serialized);
+        const deserialized = DlcClose.deserialize(serialized);
         const reSerialized = deserialized.serialize();
 
         expect(serialized.toString('hex')).to.equal(
@@ -265,7 +265,7 @@ describe('DlcClose', () => {
 
       it('should maintain data integrity through toJSON/fromJSON cycle', () => {
         const json = instance.toJSON();
-        const fromJson = DlcCloseV0.fromJSON(json);
+        const fromJson = DlcClose.fromJSON(json);
         const backToJson = fromJson.toJSON();
 
         expect(json.contractId).to.equal(backToJson.contractId);
@@ -287,6 +287,7 @@ describe('DlcClose', () => {
 
         // Skip to funding inputs length position
         reader.readUInt16BE(); // type
+        reader.readUInt32BE(); // protocolVersion (new field!)
         reader.readBytes(32); // contractId
         reader.readBytes(64); // closeSignature
         reader.readUInt64BE(); // offerPayoutSatoshis
@@ -305,6 +306,7 @@ describe('DlcClose', () => {
         // Basic structural checks
         const reader = new BufferReader(serialized);
         expect(reader.readUInt16BE()).to.equal(MessageType.DlcClose);
+        expect(reader.readUInt32BE()).to.equal(1); // protocolVersion
         expect(reader.readBytes(32)).to.deep.equal(contractId);
         expect(reader.readBytes(64)).to.deep.equal(closeSignature);
       });

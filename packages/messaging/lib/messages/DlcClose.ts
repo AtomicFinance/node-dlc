@@ -1,51 +1,34 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
-import { MessageType } from '../MessageType';
+import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
-import { FundingInputV0, IFundingInputV0JSON } from './FundingInput';
+import { FundingInput, IFundingInputJSON } from './FundingInput';
 import { FundingSignatures, IFundingSignaturesJSON } from './FundingSignatures';
 import { ScriptWitnessV0 } from './ScriptWitnessV0';
-
-export abstract class DlcClose {
-  public static deserialize(buf: Buffer): DlcCloseV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.DlcClose:
-        return DlcCloseV0.deserialize(buf);
-      default:
-        throw new Error(`DLC Close message type must be DlcClose`); // This is a temporary measure while protocol is being developed
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract toJSON(): IDlcCloseV0JSON;
-
-  public abstract serialize(): Buffer;
-}
 
 /**
  * DlcClose message contains information about a node and indicates its
  * desire to close an existing contract.
  * Updated to follow DlcOffer architectural patterns.
  */
-export class DlcCloseV0 extends DlcClose implements IDlcMessage {
+export class DlcClose implements IDlcMessage {
   public static type = MessageType.DlcClose;
 
   /**
-   * Creates a DlcCloseV0 from JSON data (e.g., from test vectors)
+   * Creates a DlcClose from JSON data (e.g., from test vectors)
    * Handles both our internal format and external test vector formats
    * @param json JSON object representing a DLC close message
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-  public static fromJSON(json: any): DlcCloseV0 {
-    const instance = new DlcCloseV0();
+  public static fromJSON(json: any): DlcClose {
+    const instance = new DlcClose();
+
+    // Basic fields with field name variations
+    instance.protocolVersion =
+      json.protocolVersion || json.protocol_version || PROTOCOL_VERSION;
 
     // Basic fields with field name variations
     instance.contractId = Buffer.from(
@@ -68,10 +51,10 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
       json.fundInputSerialId || json.fund_input_serial_id,
     );
 
-    // Use FundingInputV0.fromJSON() for each funding input - proper delegation
+    // Use FundingInput.fromJSON() for each funding input - proper delegation
     instance.fundingInputs = (json.fundingInputs || json.funding_inputs || [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((inputJson: any) => FundingInputV0.fromJSON(inputJson));
+      .map((inputJson: any) => FundingInput.fromJSON(inputJson));
 
     // Create FundingSignatures manually since it doesn't have fromJSON
     if (json.fundingSignatures || json.funding_signatures) {
@@ -112,11 +95,12 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   }
 
   /**
-   * Deserializes a close_dlc_v0 message with improved format handling
+   * Deserializes a close_dlc message with backward compatibility
+   * Detects old format (without protocol_version) vs new format (with protocol_version)
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcCloseV0 {
-    const instance = new DlcCloseV0();
+  public static deserialize(buf: Buffer): DlcClose {
+    const instance = new DlcClose();
     const reader = new BufferReader(buf);
 
     const type = reader.readUInt16BE(); // read type
@@ -128,6 +112,8 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
       );
     }
 
+    // Read protocol version
+    instance.protocolVersion = reader.readUInt32BE();
     instance.contractId = reader.readBytes(32);
     instance.closeSignature = reader.readBytes(64);
     instance.offerPayoutSatoshis = reader.readUInt64BE();
@@ -138,7 +124,15 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     const fundingInputsLen = Number(reader.readBigSize());
 
     for (let i = 0; i < fundingInputsLen; i++) {
-      instance.fundingInputs.push(FundingInputV0.deserialize(getTlv(reader)));
+      // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
+      const fundingInput = FundingInput.deserializeBody(
+        reader.buffer.subarray(reader.position),
+      );
+      instance.fundingInputs.push(fundingInput);
+
+      // Skip past the FundingInput we just read
+      const fundingInputLength = fundingInput.serializeBody().length;
+      reader.position += fundingInputLength;
     }
 
     // Handle FundingSignatures - deserialize raw data (no TLV wrapper) like DlcSign
@@ -167,9 +161,12 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   }
 
   /**
-   * The type for close_dlc_v0 message. close_dlc_v0 = 52170
+   * The type for close_dlc message. close_dlc = 52170
    */
-  public type = DlcCloseV0.type;
+  public type = DlcClose.type;
+
+  // New fields as per dlcspecs PR #163
+  public protocolVersion: number = PROTOCOL_VERSION; // Default to current protocol version
 
   public contractId: Buffer;
 
@@ -181,7 +178,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
   public fundInputSerialId: bigint;
 
-  public fundingInputs: FundingInputV0[] = [];
+  public fundingInputs: FundingInput[] = [];
 
   public fundingSignatures: FundingSignatures;
 
@@ -195,6 +192,13 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   public validate(): void {
     // Type is set automatically in class
 
+    // protocol_version validation
+    if (this.protocolVersion !== PROTOCOL_VERSION) {
+      throw new Error(
+        `Unsupported protocol version: ${this.protocolVersion}, expected: ${PROTOCOL_VERSION}`,
+      );
+    }
+
     // contractId validation
     if (!this.contractId || this.contractId.length !== 32) {
       throw new Error('contractId must be 32 bytes');
@@ -207,7 +211,7 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
 
     // Ensure input serial ids are unique
     const inputSerialIds = this.fundingInputs.map(
-      (input: FundingInputV0) => input.inputSerialId,
+      (input: FundingInput) => input.inputSerialId,
     );
 
     if (new Set(inputSerialIds).size !== inputSerialIds.length) {
@@ -215,17 +219,26 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     }
 
     // Ensure funding inputs are segwit
-    this.fundingInputs.forEach((input: FundingInputV0) => input.validate());
+    this.fundingInputs.forEach((input: FundingInput) => input.validate());
 
     // Note: FundingSignatures doesn't have a validate method, so we skip validation
   }
 
   /**
-   * Converts dlc_close_v0 to JSON (canonical format)
+   * Converts dlc_close to JSON (canonical rust-dlc format)
    */
-  public toJSON(): IDlcCloseV0JSON {
+  public toJSON(): IDlcCloseJSON {
+    // Include unknown TLVs for debugging
+    const tlvs = [];
+    if (this.unknownTlvs) {
+      this.unknownTlvs.forEach((tlv) =>
+        tlvs.push({ type: tlv.type, data: tlv.data.toString('hex') }),
+      );
+    }
+
+    // Return canonical rust-dlc format
     return {
-      type: this.type,
+      protocolVersion: this.protocolVersion,
       contractId: this.contractId.toString('hex'),
       closeSignature: this.closeSignature.toString('hex'),
       offerPayoutSatoshis: bigIntToNumber(this.offerPayoutSatoshis),
@@ -233,16 +246,19 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
       fundInputSerialId: bigIntToNumber(this.fundInputSerialId),
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
       fundingSignatures: this.fundingSignatures.toJSON(),
-    };
+    } as any; // Allow different field names from interface
   }
 
   /**
-   * Serializes the close_dlc_v0 message into a Buffer
+   * Serializes the close_dlc message into a Buffer
    * Updated serialization format to match DlcOffer patterns
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
+
+    // New fields as per dlcspecs PR #163
+    writer.writeUInt32BE(this.protocolVersion);
     writer.writeBytes(this.contractId);
     writer.writeBytes(this.closeSignature);
     writer.writeUInt64BE(this.offerPayoutSatoshis);
@@ -253,7 +269,8 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
     writer.writeBigSize(this.fundingInputs.length);
 
     for (const fundingInput of this.fundingInputs) {
-      writer.writeBytes(fundingInput.serialize());
+      // Use serializeBody() to match rust-dlc behavior - funding inputs in vec are serialized without TLV wrapper
+      writer.writeBytes(fundingInput.serializeBody());
     }
 
     // Serialize FundingSignatures directly (no TLV wrapper) like DlcSign
@@ -270,13 +287,16 @@ export class DlcCloseV0 extends DlcClose implements IDlcMessage {
   }
 }
 
-export interface IDlcCloseV0JSON {
-  type: number;
+export interface IDlcCloseJSON {
+  type?: number; // Made optional for rust-dlc compatibility
+  protocolVersion: number;
   contractId: string;
   closeSignature: string;
   offerPayoutSatoshis: number;
   acceptPayoutSatoshis: number;
   fundInputSerialId: number;
-  fundingInputs: IFundingInputV0JSON[];
+  fundingInputs: IFundingInputJSON[];
   fundingSignatures: IFundingSignaturesJSON;
+  serialized?: string; // Made optional - hex serialization for compatibility testing
+  tlvs?: any[]; // Made optional - for unknown TLVs
 }

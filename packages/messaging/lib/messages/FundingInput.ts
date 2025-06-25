@@ -5,21 +5,13 @@ import { MessageType } from '../MessageType';
 import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class FundingInput {
-  public static deserialize(buf: Buffer): FundingInputV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.FundingInputV0:
-        return FundingInputV0.deserialize(buf);
-      default:
-        throw new Error(
-          `FundingInput function TLV type must be FundingInputV0`,
-        );
-    }
-  }
+/**
+ * FundingInput contains information about a specific input to be used
+ * in a funding transaction, as well as its corresponding on-chain UTXO.
+ * Matches rust-dlc FundingInput struct.
+ */
+export class FundingInput implements IDlcMessage {
+  public static type = MessageType.FundingInput;
 
   /**
    * Creates a FundingInput from JSON data (e.g., from test vectors)
@@ -27,34 +19,7 @@ export abstract class FundingInput {
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): FundingInput {
-    // For now, always create FundingInputV0
-    return FundingInputV0.fromJSON(json);
-  }
-
-  public abstract type: number;
-
-  public abstract length: bigint;
-
-  public abstract toJSON(): IFundingInputV0JSON;
-
-  public abstract serialize(): Buffer;
-  public abstract serializeBody(): Buffer;
-}
-
-/**
- * FundingInput V0 contains information about a specific input to be used
- * in a funding transaction, as well as its corresponding on-chain UTXO.
- */
-export class FundingInputV0 extends FundingInput implements IDlcMessage {
-  public static type = MessageType.FundingInputV0;
-
-  /**
-   * Creates a FundingInputV0 from JSON data
-   * @param json JSON object representing funding input
-   */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-  public static fromJSON(json: any): FundingInputV0 {
-    const instance = new FundingInputV0();
+    const instance = new FundingInput();
 
     instance.inputSerialId = toBigInt(
       json.inputSerialId || json.input_serial_id,
@@ -93,11 +58,11 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Deserializes an funding_input_v0 message
+   * Deserializes a funding_input message
    * @param buf
    */
-  public static deserialize(buf: Buffer): FundingInputV0 {
-    const instance = new FundingInputV0();
+  public static deserialize(buf: Buffer): FundingInput {
+    const instance = new FundingInput();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -117,12 +82,12 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Deserializes an funding_input_v0 message without TLV wrapper (for use in DlcOffer)
+   * Deserializes a funding_input message without TLV wrapper (for use in DlcOffer)
    * This matches rust-dlc behavior where FundingInput is in a vector without individual TLV wrappers
    * @param buf
    */
-  public static deserializeBody(buf: Buffer): FundingInputV0 {
-    const instance = new FundingInputV0();
+  public static deserializeBody(buf: Buffer): FundingInput {
+    const instance = new FundingInput();
     const reader = new BufferReader(buf);
 
     // No TLV type/length to read - funding input body is serialized directly
@@ -146,9 +111,9 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * The type for funding_input_v0 message. funding_input_v0 = 42772
+   * The type for funding_input message. funding_input = 42772
    */
-  public type = FundingInputV0.type;
+  public type = FundingInput.type;
 
   public length: bigint;
 
@@ -183,9 +148,9 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Converts funding_input_v0 to JSON (canonical rust-dlc format)
+   * Converts funding_input to JSON (canonical rust-dlc format)
    */
-  public toJSON(): IFundingInputV0JSON {
+  public toJSON(): IFundingInputJSON {
     return {
       inputSerialId: bigIntToNumber(this.inputSerialId),
       prevTx: this.prevTx.serialize().toString('hex'),
@@ -197,7 +162,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Serializes the funding_input_v0 message into a Buffer
+   * Serializes the funding_input message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -241,7 +206,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 }
 
-export interface IFundingInputV0JSON {
+export interface IFundingInputJSON {
   inputSerialId: number;
   prevTx: string;
   prevTxVout: number;

@@ -45,7 +45,8 @@ export enum MessageType {
   NegotiationFieldsV1 = 55336,
   NegotiationFieldsV2 = 55346,
 
-  FundingInputV0 = 42772,
+  FundingInput = 42772,
+  FundingInputV0 = FundingInput, // Backward compatibility alias
 
   CetAdaptorSignatures = 42774,
   CetAdaptorSignaturesV0 = CetAdaptorSignatures, // Backward compatibility alias
