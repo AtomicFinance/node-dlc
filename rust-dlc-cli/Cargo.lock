@@ -408,6 +408,7 @@ dependencies = [
  "anyhow",
  "bitcoin",
  "clap",
+ "dlc",
  "dlc-messages",
  "hex",
  "lightning",

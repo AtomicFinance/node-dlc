@@ -1,13 +1,19 @@
 use anyhow::{Context, Result};
 use clap::{Arg, Command};
 use dlc_messages::{AcceptDlc, OfferDlc, SignDlc};
-use dlc_messages::oracle_msgs::{OracleAnnouncement, OracleAttestation, OracleEvent, OracleInfo};
+use dlc_messages::oracle_msgs::{OracleAnnouncement, OracleAttestation, OracleEvent, OracleInfo, EventDescriptor, EnumEventDescriptor, DigitDecompositionEventDescriptor};
 use dlc_messages::contract_msgs::{ContractInfo, ContractDescriptor};
+use dlc_messages::ser_impls::{write_as_tlv, read_as_tlv};
 use lightning::util::ser::{Readable, Writeable};
 use lightning::ln::wire::Type;
 use lightning::io::Cursor;
 use serde_json::Value;
 use std::io::{self, Read};
+use bitcoin::hashes::Hash;
+use secp256k1_zkp::{rand::thread_rng, Message, SECP256K1, Keypair, XOnlyPublicKey, SecretKey};
+use bitcoin::bip32::{ChildNumber, Xpriv};
+use bitcoin::Network;
+use secp256k1_zkp::rand::Fill;
 
 fn main() -> Result<()> {
     let matches = Command::new("dlc-compat")
@@ -48,6 +54,57 @@ fn main() -> Result<()> {
                         .required(true),
                 ),
         )
+        .subcommand(
+            Command::new("create-oracle-announcement")
+                .about("Create a new oracle announcement with cryptographically valid signatures")
+                .arg(
+                    Arg::new("event-type")
+                        .short('e')
+                        .long("event-type")
+                        .value_name("EVENT_TYPE")
+                        .help("Event type: enum or digit-decomposition")
+                        .default_value("enum")
+                        .required(false),
+                )
+                .arg(
+                    Arg::new("event-id")
+                        .short('i')
+                        .long("event-id")
+                        .value_name("EVENT_ID")
+                        .help("Event identifier")
+                        .default_value("test-event-001")
+                        .required(false),
+                )
+                .arg(
+                    Arg::new("maturity")
+                        .short('m')
+                        .long("maturity")
+                        .value_name("MATURITY_EPOCH")
+                        .help("Event maturity epoch timestamp")
+                        .default_value("1640995200")
+                        .required(false),
+                ),
+        )
+        .subcommand(
+            Command::new("create-oracle-attestation")
+                .about("Create an oracle attestation for a given announcement")
+                .arg(
+                    Arg::new("announcement-hex")
+                        .short('a')
+                        .long("announcement-hex")
+                        .value_name("HEX_STRING")
+                        .help("Hex-encoded oracle announcement to attest to")
+                        .required(true),
+                )
+                .arg(
+                    Arg::new("outcome")
+                        .short('o')
+                        .long("outcome")
+                        .value_name("OUTCOME")
+                        .help("Outcome to attest to (e.g., 'win' for enum or '42' for digit decomposition)")
+                        .required(true),
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -78,6 +135,21 @@ fn main() -> Result<()> {
                 .context("Failed to parse input as JSON")?;
 
             validate_message(msg_type, &json)
+        }
+        Some(("create-oracle-announcement", sub_matches)) => {
+            let event_type = sub_matches.get_one::<String>("event-type").unwrap();
+            let event_id = sub_matches.get_one::<String>("event-id").unwrap();
+            let maturity_str = sub_matches.get_one::<String>("maturity").unwrap();
+            let maturity: u32 = maturity_str.parse()
+                .context("Failed to parse maturity as u32")?;
+
+            create_oracle_announcement(event_type, event_id, maturity)
+        }
+        Some(("create-oracle-attestation", sub_matches)) => {
+            let announcement_hex = sub_matches.get_one::<String>("announcement-hex").unwrap();
+            let outcome = sub_matches.get_one::<String>("outcome").unwrap();
+
+            create_oracle_attestation(announcement_hex, outcome)
         }
         _ => {
             eprintln!("No subcommand provided. Use --help for usage.");
@@ -154,10 +226,8 @@ fn serialize_oracle_announcement(json: &Value) -> Result<String> {
         .context("Failed to parse JSON as OracleAnnouncement")?;
 
     let mut bytes = Vec::new();
-    announcement.type_id().write(&mut bytes)
-        .context("Failed to write message type")?;
-    announcement.write(&mut bytes)
-        .context("Failed to serialize OracleAnnouncement to bytes")?;
+    write_as_tlv(&announcement, &mut bytes)
+        .context("Failed to serialize OracleAnnouncement as TLV")?;
 
     Ok(hex::encode(bytes))
 }
@@ -167,10 +237,8 @@ fn serialize_oracle_attestation(json: &Value) -> Result<String> {
         .context("Failed to parse JSON as OracleAttestation")?;
 
     let mut bytes = Vec::new();
-    attestation.type_id().write(&mut bytes)
-        .context("Failed to write message type")?;
-    attestation.write(&mut bytes)
-        .context("Failed to serialize OracleAttestation to bytes")?;
+    write_as_tlv(&attestation, &mut bytes)
+        .context("Failed to serialize OracleAttestation as TLV")?;
 
     Ok(hex::encode(bytes))
 }
@@ -235,6 +303,22 @@ fn deserialize_hex(hex_str: &str) -> Result<()> {
         eprintln!("DEBUG: First 20 bytes: {}", hex::encode(&bytes[..std::cmp::min(20, bytes.len())]));
     }
 
+    // Try OracleAnnouncement TLV
+    let mut cursor_clone = Cursor::new(&bytes);
+    if let Ok(announcement) = read_as_tlv::<OracleAnnouncement, _>(&mut cursor_clone) {
+        if let Ok(json) = serde_json::to_value(&announcement) {
+            return output_success_with_data("oracle-announcement", &json, "Successfully deserialized OracleAnnouncement (TLV)");
+        }
+    }
+
+    // Try OracleAttestation TLV
+    let mut cursor_clone = Cursor::new(&bytes);
+    if let Ok(attestation) = read_as_tlv::<OracleAttestation, _>(&mut cursor_clone) {
+        if let Ok(json) = serde_json::to_value(&attestation) {
+            return output_success_with_data("oracle-attestation", &json, "Successfully deserialized OracleAttestation (TLV)");
+        }
+    }
+
     if bytes.len() >= 2 {
         let msg_type = u16::from_be_bytes([bytes[0], bytes[1]]);
 
@@ -283,28 +367,54 @@ fn deserialize_hex(hex_str: &str) -> Result<()> {
                 }
             }
             55332 => { // OracleAnnouncement (0xd824)
-                match OracleAnnouncement::read(&mut cursor) {
+                // Try TLV format first
+                let mut full_cursor = Cursor::new(&bytes);
+                match read_as_tlv::<OracleAnnouncement, _>(&mut full_cursor) {
                     Ok(announcement) => {
                         match serde_json::to_value(&announcement) {
-                            Ok(json) => return output_success_with_data("oracle-announcement", &json, "Successfully deserialized OracleAnnouncement"),
+                            Ok(json) => return output_success_with_data("oracle-announcement", &json, "Successfully deserialized OracleAnnouncement (TLV)"),
                             Err(e) => return output_error(&format!("Failed to convert OracleAnnouncement to JSON: {}", e)),
                         }
                     }
-                    Err(e) => {
-                        eprintln!("DEBUG: Failed to parse as OracleAnnouncement: {:?}", e);
+                    Err(_) => {
+                        // Fallback to direct format
+                        match OracleAnnouncement::read(&mut cursor) {
+                            Ok(announcement) => {
+                                match serde_json::to_value(&announcement) {
+                                    Ok(json) => return output_success_with_data("oracle-announcement", &json, "Successfully deserialized OracleAnnouncement (direct)"),
+                                    Err(e) => return output_error(&format!("Failed to convert OracleAnnouncement to JSON: {}", e)),
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("DEBUG: Failed to parse as OracleAnnouncement: {:?}", e);
+                            }
+                        }
                     }
                 }
             }
             55400 => { // OracleAttestation (0xd868)
-                match OracleAttestation::read(&mut cursor) {
+                // Try TLV format first
+                let mut full_cursor = Cursor::new(&bytes);
+                match read_as_tlv::<OracleAttestation, _>(&mut full_cursor) {
                     Ok(attestation) => {
                         match serde_json::to_value(&attestation) {
-                            Ok(json) => return output_success_with_data("oracle-attestation", &json, "Successfully deserialized OracleAttestation"),
+                            Ok(json) => return output_success_with_data("oracle-attestation", &json, "Successfully deserialized OracleAttestation (TLV)"),
                             Err(e) => return output_error(&format!("Failed to convert OracleAttestation to JSON: {}", e)),
                         }
                     }
-                    Err(e) => {
-                        eprintln!("DEBUG: Failed to parse as OracleAttestation: {:?}", e);
+                    Err(_) => {
+                        // Fallback to direct format
+                        match OracleAttestation::read(&mut cursor) {
+                            Ok(attestation) => {
+                                match serde_json::to_value(&attestation) {
+                                    Ok(json) => return output_success_with_data("oracle-attestation", &json, "Successfully deserialized OracleAttestation (direct)"),
+                                    Err(e) => return output_error(&format!("Failed to convert OracleAttestation to JSON: {}", e)),
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("DEBUG: Failed to parse as OracleAttestation: {:?}", e);
+                            }
+                        }
                     }
                 }
             }
@@ -449,5 +559,210 @@ fn output_error(message: &str) -> Result<()> {
 
     println!("{}", serde_json::to_string_pretty(&output)?);
     // Don't exit with error code, just output the error JSON
+    Ok(())
+}
+
+fn create_nonce_keypair() -> Result<(SecretKey, XOnlyPublicKey)> {
+    let mut nonce_seed = [0u8; 32];
+    nonce_seed.try_fill(&mut thread_rng())
+        .context("Failed to generate random nonce seed")?;
+    
+    let nonce_priv = Xpriv::new_master(Network::Bitcoin, &nonce_seed)
+        .context("Failed to create master key")?
+        .derive_priv(SECP256K1, &[ChildNumber::from_normal_idx(1).unwrap()])
+        .context("Failed to derive private key")?
+        .private_key;
+
+    let nonce_xpub = nonce_priv.x_only_public_key(SECP256K1).0;
+
+    Ok((nonce_priv, nonce_xpub))
+}
+
+fn create_oracle_announcement(event_type: &str, event_id: &str, maturity: u32) -> Result<()> {
+    // Generate oracle keypair
+    let oracle_keypair = Keypair::new(SECP256K1, &mut thread_rng());
+    let oracle_pubkey = XOnlyPublicKey::from_keypair(&oracle_keypair).0;
+
+    // Create event descriptor and nonces based on event type
+    let (event_descriptor, oracle_nonces) = match event_type {
+        "enum" => {
+            let (_, nonce_pubkey) = create_nonce_keypair()?;
+            let descriptor = EventDescriptor::EnumEvent(EnumEventDescriptor {
+                outcomes: vec!["win".to_string(), "lose".to_string(), "draw".to_string()],
+            });
+            (descriptor, vec![nonce_pubkey])
+        }
+        "digit-decomposition" => {
+            // Generate 8 nonces for 8-digit binary decomposition
+            let mut nonces = Vec::new();
+            for _ in 0..8 {
+                let (_, nonce_pubkey) = create_nonce_keypair()?;
+                nonces.push(nonce_pubkey);
+            }
+            let descriptor = EventDescriptor::DigitDecompositionEvent(DigitDecompositionEventDescriptor {
+                base: 2,
+                is_signed: false,
+                unit: "BTCUSD".to_string(),
+                precision: 0,
+                nb_digits: 8,
+            });
+            (descriptor, nonces)
+        }
+        _ => {
+            return output_error(&format!("Unsupported event type: {}", event_type));
+        }
+    };
+
+    // Create oracle event
+    let oracle_event = OracleEvent {
+        oracle_nonces,
+        event_maturity_epoch: maturity,
+        event_descriptor,
+        event_id: event_id.to_string(),
+    };
+
+    // Sign the oracle event
+    let mut event_hex = Vec::new();
+    oracle_event.write(&mut event_hex)
+        .context("Failed to serialize oracle event")?;
+    let hash = bitcoin::hashes::sha256::Hash::hash(&event_hex);
+    let msg = Message::from_digest(hash.to_byte_array());
+    let announcement_signature = SECP256K1.sign_schnorr(&msg, &oracle_keypair);
+
+    // Create oracle announcement
+    let announcement = OracleAnnouncement {
+        announcement_signature,
+        oracle_public_key: oracle_pubkey,
+        oracle_event,
+    };
+
+    // Serialize to hex using TLV format
+    let mut bytes = Vec::new();
+    write_as_tlv(&announcement, &mut bytes)
+        .context("Failed to serialize OracleAnnouncement as TLV")?;
+    let hex = hex::encode(bytes);
+
+    // Convert to JSON for display
+    let json = serde_json::to_value(&announcement)
+        .context("Failed to convert OracleAnnouncement to JSON")?;
+
+    let output = serde_json::json!({
+        "status": "success",
+        "messageType": "oracle-announcement",
+        "hex": hex,
+        "data": json,
+        "message": format!("Created {} oracle announcement", event_type)
+    });
+
+    println!("{}", serde_json::to_string_pretty(&output)?);
+    Ok(())
+}
+
+fn create_oracle_attestation(announcement_hex: &str, outcome: &str) -> Result<()> {
+    // Decode the announcement hex
+    let bytes = hex::decode(announcement_hex)
+        .context("Failed to decode announcement hex string")?;
+
+    if bytes.len() < 2 {
+        return output_error("Invalid announcement hex: too short");
+    }
+
+    // Try to parse as TLV format first
+    let announcement = match read_as_tlv::<OracleAnnouncement, _>(&mut Cursor::new(&bytes)) {
+        Ok(announcement) => announcement,
+        Err(_) => {
+            // Fallback to direct format
+            let msg_type = u16::from_be_bytes([bytes[0], bytes[1]]);
+            if msg_type != 55332 { // OracleAnnouncement type
+                return output_error(&format!("Invalid message type: expected 55332 (OracleAnnouncement), got {}", msg_type));
+            }
+
+            let message_body = &bytes[2..];
+            let mut cursor = Cursor::new(message_body);
+            OracleAnnouncement::read(&mut cursor)
+                .map_err(|e| anyhow::anyhow!("Failed to parse OracleAnnouncement from hex: {:?}", e))?
+        }
+    };
+
+    // Generate oracle keypair (in practice, this would be the same keypair used to create the announcement)
+    let oracle_keypair = Keypair::new(SECP256K1, &mut thread_rng());
+
+    // Create attestation based on event type
+    let (signatures, outcomes) = match &announcement.oracle_event.event_descriptor {
+        EventDescriptor::EnumEvent(enum_desc) => {
+            // Verify the outcome is valid
+            if !enum_desc.outcomes.contains(&outcome.to_string()) {
+                return output_error(&format!("Invalid outcome '{}' for enum event. Valid outcomes: {:?}", outcome, enum_desc.outcomes));
+            }
+
+            // Generate nonce for signing
+            let (nonce_secret, _) = create_nonce_keypair()?;
+            
+            // Sign the outcome
+            let hash = bitcoin::hashes::sha256::Hash::hash(outcome.as_bytes());
+            let msg = Message::from_digest(hash.to_byte_array());
+            
+            // Create a keypair from the nonce secret for signing
+            let nonce_keypair = Keypair::from_secret_key(SECP256K1, &nonce_secret);
+            let signature = SECP256K1.sign_schnorr(&msg, &nonce_keypair);
+
+            (vec![signature], vec![outcome.to_string()])
+        }
+        EventDescriptor::DigitDecompositionEvent(digit_desc) => {
+            // Parse the outcome as a number
+            let outcome_num: u64 = outcome.parse()
+                .context("Failed to parse outcome as number for digit decomposition event")?;
+
+            // Convert to binary representation
+            let mut binary_outcomes = Vec::new();
+            let mut signatures = Vec::new();
+            
+            for i in 0..digit_desc.nb_digits {
+                let bit = (outcome_num >> i) & 1;
+                let bit_str = bit.to_string();
+                binary_outcomes.push(bit_str.clone());
+
+                // Generate nonce and sign each bit
+                let (nonce_secret, _) = create_nonce_keypair()?;
+                let hash = bitcoin::hashes::sha256::Hash::hash(bit_str.as_bytes());
+                let msg = Message::from_digest(hash.to_byte_array());
+                
+                // Create a keypair from the nonce secret for signing
+                let nonce_keypair = Keypair::from_secret_key(SECP256K1, &nonce_secret);
+                let signature = SECP256K1.sign_schnorr(&msg, &nonce_keypair);
+                signatures.push(signature);
+            }
+
+            (signatures, binary_outcomes)
+        }
+    };
+
+    // Create oracle attestation
+    let attestation = OracleAttestation {
+        event_id: announcement.oracle_event.event_id.clone(),
+        oracle_public_key: XOnlyPublicKey::from_keypair(&oracle_keypair).0,
+        signatures,
+        outcomes,
+    };
+
+    // Serialize to hex using TLV format
+    let mut bytes = Vec::new();
+    write_as_tlv(&attestation, &mut bytes)
+        .context("Failed to serialize OracleAttestation as TLV")?;
+    let hex = hex::encode(bytes);
+
+    // Convert to JSON for display
+    let json = serde_json::to_value(&attestation)
+        .context("Failed to convert OracleAttestation to JSON")?;
+
+    let output = serde_json::json!({
+        "status": "success",
+        "messageType": "oracle-attestation",
+        "hex": hex,
+        "data": json,
+        "message": format!("Created oracle attestation for outcome '{}'", outcome)
+    });
+
+    println!("{}", serde_json::to_string_pretty(&output)?);
     Ok(())
 }
