@@ -41,3 +41,4 @@ export * from './messages/RoundingIntervals';
 export * from './messages/ScriptWitnessV0';
 export * from './MessageType';
 export * from './validation/validate';
+export { F64 } from './serialize/F64';
