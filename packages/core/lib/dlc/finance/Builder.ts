@@ -1,17 +1,15 @@
 import { Value } from '@node-dlc/bitcoin';
 import {
-  ContractDescriptorV1,
-  ContractInfo,
-  ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
   MessageType,
+  NumericalDescriptor,
   OracleAnnouncement,
-  OracleInfo,
-  OracleInfoV0,
   OrderOffer,
   OrderPositionInfoV0,
   PayoutFunction,
   RoundingIntervals,
+  SingleContractInfo,
+  SingleOracleInfo,
 } from '@node-dlc/messaging';
 import {
   BitcoinNetwork,
@@ -146,15 +144,15 @@ export const buildOrderOffer = (
 ): OrderOffer => {
   const eventDescriptor = getDigitDecompositionEventDescriptor(announcement);
 
-  const contractDescriptor = new ContractDescriptorV1();
+  const contractDescriptor = new NumericalDescriptor();
   contractDescriptor.numDigits = eventDescriptor.nbDigits;
   contractDescriptor.payoutFunction = payoutFunction;
   contractDescriptor.roundingIntervals = roundingIntervals;
 
-  const oracleInfo = new OracleInfoV0();
+  const oracleInfo = new SingleOracleInfo();
   oracleInfo.announcement = announcement;
 
-  const contractInfo = new ContractInfoV0();
+  const contractInfo = new SingleContractInfo();
   contractInfo.totalCollateral = totalCollateral;
   contractInfo.contractDescriptor = contractDescriptor;
   contractInfo.oracleInfo = oracleInfo;
@@ -692,8 +690,8 @@ export const buildCustomStrategyOrderOffer = (
   (orderOffer.positionInfo as OrderPositionInfoV0).contractSize =
     contractSize.sats;
 
-  (orderOffer.positionInfo as OrderPositionInfoV0).instrumentName = ((orderOffer.contractInfo as ContractInfoV0)
-    .oracleInfo as OracleInfoV0).announcement.oracleEvent.eventId;
+  (orderOffer.positionInfo as OrderPositionInfoV0).instrumentName = ((orderOffer.contractInfo as SingleContractInfo)
+    .oracleInfo as SingleOracleInfo).announcement.oracleEvent.eventId;
 
   if (!skipValidation) orderOffer.validate();
 

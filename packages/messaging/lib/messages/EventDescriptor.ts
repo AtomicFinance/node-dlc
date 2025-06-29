@@ -6,19 +6,19 @@ import { IDlcMessage } from './DlcMessage';
 export abstract class EventDescriptor {
   public static deserialize(
     buf: Buffer,
-  ): EnumEventDescriptor | DigitDecompositionEventDescriptorV0 {
+  ): EnumEventDescriptor | DigitDecompositionEventDescriptor {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readBigSize());
 
     switch (type) {
-      case MessageType.EnumEventDescriptorV0:
+      case MessageType.EnumEventDescriptor:
         return EnumEventDescriptor.deserialize(buf);
-      case MessageType.DigitDecompositionEventDescriptorV0:
-        return DigitDecompositionEventDescriptorV0.deserialize(buf);
+      case MessageType.DigitDecompositionEventDescriptor:
+        return DigitDecompositionEventDescriptor.deserialize(buf);
       default:
         throw new Error(
-          `Payout function TLV type must be EnumEventDescriptorV0 or DigitDecompositionEventDescriptorV0`,
+          `Payout function TLV type must be EnumEventDescriptorV0 or DigitDecompositionEventDescriptor`,
         );
     }
   }
@@ -36,7 +36,7 @@ export abstract class EventDescriptor {
     if (json.enumEvent || json.enum_event) {
       return EnumEventDescriptor.fromJSON(json.enumEvent || json.enum_event);
     } else if (json.digitDecompositionEvent || json.digit_decomposition_event) {
-      return DigitDecompositionEventDescriptorV0.fromJSON(
+      return DigitDecompositionEventDescriptor.fromJSON(
         json.digitDecompositionEvent || json.digit_decomposition_event,
       );
     } else {
@@ -52,7 +52,7 @@ export abstract class EventDescriptor {
 
   public abstract toJSON():
     | IEnumEventDescriptorJSON
-    | IDigitDecompositionEventDescriptorV0JSON;
+    | IDigitDecompositionEventDescriptorJSON;
 
   public abstract serialize(): Buffer;
 }
@@ -86,13 +86,12 @@ export class EnumEventDescriptor
 
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize(); // need to fix this
-    const numOutcomes = reader.readUInt16BE(); // num_outcomes
+    reader.readUInt16BE(); // num_outcomes
 
-    for (let i = 0; i < numOutcomes; i++) {
+    while (!reader.eof) {
       const outcomeLen = reader.readBigSize();
-      const outcome = reader.readBytes(Number(outcomeLen)).toString();
-
-      instance.outcomes.push(outcome);
+      const outcomeBuf = reader.readBytes(Number(outcomeLen));
+      instance.outcomes.push(outcomeBuf.toString());
     }
 
     return instance;
@@ -145,19 +144,20 @@ export const EnumEventDescriptorV0 = EnumEventDescriptor;
 export type EnumEventDescriptorV0 = EnumEventDescriptor;
 
 /**
- * DigitDecompositionEventDescriptorV0 V0 is a simple enumeration of outcomes
+ * DigitDecompositionEventDescriptor is a simple enumeration of outcomes.
+ * Simplified class name (removed V0 suffix).
  */
-export class DigitDecompositionEventDescriptorV0
+export class DigitDecompositionEventDescriptor
   extends EventDescriptor
   implements IDlcMessage {
-  public static type = MessageType.DigitDecompositionEventDescriptorV0;
+  public static type = MessageType.DigitDecompositionEventDescriptor;
 
   /**
-   * Creates a DigitDecompositionEventDescriptorV0 from JSON data
+   * Creates a DigitDecompositionEventDescriptor from JSON data
    * @param json JSON object representing digit decomposition event descriptor
    */
-  public static fromJSON(json: any): DigitDecompositionEventDescriptorV0 {
-    const instance = new DigitDecompositionEventDescriptorV0();
+  public static fromJSON(json: any): DigitDecompositionEventDescriptor {
+    const instance = new DigitDecompositionEventDescriptor();
     instance.base = json.base || 10;
     instance.isSigned = json.isSigned || json.is_signed || false;
     instance.unit = json.unit || '';
@@ -167,11 +167,11 @@ export class DigitDecompositionEventDescriptorV0
   }
 
   /**
-   * Deserializes an digit_decomposition_event_descriptor_v0 message
+   * Deserializes an digit_decomposition_event_descriptor message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DigitDecompositionEventDescriptorV0 {
-    const instance = new DigitDecompositionEventDescriptorV0();
+  public static deserialize(buf: Buffer): DigitDecompositionEventDescriptor {
+    const instance = new DigitDecompositionEventDescriptor();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -194,9 +194,9 @@ export class DigitDecompositionEventDescriptorV0
   }
 
   /**
-   * The type for digit_decomposition_event_descriptor_v0 message. digit_decomposition_event_descriptor_v0 = 55302
+   * The type for digit_decomposition_event_descriptor message. digit_decomposition_event_descriptor = 55306
    */
-  public type = DigitDecompositionEventDescriptorV0.type;
+  public type = DigitDecompositionEventDescriptor.type;
 
   public length: bigint;
 
@@ -227,9 +227,9 @@ export class DigitDecompositionEventDescriptorV0
   }
 
   /**
-   * Converts digit_decomposition_event_descriptor_v0 to JSON (canonical rust-dlc format)
+   * Converts digit_decomposition_event_descriptor to JSON (canonical rust-dlc format)
    */
-  public toJSON(): IDigitDecompositionEventDescriptorV0JSON {
+  public toJSON(): IDigitDecompositionEventDescriptorJSON {
     return {
       digitDecompositionEvent: {
         base: this.base,
@@ -242,7 +242,7 @@ export class DigitDecompositionEventDescriptorV0
   }
 
   /**
-   * Serializes the digit_decomposition_event_descriptor_v0 message into a Buffer
+   * Serializes the digit_decomposition_event_descriptor message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -263,13 +263,17 @@ export class DigitDecompositionEventDescriptorV0
   }
 }
 
+// Legacy support - keep V0 alias for backward compatibility
+export const DigitDecompositionEventDescriptorV0 = DigitDecompositionEventDescriptor;
+export type DigitDecompositionEventDescriptorV0 = DigitDecompositionEventDescriptor;
+
 export interface IEnumEventDescriptorJSON {
   enumEvent: {
     outcomes: string[];
   };
 }
 
-export interface IDigitDecompositionEventDescriptorV0JSON {
+export interface IDigitDecompositionEventDescriptorJSON {
   type: number;
   base: number;
   isSigned: boolean;
@@ -280,3 +284,6 @@ export interface IDigitDecompositionEventDescriptorV0JSON {
 
 // Legacy interface
 export type IEnumEventDescriptorV0JSON = IEnumEventDescriptorJSON;
+
+// Legacy interface
+export type IDigitDecompositionEventDescriptorV0JSON = IDigitDecompositionEventDescriptorJSON;

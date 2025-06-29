@@ -1,11 +1,11 @@
 import { expect } from 'chai';
 
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import { DigitDecompositionEventDescriptor } from '../../lib/messages/EventDescriptor';
 
 describe('DigitDecompositionEventDescriptorV0', () => {
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new DigitDecompositionEventDescriptorV0();
+      const instance = new DigitDecompositionEventDescriptor();
 
       instance.length = BigInt(17);
       /**
@@ -46,7 +46,7 @@ describe('DigitDecompositionEventDescriptorV0', () => {
         , "hex"
       ); // prettier-ignore
 
-      const instance = DigitDecompositionEventDescriptorV0.deserialize(buf);
+      const instance = DigitDecompositionEventDescriptor.deserialize(buf);
 
       expect(Number(instance.length)).to.equal(17);
       expect(instance.base).to.equal(2); // (Switch to Number(instance.base) with oracle_announcement_v1)

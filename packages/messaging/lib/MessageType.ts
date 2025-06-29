@@ -40,8 +40,11 @@ export enum MessageType {
 
   OracleEventContainer = 61632,
 
-  EnumEventDescriptorV0 = 55302,
-  DigitDecompositionEventDescriptorV0 = 55306,
+  EnumEventDescriptor = 55302,
+  EnumEventDescriptorV0 = EnumEventDescriptor, // Backward compatibility alias
+
+  DigitDecompositionEventDescriptor = 55306,
+  DigitDecompositionEventDescriptorV0 = DigitDecompositionEventDescriptor, // Backward compatibility alias
 
   NegotiationFieldsV0 = 55334,
   NegotiationFieldsV1 = 55336,

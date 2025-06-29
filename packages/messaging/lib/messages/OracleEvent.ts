@@ -4,11 +4,11 @@ import { MessageType } from '../MessageType';
 import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
-  DigitDecompositionEventDescriptorV0,
-  EnumEventDescriptorV0,
+  DigitDecompositionEventDescriptor,
+  EnumEventDescriptor,
   EventDescriptor,
-  IDigitDecompositionEventDescriptorV0JSON,
-  IEnumEventDescriptorV0JSON,
+  IDigitDecompositionEventDescriptorJSON,
+  IEnumEventDescriptorJSON,
 } from './EventDescriptor';
 
 /**
@@ -138,7 +138,7 @@ export class OracleEvent implements IDlcMessage {
     }
 
     // Validate the event descriptor itself
-    if (this.eventDescriptor instanceof DigitDecompositionEventDescriptorV0) {
+    if (this.eventDescriptor instanceof DigitDecompositionEventDescriptor) {
       this.eventDescriptor.validate();
     }
     // EnumEventDescriptorV0 doesn't have validation requirements beyond basic structure
@@ -149,11 +149,11 @@ export class OracleEvent implements IDlcMessage {
    * This matches the rust-dlc validation logic.
    */
   private getExpectedNonceCount(): number {
-    if (this.eventDescriptor instanceof EnumEventDescriptorV0) {
+    if (this.eventDescriptor instanceof EnumEventDescriptor) {
       // Enum events require exactly 1 nonce
       return 1;
     } else if (
-      this.eventDescriptor instanceof DigitDecompositionEventDescriptorV0
+      this.eventDescriptor instanceof DigitDecompositionEventDescriptor
     ) {
       // Digit decomposition events require nbDigits nonces, plus 1 if signed
       const descriptor = this.eventDescriptor;
@@ -169,36 +169,36 @@ export class OracleEvent implements IDlcMessage {
    * Returns whether this event is for enumerated outcomes.
    */
   public isEnumEvent(): boolean {
-    return this.eventDescriptor instanceof EnumEventDescriptorV0;
+    return this.eventDescriptor instanceof EnumEventDescriptor;
   }
 
   /**
    * Returns whether this event is for numerical outcomes.
    */
   public isDigitDecompositionEvent(): boolean {
-    return this.eventDescriptor instanceof DigitDecompositionEventDescriptorV0;
+    return this.eventDescriptor instanceof DigitDecompositionEventDescriptor;
   }
 
   /**
    * Returns the event descriptor as EnumEventDescriptor if it's an enum event.
    * @throws Error if not an enum event
    */
-  public getEnumEventDescriptor(): EnumEventDescriptorV0 {
+  public getEnumEventDescriptor(): EnumEventDescriptor {
     if (!this.isEnumEvent()) {
       throw new Error('Event is not an enum event');
     }
-    return this.eventDescriptor as EnumEventDescriptorV0;
+    return this.eventDescriptor as EnumEventDescriptor;
   }
 
   /**
    * Returns the event descriptor as DigitDecompositionEventDescriptor if it's a numerical event.
    * @throws Error if not a numerical event
    */
-  public getDigitDecompositionEventDescriptor(): DigitDecompositionEventDescriptorV0 {
+  public getDigitDecompositionEventDescriptor(): DigitDecompositionEventDescriptor {
     if (!this.isDigitDecompositionEvent()) {
       throw new Error('Event is not a digit decomposition event');
     }
-    return this.eventDescriptor as DigitDecompositionEventDescriptorV0;
+    return this.eventDescriptor as DigitDecompositionEventDescriptor;
   }
 
   /**
@@ -244,7 +244,7 @@ export interface IOracleEventJSON {
   oracleNonces: string[];
   eventMaturityEpoch: number;
   eventDescriptor:
-    | IEnumEventDescriptorV0JSON
-    | IDigitDecompositionEventDescriptorV0JSON;
+    | IEnumEventDescriptorJSON
+    | IDigitDecompositionEventDescriptorJSON;
   eventId: string;
 }

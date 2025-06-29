@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
 import {
-  DigitDecompositionEventDescriptorV0,
-  EnumEventDescriptorV0,
+  DigitDecompositionEventDescriptor,
+  EnumEventDescriptor,
 } from '../../lib/messages/EventDescriptor';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
 
@@ -21,7 +21,7 @@ describe('OracleEvent', () => {
       instance.length = BigInt(64);
       instance.oracleNonces.push(oracleNonce);
       instance.eventMaturityEpoch = 0;
-      instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
+      instance.eventDescriptor = EnumEventDescriptor.deserialize(
         Buffer.from(
           'fdd806' + // type enum_event_descriptor
             '10' + // length
@@ -98,7 +98,7 @@ describe('OracleEvent', () => {
       instance.length = BigInt(64);
       instance.oracleNonces.push(oracleNonce);
       instance.eventMaturityEpoch = 0;
-      instance.eventDescriptor = EnumEventDescriptorV0.deserialize(
+      instance.eventDescriptor = EnumEventDescriptor.deserialize(
         Buffer.from(
           'fdd806' + // type enum_event_descriptor
             '10' + // length
@@ -123,7 +123,7 @@ describe('OracleEvent', () => {
     });
 
     it('should throw if oracleNonces.length !== eventDescriptor.nbDigits', () => {
-      instance.eventDescriptor = DigitDecompositionEventDescriptorV0.deserialize(
+      instance.eventDescriptor = DigitDecompositionEventDescriptor.deserialize(
         Buffer.from(
           'fdd80a' + // type
             '11' + // length
