@@ -1,8 +1,20 @@
 import { expect } from 'chai';
+import * as fs from 'fs';
+import * as path from 'path';
 
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import {
+  DigitDecompositionEventDescriptor,
+  EnumEventDescriptor,
+} from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
+
+// Load test vectors
+const testVectorsPath = path.join(
+  __dirname,
+  '../../test_vectors/oracle/oracle_message_test_vectors.json',
+);
+const testVectors = JSON.parse(fs.readFileSync(testVectorsPath, 'utf8'));
 
 describe('OracleAnnouncement', () => {
   const announcementSig = Buffer.from(
@@ -221,7 +233,7 @@ describe('OracleAnnouncement', () => {
       expect(instance.oracleEvent.eventMaturityEpoch).to.equal(1613779200);
       expect(
         (instance.oracleEvent
-          .eventDescriptor as DigitDecompositionEventDescriptorV0).unit,
+          .eventDescriptor as DigitDecompositionEventDescriptor).unit,
       ).to.equal('btc/usd');
     });
 
@@ -229,6 +241,175 @@ describe('OracleAnnouncement', () => {
       expect(function () {
         instance.validate();
       }).to.not.throw(Error);
+    });
+  });
+
+  /**
+   * Comprehensive Test Vectors
+   * Tests oracle announcements from various implementations and oracle providers
+   */
+  describe('comprehensive announcement test vectors', () => {
+    describe('Atomic Finance announcements', () => {
+      let instance: OracleAnnouncement;
+
+      before(() => {
+        const buf = Buffer.from(testVectors.atomic.announcement, 'hex');
+        instance = OracleAnnouncement.deserialize(buf);
+      });
+
+      it('deserializes Atomic oracle announcement', () => {
+        expect(Number(instance.length)).to.be.greaterThan(0);
+        expect(instance.announcementSig).to.be.instanceOf(Buffer);
+        expect(instance.announcementSig.length).to.equal(64);
+        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
+        expect(instance.getEventId()).to.equal(
+          testVectors.atomic.metadata.eventId,
+        );
+      });
+
+      it('validates Atomic oracle announcement', () => {
+        expect(() => instance.validate()).to.not.throw();
+      });
+
+      it('has correct digit decomposition event descriptor', () => {
+        const eventDescriptor = instance.oracleEvent
+          .eventDescriptor as DigitDecompositionEventDescriptor;
+        expect(eventDescriptor).to.be.instanceOf(
+          DigitDecompositionEventDescriptor,
+        );
+        expect(eventDescriptor.base).to.equal(2);
+        expect(eventDescriptor.unit).to.equal('BTCUSD');
+        expect(eventDescriptor.nbDigits).to.equal(18);
+      });
+
+      it('round-trip serialization works', () => {
+        const serialized = instance.serialize();
+        const deserialized = OracleAnnouncement.deserialize(serialized);
+        expect(deserialized.getEventId()).to.equal(instance.getEventId());
+        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+      });
+    });
+
+    // Note: Lava oracle announcement does not contain event id so we don't validate it
+    describe('Lava oracle', () => {
+      let instance: OracleAnnouncement;
+
+      before(() => {
+        const buf = Buffer.from(testVectors.lava.announcement, 'hex');
+        instance = OracleAnnouncement.deserialize(buf);
+      });
+
+      it('deserializes Lava oracle announcement', () => {
+        expect(Number(instance.length)).to.be.greaterThan(0);
+        expect(instance.announcementSig).to.be.instanceOf(Buffer);
+        expect(instance.announcementSig.length).to.equal(64);
+        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
+      });
+
+      it('has correct digit decomposition event descriptor', () => {
+        const eventDescriptor = instance.oracleEvent
+          .eventDescriptor as DigitDecompositionEventDescriptor;
+        expect(eventDescriptor).to.be.instanceOf(
+          DigitDecompositionEventDescriptor,
+        );
+        expect(eventDescriptor.base).to.equal(2);
+        expect(eventDescriptor.unit).to.equal('BTCUSD');
+        expect(eventDescriptor.nbDigits).to.equal(18);
+      });
+
+      it('round-trip serialization works', () => {
+        const serialized = instance.serialize();
+
+        const deserialized = OracleAnnouncement.deserialize(serialized);
+        expect(deserialized.getEventId()).to.equal(instance.getEventId());
+        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+      });
+    });
+
+    describe('rust-dlc enum oracle', () => {
+      let instance: OracleAnnouncement;
+
+      before(() => {
+        const buf = Buffer.from(testVectors.rust_dlc_enum.announcement, 'hex');
+        instance = OracleAnnouncement.deserialize(buf);
+      });
+
+      it('deserializes rust-dlc enum oracle announcement', () => {
+        expect(Number(instance.length)).to.be.greaterThan(0);
+        expect(instance.announcementSig).to.be.instanceOf(Buffer);
+        expect(instance.announcementSig.length).to.equal(64);
+        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
+        expect(instance.getEventId()).to.equal('sports-match-001');
+      });
+
+      it('has correct enum event descriptor', () => {
+        const eventDescriptor = instance.oracleEvent
+          .eventDescriptor as EnumEventDescriptor;
+        expect(eventDescriptor).to.be.instanceOf(EnumEventDescriptor);
+        expect(eventDescriptor.outcomes).to.deep.equal(['win', 'lose', 'draw']);
+      });
+
+      it('has single nonce for enum event', () => {
+        expect(instance.getNonces()).to.have.length(1);
+      });
+
+      it('round-trip serialization works', () => {
+        const serialized = instance.serialize();
+        const deserialized = OracleAnnouncement.deserialize(serialized);
+        expect(deserialized.getEventId()).to.equal(instance.getEventId());
+        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+      });
+    });
+
+    describe('rust-dlc numeric oracle', () => {
+      let instance: OracleAnnouncement;
+
+      before(() => {
+        const buf = Buffer.from(
+          testVectors.rust_dlc_numeric.announcement,
+          'hex',
+        );
+        instance = OracleAnnouncement.deserialize(buf);
+      });
+
+      it('deserializes rust-dlc numeric oracle announcement', () => {
+        expect(Number(instance.length)).to.be.greaterThan(0);
+        expect(instance.announcementSig).to.be.instanceOf(Buffer);
+        expect(instance.announcementSig.length).to.equal(64);
+        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
+        expect(instance.getEventId()).to.equal('btc-price-test');
+      });
+
+      it('has correct digit decomposition event descriptor', () => {
+        const eventDescriptor = instance.oracleEvent
+          .eventDescriptor as DigitDecompositionEventDescriptor;
+        expect(eventDescriptor).to.be.instanceOf(
+          DigitDecompositionEventDescriptor,
+        );
+        expect(eventDescriptor.base).to.equal(2);
+        expect(eventDescriptor.unit).to.equal('BTCUSD');
+        expect(eventDescriptor.nbDigits).to.equal(8);
+        expect(eventDescriptor.isSigned).to.equal(false);
+      });
+
+      it('has correct number of nonces for 8-digit decomposition', () => {
+        expect(instance.getNonces()).to.have.length(8);
+      });
+
+      it('round-trip serialization works', () => {
+        const serialized = instance.serialize();
+        const deserialized = OracleAnnouncement.deserialize(serialized);
+        expect(deserialized.getEventId()).to.equal(instance.getEventId());
+        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+      });
     });
   });
 });

@@ -8,7 +8,7 @@ import { OracleAnnouncement } from './OracleAnnouncement';
 /**
  * Oracle attestation providing signatures over an outcome value.
  * This represents the oracle's actual attestation to a specific outcome.
- * Updated to match rust-dlc specification.
+ * Updated to match rust-dlc specification with 2-byte count prefixes.
  *
  * An attestation from an oracle providing signatures over an outcome value.
  * This is what the oracle publishes when they want to attest to a specific outcome.
@@ -27,11 +27,34 @@ export class OracleAttestation implements IDlcMessage {
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
 
-    const eventIdLength = reader.readBigSize();
-    const eventIdBuf = reader.readBytes(Number(eventIdLength));
-    instance.eventId = eventIdBuf.toString();
+    // Detect format: old rust-dlc 0.4.0 (no event_id) vs new rust-dlc (with event_id)
+    const currentPos = reader.position;
 
-    instance.oraclePubkey = reader.readBytes(32);
+    try {
+      // Try reading as new format (with event_id)
+      const eventIdLength = reader.readBigSize();
+
+      // If event ID length is reasonable (0-100 bytes), assume new format
+      if (eventIdLength >= BigInt('0') && eventIdLength <= BigInt('100')) {
+        if (eventIdLength === BigInt('0')) {
+          instance.eventId = '';
+        } else {
+          const eventIdBuf = reader.readBytes(Number(eventIdLength));
+          instance.eventId = eventIdBuf.toString();
+        }
+        instance.oraclePubkey = reader.readBytes(32);
+      } else {
+        // Event ID length is unreasonable, probably old format without event_id
+        reader.position = currentPos;
+        instance.eventId = ''; // Default empty event ID for old format
+        instance.oraclePubkey = reader.readBytes(32);
+      }
+    } catch (error) {
+      // If reading fails, assume old format without event_id
+      reader.position = currentPos;
+      instance.eventId = ''; // Default empty event ID for old format
+      instance.oraclePubkey = reader.readBytes(32);
+    }
 
     const numSignatures = reader.readUInt16BE();
 
@@ -40,11 +63,49 @@ export class OracleAttestation implements IDlcMessage {
       instance.signatures.push(signature);
     }
 
-    const numOutcomes = reader.readUInt16BE();
-    for (let i = 0; i < numOutcomes; i++) {
-      const outcomeLen = reader.readBigSize();
-      const outcomeBuf = reader.readBytes(Number(outcomeLen));
-      instance.outcomes.push(outcomeBuf.toString());
+    // Handle both rust-dlc format (with u16 count prefix) and DLCSpecs format (no count prefix)
+    // Try to detect format by checking if next 2 bytes look like a reasonable outcome count
+    if (!reader.eof) {
+      const currentPos = reader.position;
+
+      try {
+        // Try reading as rust-dlc format (with u16 count prefix)
+        const numOutcomes = reader.readUInt16BE();
+
+        // Validate that this looks like a reasonable count
+        // If it's > 1000 or the remaining bytes can't accommodate this many outcomes,
+        // it's probably not a count prefix
+        const remainingBytes = reader.buffer.length - reader.position;
+
+        if (
+          numOutcomes > 0 &&
+          numOutcomes <= 1000 &&
+          remainingBytes >= numOutcomes * 2
+        ) {
+          // Looks like rust-dlc format with u16 count prefix
+          for (let i = 0; i < numOutcomes; i++) {
+            const outcomeLen = reader.readBigSize();
+            const outcomeBuf = reader.readBytes(Number(outcomeLen));
+            instance.outcomes.push(outcomeBuf.toString());
+          }
+        } else {
+          // Reset and try DLCSpecs format (no count prefix)
+          reader.position = currentPos;
+          while (!reader.eof) {
+            const outcomeLen = reader.readBigSize();
+            const outcomeBuf = reader.readBytes(Number(outcomeLen));
+            instance.outcomes.push(outcomeBuf.toString());
+          }
+        }
+      } catch (error) {
+        // If reading as rust-dlc format fails, reset and try DLCSpecs format
+        reader.position = currentPos;
+        while (!reader.eof) {
+          const outcomeLen = reader.readBigSize();
+          const outcomeBuf = reader.readBytes(Number(outcomeLen));
+          instance.outcomes.push(outcomeBuf.toString());
+        }
+      }
     }
 
     return instance;
@@ -208,6 +269,7 @@ export class OracleAttestation implements IDlcMessage {
       dataWriter.writeBytes(signature);
     }
 
+    // Write outcomes with u16 count prefix (matching rust-dlc format)
     dataWriter.writeUInt16BE(this.outcomes.length);
     for (const outcome of this.outcomes) {
       dataWriter.writeBigSize(outcome.length);
