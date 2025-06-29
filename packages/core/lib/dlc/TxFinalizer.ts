@@ -23,8 +23,10 @@ export class DualFundingTxFinalizer {
     numContracts: number,
   ): IFees {
     _inputs.forEach((input) => {
-      if (input.type !== MessageType.FundingInput)
+      if (input.type !== MessageType.FundingInput) {
+        console.error('input', input);
         throw new Error('Input is not a funding input');
+      }
     });
     const inputs: FundingInput[] = _inputs.map(
       (input) => input as FundingInput,
