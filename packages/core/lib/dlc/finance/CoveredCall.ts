@@ -1,4 +1,4 @@
-import { PayoutFunctionV0 } from '@node-dlc/messaging';
+import { PayoutFunction } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
 
 import { toBigInt } from '../../utils/BigIntUtils';
@@ -57,7 +57,7 @@ const buildPayoutFunction = (
   contractSize: bigint,
   oracleBase: number,
   oracleDigits: number,
-): { payoutFunction: PayoutFunctionV0; totalCollateral: bigint } => {
+): { payoutFunction: PayoutFunction; totalCollateral: bigint } => {
   const { maxOutcome, totalCollateral, payoutCurve } = buildCurve(
     strikePrice,
     contractSize,
@@ -65,7 +65,26 @@ const buildPayoutFunction = (
     oracleDigits,
   );
 
-  const payoutFunction = new PayoutFunctionV0();
+  const payoutFunction = new PayoutFunction();
+
+  // Defensive fix: ensure payoutFunctionPieces is initialized as an array
+  if (!payoutFunction.payoutFunctionPieces) {
+    payoutFunction.payoutFunctionPieces = [];
+  }
+
+  const curvePiece = payoutCurve.toPayoutCurvePiece();
+
+  // Set the left and right endpoints for the hyperbola piece (matching rust-dlc structure)
+  curvePiece.leftEndPoint = {
+    eventOutcome: BigInt(0),
+    outcomePayout: totalCollateral,
+    extraPrecision: 0,
+  };
+  curvePiece.rightEndPoint = {
+    eventOutcome: maxOutcome,
+    outcomePayout: BigInt(0),
+    extraPrecision: 0,
+  };
 
   payoutFunction.payoutFunctionPieces.push({
     endPoint: {
@@ -73,7 +92,7 @@ const buildPayoutFunction = (
       outcomePayout: BigInt(0),
       extraPrecision: 0,
     },
-    payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
+    payoutCurvePiece: curvePiece,
   });
 
   payoutFunction.lastEndpoint = {

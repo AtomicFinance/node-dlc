@@ -15,7 +15,7 @@ import {
  * Updated to match rust-dlc format exactly.
  */
 export class PayoutFunction implements IDlcMessage {
-  public static type = MessageType.PayoutFunctionV0;
+  public static type = MessageType.PayoutFunction;
 
   /**
    * Creates a PayoutFunction from JSON data
@@ -144,6 +144,14 @@ export class PayoutFunction implements IDlcMessage {
 
   public payoutFunctionPieces: IPayoutFunctionPiece[] = [];
   public lastEndpoint: IPayoutPoint;
+
+  /**
+   * Constructor that ensures proper initialization
+   */
+  constructor() {
+    // Explicitly initialize arrays to handle file-linking issues
+    this.payoutFunctionPieces = [];
+  }
 
   /**
    * Converts payout_function to JSON

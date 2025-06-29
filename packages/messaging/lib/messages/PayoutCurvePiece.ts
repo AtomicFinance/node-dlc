@@ -1,6 +1,7 @@
-import { BufferReader, BufferWriter, F64 } from '@node-dlc/bufio';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType, PayoutCurvePieceType } from '../MessageType';
+import { F64 } from '../serialize/F64';
 import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
@@ -329,21 +330,47 @@ export class HyperbolaPayoutCurvePiece
 
   constructor(
     usePositivePiece = false,
-    translateOutcome?: F64,
-    translatePayout?: F64,
-    a?: F64,
-    b?: F64,
-    c?: F64,
-    d?: F64,
+    translateOutcome?: string | F64,
+    translatePayout?: string | F64,
+    a?: string | F64,
+    b?: string | F64,
+    c?: string | F64,
+    d?: string | F64,
   ) {
     super();
     this.usePositivePiece = usePositivePiece;
-    this.translateOutcome = translateOutcome || F64.fromNumber(0);
-    this.translatePayout = translatePayout || F64.fromNumber(0);
-    this.a = a || F64.fromNumber(0);
-    this.b = b || F64.fromNumber(0);
-    this.c = c || F64.fromNumber(0);
-    this.d = d || F64.fromNumber(0);
+
+    // Convert string inputs to F64 objects, or use existing F64 objects
+    this.translateOutcome = translateOutcome
+      ? typeof translateOutcome === 'string'
+        ? F64.fromString(translateOutcome)
+        : translateOutcome
+      : F64.fromNumber(0);
+    this.translatePayout = translatePayout
+      ? typeof translatePayout === 'string'
+        ? F64.fromString(translatePayout)
+        : translatePayout
+      : F64.fromNumber(0);
+    this.a = a
+      ? typeof a === 'string'
+        ? F64.fromString(a)
+        : a
+      : F64.fromNumber(0);
+    this.b = b
+      ? typeof b === 'string'
+        ? F64.fromString(b)
+        : b
+      : F64.fromNumber(0);
+    this.c = c
+      ? typeof c === 'string'
+        ? F64.fromString(c)
+        : c
+      : F64.fromNumber(0);
+    this.d = d
+      ? typeof d === 'string'
+        ? F64.fromString(d)
+        : d
+      : F64.fromNumber(0);
   }
 
   /**

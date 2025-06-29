@@ -1,4 +1,4 @@
-import { PayoutFunctionV0 } from '@node-dlc/messaging';
+import { PayoutFunction } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
 
 import { PolynomialPayoutCurve } from '../PolynomialPayoutCurve';
@@ -10,7 +10,7 @@ const buildPayoutFunction = (
   endOutcome: bigint,
   oracleBase: number,
   oracleDigits: number,
-): { payoutFunction: PayoutFunctionV0 } => {
+): { payoutFunction: PayoutFunction } => {
   // Max outcome limited by the oracle
   const maxOutcome = BigInt(
     new BN(oracleBase).pow(oracleDigits).minus(1).toString(10),
@@ -46,7 +46,12 @@ const buildPayoutFunction = (
     },
   ]);
 
-  const payoutFunction = new PayoutFunctionV0();
+  const payoutFunction = new PayoutFunction();
+
+  // Defensive fix: ensure payoutFunctionPieces is initialized as an array
+  if (!payoutFunction.payoutFunctionPieces) {
+    payoutFunction.payoutFunctionPieces = [];
+  }
 
   payoutFunction.payoutFunctionPieces.push({
     endPoint: {
