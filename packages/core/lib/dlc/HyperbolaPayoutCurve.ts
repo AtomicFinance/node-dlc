@@ -1,4 +1,3 @@
-import { F64 } from '@node-dlc/bufio';
 import {
   HyperbolaPayoutCurvePiece,
   MessageType,
@@ -7,10 +6,8 @@ import {
   RoundingIntervals,
 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
-import Decimal from 'decimal.js';
 
 import { CETPayout } from '..';
-import { fromPrecision, getPrecision } from '../utils/Precision';
 import { splitIntoRanges } from './CETCalculator';
 import PayoutCurve from './PayoutCurve';
 
@@ -69,6 +66,12 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
     // Inverse function
     // y=(-ad^{2}-bf_{2}^{2}+2bf_{2}x-bx^{2}+df_{1}f_{2}-df_{1}x)/(d(f_{2}-x))
     if (c.eq(0)) {
+      const denominator = d.times(translatePayout.minus(payout));
+
+      if (denominator.eq(0)) {
+        return BigInt(-1);
+      }
+
       const outcome = a
         .negated()
         .times(d.exponentiatedBy(2))
@@ -77,7 +80,7 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
         .minus(b.times(payout.exponentiatedBy(2)))
         .plus(d.times(translateOutcome).times(translatePayout))
         .minus(d.times(translateOutcome).times(payout))
-        .dividedBy(d.times(translatePayout.minus(payout)))
+        .dividedBy(denominator)
         .integerValue();
 
       if (outcome.isFinite()) return BigInt(outcome.toString());
@@ -91,16 +94,16 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
   toPayoutCurvePiece(): HyperbolaPayoutCurvePiece {
     const { a, b, c, d, translateOutcome, translatePayout, positive } = this;
 
-    const piece = new HyperbolaPayoutCurvePiece();
-    piece.usePositivePiece = positive;
-
-    // Convert BigNumber values to F64 using fromString() which preserves precision
-    piece.translateOutcome = F64.fromString(translateOutcome.toString());
-    piece.translatePayout = F64.fromString(translatePayout.toString());
-    piece.a = F64.fromString(a.toString());
-    piece.b = F64.fromString(b.toString());
-    piece.c = F64.fromString(c.toString());
-    piece.d = F64.fromString(d.toString());
+    // Use the constructor with string values to avoid F64 dependency issues
+    const piece = new HyperbolaPayoutCurvePiece(
+      positive,
+      translateOutcome.toString(),
+      translatePayout.toString(),
+      a.toString(),
+      b.toString(),
+      c.toString(),
+      d.toString(),
+    );
 
     return piece;
   }
@@ -164,15 +167,14 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
       throw new Error('Payout curve piece must be a hyperbola');
 
     const _payoutCurvePiece = payoutCurvePiece as HyperbolaPayoutCurvePiece;
-
     const curve = this.fromPayoutCurvePiece(_payoutCurvePiece);
 
-    // For the new PayoutFunction structure, we need to get the initial endpoint from the first piece
+    // For the new PayoutFunction structure, get the starting point from the hyperbola piece's leftEndPoint
+    // This matches the rust-dlc implementation where get_first_outcome() returns left_end_point.event_outcome
     const initialEventOutcome =
-      payoutFunction.payoutFunctionPieces[0].endPoint.eventOutcome;
+      _payoutCurvePiece.leftEndPoint?.eventOutcome || BigInt(0);
     const initialOutcomePayout =
-      payoutFunction.payoutFunctionPieces[0].endPoint.outcomePayout;
-
+      _payoutCurvePiece.leftEndPoint?.outcomePayout || BigInt(0);
     return splitIntoRanges(
       initialEventOutcome,
       endPoint.eventOutcome,
