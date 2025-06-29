@@ -1,4 +1,3 @@
-import { F64 } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import {
@@ -9,6 +8,7 @@ import {
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunction } from '../../lib/messages/PayoutFunction';
 import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
+import { F64 } from '../../lib/serialize/F64';
 
 describe('ContractDescriptor', () => {
   describe('EnumeratedDescriptor', () => {

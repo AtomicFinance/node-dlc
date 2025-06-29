@@ -1,4 +1,4 @@
-import { F64 } from '@node-dlc/bufio';
+import { F64 } from '@node-dlc/messaging';
 import {
   DigitDecompositionEventDescriptorV0,
   DlcOffer,

@@ -1,8 +1,8 @@
-import { F64 } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunction } from '../../lib/messages/PayoutFunction';
+import { F64 } from '../../lib/serialize/F64';
 
 describe('PayoutFunction', () => {
   describe('serialize', () => {

@@ -1,4 +1,3 @@
-import { F64 } from '@node-dlc/bufio';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
@@ -10,14 +9,17 @@ import {
   ContractInfo,
   SingleContractInfo,
 } from '../../lib/messages/ContractInfo';
-import { DigitDecompositionEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
-import { EnumEventDescriptorV0 } from '../../lib/messages/EventDescriptor';
+import {
+  DigitDecompositionEventDescriptor,
+  EnumEventDescriptor,
+} from '../../lib/messages/EventDescriptor';
 import { OracleAnnouncement } from '../../lib/messages/OracleAnnouncement';
 import { OracleEvent } from '../../lib/messages/OracleEvent';
 import { SingleOracleInfo } from '../../lib/messages/OracleInfo';
 import { HyperbolaPayoutCurvePiece } from '../../lib/messages/PayoutCurvePiece';
 import { PayoutFunction } from '../../lib/messages/PayoutFunction';
 import { RoundingIntervals } from '../../lib/messages/RoundingIntervals';
+import { F64 } from '../../lib/serialize/F64';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -58,7 +60,7 @@ describe('ContractInfo', () => {
         ];
         oracleEvent.eventMaturityEpoch = 0;
 
-        const eventDescriptor = new EnumEventDescriptorV0();
+        const eventDescriptor = new EnumEventDescriptor();
         eventDescriptor.outcomes = ['dummy1', 'dummy2'];
         oracleEvent.eventDescriptor = eventDescriptor;
         oracleEvent.eventId = 'dummy';
@@ -128,7 +130,7 @@ describe('ContractInfo', () => {
         instance.contractDescriptor = contractDescriptor;
 
         // Create oracle info for numerical contract
-        const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+        const eventDescriptor = new DigitDecompositionEventDescriptor();
         eventDescriptor.base = 2;
         eventDescriptor.isSigned = false;
         eventDescriptor.unit = 'BTCUSD';
@@ -218,7 +220,7 @@ describe('ContractInfo', () => {
         ];
         oracleEvent.eventMaturityEpoch = 0;
 
-        const eventDescriptor = new EnumEventDescriptorV0();
+        const eventDescriptor = new EnumEventDescriptor();
         eventDescriptor.outcomes = ['dummy1', 'dummy2'];
         oracleEvent.eventDescriptor = eventDescriptor;
         oracleEvent.eventId = 'dummy';
@@ -264,7 +266,7 @@ describe('ContractInfo', () => {
         eventDescriptorNumDigits = 18;
         contractDescriptorNumDigits = 18;
 
-        const eventDescriptor = new DigitDecompositionEventDescriptorV0();
+        const eventDescriptor = new DigitDecompositionEventDescriptor();
         eventDescriptor.base = 2;
         eventDescriptor.isSigned = false;
         eventDescriptor.unit = 'BTCUSD';

@@ -1,4 +1,3 @@
-import { F64 } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import {
@@ -6,6 +5,7 @@ import {
   PayoutCurvePiece,
   PolynomialPayoutCurvePiece,
 } from '../../lib/messages/PayoutCurvePiece';
+import { F64 } from '../../lib/serialize/F64';
 
 describe('PayoutCurvePiece', () => {
   describe('PolynomialPayoutCurvePiece', () => {

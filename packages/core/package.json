@@ -27,12 +27,12 @@
     "@node-dlc/bufio": "^0.24.1",
     "@node-dlc/common": "^0.24.1",
     "@node-dlc/crypto": "^0.24.1",
+    "@node-dlc/messaging": "^0.24.1",
     "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0",
     "decimal.js": "10.4.3"
   },
   "devDependencies": {
-    "@node-dlc/messaging": "^0.24.1",
     "@types/node": "18.11.9"
   },
   "publishConfig": {
