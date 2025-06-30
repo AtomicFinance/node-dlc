@@ -1,7 +1,7 @@
 import * as crypto from '@node-dlc/crypto';
 import assert from 'assert';
 import { EventEmitter } from 'events';
-import { Server, Socket } from 'net';
+import { AddressInfo, Server, Socket } from 'net';
 
 import { NoiseError } from './noise-error';
 import { NoiseServerListenOptions } from './noise-server-listen-options';
@@ -70,7 +70,7 @@ export class NoiseServer extends EventEmitter {
    * Called when the socket receives a new socket connection.
    * Emits the `connection` event.
    */
-  public _onConnection(socket: Socket) {
+  public _onConnection(socket: Socket): void {
     const ls = this.ls;
     const es = this.esFactory();
     const noiseState = new NoiseState({ ls, es });
@@ -82,7 +82,7 @@ export class NoiseServer extends EventEmitter {
    * Returns the address the server is listeening on. If the server is
    * not listening, it will return undefined.
    */
-  public address() {
+  public address(): string | AddressInfo {
     return this._server.address();
   }
 
@@ -92,14 +92,14 @@ export class NoiseServer extends EventEmitter {
    * ended and the server emits a `close` event. The optional `cb` event will be called
    * once the `close` event occurs.
    */
-  public close(cb?: (err?: Error) => void) {
+  public close(cb?: (err?: Error) => void): void {
     this._server.close(cb);
   }
 
   /**
    * Asynchronously get the number of concurrent connections on the server. Works when sockets were sent to forks.
    */
-  public getConnections(cb: (error: Error, count: number) => void) {
+  public getConnections(cb: (error: Error, count: number) => void): void {
     this._server.getConnections(cb);
   }
 
@@ -110,7 +110,7 @@ export class NoiseServer extends EventEmitter {
    * @param callback Called when the server is listening. Automatically binds
    * the function to the `listening` event.
    */
-  public listen(opts: NoiseServerListenOptions, callback?: () => void) {
+  public listen(opts: NoiseServerListenOptions, callback?: () => void): this {
     this._server.listen(opts, callback);
     return this;
   }
@@ -118,18 +118,18 @@ export class NoiseServer extends EventEmitter {
   /**
    * Indicates whether or not the server is listening for connections.
    */
-  public get listening() {
+  public get listening(): boolean {
     return this._server.listening;
   }
 
   /**
    * Set this property to reject connections when the server's connection count gets high.
    */
-  public get maxConnections() {
+  public get maxConnections(): number {
     return this._server.maxConnections;
   }
 
-  public set maxConnections(val) {
+  public set maxConnections(val: number) {
     this._server.maxConnections = val;
   }
 }

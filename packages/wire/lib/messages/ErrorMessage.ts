@@ -45,6 +45,7 @@ export class ErrorMessage implements IWireMessage {
    * funding_created messagee should use the temporary_channel_id
    * instead of the channel_id.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public channelId: any = 0;
 
   /**

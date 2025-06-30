@@ -16,6 +16,7 @@ export function ccpEncrypt(
   ad: Buffer,
   plaintext: Buffer,
 ): Buffer {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cipher = crypto.createCipheriv('ChaCha20-Poly1305' as any, k, n, {
     authTagLength: 16,
   });
@@ -41,7 +42,8 @@ export function ccpDecrypt(
   n: Buffer,
   ad: Buffer,
   ciphertext: Buffer,
-) {
+): Buffer {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const decipher = crypto.createDecipheriv('ChaCha20-Poly1305' as any, k, n, {
     authTagLength: 16,
   });

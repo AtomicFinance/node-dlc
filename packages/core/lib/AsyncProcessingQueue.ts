@@ -8,7 +8,9 @@ import { Queue } from './Queue';
  */
 export class AsyncProcessingQueue<T> extends EventEmitter {
   private _fn: (...args: T[]) => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _queue: Queue<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _flushHandle: any;
 
   constructor(fn: (...args: T[]) => Promise<void>) {
@@ -21,7 +23,7 @@ export class AsyncProcessingQueue<T> extends EventEmitter {
   /**
    * Adds a new item to the processing queue
    */
-  public enqueue(value: T) {
+  public enqueue(value: T): void {
     this._queue.enqueue(value);
 
     // Postpone flushing until end of event loop to allow multiple operations

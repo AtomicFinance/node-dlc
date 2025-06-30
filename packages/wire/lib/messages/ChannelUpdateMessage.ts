@@ -71,7 +71,7 @@ export class ChannelUpdateMessage implements IWireMessage {
   public static validateSignature(
     message: ChannelUpdateMessage,
     pubkey: Buffer,
-  ) {
+  ): boolean {
     const sigmsg = ChannelUpdateMessage.hashForSignature(message);
     return crypto.verifySig(sigmsg, message.signature, pubkey);
   }
@@ -202,7 +202,7 @@ export class ChannelUpdateMessage implements IWireMessage {
    * Serializes the instance into a Buffer that can be
    * transmitted over the wire
    */
-  public serialize() {
+  public serialize(): Buffer {
     const len =
       2 + // type
       64 + // signature

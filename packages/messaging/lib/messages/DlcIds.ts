@@ -3,37 +3,31 @@ import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class DlcIds {
-  public static deserialize(buf: Buffer): DlcIdsV0 {
+/**
+ * DlcIds message contains list of buffers
+ */
+export class DlcIds implements IDlcMessage {
+  public static type = MessageType.DlcIds;
+
+  public static deserialize(buf: Buffer): DlcIds {
     const reader = new BufferReader(buf);
 
     const type = Number(reader.readUInt16BE());
 
     switch (type) {
       case MessageType.DlcIdsV0:
-        return DlcIdsV0.deserialize(buf);
+        return DlcIds.deserializeV0(buf);
       default:
         throw new Error(`DLC IDs message type must be DlcIdsV0`);
     }
   }
 
-  public abstract type: number;
-
-  public abstract serialize(): Buffer;
-}
-
-/**
- * DlcIds message contains list of buffers
- */
-export class DlcIdsV0 extends DlcIds implements IDlcMessage {
-  public static type = MessageType.DlcIdsV0;
-
   /**
-   * Deserializes an dlc_ids_v0 message
+   * Deserializes an dlc_ids message
    * @param buf
    */
-  public static deserialize(buf: Buffer): DlcIdsV0 {
-    const instance = new DlcIdsV0();
+  private static deserializeV0(buf: Buffer): DlcIds {
+    const instance = new DlcIds();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -47,14 +41,14 @@ export class DlcIdsV0 extends DlcIds implements IDlcMessage {
   }
 
   /**
-   * The type for dlc_ids_v0 message
+   * The type for dlc_ids message
    */
-  public type = DlcIdsV0.type;
+  public type = DlcIds.type;
 
   public ids: Buffer[] = [];
 
   /**
-   * Serializes the dlc_ids_v0 message into a Buffer
+   * Serializes the dlc_ids message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -67,3 +61,7 @@ export class DlcIdsV0 extends DlcIds implements IDlcMessage {
     return writer.toBuffer();
   }
 }
+
+// Legacy support - keeping old class name as alias
+export const DlcIdsV0 = DlcIds;
+export type DlcIdsV0 = DlcIds;

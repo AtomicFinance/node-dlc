@@ -1,4 +1,4 @@
-import { PayoutFunctionV0 } from '@node-dlc/messaging';
+import { PayoutFunction } from '@node-dlc/messaging';
 import BN from 'bignumber.js';
 
 import { PolynomialPayoutCurve } from '../PolynomialPayoutCurve';
@@ -10,7 +10,7 @@ const buildPayoutFunction = (
   endOutcome: bigint,
   oracleBase: number,
   oracleDigits: number,
-): { payoutFunction: PayoutFunctionV0 } => {
+): { payoutFunction: PayoutFunction } => {
   // Max outcome limited by the oracle
   const maxOutcome = BigInt(
     new BN(oracleBase).pow(oracleDigits).minus(1).toString(10),
@@ -46,31 +46,45 @@ const buildPayoutFunction = (
     },
   ]);
 
-  const payoutFunction = new PayoutFunctionV0();
-  payoutFunction.endpoint0 = BigInt(0);
-  payoutFunction.endpointPayout0 = minPayout;
-  payoutFunction.extraPrecision0 = 0;
+  const payoutFunction = new PayoutFunction();
 
-  payoutFunction.pieces.push({
+  // Defensive fix: ensure payoutFunctionPieces is initialized as an array
+  if (!payoutFunction.payoutFunctionPieces) {
+    payoutFunction.payoutFunctionPieces = [];
+  }
+
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: startOutcome,
+      outcomePayout: minPayout,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurveMaxLoss.toPayoutCurvePiece(),
-    endpoint: startOutcome,
-    endpointPayout: minPayout,
-    extraPrecision: 0,
   });
 
-  payoutFunction.pieces.push({
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: endOutcome,
+      outcomePayout: maxPayout,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurve.toPayoutCurvePiece(),
-    endpoint: endOutcome,
-    endpointPayout: maxPayout,
-    extraPrecision: 0,
   });
 
-  payoutFunction.pieces.push({
+  payoutFunction.payoutFunctionPieces.push({
+    endPoint: {
+      eventOutcome: maxOutcome,
+      outcomePayout: maxPayout,
+      extraPrecision: 0,
+    },
     payoutCurvePiece: payoutCurveMaxGain.toPayoutCurvePiece(),
-    endpoint: maxOutcome,
-    endpointPayout: maxPayout,
-    extraPrecision: 0,
   });
+
+  payoutFunction.lastEndpoint = {
+    eventOutcome: maxOutcome,
+    outcomePayout: maxPayout,
+    extraPrecision: 0,
+  };
 
   return {
     payoutFunction,

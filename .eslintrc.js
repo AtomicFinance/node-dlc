@@ -3,17 +3,14 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: ['./tsconfig.eslint.json', './packages/*/tsconfig.json']
+    project: ['./tsconfig.eslint.json', './packages/*/tsconfig.json'],
   },
-  plugins: [
-    '@typescript-eslint',
-    'prettier',
-    'simple-import-sort'
-  ],
+  ignorePatterns: ['.eslintrc.js'],
+  plugins: ['@typescript-eslint', 'prettier', 'simple-import-sort'],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier'
+    'prettier',
   ],
   rules: {
     'prettier/prettier': 'error',
@@ -22,14 +19,26 @@ module.exports = {
   },
   overrides: [
     {
+      // Disable TypeScript parsing for config files
+      files: ['.eslintrc.js', '*.config.js'],
+      parser: 'espree',
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'script',
+      },
+      env: {
+        node: true,
+      },
+    },
+    {
       // Disable TypeScript parsing for checksum test files
       files: ['packages/checksum/__tests__/**/*.ts'],
       extends: ['eslint:recommended'],
       rules: {
         'prettier/prettier': 'error',
         'no-undef': 'off',
-        'no-unused-vars': 'off'
-      }
+        'no-unused-vars': 'off',
+      },
     },
     {
       // Apply this rule to all files
@@ -50,6 +59,7 @@ module.exports = {
       files: ['**/*.test.js', '**/*.test.ts', '**/*.spec.js', '**/*.spec.ts'],
       rules: {
         'no-restricted-syntax': 'off',
+        'no-constant-condition': 'off', // Allow while(true) loops in tests
       },
     },
   ],

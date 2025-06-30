@@ -1,5 +1,6 @@
-import { expect } from "chai";
-import { ipv6StringToBuffer } from "../../../lib/serialize/address/ipv6StringToBuffer";
+import { expect } from 'chai';
+
+import { ipv6StringToBuffer } from '../../../lib/serialize/address/ipv6StringToBuffer';
 
 const tests: Array<[string, string, Buffer]> = [
   [
@@ -69,11 +70,11 @@ const tests: Array<[string, string, Buffer]> = [
   ],
 ]; // prettier-ignore
 
-describe("ipv6StringToBuffer", () => {
-    for (const [title, input, expected] of tests) {
-        it(title, () => {
-            const actual = ipv6StringToBuffer(input);
-            expect(actual).to.deep.equal(expected);
-        });
-    }
+describe('ipv6StringToBuffer', () => {
+  for (const [title, input, expected] of tests) {
+    it(title, () => {
+      const actual = ipv6StringToBuffer(input);
+      expect(actual).to.deep.equal(expected);
+    });
+  }
 });

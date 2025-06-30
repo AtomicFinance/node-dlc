@@ -8,8 +8,8 @@ import {
 } from '@node-dlc/bitcoin';
 import {
   DlcAcceptWithoutSigs,
-  DlcOfferV0,
-  FundingInputV0,
+  DlcOffer,
+  FundingInput,
   MessageType,
 } from '@node-dlc/messaging';
 import Decimal from 'decimal.js';
@@ -18,7 +18,7 @@ import { DualFundingTxFinalizer } from './TxFinalizer';
 
 export class DlcTxBuilder {
   constructor(
-    readonly dlcOffer: DlcOfferV0,
+    readonly dlcOffer: DlcOffer,
     readonly dlcAccept: DlcAcceptWithoutSigs,
   ) {}
 
@@ -30,7 +30,7 @@ export class DlcTxBuilder {
 
 export class BatchDlcTxBuilder {
   constructor(
-    readonly dlcOffers: DlcOfferV0[],
+    readonly dlcOffers: DlcOffer[],
     readonly dlcAccepts: DlcAcceptWithoutSigs[],
   ) {}
 
@@ -54,9 +54,9 @@ export class BatchDlcTxBuilder {
       const accept = this.dlcAccepts[i];
 
       multisigScripts.push(
-        Buffer.compare(offer.fundingPubKey, accept.fundingPubKey) === -1
-          ? Script.p2msLock(2, offer.fundingPubKey, accept.fundingPubKey)
-          : Script.p2msLock(2, accept.fundingPubKey, offer.fundingPubKey),
+        Buffer.compare(offer.fundingPubkey, accept.fundingPubkey) === -1
+          ? Script.p2msLock(2, offer.fundingPubkey, accept.fundingPubkey)
+          : Script.p2msLock(2, accept.fundingPubkey, offer.fundingPubkey),
       );
     }
 
@@ -66,21 +66,21 @@ export class BatchDlcTxBuilder {
 
     const finalizer = new DualFundingTxFinalizer(
       this.dlcOffers[0].fundingInputs,
-      this.dlcOffers[0].payoutSPK,
-      this.dlcOffers[0].changeSPK,
+      this.dlcOffers[0].payoutSpk,
+      this.dlcOffers[0].changeSpk,
       this.dlcAccepts[0].fundingInputs,
-      this.dlcAccepts[0].payoutSPK,
-      this.dlcAccepts[0].changeSPK,
+      this.dlcAccepts[0].payoutSpk,
+      this.dlcAccepts[0].changeSpk,
       this.dlcOffers[0].feeRatePerVb,
       this.dlcOffers.length,
     );
 
     this.dlcOffers[0].fundingInputs.forEach((input) => {
-      if (input.type !== MessageType.FundingInputV0)
-        throw Error('FundingInput must be V0');
+      if (input.type !== MessageType.FundingInput)
+        throw new Error('Input is not a funding input');
     });
-    const offerFundingInputs: FundingInputV0[] = this.dlcOffers[0].fundingInputs.map(
-      (input) => input as FundingInputV0,
+    const offerFundingInputs: FundingInput[] = this.dlcOffers[0].fundingInputs.map(
+      (input) => input as FundingInput,
     );
 
     const offerTotalFunding = offerFundingInputs.reduce((total, input) => {
@@ -94,7 +94,7 @@ export class BatchDlcTxBuilder {
       BigInt(0),
     );
 
-    const fundingInputs: FundingInputV0[] = [
+    const fundingInputs: FundingInput[] = [
       ...offerFundingInputs,
       ...this.dlcAccepts[0].fundingInputs,
     ];
@@ -112,17 +112,17 @@ export class BatchDlcTxBuilder {
     });
 
     const offerInput = this.dlcOffers.reduce(
-      (total, offer) => total + offer.offerCollateralSatoshis,
+      (total, offer) => total + offer.offerCollateral,
       BigInt(0),
     );
     const acceptInput = this.dlcAccepts.reduce(
-      (total, accept) => total + accept.acceptCollateralSatoshis,
+      (total, accept) => total + accept.acceptCollateral,
       BigInt(0),
     );
 
     const totalInputs = this.dlcOffers.map((offer, i) => {
-      const offerInput = offer.offerCollateralSatoshis;
-      const acceptInput = this.dlcAccepts[i].acceptCollateralSatoshis;
+      const offerInput = offer.offerCollateral;
+      const acceptInput = this.dlcAccepts[i].acceptCollateral;
       return offerInput + acceptInput;
     });
 
@@ -162,12 +162,12 @@ export class BatchDlcTxBuilder {
     });
     outputs.push({
       value: Value.fromSats(Number(offerChangeValue)),
-      script: Script.p2wpkhLock(this.dlcOffers[0].changeSPK.slice(2)),
+      script: Script.p2wpkhLock(this.dlcOffers[0].changeSpk.slice(2)),
       serialId: this.dlcOffers[0].changeSerialId,
     });
     outputs.push({
       value: Value.fromSats(Number(acceptChangeValue)),
-      script: Script.p2wpkhLock(this.dlcAccepts[0].changeSPK.slice(2)),
+      script: Script.p2wpkhLock(this.dlcAccepts[0].changeSpk.slice(2)),
       serialId: this.dlcAccepts[0].changeSerialId,
     });
 

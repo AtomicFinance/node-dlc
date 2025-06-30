@@ -45,7 +45,7 @@ export class GossipQueriesReceiver {
    * message will use a first_timestamp of uint32_max and a timestamp_range of
    * 0 to prevent the remote peer from sending information.
    */
-  public deactivate() {
+  public deactivate(): void {
     this.logger.info('deactivating gossip');
 
     // reset params
@@ -73,7 +73,7 @@ export class GossipQueriesReceiver {
   public activate(
     start: number = Math.trunc(Date.now() / 1000),
     range = 0xffffffff,
-  ) {
+  ): void {
     this.logger.info('activating gossip for range %d to %d', start, range);
 
     // set params

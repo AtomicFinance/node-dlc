@@ -9,7 +9,7 @@ import { BufferReader } from '@node-dlc/bufio';
 export function readTlvs(
   reader: BufferReader,
   handler: (type: bigint, value: BufferReader) => boolean,
-) {
+): void {
   let lastType: bigint;
   while (!reader.eof) {
     const type = reader.readBigSize();

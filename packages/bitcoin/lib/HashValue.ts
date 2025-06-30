@@ -66,7 +66,7 @@ export class HashValue implements ICloneable<HashValue> {
    * Serializes to JSON returning a hex string. Defaults to using
    * RPC (reversed/big endian) byte order.
    */
-  public toJSON(byteOrder?: HashByteOrder): any {
+  public toJSON(byteOrder?: HashByteOrder): string {
     return this.toString(byteOrder);
   }
 

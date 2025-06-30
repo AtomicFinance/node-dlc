@@ -1,7 +1,8 @@
+import { Value } from '@node-dlc/bitcoin';
 import * as crypto from '@node-dlc/crypto';
 import { expect } from 'chai';
+
 import { AcceptChannelMessage } from '../../lib/messages/AcceptChannelMessage';
-import { Value } from '@node-dlc/bitcoin';
 
 describe('AcceptChannelMessage', () => {
   // abb00e1f13665a56d7b39917a3afa1a9753191e97541334705e39019c0e3d9b4
@@ -97,7 +98,7 @@ describe('AcceptChannelMessage', () => {
       instance.upfrontShutdownScript = Buffer.concat([
         Buffer.from([0x00]),
         crypto.hash160(paymentBasePoint),
-      ]);
+      ] as any);
 
       expect(instance.serialize().toString("hex")).to.equal(
                 "0021" + // type
@@ -170,7 +171,10 @@ describe('AcceptChannelMessage', () => {
         firstCommitmentPoint,
       );
       expect(instance.upfrontShutdownScript).to.deep.equal(
-        Buffer.concat([Buffer.from([0x00]), crypto.hash160(paymentBasePoint)]),
+        Buffer.concat([
+          Buffer.from([0x00]),
+          crypto.hash160(paymentBasePoint),
+        ] as any),
       );
     });
   });

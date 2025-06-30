@@ -2,10 +2,10 @@ import { Sequence, Tx } from '@node-dlc/bitcoin';
 import { StreamReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
-import { FundingInputV0 } from '../../lib/messages/FundingInput';
+import { FundingInput } from '../../lib/messages/FundingInput';
 
-describe('FundingInputV0', () => {
-  let instance: FundingInputV0;
+describe('FundingInput', () => {
+  let instance: FundingInput;
 
   const type = Buffer.from('fda714', 'hex');
   const length = Buffer.from('3f', 'hex');
@@ -33,7 +33,7 @@ describe('FundingInputV0', () => {
   ]);
 
   beforeEach(() => {
-    instance = new FundingInputV0();
+    instance = new FundingInput();
 
     instance.length = BigInt(63);
     instance.inputSerialId = BigInt(56040);
@@ -54,7 +54,7 @@ describe('FundingInputV0', () => {
 
   describe('deserialize', () => {
     it('deserializes', () => {
-      const instance = FundingInputV0.deserialize(fundingInputHex);
+      const instance = FundingInput.deserialize(fundingInputHex);
 
       expect(Number(instance.length)).to.equal(63);
       expect(Number(instance.inputSerialId)).to.equal(56040);

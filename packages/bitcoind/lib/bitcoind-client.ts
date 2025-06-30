@@ -41,7 +41,7 @@ export class BitcoindClient extends EventEmitter {
    * rawtx events with a Buffer payload
    * @emits rawtx
    */
-  public subscribeRawTx() {
+  public subscribeRawTx(): void {
     const sock = (this.rawTxSock = new Subscriber());
     sock.connect(this.opts.zmqpubrawtx);
     sock.subscribe('rawtx');
@@ -54,7 +54,7 @@ export class BitcoindClient extends EventEmitter {
    * rawblock events with a Buffer payload.
    * @emits rawblock
    */
-  public subscribeRawBlock() {
+  public subscribeRawBlock(): void {
     const sock = (this.rawBlockSock = new Subscriber());
     sock.connect(this.opts.zmqpubrawblock);
     sock.subscribe('rawblock');
@@ -71,6 +71,7 @@ export class BitcoindClient extends EventEmitter {
     eventType: 'rawtx' | 'rawblock',
   ) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const [topic, message] of sock) {
         this.emit(eventType, message);
       }
@@ -83,7 +84,7 @@ export class BitcoindClient extends EventEmitter {
   /**
    * Closes ZeroMQ connections
    */
-  public async close() {
+  public async close(): Promise<void> {
     if (this.rawTxSock) {
       await this.rawTxSock.close();
     }
@@ -202,6 +203,7 @@ export class BitcoindClient extends EventEmitter {
    * @param method
    * @param args
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _jsonrpc<T>(method: string, args?: any): Promise<T> {
     // constructs a request delegate that will be used for retries
     const fn = () => jsonrpcRequest<T>(method, args, ++this.id, this.opts);

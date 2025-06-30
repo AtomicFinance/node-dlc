@@ -1,8 +1,8 @@
-// tslint:disable: no-unused-expression
+import { OutPoint } from '@node-dlc/bitcoin';
 import { BitField } from '@node-dlc/common';
 import { ShortChannelId } from '@node-dlc/common';
-import { OutPoint } from '@node-dlc/bitcoin';
 import { expect } from 'chai';
+
 import { ExtendedChannelAnnouncementMessage } from '../../lib/messages/ExtendedChannelAnnouncementMessage';
 
 describe('ExtendedChannelAnnouncementMessage', () => {

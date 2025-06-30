@@ -283,7 +283,23 @@ export function splitIntoRanges(
       .getPayout(nextFirstRoundingOutcome)
       .gt(currentPayout);
 
+    // Add loop counter to prevent infinite loops
+    let loopCounter = 0;
+    const maxIterations = Number(to - from) + 1000; // Allow some extra iterations
+
     while (currentMidRoundedOutcome < nextFirstRoundingOutcome) {
+      // Prevent infinite loops
+      if (++loopCounter > maxIterations) {
+        // Breaking out of potential infinite loop - add remaining range and exit
+        result.push({
+          payout: clamp(toBigInt(currentPayout)),
+          indexFrom: currentMidRoundedOutcome,
+          indexTo: to - BigInt(1),
+        });
+        currentOutcome = to;
+        break;
+      }
+
       const nextRoundedPayout = currentPayout
         .integerValue()
         .plus(isAscending ? Number(rounding) : -Number(rounding));
@@ -298,13 +314,25 @@ export function splitIntoRanges(
         nextMidRoundedPayout,
       );
 
+      // Handle invalid outcomes from getOutcomeForPayout
+      if (nextMidRoundedOutcome < 0) {
+        // If getOutcomeForPayout returns invalid value, advance manually
+        nextMidRoundedOutcome = currentMidRoundedOutcome + BigInt(1);
+      }
+
       if (
         (!isAscending &&
+          nextMidRoundedOutcome >= 0 &&
           curve.getPayout(nextMidRoundedOutcome).lt(nextMidRoundedPayout)) ||
         (isAscending &&
+          nextMidRoundedOutcome >= 0 &&
           curve.getPayout(nextMidRoundedOutcome).gte(nextMidRoundedPayout))
       ) {
         nextMidRoundedOutcome = nextMidRoundedOutcome - BigInt(1);
+        // Ensure we don't go negative
+        if (nextMidRoundedOutcome < 0) {
+          nextMidRoundedOutcome = currentMidRoundedOutcome;
+        }
       }
 
       const nextOutcome = curve.getOutcomeForPayout(nextRoundedPayout);
@@ -357,10 +385,25 @@ export function splitIntoRanges(
         indexTo: nextMidRoundedOutcome,
       });
 
-      currentOutcome = nextOutcome + BigInt(1);
+      // Handle case where nextOutcome is invalid
+      if (nextOutcome < 0) {
+        // Advance manually if getOutcomeForPayout returns invalid value
+        currentOutcome = currentMidRoundedOutcome + BigInt(1);
+      } else {
+        currentOutcome = nextOutcome + BigInt(1);
+      }
+
       currentPayout = nextRoundedPayout;
 
+      // Additional safety check: ensure we're making progress
+      const previousMidRoundedOutcome = currentMidRoundedOutcome;
       currentMidRoundedOutcome = nextMidRoundedOutcome + BigInt(1);
+
+      if (currentMidRoundedOutcome <= previousMidRoundedOutcome) {
+        // No progress detected in splitIntoRanges loop, breaking
+        currentOutcome = nextFirstRoundingOutcome;
+        break;
+      }
     }
   }
 

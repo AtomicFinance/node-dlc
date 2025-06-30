@@ -1,4 +1,4 @@
-import { Script, Value } from '@node-dlc/bitcoin';
+import { Value } from '@node-dlc/bitcoin';
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { BitField } from '@node-dlc/common';
 

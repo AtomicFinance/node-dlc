@@ -18,15 +18,15 @@ export class GossipMemoryStore implements IGossipStore {
   private _nodeAnn = new Map<string, NodeAnnouncementMessage>();
   private _nodeChannels = new Map<string, Set<bigint>>();
 
-  public get channelAnnouncementCount() {
+  public get channelAnnouncementCount(): number {
     return this._channelAnn.size;
   }
 
-  public get channelUpdateCount() {
+  public get channelUpdateCount(): number {
     return this._channelUpd.size;
   }
 
-  public get nodeAnnouncementCount() {
+  public get nodeAnnouncementCount(): number {
     return this._nodeAnn.size;
   }
 
@@ -126,11 +126,14 @@ export class GossipMemoryStore implements IGossipStore {
     this._nodeChannels.get(getNodeKey(msg.nodeId2)).delete(chanKey);
   }
 
-  public async deleteChannelUpdate(scid: ShortChannelId, dir: number) {
+  public async deleteChannelUpdate(
+    scid: ShortChannelId,
+    dir: number,
+  ): Promise<void> {
     this._channelUpd.delete(getChanUpdKey(getChanKey(scid), dir));
   }
 
-  public async deleteNodeAnnouncement(nodeId: Buffer) {
+  public async deleteNodeAnnouncement(nodeId: Buffer): Promise<void> {
     this._nodeAnn.delete(getNodeKey(nodeId));
     this._nodeChannels.get(getNodeKey(nodeId));
   }

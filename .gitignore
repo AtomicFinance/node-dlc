@@ -110,3 +110,14 @@ dist
 
 # LevelDB temporary directories
 packages/leveldb/tmp-leveldb/
+
+# Rust CLI build artifacts and temporary files
+rust-dlc-cli/target/
+rust-dlc-cli/*.hex
+rust-dlc-cli/*.txt
+rust-dlc-cli/*_result.json
+rust-dlc-cli/*_hex.txt
+rust-dlc-cli/temp_*.txt
+rust-dlc-cli/clean_*.txt
+rust-dlc-cli/correct_*.txt
+rust-dlc-cli/expected_*.hex

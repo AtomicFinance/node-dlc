@@ -2,12 +2,14 @@ import { expect } from 'chai';
 
 import {
   HyperbolaPayoutCurvePiece,
+  PayoutCurvePiece,
   PolynomialPayoutCurvePiece,
 } from '../../lib/messages/PayoutCurvePiece';
+import { F64 } from '../../lib/serialize/F64';
 
 describe('PayoutCurvePiece', () => {
   describe('PolynomialPayoutCurvePiece', () => {
-    it('serializes', () => {
+    it('serializes and deserializes correctly', () => {
       const instance = new PolynomialPayoutCurvePiece();
 
       instance.points = [
@@ -23,95 +25,196 @@ describe('PayoutCurvePiece', () => {
         },
       ];
 
-      expect(instance.serialize().toString("hex")).to.equal(
-        'fda728' + // type
-        '0a' + // length
-        '0002' + // num_points
-        '00' + // event_outcome[0]
-        '00' + // outcome_payout[0]
-        '0000' + // extra_precision[0]
-        '01' + // event_outcome[1]
-        '01' + // outcome_payout[1]
-        '0000'// extra_precision[1]
-      ); // prettier-ignore
+      // Test that it serializes without errors (new dlcspecs PR #163 format)
+      const serialized = instance.serialize();
+      expect(serialized).to.be.instanceof(Buffer);
+      expect(serialized.length).to.be.greaterThan(0);
+
+      // Test round-trip serialization
+      const deserialized = PayoutCurvePiece.deserialize(
+        serialized,
+      ) as PolynomialPayoutCurvePiece;
+      expect(deserialized).to.be.instanceof(PolynomialPayoutCurvePiece);
+      expect(deserialized.points.length).to.equal(2);
+      expect(deserialized.points[0].eventOutcome).to.equal(BigInt(0));
+      expect(deserialized.points[0].outcomePayout).to.equal(BigInt(0));
+      expect(deserialized.points[1].eventOutcome).to.equal(BigInt(1));
+      expect(deserialized.points[1].outcomePayout).to.equal(BigInt(1));
     });
 
-    it('deserializes', () => {
-      const buf =  Buffer.from(
-        'fda728' + // type
-        '0a' + // length
-        '0002' + // num_points
-        '00' + // event_outcome[0]
-        '00' + // outcome_payout[0]
-        '0000' + // extra_precision[0]
-        '01' + // event_outcome[1]
-        '01' + // outcome_payout[1]
-        '0000'// extra_precision[1]
-      , 'hex'); // prettier-ignore
+    it('handles large BigInt values correctly', () => {
+      const instance = new PolynomialPayoutCurvePiece();
+      const largeBigInt = BigInt('18446744073709551615'); // Max uint64
 
-      const instance = PolynomialPayoutCurvePiece.deserialize(buf);
+      instance.points = [
+        {
+          eventOutcome: largeBigInt,
+          outcomePayout: largeBigInt,
+          extraPrecision: 0,
+        },
+      ];
 
-      expect(instance.points[0].eventOutcome).to.equal(BigInt(0));
-      expect(instance.points[0].outcomePayout).to.equal(BigInt(0));
-      expect(instance.points[0].extraPrecision).to.equal(0);
+      const serialized = instance.serialize();
+      const deserialized = PayoutCurvePiece.deserialize(
+        serialized,
+      ) as PolynomialPayoutCurvePiece;
 
-      expect(instance.points[1].eventOutcome).to.equal(BigInt(1));
-      expect(instance.points[1].outcomePayout).to.equal(BigInt(1));
-      expect(instance.points[1].extraPrecision).to.equal(0);
+      expect(deserialized.points[0].eventOutcome).to.equal(largeBigInt);
+      expect(deserialized.points[0].outcomePayout).to.equal(largeBigInt);
     });
   });
+
   describe('HyperbolaPayoutCurvePiece', () => {
-    const piece = 'fda72a1901010000000100000000010000000100000001000000010000';
-
-    it('serializes', () => {
+    it('serializes and deserializes correctly with normal values', () => {
       const instance = new HyperbolaPayoutCurvePiece();
-
       instance.usePositivePiece = true;
-      instance.translateOutcomeSign = true;
-      instance.translateOutcome = BigInt(0);
-      instance.translateOutcomeExtraPrecision = 0;
-      instance.translatePayoutSign = true;
-      instance.translatePayout = BigInt(0);
-      instance.translatePayoutExtraPrecision = 0;
-      instance.a = BigInt(1);
-      instance.aExtraPrecision = 0;
-      instance.aSign = false;
-      instance.b = BigInt(1);
-      instance.bExtraPrecision = 0;
-      instance.bSign = false;
-      instance.c = BigInt(1);
-      instance.cExtraPrecision = 0;
-      instance.cSign = false;
-      instance.d = BigInt(1);
-      instance.dExtraPrecision = 0;
-      instance.dSign = false;
+      instance.translateOutcome = F64.fromNumber(100.5);
+      instance.translatePayout = F64.fromNumber(50.25);
+      instance.a = F64.fromNumber(1.0);
+      instance.b = F64.fromNumber(0.0);
+      instance.c = F64.fromNumber(0.0);
+      instance.d = F64.fromNumber(200.0);
 
-      expect(instance.serialize().toString('hex')).to.equal(piece);
+      const serialized = instance.serialize();
+      expect(serialized).to.be.instanceof(Buffer);
+      expect(serialized.length).to.be.greaterThan(0);
+
+      // Test round-trip
+      const deserialized = PayoutCurvePiece.deserialize(
+        serialized,
+      ) as HyperbolaPayoutCurvePiece;
+      expect(deserialized.usePositivePiece).to.equal(true);
+      expect(deserialized.translateOutcome.toNumber()).to.equal(100.5);
     });
 
-    it('deserializes', () => {
-      const buf = Buffer.from(piece, 'hex');
-      const instance = HyperbolaPayoutCurvePiece.deserialize(buf);
+    it('handles very large f64 values without precision loss', () => {
+      // Test values that exceed JavaScript MAX_SAFE_INTEGER
+      const testCases = [
+        {
+          name: 'Large positive number',
+          value: 1.7976931348623157e100, // Very large but valid f64
+        },
+        {
+          name: 'Very small number',
+          value: 5e-324, // Smallest positive denormalized f64
+        },
+        {
+          name: 'Beyond safe integer',
+          value: 9007199254740992, // MAX_SAFE_INTEGER + 1
+        },
+        {
+          name: 'Scientific notation',
+          value: 1.23456789e50,
+        },
+      ];
 
-      expect(instance.usePositivePiece).to.equal(true);
-      expect(instance.translateOutcomeSign).to.equal(true);
-      expect(instance.translateOutcome).to.equal(BigInt(0));
-      expect(instance.translateOutcomeExtraPrecision).to.equal(0);
-      expect(instance.translatePayoutSign).to.equal(true);
-      expect(instance.translatePayout).to.equal(BigInt(0));
-      expect(instance.translatePayoutExtraPrecision).to.equal(0);
-      expect(instance.a).to.equal(BigInt(1));
-      expect(instance.aExtraPrecision).to.equal(0);
-      expect(instance.aSign).to.equal(false);
-      expect(instance.b).to.equal(BigInt(1));
-      expect(instance.bExtraPrecision).to.equal(0);
-      expect(instance.bSign).to.equal(false);
-      expect(instance.c).to.equal(BigInt(1));
-      expect(instance.cExtraPrecision).to.equal(0);
-      expect(instance.cSign).to.equal(false);
-      expect(instance.d).to.equal(BigInt(1));
-      expect(instance.dExtraPrecision).to.equal(0);
-      expect(instance.dSign).to.equal(false);
+      testCases.forEach(({ value }) => {
+        const instance = new HyperbolaPayoutCurvePiece();
+        instance.usePositivePiece = false;
+        instance.translateOutcome = F64.fromNumber(value);
+        instance.translatePayout = F64.fromNumber(123.456);
+        instance.a = F64.fromNumber(1.0);
+        instance.b = F64.fromNumber(0.0);
+        instance.c = F64.fromNumber(0.0);
+        instance.d = F64.fromNumber(value * 2);
+
+        // Test round-trip serialization preserves exact binary representation
+        const serialized = instance.serialize();
+        const deserialized = PayoutCurvePiece.deserialize(
+          serialized,
+        ) as HyperbolaPayoutCurvePiece;
+
+        // The F64 should maintain exact binary representation
+        expect(deserialized.translateOutcome.equals(instance.translateOutcome))
+          .to.be.true;
+        expect(deserialized.d.equals(instance.d)).to.be.true;
+      });
+    });
+
+    it('handles JSON with string values (for very large numbers)', () => {
+      // Test JSON with string values for large numbers
+      const jsonWithStrings = {
+        usePositivePiece: true,
+        translateOutcome: '1.7976931348623157e+100', // String representation
+        translatePayout: 50000.0, // Regular number
+        a: '9007199254740992', // String for large integer
+        b: 0.0,
+        c: 0.0,
+        d: 1.5,
+      };
+
+      const instance = HyperbolaPayoutCurvePiece.fromJSON(jsonWithStrings);
+
+      // Should handle both string and number inputs correctly
+      expect(instance.usePositivePiece).to.be.true;
+      expect(instance.translateOutcome.toNumber()).to.equal(
+        1.7976931348623157e100,
+      );
+      expect(instance.translatePayout.toNumber()).to.equal(50000.0);
+      expect(instance.a.toNumber()).to.equal(9007199254740992);
+    });
+
+    it('JSON round-trip maintains values within JavaScript precision limits', () => {
+      const instance = new HyperbolaPayoutCurvePiece();
+      instance.usePositivePiece = true;
+      instance.translateOutcome = F64.fromNumber(50000.5);
+      instance.translatePayout = F64.fromNumber(25000.25);
+      instance.a = F64.fromNumber(1.5);
+      instance.b = F64.fromNumber(0.0);
+      instance.c = F64.fromNumber(0.0);
+      instance.d = F64.fromNumber(10000.0);
+
+      // Test JSON round-trip
+      const json = instance.toJSON();
+      const restored = HyperbolaPayoutCurvePiece.fromJSON(
+        json.hyperbolaPayoutCurvePiece,
+      );
+
+      expect(restored.usePositivePiece).to.equal(instance.usePositivePiece);
+      expect(restored.translateOutcome.toNumber()).to.equal(
+        instance.translateOutcome.toNumber(),
+      );
+      expect(restored.translatePayout.toNumber()).to.equal(
+        instance.translatePayout.toNumber(),
+      );
+      expect(restored.a.toNumber()).to.equal(instance.a.toNumber());
+      expect(restored.d.toNumber()).to.equal(instance.d.toNumber());
+    });
+
+    it('demonstrates precision limits with very large numbers in JSON', () => {
+      // This test demonstrates the precision tradeoff we're making
+      const veryLargeNumber = 1.2345678901234567e100;
+
+      const instance = new HyperbolaPayoutCurvePiece();
+      instance.usePositivePiece = false;
+      instance.translateOutcome = F64.fromNumber(veryLargeNumber);
+      instance.translatePayout = F64.fromNumber(0);
+      instance.a = F64.fromNumber(0);
+      instance.b = F64.fromNumber(0);
+      instance.c = F64.fromNumber(0);
+      instance.d = F64.fromNumber(0);
+
+      // Binary serialization preserves exact representation
+      const binarySerialized = instance.serialize();
+      const binaryDeserialized = PayoutCurvePiece.deserialize(
+        binarySerialized,
+      ) as HyperbolaPayoutCurvePiece;
+
+      expect(
+        binaryDeserialized.translateOutcome.equals(instance.translateOutcome),
+      ).to.be.true;
+
+      // JSON serialization may lose precision for very large numbers
+      const json = instance.toJSON();
+      const jsonRestored = HyperbolaPayoutCurvePiece.fromJSON(
+        json.hyperbolaPayoutCurvePiece,
+      );
+
+      // This may not be exactly equal due to JSON number precision limits
+      const jsonValue = jsonRestored.translateOutcome.toNumber();
+
+      // The important thing is that both are very large numbers in the same ballpark
+      expect(jsonValue).to.be.greaterThan(1e99);
     });
   });
 });

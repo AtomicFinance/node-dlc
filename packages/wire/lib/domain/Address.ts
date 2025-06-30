@@ -28,7 +28,7 @@ export abstract class Address {
     throw new Error('Not implemented');
   }
 
-  public toString() {
+  public toString(): string {
     return `${this.host}:${this.port}`;
   }
 

@@ -1,13 +1,14 @@
+import { F64 } from '@node-dlc/messaging';
 import {
-  ContractDescriptorV1,
-  ContractInfoV0,
   DigitDecompositionEventDescriptorV0,
-  DlcOfferV0,
+  DlcOffer,
   HyperbolaPayoutCurvePiece,
-  OracleAnnouncementV0,
-  OracleEventV0,
-  OracleInfoV0,
-  PayoutFunctionV0,
+  NumericalDescriptor,
+  OracleAnnouncement,
+  OracleEvent,
+  PayoutFunction,
+  SingleContractInfo,
+  SingleOracleInfo,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
@@ -87,12 +88,13 @@ describe('OptionInfo', () => {
         premium,
       );
 
-      ((((invalidDlcOffer.contractInfo as ContractInfoV0)
-        .contractDescriptor as ContractDescriptorV1)
-        .payoutFunction as PayoutFunctionV0).pieces[0]
-        .payoutCurvePiece as HyperbolaPayoutCurvePiece).translateOutcome = BigInt(
-        4,
-      );
+      const contractInfo = invalidDlcOffer.contractInfo as SingleContractInfo;
+      const contractDescriptor = contractInfo.contractDescriptor as NumericalDescriptor;
+      const payoutFunc = contractDescriptor.payoutFunction as PayoutFunction;
+      const hyperbolaPiece = payoutFunc.payoutFunctionPieces[0]
+        .payoutCurvePiece as HyperbolaPayoutCurvePiece;
+
+      hyperbolaPiece.translateOutcome = F64.fromNumber(4);
 
       expect(() => {
         getOptionInfoFromOffer(invalidDlcOffer);
@@ -169,12 +171,13 @@ describe('OptionInfo', () => {
         premium,
       );
 
-      ((((invalidDlcOffer.contractInfo as ContractInfoV0)
-        .contractDescriptor as ContractDescriptorV1)
-        .payoutFunction as PayoutFunctionV0).pieces[0]
-        .payoutCurvePiece as HyperbolaPayoutCurvePiece).translateOutcome = BigInt(
-        4,
-      );
+      const contractInfo = invalidDlcOffer.contractInfo as SingleContractInfo;
+      const contractDescriptor = contractInfo.contractDescriptor as NumericalDescriptor;
+      const payoutFunc = contractDescriptor.payoutFunction as PayoutFunction;
+      const hyperbolaPiece = payoutFunc.payoutFunctionPieces[0]
+        .payoutCurvePiece as HyperbolaPayoutCurvePiece;
+
+      hyperbolaPiece.translateOutcome = F64.fromNumber(4);
 
       expect(() => {
         getOptionInfoFromOffer(invalidDlcOffer);
@@ -186,7 +189,7 @@ describe('OptionInfo', () => {
 function buildDlcOfferFixture(
   oracleDigits: number,
   expiry: Date,
-  payoutFunction: PayoutFunctionV0,
+  payoutFunction: PayoutFunction,
   totalCollateral: bigint,
   premium: bigint,
 ) {
@@ -197,27 +200,27 @@ function buildDlcOfferFixture(
   eventDescriptor.precision = 0;
   eventDescriptor.nbDigits = oracleDigits;
 
-  const oracleEvent = new OracleEventV0();
+  const oracleEvent = new OracleEvent();
   oracleEvent.eventMaturityEpoch = Math.floor(expiry.getTime() / 1000);
   oracleEvent.eventDescriptor = eventDescriptor;
 
-  const oracleAnnouncement = new OracleAnnouncementV0();
+  const oracleAnnouncement = new OracleAnnouncement();
   oracleAnnouncement.oracleEvent = oracleEvent;
 
-  const oracleInfo = new OracleInfoV0();
+  const oracleInfo = new SingleOracleInfo();
   oracleInfo.announcement = oracleAnnouncement;
 
-  const contractDescriptor = new ContractDescriptorV1();
+  const contractDescriptor = new NumericalDescriptor();
   contractDescriptor.numDigits = oracleDigits;
   contractDescriptor.payoutFunction = payoutFunction;
 
-  const contractInfo = new ContractInfoV0();
+  const contractInfo = new SingleContractInfo();
   contractInfo.totalCollateral = totalCollateral;
   contractInfo.contractDescriptor = contractDescriptor;
   contractInfo.oracleInfo = oracleInfo;
 
-  const dlcOffer = new DlcOfferV0();
+  const dlcOffer = new DlcOffer();
   dlcOffer.contractInfo = contractInfo;
-  dlcOffer.offerCollateralSatoshis = totalCollateral - premium;
+  dlcOffer.offerCollateral = totalCollateral - premium;
   return dlcOffer;
 }

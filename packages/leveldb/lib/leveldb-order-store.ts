@@ -1,9 +1,5 @@
 import { sha256 } from '@node-dlc/crypto';
-import {
-  OrderAcceptV0,
-  OrderMetadataV0,
-  OrderOfferV0,
-} from '@node-dlc/messaging';
+import { OrderAccept, OrderMetadataV0, OrderOffer } from '@node-dlc/messaging';
 
 import { LeveldbBase } from './leveldb-base';
 
@@ -17,14 +13,14 @@ enum Prefix {
 }
 
 export class LeveldbOrderStore extends LeveldbBase {
-  public async findOrderOffers(): Promise<OrderOfferV0[]> {
-    const results: OrderOfferV0[] = [];
+  public async findOrderOffers(): Promise<OrderOffer[]> {
+    const results: OrderOffer[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.OrderOfferV0) {
-          results.push(OrderOfferV0.deserialize(value));
+          results.push(OrderOffer.deserialize(value));
         }
       }
     } finally {
@@ -34,14 +30,14 @@ export class LeveldbOrderStore extends LeveldbBase {
     return results;
   }
 
-  public async findOrderOffer(tempOrderId: Buffer): Promise<OrderOfferV0> {
+  public async findOrderOffer(tempOrderId: Buffer): Promise<OrderOffer> {
     const key = Buffer.concat([
       Buffer.from([Prefix.OrderOfferV0]),
       tempOrderId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return OrderOfferV0.deserialize(raw);
+    return OrderOffer.deserialize(raw);
   }
 
   public async findOrderOfferTempOrderIdsByNick(
@@ -92,15 +88,15 @@ export class LeveldbOrderStore extends LeveldbBase {
     return results;
   }
 
-  public async findOrderOffersByNick(nick: string): Promise<OrderOfferV0[]> {
+  public async findOrderOffersByNick(nick: string): Promise<OrderOffer[]> {
     const tempOrderIds = await this.findOrderOfferTempOrderIdsByNick(nick);
-    const results: OrderOfferV0[] = [];
+    const results: OrderOffer[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.OrderOfferV0) {
-          const orderOffer = OrderOfferV0.deserialize(value);
+          const orderOffer = OrderOffer.deserialize(value);
 
           if (
             tempOrderIds
@@ -121,7 +117,7 @@ export class LeveldbOrderStore extends LeveldbBase {
   public async findOrderOfferByNickAndMetadata(
     nick: string,
     orderMetadataId: Buffer,
-  ): Promise<OrderOfferV0> {
+  ): Promise<OrderOffer> {
     const key = Buffer.concat([
       Buffer.from([Prefix.OrderMetadataV0Nick]),
       orderMetadataId,
@@ -136,19 +132,19 @@ export class LeveldbOrderStore extends LeveldbBase {
   public async findOrderOffersByNickAndMetadata(
     nick: string,
     orderMetadataId: Buffer,
-  ): Promise<OrderOfferV0[]> {
+  ): Promise<OrderOffer[]> {
     const tempOrderIds = await this.findOrderOfferTempOrderIdsByNickAndMetadata(
       nick,
       orderMetadataId,
     );
 
-    const results: OrderOfferV0[] = [];
+    const results: OrderOffer[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.OrderOfferV0) {
-          const orderOffer = OrderOfferV0.deserialize(value);
+          const orderOffer = OrderOffer.deserialize(value);
 
           if (
             tempOrderIds
@@ -166,7 +162,7 @@ export class LeveldbOrderStore extends LeveldbBase {
     return results;
   }
 
-  public async saveOrderOffer(orderOffer: OrderOfferV0): Promise<void> {
+  public async saveOrderOffer(orderOffer: OrderOffer): Promise<void> {
     const value = orderOffer.serialize();
     const tempOrderId = sha256(value);
     const key = Buffer.concat([
@@ -177,7 +173,7 @@ export class LeveldbOrderStore extends LeveldbBase {
   }
 
   public async saveOrderOfferByNick(
-    orderOffer: OrderOfferV0,
+    orderOffer: OrderOffer,
     nick: string,
   ): Promise<void> {
     const value = orderOffer.serialize();
@@ -199,7 +195,7 @@ export class LeveldbOrderStore extends LeveldbBase {
   }
 
   public async saveOrderOfferByMetadataAndNick(
-    orderOffer: OrderOfferV0,
+    orderOffer: OrderOffer,
     nick: string,
   ): Promise<void> {
     if (orderOffer.metadata) {
@@ -227,14 +223,14 @@ export class LeveldbOrderStore extends LeveldbBase {
     await this._db.del(key);
   }
 
-  public async findOrderAccepts(): Promise<OrderAcceptV0[]> {
-    const results: OrderAcceptV0[] = [];
+  public async findOrderAccepts(): Promise<OrderAccept[]> {
+    const results: OrderAccept[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.OrderAcceptV0) {
-          results.push(OrderAcceptV0.deserialize(value));
+          results.push(OrderAccept.deserialize(value));
         }
       }
     } finally {
@@ -267,15 +263,15 @@ export class LeveldbOrderStore extends LeveldbBase {
     return results;
   }
 
-  public async findOrderAcceptsByNick(nick: string): Promise<OrderAcceptV0[]> {
+  public async findOrderAcceptsByNick(nick: string): Promise<OrderAccept[]> {
     const tempOrderIds = await this.findOrderAcceptTempOrderIdsByNick(nick);
-    const results: OrderAcceptV0[] = [];
+    const results: OrderAccept[] = [];
     const iterator = this._db.iterator();
 
     try {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.OrderAcceptV0) {
-          results.push(OrderAcceptV0.deserialize(value));
+          results.push(OrderAccept.deserialize(value));
         }
       }
     } finally {
@@ -289,17 +285,17 @@ export class LeveldbOrderStore extends LeveldbBase {
     });
   }
 
-  public async findOrderAccept(tempOrderId: Buffer): Promise<OrderAcceptV0> {
+  public async findOrderAccept(tempOrderId: Buffer): Promise<OrderAccept> {
     const key = Buffer.concat([
       Buffer.from([Prefix.OrderAcceptV0]),
       tempOrderId,
     ]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
-    return OrderAcceptV0.deserialize(raw);
+    return OrderAccept.deserialize(raw);
   }
 
-  public async saveOrderAccept(orderAccept: OrderAcceptV0): Promise<void> {
+  public async saveOrderAccept(orderAccept: OrderAccept): Promise<void> {
     const value = orderAccept.serialize();
     const key = Buffer.concat([
       Buffer.from([Prefix.OrderAcceptV0]),
@@ -309,7 +305,7 @@ export class LeveldbOrderStore extends LeveldbBase {
   }
 
   public async saveOrderAcceptByNick(
-    orderAccept: OrderAcceptV0,
+    orderAccept: OrderAccept,
     nick: string,
   ): Promise<void> {
     const value = orderAccept.serialize();

@@ -57,7 +57,7 @@ export function connect({
   host,
   port = 9735,
   logger,
-}: NoiseConnectOptions) {
+}: NoiseConnectOptions): NoiseSocket {
   if (!es) {
     es = crypto.createPrivateKey();
   }
@@ -83,6 +83,6 @@ export function connect({
 export function createServer(
   { ls, esFactory }: NoiseServerOptions,
   connListener: (socket: NoiseSocket) => void,
-) {
+): NoiseServer {
   return new NoiseServer({ ls, esFactory }, connListener);
 }

@@ -15,7 +15,7 @@ import { IWireMessage } from './IWireMessage';
  * nodes not associated with an already known channel are ignored.
  */
 export class NodeAnnouncementMessage implements IWireMessage {
-  public static deserialize(payload: Buffer) {
+  public static deserialize(payload: Buffer): NodeAnnouncementMessage {
     const instance = new NodeAnnouncementMessage();
     const reader = new BufferReader(payload);
     reader.readUInt16BE(); // read off type
@@ -99,7 +99,7 @@ export class NodeAnnouncementMessage implements IWireMessage {
    */
   public addresses: Address[] = [];
 
-  public serialize() {
+  public serialize(): Buffer {
     const featuresBuffer = this.features.toBuffer();
     const featuresLen = featuresBuffer.length;
 

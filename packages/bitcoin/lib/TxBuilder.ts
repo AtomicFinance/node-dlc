@@ -87,7 +87,7 @@ export class TxBuilder {
    * @param scriptPubKey the locking script encumbering the funds send
    * to this output
    */
-  public addOutput(value: TxOut | number | Value, scriptPubKey?: Script) {
+  public addOutput(value: TxOut | number | Value, scriptPubKey?: Script): void {
     if (value instanceof TxOut) {
       this._outputs.push(value.clone());
     } else {

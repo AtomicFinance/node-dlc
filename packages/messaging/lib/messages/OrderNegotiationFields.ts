@@ -1,157 +1,210 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
-import { MessageType } from '../MessageType';
-import { IDlcMessage } from './DlcMessage';
 import { IOrderOfferJSON, OrderOffer } from './OrderOffer';
 
+/**
+ * Order negotiation fields for order contract negotiation.
+ * Follows the same pattern as NegotiationFields with Single and Disjoint variants.
+ */
 export abstract class OrderNegotiationFields {
-  public static deserialize(
-    buf: Buffer,
-  ): OrderNegotiationFieldsV0 | OrderNegotiationFieldsV1 {
+  public static deserialize(buf: Buffer): OrderNegotiationFields {
     const reader = new BufferReader(buf);
+    const discriminator = Number(reader.readBigSize());
 
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.OrderNegotiationFieldsV0:
-        return OrderNegotiationFieldsV0.deserialize(buf);
-      case MessageType.OrderNegotiationFieldsV1:
-        return OrderNegotiationFieldsV1.deserialize(buf);
+    switch (discriminator) {
+      case 0:
+        return SingleOrderNegotiationFields.deserialize(buf);
+      case 1:
+        return DisjointOrderNegotiationFields.deserialize(buf);
       default:
         throw new Error(
-          `Order Negotiation Fields TLV type must be OrderNegotiationFieldsV0 or OrderNegotiationFieldsV1`,
+          `Invalid OrderNegotiationFields discriminator: ${discriminator}. Must be 0 (Single) or 1 (Disjoint)`,
         );
     }
   }
 
-  public abstract type: number;
+  /**
+   * Creates OrderNegotiationFields from JSON data
+   * @param json JSON object representing order negotiation fields
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OrderNegotiationFields {
+    if (!json || typeof json !== 'object') {
+      throw new Error('Invalid JSON input for OrderNegotiationFields');
+    }
 
-  public abstract length: bigint;
+    const variant = json.variant;
 
-  public abstract toJSON():
-    | IOrderNegotiationFieldsV0JSON
-    | IOrderNegotiationFieldsV1JSON;
+    switch (variant) {
+      case 'Single':
+        return SingleOrderNegotiationFields.fromJSON(json);
+      case 'Disjoint':
+        return DisjointOrderNegotiationFields.fromJSON(json);
+      default:
+        throw new Error(
+          `Unknown order negotiation fields variant: ${variant}. Must be 'Single' or 'Disjoint'`,
+        );
+    }
+  }
 
+  public abstract variant: 'Single' | 'Disjoint';
+  public abstract discriminator: number;
   public abstract serialize(): Buffer;
+  public abstract toJSON(): IOrderNegotiationFieldsJSON;
 }
 
 /**
- * OrderNegotiationFields V0 contains preferences of the accepter of a order
- * offer which are taken into account during DLC construction.
+ * Order negotiation fields for contract based on a single event (basic/empty).
  */
-export class OrderNegotiationFieldsV0
-  extends OrderNegotiationFields
-  implements IDlcMessage {
-  public static type = MessageType.OrderNegotiationFieldsV0;
-
+export class SingleOrderNegotiationFields extends OrderNegotiationFields {
   /**
-   * Deserializes an order_negotiation_fields_v0 message
-   * @param buf
+   * Creates a SingleOrderNegotiationFields from JSON data
+   * @param json JSON object representing single order negotiation fields
    */
-  public static deserialize(buf: Buffer): OrderNegotiationFieldsV0 {
-    const instance = new OrderNegotiationFieldsV0();
-    const reader = new BufferReader(buf);
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): SingleOrderNegotiationFields {
+    const instance = new SingleOrderNegotiationFields();
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
+    if (json.variant !== 'Single') {
+      throw new Error(
+        `Invalid variant for SingleOrderNegotiationFields: expected 'Single', got ${json.variant}`,
+      );
+    }
 
+    // Single order negotiation fields are currently empty/basic
     return instance;
   }
 
   /**
-   * The type for order_negotiation_fields_v0 message. order_negotiation_fields_v0 = 65334
+   * Deserializes single order negotiation fields
+   * @param buf
    */
-  public type = OrderNegotiationFieldsV0.type;
+  public static deserialize(buf: Buffer): SingleOrderNegotiationFields {
+    const instance = new SingleOrderNegotiationFields();
+    const reader = new BufferReader(buf);
 
-  public length: bigint;
+    reader.readBigSize(); // read discriminator (0)
+    // Single order negotiation fields are currently empty
+
+    return instance;
+  }
+
+  public variant: 'Single' = 'Single';
+  public discriminator = 0;
 
   /**
-   * Converts order_negotiation_fields_v0 to JSON
+   * Converts single order negotiation fields to JSON
    */
-  public toJSON(): IOrderNegotiationFieldsV0JSON {
+  public toJSON(): ISingleOrderNegotiationFieldsJSON {
     return {
-      type: this.type,
+      variant: this.variant,
     };
   }
 
   /**
-   * Serializes the order_negotiation_fields_v0 message into a Buffer
+   * Serializes the single order negotiation fields into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
-    writer.writeBigSize(0);
+    writer.writeBigSize(this.discriminator);
+    // Single order negotiation fields are currently empty
 
     return writer.toBuffer();
   }
 }
 
 /**
- * OrderNegotiationFields V1 contains preferences of the acceptor of a order
- * offer which are taken into account during DLC construction.
+ * Order negotiation fields for contract based on multiple events.
  */
-export class OrderNegotiationFieldsV1
-  extends OrderNegotiationFields
-  implements IDlcMessage {
-  public static type = MessageType.OrderNegotiationFieldsV1;
-
+export class DisjointOrderNegotiationFields extends OrderNegotiationFields {
   /**
-   * Deserializes an order_negotiation_fields_v1 message
-   * @param buf
+   * Creates a DisjointOrderNegotiationFields from JSON data
+   * @param json JSON object representing disjoint order negotiation fields
    */
-  public static deserialize(buf: Buffer): OrderNegotiationFieldsV1 {
-    const instance = new OrderNegotiationFieldsV1();
-    const reader = new BufferReader(buf);
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): DisjointOrderNegotiationFields {
+    const instance = new DisjointOrderNegotiationFields();
 
-    reader.readBigSize(); // read type
-    instance.length = reader.readBigSize();
-    const newBuf = reader.readBytes();
-    instance.orderOffer = OrderOffer.deserialize(newBuf);
+    if (json.variant !== 'Disjoint') {
+      throw new Error(
+        `Invalid variant for DisjointOrderNegotiationFields: expected 'Disjoint', got ${json.variant}`,
+      );
+    }
+
+    if (!json.orderOffer) {
+      throw new Error(
+        'DisjointOrderNegotiationFields requires orderOffer field',
+      );
+    }
+
+    instance.orderOffer = OrderOffer.fromJSON
+      ? OrderOffer.fromJSON(json.orderOffer)
+      : OrderOffer.deserialize(Buffer.from(json.orderOffer, 'hex'));
 
     return instance;
   }
 
   /**
-   * The type for order_negotiation_fields_v1 message. order_negotiation_fields_v1 = 65336
+   * Deserializes disjoint order negotiation fields
+   * @param buf
    */
-  public type = OrderNegotiationFieldsV1.type;
+  public static deserialize(buf: Buffer): DisjointOrderNegotiationFields {
+    const instance = new DisjointOrderNegotiationFields();
+    const reader = new BufferReader(buf);
 
-  public length: bigint;
+    reader.readBigSize(); // read discriminator (1)
+    const orderOfferLength = reader.readBigSize();
+    const orderOfferBuf = reader.readBytes(Number(orderOfferLength));
+    instance.orderOffer = OrderOffer.deserialize(orderOfferBuf);
 
+    return instance;
+  }
+
+  public variant: 'Disjoint' = 'Disjoint';
+  public discriminator = 1;
   public orderOffer: OrderOffer;
 
   /**
-   * Converts order_negotiation_fields_v1 to JSON
+   * Converts disjoint order negotiation fields to JSON
    */
-  public toJSON(): IOrderNegotiationFieldsV1JSON {
+  public toJSON(): IDisjointOrderNegotiationFieldsJSON {
     return {
-      type: this.type,
+      variant: this.variant,
       orderOffer: this.orderOffer.toJSON(),
     };
   }
 
   /**
-   * Serializes the order_negotiation_fields_v1 message into a Buffer
+   * Serializes the disjoint order negotiation fields into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
-    writer.writeBigSize(this.type);
+    writer.writeBigSize(this.discriminator);
 
-    const dataWriter = new BufferWriter();
-    dataWriter.writeBytes(this.orderOffer.serialize());
-
-    writer.writeBigSize(dataWriter.size);
-    writer.writeBytes(dataWriter.toBuffer());
+    const orderOfferData = this.orderOffer.serialize();
+    writer.writeBigSize(orderOfferData.length);
+    writer.writeBytes(orderOfferData);
 
     return writer.toBuffer();
   }
 }
 
-export interface IOrderNegotiationFieldsV0JSON {
-  type: number;
+export type IOrderNegotiationFieldsJSON =
+  | ISingleOrderNegotiationFieldsJSON
+  | IDisjointOrderNegotiationFieldsJSON;
+
+export interface ISingleOrderNegotiationFieldsJSON {
+  variant: 'Single';
 }
 
-export interface IOrderNegotiationFieldsV1JSON {
-  type: number;
+export interface IDisjointOrderNegotiationFieldsJSON {
+  variant: 'Disjoint';
   orderOffer: IOrderOfferJSON;
 }
+
+// Legacy exports for backward compatibility - map to new structure
+export const OrderNegotiationFieldsV0 = SingleOrderNegotiationFields; // V0 was basic/empty
+export const OrderNegotiationFieldsV1 = DisjointOrderNegotiationFields; // V1 had OrderOffer
+
+export type IOrderNegotiationFieldsV0JSON = ISingleOrderNegotiationFieldsJSON;
+export type IOrderNegotiationFieldsV1JSON = IDisjointOrderNegotiationFieldsJSON;

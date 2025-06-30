@@ -3,6 +3,7 @@ import sinon from 'sinon';
 
 export function createFakeLogger(): ILogger {
   const fake = sinon.createStubInstance(Logger);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fake.sub = createFakeLogger as any;
   return fake;
 }

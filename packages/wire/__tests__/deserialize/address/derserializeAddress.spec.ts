@@ -1,12 +1,12 @@
-import { BufferReader } from "@node-dlc/bufio";
-import { expect } from "chai";
-import { deserializeAddress as sut } from "../../../lib/deserialize/address/deserializeAddress";
+import { BufferReader } from '@node-dlc/bufio';
+import { expect } from 'chai';
 
-import { Address } from "../../../lib/domain/Address";
-import { AddressIPv4 } from "../../../lib/domain/AddressIPv4";
-import { AddressIPv6 } from "../../../lib/domain/AddressIPv6";
-import { AddressTor2 } from "../../../lib/domain/AddressTor2";
-import { AddressTor3 } from "../../../lib/domain/AddressTor3";
+import { deserializeAddress as sut } from '../../../lib/deserialize/address/deserializeAddress';
+import { Address } from '../../../lib/domain/Address';
+import { AddressIPv4 } from '../../../lib/domain/AddressIPv4';
+import { AddressIPv6 } from '../../../lib/domain/AddressIPv6';
+import { AddressTor2 } from '../../../lib/domain/AddressTor2';
+import { AddressTor3 } from '../../../lib/domain/AddressTor3';
 
 const tests: Array<[string, any, Address]> = [
   [
@@ -41,11 +41,11 @@ const tests: Array<[string, any, Address]> = [
   ],
 ]; // prettier-ignore
 
-describe("deserializeAddress", () => {
-    for (const [title, input, expected] of tests) {
-        it(title, () => {
-            const actual = sut.apply(this, input);
-            expect(actual).to.deep.equal(expected);
-        });
-    }
+describe('deserializeAddress', () => {
+  for (const [title, input, expected] of tests) {
+    it(title, () => {
+      const actual = sut.apply(this, input);
+      expect(actual).to.deep.equal(expected);
+    });
+  }
 });

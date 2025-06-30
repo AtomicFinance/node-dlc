@@ -6,5 +6,5 @@ Calculates a CRC32C checksum based on RFC3720.
 
 ```typescript
 const { crc32c } = require('@node-dlc/checksum');
-const checksum = crc32c(Buffer.from("hello")); // 2591144780
+const checksum = crc32c(Buffer.from('hello')); // 2591144780
 ```

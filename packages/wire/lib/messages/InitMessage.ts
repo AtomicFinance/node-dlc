@@ -80,7 +80,7 @@ export class InitMessage implements IWireMessage {
    * Serialize will construct a properly formatted message based on the
    * properties of the configured message.
    */
-  public serialize() {
+  public serialize(): Buffer {
     const writer = new BufferWriter();
 
     // write the type

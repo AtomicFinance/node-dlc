@@ -4,7 +4,8 @@
   "scripts": {
     "start": "cd packages/daemon; npm run start",
     "bootstrap": "lerna bootstrap",
-    "format": "prettier --check \"packages/**\" \"examples/**\"",
+    "format": "prettier --check \"packages/**\"",
+    "format:fix": "lerna run lint:fix && prettier --write \"packages/**\"",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint:fix",
     "clean": "lerna clean",
@@ -61,5 +62,8 @@
     "source-map-support": "^0.5.19",
     "ts-node": "^8.10.2",
     "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "json-bigint": "^1.0.0"
   }
 }

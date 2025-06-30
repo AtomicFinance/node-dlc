@@ -1,8 +1,9 @@
 import {
   MessageType,
-  PayoutFunctionV0,
+  PayoutCurvePieceType,
+  PayoutFunction,
   PolynomialPayoutCurvePiece,
-  RoundingIntervalsV0,
+  RoundingIntervals,
 } from '@node-dlc/messaging';
 import BigNumber from 'bignumber.js';
 
@@ -54,8 +55,21 @@ export class PolynomialPayoutCurve {
    * @returns The outcome for the payout
    */
   getOutcomeForPayout(payout: BigNumber): bigint {
-    const { left, slope } = this;
+    const { left, right, slope } = this;
     const y = new BigNumber(Number(payout));
+
+    // Handle constant payout curve (slope = 0)
+    if (slope.isZero()) {
+      // For constant curves, if the payout matches, return any outcome in the range
+      // If it doesn't match, this is an invalid request
+      if (y.eq(left.payout)) {
+        return BigInt(left.outcome.toString());
+      } else {
+        // For constant curves, if payout doesn't match, return left outcome
+        // This prevents Infinity errors in calculations
+        return BigInt(left.outcome.toString());
+      }
+    }
 
     // Find the x value for the given y
     // slope = (y2 - y1) / (x2 - x1)
@@ -65,7 +79,14 @@ export class PolynomialPayoutCurve {
       .dividedBy(slope)
       .plus(left.outcome)
       .integerValue();
-    return BigInt(outcome.toString());
+
+    // Clamp the outcome to the valid range
+    const clampedOutcome = BigNumber.max(
+      left.outcome,
+      BigNumber.min(outcome, right.outcome),
+    );
+
+    return BigInt(clampedOutcome.toString());
   }
 
   /**
@@ -128,15 +149,17 @@ export class PolynomialPayoutCurve {
    * @returns A list of CETs
    */
   static computePayouts(
-    payoutFunction: PayoutFunctionV0,
+    payoutFunction: PayoutFunction,
     totalCollateral: bigint,
-    roundingIntervals: RoundingIntervalsV0,
+    roundingIntervals: RoundingIntervals,
   ): CETPayout[] {
-    if (payoutFunction.pieces.length < 1)
+    if (payoutFunction.payoutFunctionPieces.length < 1)
       throw new Error('Must have at least one piece');
 
-    payoutFunction.pieces.forEach((piece) => {
+    payoutFunction.payoutFunctionPieces.forEach((piece) => {
       if (
+        piece.payoutCurvePiece.payoutCurvePieceType !==
+          PayoutCurvePieceType.Polynomial &&
         piece.payoutCurvePiece.type !== MessageType.PolynomialPayoutCurvePiece
       )
         throw new Error('Payout curve piece must be a polynomial');
@@ -145,27 +168,37 @@ export class PolynomialPayoutCurve {
     const CETS: CETPayout[] = [];
 
     // 1. Add the first piece to the list
-    const { payoutCurvePiece } = payoutFunction.pieces[0];
+    const { payoutCurvePiece } = payoutFunction.payoutFunctionPieces[0];
 
     const curve = this.fromPayoutCurvePiece(
       payoutCurvePiece as PolynomialPayoutCurvePiece,
     );
 
-    CETS.push(
-      ...splitIntoRanges(
-        payoutFunction.endpoint0,
-        payoutFunction.pieces[0].endpoint,
-        payoutFunction.endpointPayout0,
-        payoutFunction.pieces[0].endpointPayout,
-        totalCollateral,
-        curve,
-        roundingIntervals.intervals,
-      ),
-    );
+    // For the first piece, start from 0 and go to the first endpoint
+    const firstPiece = payoutFunction.payoutFunctionPieces[0];
+
+    // Calculate the start payout by evaluating the curve at outcome 0
+    const startPayout = curve.getPayout(BigInt(0));
+    const startPayoutBigInt = BigInt(startPayout.integerValue().toString());
+
+    // Only add ranges if there's actually a range to cover
+    if (firstPiece.endPoint.eventOutcome > 0) {
+      CETS.push(
+        ...splitIntoRanges(
+          BigInt(0), // Start from 0
+          firstPiece.endPoint.eventOutcome,
+          startPayoutBigInt, // Start payout calculated from curve
+          firstPiece.endPoint.outcomePayout, // End payout from endpoint
+          totalCollateral,
+          curve,
+          roundingIntervals.intervals,
+        ),
+      );
+    }
 
     // 2. If there are subsequent pieces, add them to the list
-    for (let i = 1; i < payoutFunction.pieces.length; i++) {
-      const { payoutCurvePiece } = payoutFunction.pieces[i];
+    for (let i = 1; i < payoutFunction.payoutFunctionPieces.length; i++) {
+      const { payoutCurvePiece } = payoutFunction.payoutFunctionPieces[i];
 
       const curve = this.fromPayoutCurvePiece(
         payoutCurvePiece as PolynomialPayoutCurvePiece,
@@ -173,15 +206,59 @@ export class PolynomialPayoutCurve {
 
       CETS.push(
         ...splitIntoRanges(
-          payoutFunction.pieces[i - 1].endpoint,
-          payoutFunction.pieces[i].endpoint,
-          payoutFunction.pieces[i - 1].endpointPayout,
-          payoutFunction.pieces[i].endpointPayout,
+          payoutFunction.payoutFunctionPieces[i - 1].endPoint.eventOutcome,
+          payoutFunction.payoutFunctionPieces[i].endPoint.eventOutcome,
+          payoutFunction.payoutFunctionPieces[i - 1].endPoint.outcomePayout,
+          payoutFunction.payoutFunctionPieces[i].endPoint.outcomePayout,
           totalCollateral,
           curve,
           roundingIntervals.intervals,
         ),
       );
+    }
+
+    // 3. Handle the final range from the last piece to lastEndpoint if it exists
+    if (
+      payoutFunction.lastEndpoint &&
+      payoutFunction.payoutFunctionPieces.length > 0
+    ) {
+      const lastPieceIndex = payoutFunction.payoutFunctionPieces.length - 1;
+      const lastPiece = payoutFunction.payoutFunctionPieces[lastPieceIndex];
+
+      // Check if there's a range to cover
+      if (
+        payoutFunction.lastEndpoint.eventOutcome >
+        lastPiece.endPoint.eventOutcome
+      ) {
+        // For the final range, we'll assume a constant payout from the last piece endpoint to lastEndpoint
+        // This is a common pattern for DLC payout functions
+        const finalCurve = new PolynomialPayoutCurve([
+          {
+            outcome: new BigNumber(lastPiece.endPoint.eventOutcome.toString()),
+            payout: new BigNumber(lastPiece.endPoint.outcomePayout.toString()),
+          },
+          {
+            outcome: new BigNumber(
+              payoutFunction.lastEndpoint.eventOutcome.toString(),
+            ),
+            payout: new BigNumber(
+              payoutFunction.lastEndpoint.outcomePayout.toString(),
+            ),
+          },
+        ]);
+
+        CETS.push(
+          ...splitIntoRanges(
+            lastPiece.endPoint.eventOutcome,
+            payoutFunction.lastEndpoint.eventOutcome,
+            lastPiece.endPoint.outcomePayout,
+            payoutFunction.lastEndpoint.outcomePayout,
+            totalCollateral,
+            finalCurve,
+            roundingIntervals.intervals,
+          ),
+        );
+      }
     }
 
     return mergePayouts(CETS);

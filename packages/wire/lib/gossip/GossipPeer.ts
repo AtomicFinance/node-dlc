@@ -143,7 +143,7 @@ export class GossipPeer extends Readable implements IPeer {
    * to ensure only a single read event occurs at a time.
    * @returns
    */
-  protected async _onPeerReadable() {
+  protected async _onPeerReadable(): Promise<void> {
     while (this._readState === ReadState.Ready) {
       this._readState = ReadState.Reading;
       const msg = this.peer.read() as IWireMessage;

@@ -1,11 +1,11 @@
-import { DlcTransactionsV0 } from '../messages/DlcTransactions';
+import { DlcTransactions } from '../messages/DlcTransactions';
 
 /**
  * Interface for storing, finding, and deleting dlc messages.
  */
 export interface IDlcStore {
-  findDlcTransactionsList(): Promise<DlcTransactionsV0[]>;
-  findDlcTransactions(contractId: Buffer): Promise<DlcTransactionsV0>;
-  saveDlcTransactions(dlcTransactions: DlcTransactionsV0): Promise<void>;
+  findDlcTransactionsList(): Promise<DlcTransactions[]>;
+  findDlcTransactions(contractId: Buffer): Promise<DlcTransactions>;
+  saveDlcTransactions(dlcTransactions: DlcTransactions): Promise<void>;
   deleteDlcTransactions(contractId: Buffer): Promise<void>;
 }

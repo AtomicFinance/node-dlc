@@ -1,10 +1,7 @@
 import { Value } from '@node-dlc/bitcoin';
-import { BufferReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
 import { BatchFundingGroup } from '../../lib';
-import { deserializeTlv } from '../../lib/serialize/deserializeTlv';
-import { getTlv } from '../../lib/serialize/getTlv';
 
 describe('BatchFundingGroup TLV', () => {
   it('should serialize and deserialize without contract ids', () => {

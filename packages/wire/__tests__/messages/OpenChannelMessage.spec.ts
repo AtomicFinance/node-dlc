@@ -1,7 +1,7 @@
+import { Value } from '@node-dlc/bitcoin';
 import * as crypto from '@node-dlc/crypto';
 import { expect } from 'chai';
-import { InitFeatureFlags } from '../../lib/flags/InitFeatureFlags';
-import { Value, Script } from '@node-dlc/bitcoin';
+
 import { OpenChannelMessage } from '../../lib/messages/OpenChannelMessage';
 
 describe('OpenChannelMessage', () => {
@@ -166,7 +166,7 @@ describe('OpenChannelMessage', () => {
       instance.upfrontShutdownScript = Buffer.concat([
         Buffer.from([0x00]),
         crypto.hash160(paymentBasePoint),
-      ]);
+      ] as any);
 
       expect(instance.serialize().toString("hex")).to.equal(
                 "0020" + // type
@@ -256,7 +256,10 @@ describe('OpenChannelMessage', () => {
       );
       expect(instance.announceChannel).to.equal(true);
       expect(instance.upfrontShutdownScript).to.deep.equal(
-        Buffer.concat([Buffer.from([0x00]), crypto.hash160(paymentBasePoint)]),
+        Buffer.concat([
+          Buffer.from([0x00]),
+          crypto.hash160(paymentBasePoint),
+        ] as any),
       );
     });
   });

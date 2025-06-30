@@ -23,7 +23,7 @@ export function hkdf(
   salt: Buffer = Buffer.alloc(0),
   info: Buffer = Buffer.alloc(0),
   hash = 'sha256',
-) {
+): Buffer {
   // extract step
   const prk = hmacHash(salt, ikm, hash);
 

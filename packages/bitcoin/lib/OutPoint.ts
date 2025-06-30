@@ -65,7 +65,7 @@ export class OutPoint implements ICloneable<OutPoint> {
    * Converts the outpoint to a human readable string in the format
    * [txid]:[voutidx]
    */
-  public toString() {
+  public toString(): string {
     return `${this.txid.toString(HashByteOrder.RPC)}:${this.outputIndex}`;
   }
 
@@ -73,6 +73,7 @@ export class OutPoint implements ICloneable<OutPoint> {
    * Converts the outpoint to a JSON object with the txid and index
    * tuple
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public toJSON() {
     return {
       txid: this.txid.toString(HashByteOrder.RPC),

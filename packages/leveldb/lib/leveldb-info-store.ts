@@ -3,7 +3,7 @@ import { DlcInfoV0 } from '@node-dlc/messaging';
 import { LeveldbBase } from './leveldb-base';
 
 enum Prefix {
-  DlcInfoV0 = 90,
+  DlcInfo = 90,
 }
 
 export type InfoValue =
@@ -16,7 +16,7 @@ export type InfoValue =
 
 export class LeveldbInfoStore extends LeveldbBase {
   public async findDlcInfo(): Promise<DlcInfoV0> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcInfoV0])]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcInfo])]);
     const raw = await this._safeGet<Buffer>(key);
     if (!raw) return;
     return DlcInfoV0.deserialize(raw);
@@ -24,12 +24,12 @@ export class LeveldbInfoStore extends LeveldbBase {
 
   public async saveDlcInfo(dlcInfo: DlcInfoV0): Promise<void> {
     const value = dlcInfo.serialize();
-    const key = Buffer.concat([Buffer.from([Prefix.DlcInfoV0])]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcInfo])]);
     await this._db.put(key, value);
   }
 
   public async deleteDlcInfo(): Promise<void> {
-    const key = Buffer.concat([Buffer.from([Prefix.DlcInfoV0])]);
+    const key = Buffer.concat([Buffer.from([Prefix.DlcInfo])]);
     await this._db.del(key);
   }
 

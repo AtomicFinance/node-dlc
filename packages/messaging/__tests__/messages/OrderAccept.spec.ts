@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
 import {
+  OrderAccept,
   OrderAcceptContainer,
-  OrderAcceptV0,
 } from '../../lib/messages/OrderAccept';
 import { OrderNegotiationFieldsV0 } from '../../lib/messages/OrderNegotiationFields';
 
@@ -19,17 +19,16 @@ describe('OrderAccept', () => {
 
   describe('serialize', () => {
     it('serializes', () => {
-      const instance = new OrderAcceptV0();
+      const instance = new OrderAccept();
 
       instance.tempOrderId = tempOrderId;
-      instance.negotiationFields = OrderNegotiationFieldsV0.deserialize(
-        Buffer.from('fdff3600', 'hex'),
-      );
+      instance.negotiationFields = new OrderNegotiationFieldsV0();
 
       expect(instance.serialize().toString("hex")).to.equal(
         "f534" + // type order_accept_v0
         "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_order_id
-        "fdff3600" // order_negotiation_fields
+        "01" + // has negotiation fields (0x01)
+        "00" // SingleOrderNegotiationFields discriminator (0x00)
       ); // prettier-ignore
     });
   });
@@ -39,30 +38,29 @@ describe('OrderAccept', () => {
       const buf = Buffer.from(
         "f534" + // type order_accept_v0
         "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_order_id
-        "fdff3600" // order_negotiation_fields
+        "01" + // has negotiation fields (0x01)
+        "00" // SingleOrderNegotiationFields discriminator (0x00)
         , "hex"
       ); // prettier-ignore
 
-      const instance = OrderAcceptV0.deserialize(buf);
+      const instance = OrderAccept.deserialize(buf);
 
       expect(instance.tempOrderId).to.deep.equal(tempOrderId);
       expect(instance.negotiationFields.serialize().toString('hex')).to.equal(
-        'fdff3600',
+        '00',
       );
     });
   });
 
   describe('OrderAcceptContainer', () => {
     it('should serialize and deserialize', () => {
-      const orderAccept = new OrderAcceptV0();
+      const orderAccept = new OrderAccept();
 
       orderAccept.tempOrderId = tempOrderId;
-      orderAccept.negotiationFields = OrderNegotiationFieldsV0.deserialize(
-        Buffer.from('fdff3600', 'hex'),
-      );
+      orderAccept.negotiationFields = new OrderNegotiationFieldsV0();
 
       // swap payout and change spk to differentiate between dlcoffers
-      const orderAccept2 = OrderAcceptV0.deserialize(orderAccept.serialize());
+      const orderAccept2 = OrderAccept.deserialize(orderAccept.serialize());
       orderAccept2.tempOrderId = tempOrderId2;
 
       const container = new OrderAcceptContainer();

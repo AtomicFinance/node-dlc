@@ -1,10 +1,11 @@
 // tslint:disable: no-unused-expression
 
-import { BitField } from '@node-dlc/common';
 import { OutPoint } from '@node-dlc/bitcoin';
+import { BitField } from '@node-dlc/common';
 import { ShortChannelId } from '@node-dlc/common';
 import { expect } from 'chai';
 import sinon from 'sinon';
+
 import { InitFeatureFlags } from '../../lib/flags/InitFeatureFlags';
 import { GossipManager, SyncState } from '../../lib/gossip/GossipManager';
 import { GossipMemoryStore } from '../../lib/gossip/GossipMemoryStore';

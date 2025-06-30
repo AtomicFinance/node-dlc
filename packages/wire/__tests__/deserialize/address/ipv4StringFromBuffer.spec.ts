@@ -1,5 +1,6 @@
-import { expect } from "chai";
-import { ipv4StringFromBuffer } from "../../../lib/deserialize/address/ipv4StringFromBuffer";
+import { expect } from 'chai';
+
+import { ipv4StringFromBuffer } from '../../../lib/deserialize/address/ipv4StringFromBuffer';
 
 const tests: Array<[string, Buffer, string]> = [
   [
@@ -19,11 +20,11 @@ const tests: Array<[string, Buffer, string]> = [
   ],
 ]; // prettier-ignore
 
-describe("ipv4StringFromBuffer", () => {
-    for (const [title, input, expected] of tests) {
-        it(title, () => {
-            const actual = ipv4StringFromBuffer(input);
-            expect(actual).to.equal(expected);
-        });
-    }
+describe('ipv4StringFromBuffer', () => {
+  for (const [title, input, expected] of tests) {
+    it(title, () => {
+      const actual = ipv4StringFromBuffer(input);
+      expect(actual).to.equal(expected);
+    });
+  }
 });

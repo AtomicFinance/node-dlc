@@ -4,40 +4,19 @@ import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
 import { MessageType } from '../MessageType';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class DlcTransactions {
-  public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readUInt16BE());
-
-    switch (type) {
-      case MessageType.DlcTransactionsV0:
-        return DlcTransactionsV0.deserialize(buf, parseCets);
-      default:
-        throw new Error(`Dlc Transactions type must be DlcTransactionsV0`);
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract toJSON(): IDlcTransactionsV0JSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
  * DlcTransactions message contains information about state of DLC
  * contract such as fundtx and closetx
  */
-export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
-  public static type = MessageType.DlcTransactionsV0;
+export class DlcTransactions implements IDlcMessage {
+  public static type = MessageType.DlcTransactions;
 
   /**
-   * Deserializes an offer_dlc_v0 message
+   * Deserializes a dlc_transactions message
    * @param buf
    */
-  public static deserialize(buf: Buffer, parseCets = true): DlcTransactionsV0 {
-    const instance = new DlcTransactionsV0();
+  public static deserialize(buf: Buffer, parseCets = true): DlcTransactions {
+    const instance = new DlcTransactions();
     const reader = new BufferReader(buf);
 
     reader.readUInt16BE(); // read type
@@ -94,9 +73,9 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   }
 
   /**
-   * The type for offer_dlc_v0 message. offer_dlc_v0 = 42778
+   * The type for dlc_transactions message. dlc_transactions = 61230
    */
-  public type = DlcTransactionsV0.type;
+  public type = DlcTransactions.type;
 
   public contractId: Buffer;
 
@@ -127,9 +106,9 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   public closeBroadcastHeight = 0;
 
   /**
-   * Converts dlc_transactions_v0 to JSON
+   * Converts dlc_transactions to JSON
    */
-  public toJSON(): IDlcTransactionsV0JSON {
+  public toJSON(): IDlcTransactionsJSON {
     return {
       type: this.type,
       contractId: this.contractId.toString('hex'),
@@ -153,7 +132,7 @@ export class DlcTransactionsV0 extends DlcTransactions implements IDlcMessage {
   }
 
   /**
-   * Serializes the dlc_transactions_v0 message into a Buffer
+   * Serializes the dlc_transactions message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -197,7 +176,7 @@ const closeTypeToStr = (closeType: CloseType): string => {
   }
 };
 
-export interface IDlcTransactionsV0JSON {
+export interface IDlcTransactionsJSON {
   type: number;
   contractId: string;
   fundTx: string;
@@ -228,3 +207,7 @@ export enum CloseType {
   RefundClose = 2,
   CooperativeClose = 3,
 }
+
+// Backward compatibility aliases
+export const DlcTransactionsV0 = DlcTransactions;
+export type IDlcTransactionsV0JSON = IDlcTransactionsJSON;

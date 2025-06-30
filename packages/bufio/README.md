@@ -10,7 +10,7 @@ npm install @node-dlc/bufio
 ```
 
 ```javascript
-const { BufferReader, BufferWriter } = require("@node-dlc/bufio");
+const { BufferReader, BufferWriter } = require('@node-dlc/bufio');
 
 // write arbitrary length data
 const writer = new BufferWriter();
