@@ -285,7 +285,7 @@ export class Script implements ICloneable<Script> {
    * data blocks or op_codes depending on the meaning of the bytes
    * @param stream
    */
-  public static parse(reader: StreamReader) {
+  public static parse(reader: StreamReader): Script {
     // read the length
     const len = reader.readVarInt();
 
@@ -399,7 +399,7 @@ export class Script implements ICloneable<Script> {
   /**
    * Returns a JSON serialization of the Script.
    */
-  public toJSON() {
+  public toJSON(): string {
     return this.toString();
   }
 

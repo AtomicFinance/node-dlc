@@ -112,6 +112,7 @@ export class DlcSign implements IDlcMessage {
    * @param fundingSigsJson JSON object representing funding signatures
    */
   private static parseFundingSignaturesFromJSON(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fundingSigsJson: any,
   ): FundingSignatures {
     const instance = new FundingSignatures();
@@ -122,6 +123,7 @@ export class DlcSign implements IDlcMessage {
     ) {
       const fundingSigs =
         fundingSigsJson.fundingSignatures || fundingSigsJson.funding_signatures;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       instance.witnessElements = fundingSigs.map((sig: any) =>
         (sig.witnessElements || sig.witness_elements || []).map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

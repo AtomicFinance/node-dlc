@@ -7,7 +7,9 @@ export function sleep(ms: number): Promise<void> {
  * @param value Value to convert to BigInt
  * @returns BigInt representation of the value, or BigInt(0) for null/undefined
  */
-export function toBigInt(value: any): bigint {
+export function toBigInt(
+  value: string | number | bigint | null | undefined,
+): bigint {
   if (value === null || value === undefined) return BigInt(0);
   if (typeof value === 'bigint') return value;
   if (typeof value === 'string') return BigInt(value);
@@ -20,6 +22,7 @@ export function toBigInt(value: any): bigint {
  * @param value BigInt value to convert
  * @returns Number if within safe range, otherwise returns the BigInt as-is for JSON serialization
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function bigIntToNumber(value: bigint): number | any {
   // For values within safe integer range, convert to number
   if (
@@ -29,5 +32,6 @@ export function bigIntToNumber(value: bigint): number | any {
     return Number(value);
   }
   // For larger values, preserve as BigInt (json-bigint will handle serialization)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return value as any;
 }

@@ -18,7 +18,7 @@ export class Value implements ICloneable<Value> {
    * equates to 0.00000001 bitcoin.
    * @param num
    */
-  public static fromSats(num: bigint | number) {
+  public static fromSats(num: bigint | number): Value {
     return new Value(BigInt(num) * BigInt(1e12));
   }
 
@@ -29,7 +29,7 @@ export class Value implements ICloneable<Value> {
    * eg: 123 millisatoshis equates to 0.00000000123 bitcoin
    * @param num
    */
-  public static fromMilliSats(num: bigint | number) {
+  public static fromMilliSats(num: bigint | number): Value {
     return new Value(BigInt(num) * BigInt(1e9));
   }
 
@@ -40,7 +40,7 @@ export class Value implements ICloneable<Value> {
    * eg: 123 microsatoshis equates to 0.00000000000123 bitcoin
    * @param num
    */
-  public static fromMicroSats(num: bigint | number) {
+  public static fromMicroSats(num: bigint | number): Value {
     return new Value(BigInt(num) * BigInt(1e6));
   }
 
@@ -51,7 +51,7 @@ export class Value implements ICloneable<Value> {
    * eg: 123 picosatoshis equates to 0.00000000000000000123 bitcoin
    * @param num
    */
-  public static fromPicoSats(num: bigint | number) {
+  public static fromPicoSats(num: bigint | number): Value {
     return new Value(BigInt(num));
   }
 

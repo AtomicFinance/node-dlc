@@ -74,7 +74,7 @@ export class GossipManager extends EventEmitter {
    * channels have closed), and finally emit all messages that
    * exist in the system.
    */
-  public async start() {
+  public async start(): Promise<void> {
     this.logger.info('starting gossip manager');
 
     // wait for chain sync to complete
@@ -102,7 +102,7 @@ export class GossipManager extends EventEmitter {
    * Adds a new peer to the GossipManager and subscribes to events that will
    * allow it to iteract with other sub-systems managed by the GossipManager.
    */
-  public addPeer(peer: Peer) {
+  public addPeer(peer: Peer): void {
     if (!this.started)
       throw new WireError(WireErrorCode.gossipManagerNotStarted);
 
@@ -117,7 +117,7 @@ export class GossipManager extends EventEmitter {
    * Removes the channel from storage by the gossip manager. This
    * will likely be called by a chain-monitoring service.
    */
-  public async removeChannel(scid: ShortChannelId) {
+  public async removeChannel(scid: ShortChannelId): Promise<void> {
     this.logger.debug('removing channel %s', scid.toString());
     await this.gossipStore.deleteChannelAnnouncement(scid);
   }
@@ -127,7 +127,7 @@ export class GossipManager extends EventEmitter {
    * likely be called by a chain-monitoring service.
    * @param outpoint
    */
-  public async removeChannelByOutpoint(outpoint: OutPoint) {
+  public async removeChannelByOutpoint(outpoint: OutPoint): Promise<void> {
     const chanAnn = await this.gossipStore.findChannelAnnouncementByOutpoint(
       outpoint,
     );

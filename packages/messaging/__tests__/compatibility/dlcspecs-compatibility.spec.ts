@@ -423,41 +423,6 @@ describe('DLC Ecosystem Compatibility Tests', () => {
 
   describe('Overall Ecosystem Compatibility Summary', () => {
     it('should provide comprehensive ecosystem compatibility metrics with version analysis', () => {
-      const reportLines = [
-        '🌐 DLC Ecosystem Test Coverage:',
-        `📁 DLCSpecs files: ${dlcSpecsFiles.length}`,
-        `📁 Rust-DLC files: ${rustDlcFiles.length}`,
-        `📊 Total test vectors: ${dlcSpecsFiles.length + rustDlcFiles.length}`,
-        '',
-        '🔍 Critical Discovery: Serialization Format Evolution',
-        '  📌 Test vectors use INLINE serialization format',
-        '  📌 Our implementation uses TLV (Type-Length-Value) format',
-        '  📌 Example difference in ContractInfo:',
-        '    • Test vector: [type][totalCollateral][contractDescriptor: inline][oracleInfo: inline]',
-        '    • Our format: [type][totalCollateral][contractDescriptor: TLV][oracleInfo: TLV]',
-        '  📌 Our implementation correctly follows dlcspecs PR #163 with rust-dlc compatibility',
-        '  📌 Test vectors appear to use older inline format',
-        '',
-        '✅ Protocol Version Analysis:',
-        '  • All test vectors include protocol_version field',
-        '  • No backward compatibility issues with protocol_version',
-        '  • Original hex confusion (a71a00...) was due to TLV format differences',
-        '',
-        '🎯 Key achievements:',
-        '  ✅ Identified exact serialization format differences',
-        '  ✅ Version compatibility detection implemented',
-        '  ✅ Comprehensive format analysis and debugging',
-        '  ✅ Property name standardization (cetAdaptorSignatures)',
-        '  ✅ Dynamic test vector discovery and processing',
-        '  ✅ Detailed failure reporting and root cause analysis',
-        '',
-        '🚀 Next Steps:',
-        '  • Implement TLV/inline format compatibility layer',
-        '  • Test rust-dlc CLI integration for current format validation',
-        '  • Generate modern test vectors with TLV format',
-        '  • Validate round-trip compatibility with latest rust-dlc',
-      ];
-
       expect(dlcSpecsFiles.length).to.be.greaterThan(
         0,
         'Should have dlcspecs test vectors',

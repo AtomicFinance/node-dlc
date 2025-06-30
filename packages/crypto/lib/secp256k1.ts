@@ -143,7 +143,7 @@ export function publicKeyTweakAdd(
   publicKey: Buffer,
   tweak: Buffer,
   compressed = true,
-) {
+): Buffer {
   return Buffer.from(secp256k1.publicKeyTweakAdd(publicKey, tweak, compressed));
 }
 
@@ -160,7 +160,7 @@ export function publicKeyTweakMul(
   publicKey: Buffer,
   tweak: Buffer,
   compressed = true,
-) {
+): Buffer {
   return Buffer.from(secp256k1.publicKeyTweakMul(publicKey, tweak, compressed));
 }
 

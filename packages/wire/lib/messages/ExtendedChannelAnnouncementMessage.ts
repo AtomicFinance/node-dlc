@@ -22,7 +22,9 @@ export class ExtendedChannelAnnouncementMessage extends ChannelAnnouncementMessa
    * Constructs a new ExtendedChannelAnnouncementMessage from the plain-jane
    * ChannelAnnouncementMessage
    */
-  public static fromMessage(msg: ChannelAnnouncementMessage) {
+  public static fromMessage(
+    msg: ChannelAnnouncementMessage,
+  ): ExtendedChannelAnnouncementMessage {
     const instance = new ExtendedChannelAnnouncementMessage();
     instance.bitcoinKey1 = msg.bitcoinKey1;
     instance.bitcoinKey2 = msg.bitcoinKey2;
@@ -101,7 +103,7 @@ export class ExtendedChannelAnnouncementMessage extends ChannelAnnouncementMessa
    */
   public capacity: bigint;
 
-  public serialize() {
+  public serialize(): Buffer {
     const chanAnnBuffer = super.serialize();
     const writer = new BufferWriter();
 

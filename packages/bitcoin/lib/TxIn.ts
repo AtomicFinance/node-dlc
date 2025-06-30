@@ -73,7 +73,7 @@ export class TxIn implements ICloneable<TxIn> {
    * Creates a string of the transaction input that includes all of the
    * properties.
    */
-  public toString() {
+  public toString(): string {
     return `prev=${this.outpoint.toString()}, scriptSig=${this.scriptSig.toString()}, sequence=${this.sequence.toString()}`; // prettier-ignore
   }
 
@@ -81,6 +81,7 @@ export class TxIn implements ICloneable<TxIn> {
    * Creates a JSON object of the transaction input that includes all
    * of the properties.
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public toJSON() {
     return {
       outpoint: this.outpoint.toJSON(),

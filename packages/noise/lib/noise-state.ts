@@ -169,7 +169,7 @@ export class NoiseState {
    *
    * @param m 50-byte message from responder's act1
    */
-  public initiatorAct2(m: Buffer) {
+  public initiatorAct2(m: Buffer): void {
     if (this.logger) this.logger.debug('initiator act2');
 
     // 1. read exactly 50 bytes off the stream
@@ -210,7 +210,7 @@ export class NoiseState {
    * was successful. The initiator transports its static public key
    * to the responder.
    */
-  public initiatorAct3() {
+  public initiatorAct3(): Buffer {
     if (this.logger) this.logger.debug('initiator act3');
 
     // 1. c = encryptWithAD(temp_k2, 1, h, lpk)
@@ -259,7 +259,7 @@ export class NoiseState {
    * validates that the initiator knows the receivers public key.
    * @param m 50-byte message sent by the initiator
    */
-  public receiveAct1(m: Buffer) {
+  public receiveAct1(m: Buffer): void {
     this._initialize(this.lpk);
 
     if (this.logger) this.logger.debug('receive act1');
@@ -334,7 +334,7 @@ export class NoiseState {
    * The receiver extracts the public key of the initiator.
    * @param m 66-byte message
    */
-  public receiveAct3(m: Buffer) {
+  public receiveAct3(m: Buffer): void {
     // 1. read exactly 66 bytes from the network buffer
     if (m.length !== 66) throw new Error('ACT3_READ_FAILED');
 
@@ -422,7 +422,7 @@ export class NoiseState {
    * Decrypts the message using the receiving key and nonce. The receiving
    * key is rotated every 1000 messages.
    */
-  public decryptMessage(c: Buffer) {
+  public decryptMessage(c: Buffer): Buffer {
     const m = ccpDecrypt(this.rk, this.rn, Buffer.alloc(0), c);
 
     if (this._incrementRecievingNonce() >= 1000) this._rotateRecievingKeys();

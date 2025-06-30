@@ -24,6 +24,7 @@ function getMessage(code: BitcoinErrorCode) {
 }
 
 export class BitcoinError extends Error {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   constructor(readonly code: BitcoinErrorCode, readonly data?: any) {
     super(getMessage(code));
   }

@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import util from 'util';
 
 import { LogLevel } from './log-level';
 import { ITransport } from './transport';
-import { ConsoleTransport } from './transports/console-transport';
 import { shouldLog } from './util';
 
 export interface ILogger {

@@ -44,13 +44,14 @@ export class Witness implements ICloneable<Witness> {
   /**
    * Returns the string of a piece of witness data
    */
-  public toString() {
+  public toString(): string {
     return this.data.toString('hex');
   }
 
   /**
    * Returns the string of a piece of witness data
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public toJSON() {
     return this.toString();
   }

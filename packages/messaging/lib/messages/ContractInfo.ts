@@ -38,6 +38,7 @@ export abstract class ContractInfo extends DlcMessage {
    * Creates a ContractInfo from JSON data (e.g., from test vectors)
    * @param json JSON object representing contract info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): ContractInfo {
     if (!json) {
       throw new Error('contractInfo is required');

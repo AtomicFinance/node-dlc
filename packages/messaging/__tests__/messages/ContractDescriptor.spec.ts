@@ -93,6 +93,7 @@ describe('ContractDescriptor', () => {
           { outcome: outcomeThree, localPayout: payoutThree },
         ];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const json = instance.toJSON() as any; // Cast to any to access the wrapped structure
 
         // Check that the JSON has the proper enum format structure
@@ -238,6 +239,7 @@ describe('ContractDescriptor', () => {
         ];
         instance.roundingIntervals = roundingIntervals;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const json = instance.toJSON() as any; // Cast to any to access the wrapped structure
 
         // Check that the JSON has the proper structure
