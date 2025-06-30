@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-06-30
+
+### 🚨 BREAKING CHANGES
+
+- **DLC Protocol Version 1**: Complete protocol overhaul with new serialization format
+- **Message Class Naming**: Removed V0 suffixes from all DLC message classes
+- **Incompatible with Previous Versions**: All DLC messages use new format incompatible with v0.x releases
+- **Type System Refactor**: Introduced new type enums (ContractInfoType, ContractDescriptorType, OracleInfoType)
+
+### 🚀 Major Features
+
+#### DLC Specifications Compliance (PR #163)
+- **Full rust-dlc Compatibility**: 100% compatibility with rust-dlc implementation
+- **Protocol Version 1**: Added `PROTOCOL_VERSION = 1` constant
+- **Enhanced Type System**: New discriminated union types for better type safety
+- **F64 Precision Class**: High-precision floating-point calculations for financial operations
+- **Standardized Properties**: Consistent naming across all message types
+
+#### Message System Overhaul
+- **New Message Formats**: Complete refactor of DLC message serialization
+- **TLV Compatibility**: Preserved forward compatibility with unknown TLV handling
+- **Enhanced Oracle Support**: Improved oracle message parsing and compatibility
+- **Simplified Class Names**: Cleaner naming convention without version suffixes
+
+### 🔧 Improvements
+
+- **TypeScript Type Safety**: Enhanced type checking with discriminated unions
+- **Code Quality**: Standardized formatting and removed duck typing patterns
+- **Test Coverage**: 171 passing internal tests with 24 new test vector files
+- **Cross-Language Testing**: Compatibility testing infrastructure with rust-dlc
+- **Defensive Programming**: Added error handling and validation throughout
+
+### 🐛 Bug Fixes
+
+- **Payout Calculations**: Improved accuracy in payout curve calculations
+- **Message Parsing**: Enhanced oracle message parsing compatibility
+- **BigInt Handling**: Consolidated BigInt helper functions
+- **Import Organization**: Cleaned up package imports and dependencies
+
+### 📦 Package Changes
+
+- **Messaging Package**: F64 class moved to messaging package for better organization
+- **Transport Updates**: Updated for new message format compatibility
+- **Storage Libraries**: Updated to handle new serialization format
+- **CLI Enhancements**: Improved rust-dlc CLI with oracle creation capabilities
+
+### 🧪 Testing
+
+- **Compatibility Tests**: Comprehensive testing against rust-dlc implementation
+- **Test Vector Updates**: New test files for protocol version 1 compliance
+- **Cross-Platform Testing**: Verified compatibility across different environments
+- **Increased Timeout**: Extended compatibility test timeouts for complex scenarios
+
+---
+
 ## [0.24.1] - 2025-06-09
 
 ### 🔧 Improvements

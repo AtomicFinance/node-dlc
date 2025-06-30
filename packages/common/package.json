@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/common",
-  "version": "0.24.1",
+  "version": "1.0.0",
   "description": "Common utilities and types for node-dlc",
   "keywords": [
     "dlc",
@@ -24,8 +24,8 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^0.24.1",
-    "@node-dlc/bufio": "^0.24.1"
+    "@node-dlc/bitcoin": "^1.0.0",
+    "@node-dlc/bufio": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9"
