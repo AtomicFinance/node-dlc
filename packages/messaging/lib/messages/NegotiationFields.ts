@@ -28,6 +28,7 @@ export abstract class NegotiationFields {
    * Creates a NegotiationFields from JSON data
    * @param json JSON object representing negotiation fields
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): NegotiationFields {
     if (!json || typeof json !== 'object') {
       throw new Error('Invalid JSON input for NegotiationFields');
@@ -61,6 +62,7 @@ export class SingleNegotiationFields extends NegotiationFields {
    * Creates a SingleNegotiationFields from JSON data
    * @param json JSON object representing single negotiation fields
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): SingleNegotiationFields {
     const instance = new SingleNegotiationFields();
 
@@ -134,6 +136,7 @@ export class DisjointNegotiationFields extends NegotiationFields {
    * Creates a DisjointNegotiationFields from JSON data
    * @param json JSON object representing disjoint negotiation fields
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): DisjointNegotiationFields {
     const instance = new DisjointNegotiationFields();
 
@@ -149,6 +152,7 @@ export class DisjointNegotiationFields extends NegotiationFields {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance.negotiationFields = json.negotiationFields.map((fieldJson: any) =>
       NegotiationFields.fromJSON(fieldJson),
     );

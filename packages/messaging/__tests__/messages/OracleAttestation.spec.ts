@@ -155,7 +155,6 @@ describe('OracleAttestation', () => {
     });
 
     describe('Lava attestation', () => {
-      let announcement: OracleAnnouncement;
       let instance: OracleAttestation;
 
       before(() => {
@@ -163,7 +162,7 @@ describe('OracleAttestation', () => {
           testVectors.lava.announcement,
           'hex',
         );
-        announcement = OracleAnnouncement.deserialize(announcementBuf);
+        OracleAnnouncement.deserialize(announcementBuf); // ensure announcement deserializes
         const attestationBuf = Buffer.from(testVectors.lava.attestation, 'hex');
         instance = OracleAttestation.deserialize(attestationBuf);
       });
@@ -199,7 +198,6 @@ describe('OracleAttestation', () => {
     });
 
     describe('rust-dlc enum oracle', () => {
-      let announcement: OracleAnnouncement;
       let instance: OracleAttestation;
 
       before(() => {
@@ -207,7 +205,7 @@ describe('OracleAttestation', () => {
           testVectors.rust_dlc_enum.announcement,
           'hex',
         );
-        announcement = OracleAnnouncement.deserialize(announcementBuf);
+        OracleAnnouncement.deserialize(announcementBuf); // ensure announcement deserializes
         const attestationBuf = Buffer.from(
           testVectors.rust_dlc_enum.attestation,
           'hex',

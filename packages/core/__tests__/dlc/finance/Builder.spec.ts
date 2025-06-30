@@ -12,7 +12,6 @@ import sinon from 'sinon';
 import {
   buildCoveredCallOrderOffer,
   buildCustomStrategyOrderOffer,
-  buildLinearOrderOffer,
   buildLongCallOrderOffer,
   buildLongPutOrderOffer,
   buildRoundingIntervalsFromIntervals,

@@ -196,7 +196,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
           oracleInfo: this.oracleInfo.toJSON(),
         },
       },
-    } as any;
+    };
   }
 
   /**
@@ -234,6 +234,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
    * Creates a DisjointContractInfo from JSON data
    * @param json JSON object representing disjoint contract info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): DisjointContractInfo {
     const instance = new DisjointContractInfo();
 
@@ -244,6 +245,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
     // Parse contract infos array
     const contractInfosData = json.contractInfos || json.contract_infos || [];
     instance.contractOraclePairs = contractInfosData.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (contractInfoData: any) => ({
         contractDescriptor: ContractDescriptor.fromJSON(
           contractInfoData.contractDescriptor ||
@@ -366,7 +368,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
           oracleInfo: pair.oracleInfo.toJSON(),
         })),
       },
-    } as any;
+    };
   }
 
   /**
@@ -412,21 +414,23 @@ interface IContractOraclePairJSON {
   oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
 }
 
+// Rust-dlc enum variant format for SingleContractInfo
 export interface ISingleContractInfoJSON {
-  type?: number; // Made optional for rust-dlc compatibility
-  contractInfoType?: ContractInfoType; // Made optional for rust-dlc compatibility
-  totalCollateral: number;
-  contractInfo: {
-    contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
-    oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
+  singleContractInfo: {
+    totalCollateral: number;
+    contractInfo: {
+      contractDescriptor: ContractDescriptorV0JSON | ContractDescriptorV1JSON;
+      oracleInfo: SingleOracleInfoJSON | MultiOracleInfoJSON;
+    };
   };
 }
 
+// Rust-dlc enum variant format for DisjointContractInfo
 export interface IDisjointContractInfoJSON {
-  type?: number; // Made optional for rust-dlc compatibility
-  contractInfoType?: ContractInfoType; // Made optional for rust-dlc compatibility
-  totalCollateral: number;
-  contractOraclePairs: IContractOraclePairJSON[];
+  disjointContractInfo: {
+    totalCollateral: number;
+    contractInfos: IContractOraclePairJSON[];
+  };
 }
 
 // Legacy type aliases for backward compatibility (same as the new interfaces)

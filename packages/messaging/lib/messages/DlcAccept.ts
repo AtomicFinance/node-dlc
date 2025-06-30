@@ -1,5 +1,5 @@
-import { Script, Sequence, Tx } from '@node-dlc/bitcoin';
-import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
+import { Script } from '@node-dlc/bitcoin';
+import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { hash160 } from '@node-dlc/crypto';
 import { BitcoinNetwork } from 'bitcoin-networks';
 import { address } from 'bitcoinjs-lib';
@@ -7,9 +7,9 @@ import secp256k1 from 'secp256k1';
 
 import { MessageType, PROTOCOL_VERSION } from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
-import { getTlv, skipTlv } from '../serialize/getTlv';
+import { getTlv } from '../serialize/getTlv';
 import { bigIntToNumber, toBigInt } from '../util';
-import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
+import { BatchFundingGroup } from './BatchFundingGroup';
 import {
   CetAdaptorSignatures,
   ICetAdaptorSignaturesJSON,
@@ -126,6 +126,7 @@ export class DlcAccept implements IDlcMessage {
    * @param fundingInputsJson Array of JSON objects representing funding inputs
    */
   private static parseFundingInputsFromJSON(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fundingInputsJson: any[],
   ): FundingInput[] {
     return fundingInputsJson.map((inputJson) => {
@@ -139,6 +140,7 @@ export class DlcAccept implements IDlcMessage {
    * @param cetSigsJson JSON object representing CET adaptor signatures
    */
   private static parseCetAdaptorSignaturesFromJSON(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cetSigsJson: any,
   ): CetAdaptorSignatures {
     const instance = new CetAdaptorSignatures();
@@ -150,6 +152,7 @@ export class DlcAccept implements IDlcMessage {
       const ecdsaSigs =
         cetSigsJson.ecdsaAdaptorSignatures ||
         cetSigsJson.ecdsa_adaptor_signatures;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       instance.sigs = ecdsaSigs.map((sig: any) => {
         // The test vectors use 'signature' field, but our internal format uses encryptedSig/dleqProof
         // Adaptor signatures have different format than regular ECDSA (65 bytes + 97 bytes)
@@ -170,6 +173,7 @@ export class DlcAccept implements IDlcMessage {
    * @param negotiationJson JSON object representing negotiation fields
    */
   private static parseNegotiationFieldsFromJSON(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     negotiationJson: any,
   ): NegotiationFields {
     return NegotiationFields.fromJSON(negotiationJson);

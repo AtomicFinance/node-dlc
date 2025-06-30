@@ -8,8 +8,6 @@ import {
   OracleAnnouncement,
   OracleEvent,
   OrderAccept,
-  OrderNegotiationFields,
-  OrderNegotiationFieldsV0,
   OrderOffer,
   SingleContractInfo,
   SingleOracleInfo,
@@ -86,10 +84,7 @@ describe('LeveldbOrderStore', () => {
     const orderAccept = new OrderAccept();
     orderAccept.tempOrderId = tempOrderId;
 
-    // Create negotiation fields V0 (simplest version)
-    const negotiationFields = new OrderNegotiationFieldsV0();
-    negotiationFields.length = BigInt(0); // V0 has empty content
-    orderAccept.negotiationFields = negotiationFields;
+    // negotiationFields is now optional - no need to set it for basic tests
 
     return orderAccept;
   }
@@ -108,9 +103,6 @@ describe('LeveldbOrderStore', () => {
 
   const orderAccept = createTestOrderAccept(tempOrderId);
   const orderAccept2 = createTestOrderAccept(tempOrderId2);
-
-  const orderAcceptHex = orderAccept.serialize();
-  const orderAcceptHex2 = orderAccept2.serialize();
 
   const orderMetadataId = Buffer.alloc(32, 0); // Placeholder for metadata ID
 

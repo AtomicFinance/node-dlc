@@ -128,21 +128,6 @@ export class F64 {
   }
 
   /**
-   * Write to BufferWriter
-   */
-  writeTo(writer: any): void {
-    writer.writeBytes(this._buffer);
-  }
-
-  /**
-   * Read from BufferReader
-   */
-  static readFrom(reader: any): F64 {
-    const buffer = reader.readBytes(8);
-    return new F64(buffer);
-  }
-
-  /**
    * Convert to JavaScript number
    * This may lose precision for very large or very precise values
    */

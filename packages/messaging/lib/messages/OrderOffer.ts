@@ -1,5 +1,4 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
-import { BitcoinNetwork } from 'bitcoin-networks';
 
 import { IOrderMetadataJSON } from '..';
 import { MessageType, PROTOCOL_VERSION } from '../MessageType';
@@ -141,7 +140,7 @@ export class OrderOffer implements IDlcMessage {
         case MessageType.OrderIrcInfoV0:
           instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
           break;
-        case MessageType.OrderPositionInfoV0:
+        case MessageType.OrderPositionInfo:
           instance.positionInfo = OrderPositionInfo.deserialize(buf);
           break;
         case MessageType.BatchFundingGroup:
@@ -357,7 +356,7 @@ export interface IOrderOfferJSON {
     | IOrderIrcInfoJSON
     | IOrderPositionInfoJSON
     | IBatchFundingGroupJSON
-    | any
+    | unknown
   )[];
 }
 

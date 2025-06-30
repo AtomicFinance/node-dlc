@@ -5,41 +5,18 @@ import { IDlcMessage } from './DlcMessage';
 
 export type DlcParty = 'offeror' | 'acceptor' | 'neither';
 
-export abstract class OrderPositionInfo {
-  public static deserialize(buf: Buffer): OrderPositionInfo {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.OrderPositionInfoV0:
-        return OrderPositionInfoV0.deserialize(buf);
-      default:
-        throw new Error(`Order cso info TLV type must be OrderPositionInfoV0`);
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract toJSON(): IOrderPositionInfoJSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
- * OrderCsoInfo message
+ * OrderPositionInfo message
  */
-export class OrderPositionInfoV0
-  extends OrderPositionInfo
-  implements IDlcMessage {
-  public static type = MessageType.OrderPositionInfoV0;
+export class OrderPositionInfo implements IDlcMessage {
+  public static type = MessageType.OrderPositionInfo;
 
   /**
-   * Deserializes an offer_dlc_v0 message
+   * Deserializes an OrderPositionInfo message
    * @param buf
    */
-  public static deserialize(buf: Buffer): OrderPositionInfoV0 {
-    const instance = new OrderPositionInfoV0();
+  public static deserialize(buf: Buffer): OrderPositionInfo {
+    const instance = new OrderPositionInfo();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -85,9 +62,9 @@ export class OrderPositionInfoV0
   }
 
   /**
-   * The type for order_metadata_v0 message. order_metadata_v0 = 62774
+   * The type for OrderPositionInfo message
    */
-  public type = OrderPositionInfoV0.type;
+  public type = OrderPositionInfo.type;
 
   public length: bigint;
 
@@ -106,7 +83,7 @@ export class OrderPositionInfoV0
   public extraPrecision = 0;
 
   /**
-   * Converts order_metadata_v0 to JSON
+   * Converts OrderPositionInfo to JSON
    */
   public toJSON(): IOrderPositionInfoJSON {
     return {
@@ -121,7 +98,7 @@ export class OrderPositionInfoV0
   }
 
   /**
-   * Serializes the oracle_event message into a Buffer
+   * Serializes the OrderPositionInfo message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();

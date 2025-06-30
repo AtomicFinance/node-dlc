@@ -22,14 +22,13 @@ describe('OrderAccept', () => {
       const instance = new OrderAccept();
 
       instance.tempOrderId = tempOrderId;
-      instance.negotiationFields = OrderNegotiationFieldsV0.deserialize(
-        Buffer.from('fdff3600', 'hex'),
-      );
+      instance.negotiationFields = new OrderNegotiationFieldsV0();
 
       expect(instance.serialize().toString("hex")).to.equal(
         "f534" + // type order_accept_v0
         "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_order_id
-        "fdff3600" // order_negotiation_fields
+        "01" + // has negotiation fields (0x01)
+        "00" // SingleOrderNegotiationFields discriminator (0x00)
       ); // prettier-ignore
     });
   });
@@ -39,7 +38,8 @@ describe('OrderAccept', () => {
       const buf = Buffer.from(
         "f534" + // type order_accept_v0
         "960fb5f7960382ac7e76f3e24eb6b00059b1e68632a946843c22e1f65fdf216a" + // temp_order_id
-        "fdff3600" // order_negotiation_fields
+        "01" + // has negotiation fields (0x01)
+        "00" // SingleOrderNegotiationFields discriminator (0x00)
         , "hex"
       ); // prettier-ignore
 
@@ -47,7 +47,7 @@ describe('OrderAccept', () => {
 
       expect(instance.tempOrderId).to.deep.equal(tempOrderId);
       expect(instance.negotiationFields.serialize().toString('hex')).to.equal(
-        'fdff3600',
+        '00',
       );
     });
   });
@@ -57,9 +57,7 @@ describe('OrderAccept', () => {
       const orderAccept = new OrderAccept();
 
       orderAccept.tempOrderId = tempOrderId;
-      orderAccept.negotiationFields = OrderNegotiationFieldsV0.deserialize(
-        Buffer.from('fdff3600', 'hex'),
-      );
+      orderAccept.negotiationFields = new OrderNegotiationFieldsV0();
 
       // swap payout and change spk to differentiate between dlcoffers
       const orderAccept2 = OrderAccept.deserialize(orderAccept.serialize());

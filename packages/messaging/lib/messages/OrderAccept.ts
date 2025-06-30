@@ -1,7 +1,6 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
-import { getTlv } from '../serialize/getTlv';
 import { IDlcMessage } from './DlcMessage';
 import {
   IOrderNegotiationFieldsV0JSON,
@@ -30,9 +29,11 @@ export class OrderAccept implements IDlcMessage {
       'hex',
     );
 
-    // Handle OrderNegotiationFields - will be parsed during deserialization if needed
-    instance.negotiationFields =
-      json.negotiationFields || json.negotiation_fields;
+    // Handle OrderNegotiationFields - optional field
+    if (json.negotiationFields || json.negotiation_fields) {
+      instance.negotiationFields =
+        json.negotiationFields || json.negotiation_fields;
+    }
 
     return instance;
   }
@@ -55,9 +56,17 @@ export class OrderAccept implements IDlcMessage {
     }
 
     instance.tempOrderId = reader.readBytes(32);
-    instance.negotiationFields = OrderNegotiationFields.deserialize(
-      getTlv(reader),
-    );
+
+    // Check if negotiation_fields is present
+    const hasNegotiationFields = reader.readUInt8();
+    if (hasNegotiationFields === 0x01) {
+      // Read the remaining bytes as negotiationFields (not TLV format)
+      const remainingLength = buf.length - reader.position;
+      const remainingBytes = reader.readBytes(remainingLength);
+      instance.negotiationFields = OrderNegotiationFields.deserialize(
+        remainingBytes,
+      );
+    }
 
     return instance;
   }
@@ -69,7 +78,7 @@ export class OrderAccept implements IDlcMessage {
 
   public tempOrderId: Buffer;
 
-  public negotiationFields: OrderNegotiationFields;
+  public negotiationFields?: OrderNegotiationFields;
 
   /**
    * Converts order_accept to JSON
@@ -78,7 +87,7 @@ export class OrderAccept implements IDlcMessage {
     return {
       type: this.type,
       tempOrderId: this.tempOrderId.toString('hex'),
-      negotiationFields: this.negotiationFields.toJSON(),
+      negotiationFields: this.negotiationFields?.toJSON(),
     };
   }
 
@@ -89,7 +98,14 @@ export class OrderAccept implements IDlcMessage {
     const writer = new BufferWriter();
     writer.writeUInt16BE(this.type);
     writer.writeBytes(this.tempOrderId);
-    writer.writeBytes(this.negotiationFields.serialize());
+
+    // negotiation_fields is optional
+    if (this.negotiationFields) {
+      writer.writeUInt8(0x01); // present
+      writer.writeBytes(this.negotiationFields.serialize());
+    } else {
+      writer.writeUInt8(0x00); // absent
+    }
 
     return writer.toBuffer();
   }
@@ -98,9 +114,8 @@ export class OrderAccept implements IDlcMessage {
 export interface IOrderAcceptJSON {
   type: number;
   tempOrderId: string;
-  negotiationFields:
-    | IOrderNegotiationFieldsV0JSON
-    | IOrderNegotiationFieldsV1JSON;
+  negotiationFields?: // Now optional
+  IOrderNegotiationFieldsV0JSON | IOrderNegotiationFieldsV1JSON;
 }
 
 export class OrderAcceptContainer {

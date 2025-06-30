@@ -143,8 +143,7 @@ export class EnumeratedDescriptor
           offerPayout: Number(outcome.localPayout), // Use offerPayout to match Rust
         })),
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    };
   }
 
   /**
@@ -265,7 +264,7 @@ export class NumericalDescriptor
         payoutFunction: this.payoutFunction.toJSON(),
         roundingIntervals: this.roundingIntervals.toJSON(),
       },
-    } as any;
+    };
   }
 
   /**
@@ -294,23 +293,23 @@ interface IOutcome {
   localPayout: bigint;
 }
 
-interface IOutcomeJSON {
-  outcome: string;
-  localPayout: number;
-}
-
+// Rust-dlc enum variant format for EnumeratedDescriptor
 export interface EnumeratedDescriptorJSON {
-  type?: number; // Made optional for rust-dlc compatibility
-  contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
-  outcomes: IOutcomeJSON[];
+  enumeratedContractDescriptor: {
+    payouts: Array<{
+      outcome: string;
+      offerPayout: number;
+    }>;
+  };
 }
 
+// Rust-dlc enum variant format for NumericalDescriptor
 export interface NumericalDescriptorJSON {
-  type?: number; // Made optional for rust-dlc compatibility
-  contractDescriptorType?: ContractDescriptorType; // Made optional for rust-dlc compatibility
-  numDigits: number;
-  payoutFunction: PayoutFunctionV0JSON;
-  roundingIntervals: IRoundingIntervalsJSON;
+  numericOutcomeContractDescriptor: {
+    numDigits: number;
+    payoutFunction: PayoutFunctionV0JSON;
+    roundingIntervals: IRoundingIntervalsJSON;
+  };
 }
 
 // Legacy interfaces for backward compatibility

@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 
-import { OrderPositionInfoV0 } from '../../lib/messages/OrderPositionInfo';
+import { OrderPositionInfo } from '../../lib/messages/OrderPositionInfo';
 
 describe('OrderPositionInfo', () => {
-  let instance: OrderPositionInfoV0;
+  let instance: OrderPositionInfo;
 
   beforeEach(() => {
-    instance = new OrderPositionInfoV0();
+    instance = new OrderPositionInfo();
     instance.shiftForFees = 'offeror';
     instance.fees = BigInt(10000);
     instance.instrumentName = 'BTC-24SEP23-23500-P';
@@ -21,7 +21,7 @@ describe('OrderPositionInfo', () => {
         'fdf53a2e010000000000002710134254432d323453455032332d32333530302d500000000005f5e1000100000000000186a00000',
         'hex',
       );
-      const result = OrderPositionInfoV0.deserialize(buf);
+      const result = OrderPositionInfo.deserialize(buf);
 
       expect(result.shiftForFees).to.equal('offeror');
       expect(result.fees).to.equal(BigInt(10000));
@@ -29,14 +29,14 @@ describe('OrderPositionInfo', () => {
 
     it('should throw an error for invalid shiftForFees value', () => {
       const buf = Buffer.from('fdf53a09030000000000002710', 'hex');
-      expect(() => OrderPositionInfoV0.deserialize(buf)).to.throw(
+      expect(() => OrderPositionInfo.deserialize(buf)).to.throw(
         'Invalid shift for fees value: 3',
       );
     });
 
     it('should deserialize with no instrument name or other parameters', () => {
       const buf = Buffer.from('fdf53a2e010000000000002710', 'hex');
-      const result = OrderPositionInfoV0.deserialize(buf);
+      const result = OrderPositionInfo.deserialize(buf);
 
       expect(result.shiftForFees).to.equal('offeror');
       expect(result.fees).to.equal(BigInt(10000));

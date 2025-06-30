@@ -67,6 +67,7 @@ export class DlcClose implements IDlcMessage {
         instance.fundingSignatures.witnessElements = sigData.fundingSignatures.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (sig: any) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             sig.witnessElements?.map((elem: any) => {
               const witness = new ScriptWitnessV0();
               witness.length =
@@ -80,6 +81,7 @@ export class DlcClose implements IDlcMessage {
         instance.fundingSignatures.witnessElements = sigData.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (sig: any) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             sig.witnessElements?.map((elem: any) => {
               const witness = new ScriptWitnessV0();
               witness.length =
@@ -246,7 +248,7 @@ export class DlcClose implements IDlcMessage {
       fundInputSerialId: bigIntToNumber(this.fundInputSerialId),
       fundingInputs: this.fundingInputs.map((input) => input.toJSON()),
       fundingSignatures: this.fundingSignatures.toJSON(),
-    } as any; // Allow different field names from interface
+    }; // Allow different field names from interface
   }
 
   /**
@@ -298,5 +300,6 @@ export interface IDlcCloseJSON {
   fundingInputs: IFundingInputJSON[];
   fundingSignatures: IFundingSignaturesJSON;
   serialized?: string; // Made optional - hex serialization for compatibility testing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tlvs?: any[]; // Made optional - for unknown TLVs
 }

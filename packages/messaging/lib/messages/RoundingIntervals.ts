@@ -20,6 +20,7 @@ export class RoundingIntervals implements IDlcMessage {
     const instance = new RoundingIntervals();
 
     const intervals = json.intervals || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance.intervals = intervals.map((interval: any) => ({
       beginInterval: toBigInt(
         interval.beginInterval || interval.begin_interval,

@@ -79,6 +79,7 @@ export class DlcSign implements IDlcMessage {
    * @param cetSigsJson JSON object representing CET adaptor signatures
    */
   private static parseCetAdaptorSignaturesFromJSON(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cetSigsJson: any,
   ): CetAdaptorSignatures {
     const instance = new CetAdaptorSignatures();
@@ -90,6 +91,7 @@ export class DlcSign implements IDlcMessage {
       const ecdsaSigs =
         cetSigsJson.ecdsaAdaptorSignatures ||
         cetSigsJson.ecdsa_adaptor_signatures;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       instance.sigs = ecdsaSigs.map((sig: any) => {
         // The test vectors use 'signature' field, but our internal format uses encryptedSig/dleqProof
         // For now, we'll parse the signature as encryptedSig and leave dleqProof empty
@@ -122,6 +124,7 @@ export class DlcSign implements IDlcMessage {
         fundingSigsJson.fundingSignatures || fundingSigsJson.funding_signatures;
       instance.witnessElements = fundingSigs.map((sig: any) =>
         (sig.witnessElements || sig.witness_elements || []).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (element: any) => {
             // Create a ScriptWitnessV0 instance for each witness element
             const witness = new ScriptWitnessV0();

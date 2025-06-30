@@ -6,7 +6,7 @@ import {
   BatchFundingGroup,
   OrderIrcInfoV0,
   OrderMetadataV0,
-  OrderPositionInfoV0,
+  OrderPositionInfo,
 } from '../../lib';
 import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
 import { SingleContractInfo } from '../../lib/messages/ContractInfo';
@@ -112,30 +112,6 @@ describe('DlcOffer', () => {
     'hex',
   );
 
-  // Use round-trip testing approach for new dlcspecs PR #163 format
-  function createTestDlcOfferHex(): Buffer {
-    const testInstance = new DlcOffer();
-    testInstance.protocolVersion = PROTOCOL_VERSION;
-    testInstance.contractFlags = contractFlags;
-    testInstance.chainHash = chainHash;
-    testInstance.temporaryContractId = temporaryContractId;
-    testInstance.contractInfo = createTestContractInfo();
-    testInstance.fundingPubkey = fundingPubkey;
-    testInstance.payoutSpk = payoutSpk;
-    testInstance.payoutSerialId = BigInt(11555292);
-    testInstance.offerCollateral = BigInt(99999999);
-    testInstance.fundingInputs = [FundingInput.deserialize(fundingInput)];
-    testInstance.changeSpk = changeSpk;
-    testInstance.changeSerialId = BigInt(2008045);
-    testInstance.fundOutputSerialId = BigInt(5411962);
-    testInstance.feeRatePerVb = BigInt(1);
-    testInstance.cetLocktime = 100;
-    testInstance.refundLocktime = 200;
-    return testInstance.serialize();
-  }
-
-  const dlcOfferHex = createTestDlcOfferHex();
-
   beforeEach(() => {
     instance = new DlcOffer();
     instance.protocolVersion = PROTOCOL_VERSION; // New field
@@ -185,7 +161,7 @@ describe('DlcOffer', () => {
       });
 
       it('serializes with positioninfo', () => {
-        const positionInfo = new OrderPositionInfoV0();
+        const positionInfo = new OrderPositionInfo();
         positionInfo.shiftForFees = 'acceptor';
         positionInfo.fees = BigInt(1000);
 
@@ -230,7 +206,7 @@ describe('DlcOffer', () => {
       });
 
       it('deserializes with positioninfo', () => {
-        const positionInfo = new OrderPositionInfoV0();
+        const positionInfo = new OrderPositionInfo();
         positionInfo.shiftForFees = 'acceptor';
         positionInfo.fees = BigInt(1000);
 
@@ -239,7 +215,7 @@ describe('DlcOffer', () => {
         const serialized = instance.serialize();
         const deserialized = DlcOffer.deserialize(serialized);
 
-        expect(deserialized.positionInfo).to.be.instanceof(OrderPositionInfoV0);
+        expect(deserialized.positionInfo).to.be.instanceof(OrderPositionInfo);
         expect(deserialized.positionInfo?.serialize()).to.deep.equal(
           positionInfo.serialize(),
         );
@@ -504,7 +480,7 @@ describe('DlcOffer', () => {
       ircInfo.nick = 'test-nick'; // Required property
       ircInfo.pubKey = Buffer.alloc(33); // Required property
 
-      const positionInfo = new OrderPositionInfoV0();
+      const positionInfo = new OrderPositionInfo();
       positionInfo.shiftForFees = 'acceptor';
       positionInfo.fees = BigInt(6930);
 

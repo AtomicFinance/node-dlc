@@ -21,6 +21,7 @@ export class PayoutFunction implements IDlcMessage {
    * Creates a PayoutFunction from JSON data
    * @param json JSON object representing a payout function
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): PayoutFunction {
     const instance = new PayoutFunction();
 
@@ -28,6 +29,7 @@ export class PayoutFunction implements IDlcMessage {
     const pieces =
       json.payoutFunctionPieces || json.payout_function_pieces || [];
     instance.payoutFunctionPieces = pieces.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (pieceJson: any, index: number) => {
         const piece = {
           endPoint: {

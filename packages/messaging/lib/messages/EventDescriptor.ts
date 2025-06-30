@@ -27,6 +27,7 @@ export abstract class EventDescriptor {
    * Creates an EventDescriptor from JSON data
    * @param json JSON object representing event descriptor
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): EventDescriptor {
     if (!json) {
       throw new Error('eventDescriptor is required');
@@ -70,6 +71,7 @@ export class EnumEventDescriptor
    * Creates an EnumEventDescriptor from JSON data
    * @param json JSON object representing an enum event descriptor
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): EnumEventDescriptor {
     const instance = new EnumEventDescriptor();
     instance.outcomes = json.outcomes || [];
@@ -156,6 +158,7 @@ export class DigitDecompositionEventDescriptor
    * Creates a DigitDecompositionEventDescriptor from JSON data
    * @param json JSON object representing digit decomposition event descriptor
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): DigitDecompositionEventDescriptor {
     const instance = new DigitDecompositionEventDescriptor();
     instance.base = json.base || 10;
@@ -238,7 +241,7 @@ export class DigitDecompositionEventDescriptor
         precision: this.precision,
         nbDigits: this.nbDigits,
       },
-    } as any;
+    };
   }
 
   /**
@@ -273,13 +276,15 @@ export interface IEnumEventDescriptorJSON {
   };
 }
 
+// Rust-dlc enum variant format for DigitDecompositionEventDescriptor
 export interface IDigitDecompositionEventDescriptorJSON {
-  type: number;
-  base: number;
-  isSigned: boolean;
-  unit: string;
-  precision: number;
-  nbDigits: number;
+  digitDecompositionEvent: {
+    base: number;
+    isSigned: boolean;
+    unit: string;
+    precision: number;
+    nbDigits: number;
+  };
 }
 
 // Legacy interface

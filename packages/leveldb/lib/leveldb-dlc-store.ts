@@ -2,6 +2,7 @@ import { OutPoint, Script } from '@node-dlc/bitcoin';
 import { BatchDlcTxBuilder, DlcTxBuilder } from '@node-dlc/core';
 import { sha256, xor } from '@node-dlc/crypto';
 import {
+  ContractInfoType,
   DisjointContractInfo,
   DlcAccept,
   DlcCancel,
@@ -10,7 +11,11 @@ import {
   DlcSign,
   DlcTransactions,
   FundingInput,
+  MessageType,
+  MultiOracleInfo,
+  OracleInfo,
   SingleContractInfo,
+  SingleOracleInfo,
 } from '@node-dlc/messaging';
 
 import { LeveldbBase } from './leveldb-base';
@@ -86,59 +91,31 @@ export class LeveldbDlcStore extends LeveldbBase {
       for await (const [key, value] of iterator) {
         if (key[0] === Prefix.DlcOffer) {
           const dlcOffer = DlcOffer.deserialize(value);
-          if (dlcOffer.contractInfo.type === SingleContractInfo.type) {
-            const oracleInfo = (dlcOffer.contractInfo as SingleContractInfo)
-              .oracleInfo;
-            // Handle both SingleOracleInfo and MultiOracleInfo
-            if ('announcement' in oracleInfo) {
-              // SingleOracleInfo
-              const singleOracleInfo = oracleInfo as any;
+
+          switch (dlcOffer.contractInfo.contractInfoType) {
+            case ContractInfoType.Single: {
+              const singleContractInfo = dlcOffer.contractInfo as SingleContractInfo;
               if (
-                singleOracleInfo.announcement.oracleEvent.eventId === eventId
-              ) {
-                results.push(dlcOffer);
-              }
-            } else if ('announcements' in oracleInfo) {
-              // MultiOracleInfo
-              const multiOracleInfo = oracleInfo as any;
-              if (
-                multiOracleInfo.announcements.some(
-                  (ann: any) => ann.oracleEvent.eventId === eventId,
+                this._checkOracleInfoForEventId(
+                  singleContractInfo.oracleInfo,
+                  eventId,
                 )
               ) {
                 results.push(dlcOffer);
               }
+              break;
             }
-          } else if (dlcOffer.contractInfo.type === DisjointContractInfo.type) {
-            (dlcOffer.contractInfo as DisjointContractInfo).contractOraclePairs.some(
-              (pair) => {
-                const oracleInfo = pair.oracleInfo;
-                // Handle both SingleOracleInfo and MultiOracleInfo
-                if ('announcement' in oracleInfo) {
-                  // SingleOracleInfo
-                  const singleOracleInfo = oracleInfo as any;
-                  if (
-                    singleOracleInfo.announcement.oracleEvent.eventId ===
-                    eventId
-                  ) {
-                    results.push(dlcOffer);
-                    return true;
-                  }
-                } else if ('announcements' in oracleInfo) {
-                  // MultiOracleInfo
-                  const multiOracleInfo = oracleInfo as any;
-                  if (
-                    multiOracleInfo.announcements.some(
-                      (ann: any) => ann.oracleEvent.eventId === eventId,
-                    )
-                  ) {
-                    results.push(dlcOffer);
-                    return true;
-                  }
-                }
-                return false;
-              },
-            );
+            case ContractInfoType.Disjoint: {
+              const disjointContractInfo = dlcOffer.contractInfo as DisjointContractInfo;
+              const hasMatchingEvent = disjointContractInfo.contractOraclePairs.some(
+                (pair) =>
+                  this._checkOracleInfoForEventId(pair.oracleInfo, eventId),
+              );
+              if (hasMatchingEvent) {
+                results.push(dlcOffer);
+              }
+              break;
+            }
           }
         }
       }
@@ -147,6 +124,26 @@ export class LeveldbDlcStore extends LeveldbBase {
     }
 
     return results;
+  }
+
+  private _checkOracleInfoForEventId(
+    oracleInfo: OracleInfo,
+    eventId: string,
+  ): boolean {
+    switch (oracleInfo.type) {
+      case MessageType.SingleOracleInfo: {
+        const singleOracleInfo = oracleInfo as SingleOracleInfo;
+        return singleOracleInfo.announcement.oracleEvent.eventId === eventId;
+      }
+      case MessageType.MultiOracleInfo: {
+        const multiOracleInfo = oracleInfo as MultiOracleInfo;
+        return multiOracleInfo.announcements.some(
+          (announcement) => announcement.oracleEvent.eventId === eventId,
+        );
+      }
+      default:
+        return false;
+    }
   }
 
   public async saveDlcOffer(dlcOffer: DlcOffer): Promise<void> {

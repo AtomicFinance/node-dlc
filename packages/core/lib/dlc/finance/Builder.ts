@@ -5,7 +5,7 @@ import {
   NumericalDescriptor,
   OracleAnnouncement,
   OrderOffer,
-  OrderPositionInfoV0,
+  OrderPositionInfo,
   PayoutFunction,
   RoundingIntervals,
   SingleContractInfo,
@@ -515,7 +515,7 @@ export const buildLinearOrderOffer = (
     network.name,
   );
 
-  const positionInfo = new OrderPositionInfoV0();
+  const positionInfo = new OrderPositionInfo();
   positionInfo.shiftForFees = shiftForFees;
   positionInfo.fees = shiftForFees === 'neither' ? BigInt(0) : fees.sats;
   orderOffer.positionInfo = positionInfo;
@@ -687,10 +687,10 @@ export const buildCustomStrategyOrderOffer = (
     fees,
   );
 
-  (orderOffer.positionInfo as OrderPositionInfoV0).contractSize =
+  (orderOffer.positionInfo as OrderPositionInfo).contractSize =
     contractSize.sats;
 
-  (orderOffer.positionInfo as OrderPositionInfoV0).instrumentName = ((orderOffer.contractInfo as SingleContractInfo)
+  (orderOffer.positionInfo as OrderPositionInfo).instrumentName = ((orderOffer.contractInfo as SingleContractInfo)
     .oracleInfo as SingleOracleInfo).announcement.oracleEvent.eventId;
 
   if (!skipValidation) orderOffer.validate();

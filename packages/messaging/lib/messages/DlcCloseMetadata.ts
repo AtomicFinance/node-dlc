@@ -1,9 +1,6 @@
 import { Tx } from '@node-dlc/bitcoin';
-import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 
 import { DlcAccept, DlcOffer, DlcTransactions } from '..';
-import { MessageType } from '../MessageType';
-import { IDlcMessage } from './DlcMessage';
 
 /**
  * DlcClose Metadata object contains information required for verifying DlcClose

@@ -14,7 +14,7 @@ export class LinkedList<T> {
    * @param T value
    * @returns {LinkedListNode}
    */
-  public add(value: T) {
+  public add(value: T): LinkedListNode<T> {
     const node = new LinkedListNode(value);
 
     // when empty list

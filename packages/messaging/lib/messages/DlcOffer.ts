@@ -207,7 +207,7 @@ export class DlcOffer implements IDlcMessage {
         case MessageType.OrderIrcInfoV0:
           instance.ircInfo = OrderIrcInfoV0.deserialize(buf);
           break;
-        case MessageType.OrderPositionInfoV0:
+        case MessageType.OrderPositionInfo:
           instance.positionInfo = OrderPositionInfo.deserialize(buf);
           break;
         case MessageType.BatchFundingGroup:
@@ -453,7 +453,7 @@ export class DlcOffer implements IDlcMessage {
       feeRatePerVb: bigIntToNumber(this.feeRatePerVb),
       cetLocktime: this.cetLocktime,
       refundLocktime: this.refundLocktime,
-    } as any; // Allow different field names from interface
+    }; // Allow different field names from interface
   }
 
   /**
@@ -537,7 +537,7 @@ export interface IDlcOfferJSON {
     | IOrderIrcInfoJSON
     | IOrderPositionInfoJSON
     | IBatchFundingGroupJSON
-    | any
+    | unknown
   )[]; // Made optional - for unknown TLVs
 }
 

@@ -188,7 +188,7 @@ export class SingleOracleInfo implements IDlcMessage {
       single: {
         oracleAnnouncement: this.announcement.toJSON(),
       },
-    } as any;
+    };
   }
 
   public serialize(): Buffer {
@@ -243,6 +243,7 @@ export class MultiOracleInfo implements IDlcMessage {
     // Parse oracle announcements using proper fromJSON method
     const announcements =
       json.oracleAnnouncements || json.oracle_announcements || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance.announcements = announcements.map((announcementJson: any) =>
       OracleAnnouncement.fromJSON(announcementJson),
     );
@@ -341,7 +342,7 @@ export class MultiOracleInfo implements IDlcMessage {
         oracleAnnouncements: this.announcements.map((a) => a.toJSON()),
         oracleParams: this.oracleParams?.toJSON(),
       },
-    } as any;
+    };
   }
 
   public serialize(): Buffer {
@@ -442,6 +443,7 @@ export abstract class OracleInfo implements IDlcMessage {
    * Creates an OracleInfo from JSON data (e.g., from test vectors)
    * @param json JSON object representing oracle info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): OracleInfo {
     if (!json) {
       throw new Error('oracleInfo is required');
@@ -490,6 +492,7 @@ export class OracleInfoV0 extends SingleOracleInfo {
    * Creates an OracleInfoV0 from JSON data (alias for SingleOracleInfo.fromJSON)
    * @param json JSON object representing oracle info
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): OracleInfoV0 {
     return SingleOracleInfo.fromJSON(json) as OracleInfoV0;
   }
@@ -503,16 +506,20 @@ export interface OracleParamsJSON {
   maximizeCoverage: boolean;
 }
 
+// Rust-dlc enum variant format for SingleOracleInfo
 export interface SingleOracleInfoJSON {
-  type?: number; // Made optional for rust-dlc compatibility
-  announcement: OracleAnnouncementJSON;
+  single: {
+    oracleAnnouncement: OracleAnnouncementJSON;
+  };
 }
 
+// Rust-dlc enum variant format for MultiOracleInfo
 export interface MultiOracleInfoJSON {
-  type?: number; // Made optional for rust-dlc compatibility
-  threshold: number;
-  announcements: OracleAnnouncementJSON[];
-  oracleParams?: OracleParamsJSON;
+  multi: {
+    threshold: number;
+    oracleAnnouncements: OracleAnnouncementJSON[];
+    oracleParams?: OracleParamsJSON;
+  };
 }
 
 // Backward compatibility type alias

@@ -1,15 +1,18 @@
 import { Value } from '@node-dlc/bitcoin';
 import {
-  ContractDescriptorV1,
+  ContractDescriptorType,
   ContractInfo,
-  ContractInfoV0,
-  DigitDecompositionEventDescriptorV0,
+  ContractInfoType,
+  DigitDecompositionEventDescriptor,
   MessageType,
+  MultiOracleInfo,
+  NumericalDescriptor,
   OrderPositionInfo,
-  OrderPositionInfoV0,
   PayoutCurvePieceType,
-  PayoutFunctionV0,
+  PayoutFunction,
   PolynomialPayoutCurvePiece,
+  SingleContractInfo,
+  SingleOracleInfo,
 } from '@node-dlc/messaging';
 import assert from 'assert';
 import Decimal from 'decimal.js';
@@ -250,58 +253,64 @@ export const getCsoInfoFromContractInfo = (
   _contractSize?: Value,
   csoVersion: 'v0' | 'v1' = 'v1',
 ): CsoInfo => {
-  if (_contractInfo.type !== MessageType.ContractInfoV0)
+  if (_contractInfo.contractInfoType !== ContractInfoType.Single)
     throw Error('Only ContractInfoV0 currently supported');
 
-  const contractInfo = _contractInfo as ContractInfoV0;
-  if (contractInfo.contractDescriptor.type !== MessageType.ContractDescriptorV1)
-    throw Error('Only ContractDescriptorV1 currently supported');
+  const contractInfo = _contractInfo as SingleContractInfo;
+  if (
+    contractInfo.contractDescriptor.contractDescriptorType !==
+    ContractDescriptorType.NumericOutcome
+  )
+    throw Error('Only Numeric Descriptor currently supported');
 
   const oracleInfo = contractInfo.oracleInfo;
 
   // Handle both SingleOracleInfo and MultiOracleInfo
   let eventMaturityEpoch: number;
-  let eventDescriptor: DigitDecompositionEventDescriptorV0;
+  let eventDescriptor: DigitDecompositionEventDescriptor;
 
-  if ('announcement' in oracleInfo) {
-    // SingleOracleInfo
-    const singleOracleInfo = oracleInfo as any;
-    eventMaturityEpoch =
-      singleOracleInfo.announcement.oracleEvent.eventMaturityEpoch;
-    eventDescriptor = singleOracleInfo.announcement.oracleEvent
-      .eventDescriptor as DigitDecompositionEventDescriptorV0;
+  switch (oracleInfo.type) {
+    case MessageType.SingleOracleInfo: {
+      const singleOracleInfo = oracleInfo as SingleOracleInfo;
+      eventMaturityEpoch =
+        singleOracleInfo.announcement.oracleEvent.eventMaturityEpoch;
+      eventDescriptor = singleOracleInfo.announcement.oracleEvent
+        .eventDescriptor as DigitDecompositionEventDescriptor;
 
-    if (
-      singleOracleInfo.announcement.oracleEvent.eventDescriptor.type !==
-      MessageType.DigitDecompositionEventDescriptorV0
-    )
-      throw Error(
-        'Only DigitDecompositionEventDescriptorV0 currently supported',
-      );
-  } else if ('announcements' in oracleInfo) {
-    // MultiOracleInfo
-    const multiOracleInfo = oracleInfo as any;
-    eventMaturityEpoch =
-      multiOracleInfo.announcements[0].oracleEvent.eventMaturityEpoch;
-    eventDescriptor = multiOracleInfo.announcements[0].oracleEvent
-      .eventDescriptor as DigitDecompositionEventDescriptorV0;
+      if (
+        singleOracleInfo.announcement.oracleEvent.eventDescriptor.type !==
+        MessageType.DigitDecompositionEventDescriptor
+      )
+        throw Error(
+          'Only DigitDecompositionEventDescriptor currently supported',
+        );
+      break;
+    }
+    case MessageType.MultiOracleInfo: {
+      const multiOracleInfo = oracleInfo as MultiOracleInfo;
+      eventMaturityEpoch =
+        multiOracleInfo.announcements[0].oracleEvent.eventMaturityEpoch;
+      eventDescriptor = multiOracleInfo.announcements[0].oracleEvent
+        .eventDescriptor as DigitDecompositionEventDescriptor;
 
-    if (
-      multiOracleInfo.announcements[0].oracleEvent.eventDescriptor.type !==
-      MessageType.DigitDecompositionEventDescriptorV0
-    )
-      throw Error(
-        'Only DigitDecompositionEventDescriptorV0 currently supported',
-      );
-  } else {
-    throw Error('Unknown oracle info type');
+      if (
+        multiOracleInfo.announcements[0].oracleEvent.eventDescriptor.type !==
+        MessageType.DigitDecompositionEventDescriptor
+      )
+        throw Error(
+          'Only DigitDecompositionEventDescriptor currently supported',
+        );
+      break;
+    }
+    default:
+      throw Error('Unknown oracle info type');
   }
 
-  const contractDescriptor = contractInfo.contractDescriptor as ContractDescriptorV1;
-  if (contractDescriptor.payoutFunction.type !== MessageType.PayoutFunctionV0)
-    throw Error('Only PayoutFunctionV0 currently supported');
+  const contractDescriptor = contractInfo.contractDescriptor as NumericalDescriptor;
+  if (contractDescriptor.payoutFunction.type !== MessageType.PayoutFunction)
+    throw Error('Only PayoutFunction currently supported');
 
-  const payoutFunction = contractDescriptor.payoutFunction as PayoutFunctionV0;
+  const payoutFunction = contractDescriptor.payoutFunction as PayoutFunction;
 
   validateCsoPayoutFunction(payoutFunction);
 
@@ -385,10 +394,10 @@ export const getCsoInfoFromOffer = (
   const contractSize = Value.zero();
 
   if (offer.positionInfo) {
-    shiftForFees = (offer.positionInfo as OrderPositionInfoV0).shiftForFees;
-    fees.add(Value.fromSats((offer.positionInfo as OrderPositionInfoV0).fees));
+    shiftForFees = (offer.positionInfo as OrderPositionInfo).shiftForFees;
+    fees.add(Value.fromSats((offer.positionInfo as OrderPositionInfo).fees));
     contractSize.add(
-      Value.fromSats((offer.positionInfo as OrderPositionInfoV0).contractSize),
+      Value.fromSats((offer.positionInfo as OrderPositionInfo).contractSize),
     );
   }
 
@@ -414,10 +423,10 @@ export const getCsoInfoFromOffer = (
  *
  * All PayoutCurvePieces should be type PolynomialPayoutCurvePieces
  *
- * @param {PayoutFunctionV0} payoutFunction
+ * @param {PayoutFunction} payoutFunction
  */
 export const validateCsoPayoutFunction = (
-  payoutFunction: PayoutFunctionV0,
+  payoutFunction: PayoutFunction,
 ): void => {
   assert(
     payoutFunction.payoutFunctionPieces.length === 3,

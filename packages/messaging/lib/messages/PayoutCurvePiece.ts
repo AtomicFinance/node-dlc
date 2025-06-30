@@ -28,6 +28,7 @@ export abstract class PayoutCurvePiece {
    * Creates a PayoutCurvePiece from JSON data
    * @param json JSON object representing a payout curve piece
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): PayoutCurvePiece {
     if (!json) {
       throw new Error('payoutCurvePiece is required');
@@ -74,10 +75,12 @@ export class PolynomialPayoutCurvePiece
    * Creates a PolynomialPayoutCurvePiece from JSON data
    * @param json JSON object representing a polynomial payout curve piece
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): PolynomialPayoutCurvePiece {
     const instance = new PolynomialPayoutCurvePiece();
 
     const points = json.payoutPoints || json.points || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     instance.points = points.map((point: any) => ({
       eventOutcome: toBigInt(point.eventOutcome || point.event_outcome),
       outcomePayout: toBigInt(point.outcomePayout || point.outcome_payout),
@@ -175,6 +178,7 @@ export class HyperbolaPayoutCurvePiece
    * Helper function to safely parse F64 values from JSON
    * Handles both number and string inputs for maximum precision
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   private static parseF64Value(value: any): F64 | null {
     // Check for basic null/undefined
     if (value === null || value === undefined) {
@@ -217,6 +221,7 @@ export class HyperbolaPayoutCurvePiece
    * Creates a HyperbolaPayoutCurvePiece from JSON data
    * @param json JSON object representing a hyperbola payout curve piece
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   public static fromJSON(json: any): HyperbolaPayoutCurvePiece | null {
     if (!json || typeof json !== 'object') return null;
 

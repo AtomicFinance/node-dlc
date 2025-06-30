@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tx } from '@node-dlc/bitcoin';
 import { Block, Transaction } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
