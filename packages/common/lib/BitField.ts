@@ -13,14 +13,14 @@ export class BitField<T extends string | number | bigint | boolean = number> {
   /**
    * Constructs a bitmask from a number
    */
-  public static fromNumber(value: number) {
+  public static fromNumber(value: number): BitField {
     return new BitField(BigInt(value));
   }
 
   /**
    * Constructs a bitmask from a buffer
    */
-  public static fromBuffer(value: Buffer) {
+  public static fromBuffer(value: Buffer): BitField {
     if (value.length === 0) return new BitField();
     return new BitField(BigInt('0x' + value.toString('hex')));
   }
@@ -35,15 +35,15 @@ export class BitField<T extends string | number | bigint | boolean = number> {
     return (this.value & (BigInt(1) << BigInt(bit))) > BigInt(0);
   }
 
-  public set(bit: T) {
+  public set(bit: T): void {
     this.value |= BigInt(1) << BigInt(bit);
   }
 
-  public unset(bit: T) {
+  public unset(bit: T): void {
     this.value &= ~(this.value & (BigInt(1) << BigInt(bit)));
   }
 
-  public toggle(bit: T) {
+  public toggle(bit: T): void {
     this.value ^= BigInt(1) << BigInt(bit);
   }
 
@@ -55,6 +55,7 @@ export class BitField<T extends string | number | bigint | boolean = number> {
     let bit = 0;
     let val = BigInt(1);
     while (val < this.value) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (this.value & val) bits.push(bit as any);
       bit += 1;
       val <<= BigInt(1);
@@ -99,11 +100,11 @@ export class BitField<T extends string | number | bigint | boolean = number> {
     return new BitField(this.value ^ bitfield.value);
   }
 
-  public toBigInt() {
+  public toBigInt(): bigint {
     return this.value;
   }
 
-  public toNumber() {
+  public toNumber(): number {
     return Number(this.value);
   }
 

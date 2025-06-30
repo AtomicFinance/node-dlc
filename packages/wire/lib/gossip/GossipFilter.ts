@@ -12,11 +12,11 @@ import { IGossipStore } from './GossipStore';
 import { IGossipFilterChainClient } from './IGossipFilterChainClient';
 
 export class Result<V, E> {
-  public static err<V, E>(error: E) {
+  public static err<V, E>(error: E): Result<V, E> {
     return new Result<V, E>(undefined, error);
   }
 
-  public static ok<V, E>(value: V) {
+  public static ok<V, E>(value: V): Result<V, E> {
     return new Result<V, E>(value);
   }
 

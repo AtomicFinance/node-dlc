@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as http from 'http';
 
 import { IBitcoindOptions } from './bitcoind-options';

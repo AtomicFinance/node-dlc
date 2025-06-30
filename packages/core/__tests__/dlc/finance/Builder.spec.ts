@@ -2,7 +2,7 @@ import { Value } from '@node-dlc/bitcoin';
 import {
   ContractDescriptorV1,
   ContractInfoV0,
-  OracleAnnouncementV0,
+  OracleAnnouncement,
   PayoutFunctionV0,
 } from '@node-dlc/messaging';
 import { BitcoinNetworks } from 'bitcoin-networks';
@@ -18,7 +18,7 @@ import {
   buildShortPutOrderOffer,
   computeRoundingModulus,
   UNIT_MULTIPLIER,
-} from '../../../lib';
+} from '../../../lib/dlc/finance/Builder';
 
 describe('OrderOffer Builder', () => {
   describe('buildCoveredCallOrderOffer', () => {
@@ -32,7 +32,7 @@ describe('OrderOffer Builder', () => {
       'hex',
     );
 
-    const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+    const oracleAnnouncement = OracleAnnouncement.deserialize(
       oracleAnnouncementBuf,
     );
 
@@ -142,7 +142,7 @@ describe('OrderOffer Builder', () => {
       'hex',
     );
 
-    const oracleAnnouncement = OracleAnnouncementV0.deserialize(
+    const oracleAnnouncement = OracleAnnouncement.deserialize(
       oracleAnnouncementBuf,
     );
 
@@ -172,7 +172,7 @@ describe('OrderOffer Builder', () => {
 
         const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
           .contractDescriptor as ContractDescriptorV1)
-          .payoutFunction as PayoutFunctionV0).pieces;
+          .payoutFunction as PayoutFunctionV0).payoutFunctionPieces;
 
         expect(() => orderOffer.validate()).to.not.throw(Error);
         expect(orderOffer.contractInfo.totalCollateral).to.equal(
@@ -181,20 +181,22 @@ describe('OrderOffer Builder', () => {
         expect(orderOffer.offerCollateralSatoshis).to.equal(
           contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
         );
-        expect(payoutCurvePieces[0].endpoint).to.equal(
+        expect(payoutCurvePieces[0].endPoint.eventOutcome).to.equal(
           (defaultContractSize.sats - maxLoss.sats) /
             BigInt(UNIT_MULTIPLIER[unit]),
         );
-        expect(payoutCurvePieces[1].endpoint).to.equal(
+        expect(payoutCurvePieces[1].endPoint.eventOutcome).to.equal(
           (defaultContractSize.sats + maxGain.sats) /
             BigInt(UNIT_MULTIPLIER[unit]),
         );
-        expect(payoutCurvePieces[0].endpointPayout).to.equal(
+        expect(payoutCurvePieces[0].endPoint.outcomePayout).to.equal(
           contractSize.sats -
             (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
             (maxGain.sats * contractSize.sats) / BigInt(1e8),
         );
-        expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+        expect(payoutCurvePieces[1].endPoint.outcomePayout).to.equal(
+          contractSize.sats,
+        );
       });
     }
 
@@ -227,7 +229,7 @@ describe('OrderOffer Builder', () => {
 
       const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
         .contractDescriptor as ContractDescriptorV1)
-        .payoutFunction as PayoutFunctionV0).pieces;
+        .payoutFunction as PayoutFunctionV0).payoutFunctionPieces;
 
       expect(() => orderOffer.validate()).to.not.throw(Error);
       expect(orderOffer.contractInfo.totalCollateral).to.equal(
@@ -236,20 +238,22 @@ describe('OrderOffer Builder', () => {
       expect(orderOffer.offerCollateralSatoshis).to.equal(
         contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
       );
-      expect(payoutCurvePieces[0].endpoint).to.equal(
+      expect(payoutCurvePieces[0].endPoint.eventOutcome).to.equal(
         (defaultContractSize.sats - maxLoss.sats + offerFees.sats) /
           BigInt(UNIT_MULTIPLIER[unit]),
       );
-      expect(payoutCurvePieces[1].endpoint).to.equal(
+      expect(payoutCurvePieces[1].endPoint.eventOutcome).to.equal(
         (defaultContractSize.sats + maxGain.sats + offerFees.sats) /
           BigInt(UNIT_MULTIPLIER[unit]),
       );
-      expect(payoutCurvePieces[0].endpointPayout).to.equal(
+      expect(payoutCurvePieces[0].endPoint.outcomePayout).to.equal(
         contractSize.sats -
           (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
           (maxGain.sats * contractSize.sats) / BigInt(1e8),
       );
-      expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+      expect(payoutCurvePieces[1].endPoint.outcomePayout).to.equal(
+        contractSize.sats,
+      );
     });
 
     it('should build a CSO OrderOffer and shift the payout curve correctly for acceptor fees', () => {
@@ -281,7 +285,7 @@ describe('OrderOffer Builder', () => {
 
       const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
         .contractDescriptor as ContractDescriptorV1)
-        .payoutFunction as PayoutFunctionV0).pieces;
+        .payoutFunction as PayoutFunctionV0).payoutFunctionPieces;
 
       expect(() => orderOffer.validate()).to.not.throw(Error);
       expect(orderOffer.contractInfo.totalCollateral).to.equal(
@@ -290,20 +294,22 @@ describe('OrderOffer Builder', () => {
       expect(orderOffer.offerCollateralSatoshis).to.equal(
         contractSize.sats - (contractSize.sats * maxGain.sats) / BigInt(1e8),
       );
-      expect(payoutCurvePieces[0].endpoint).to.equal(
+      expect(payoutCurvePieces[0].endPoint.eventOutcome).to.equal(
         (defaultContractSize.sats - maxLoss.sats - acceptFees.sats) /
           BigInt(UNIT_MULTIPLIER[unit]),
       );
-      expect(payoutCurvePieces[1].endpoint).to.equal(
+      expect(payoutCurvePieces[1].endPoint.eventOutcome).to.equal(
         (defaultContractSize.sats + maxGain.sats - acceptFees.sats) /
           BigInt(UNIT_MULTIPLIER[unit]),
       );
-      expect(payoutCurvePieces[0].endpointPayout).to.equal(
+      expect(payoutCurvePieces[0].endPoint.outcomePayout).to.equal(
         contractSize.sats -
           (maxLoss.sats * contractSize.sats) / BigInt(1e8) -
           (maxGain.sats * contractSize.sats) / BigInt(1e8),
       );
-      expect(payoutCurvePieces[1].endpointPayout).to.equal(contractSize.sats);
+      expect(payoutCurvePieces[1].endPoint.outcomePayout).to.equal(
+        contractSize.sats,
+      );
     });
 
     it('should fail to build a CSO OrderOffer with contractSize 0', () => {

@@ -2,46 +2,67 @@ import { Sequence, Tx } from '@node-dlc/bitcoin';
 import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
+import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
-export abstract class FundingInput {
-  public static deserialize(buf: Buffer): FundingInputV0 {
-    const reader = new BufferReader(buf);
-
-    const type = Number(reader.readBigSize());
-
-    switch (type) {
-      case MessageType.FundingInputV0:
-        return FundingInputV0.deserialize(buf);
-      default:
-        throw new Error(
-          `FundingInput function TLV type must be FundingInputV0`,
-        );
-    }
-  }
-
-  public abstract type: number;
-
-  public abstract length: bigint;
-
-  public abstract toJSON(): IFundingInputV0JSON;
-
-  public abstract serialize(): Buffer;
-}
-
 /**
- * FundingInput V0 contains information about a specific input to be used
+ * FundingInput contains information about a specific input to be used
  * in a funding transaction, as well as its corresponding on-chain UTXO.
+ * Matches rust-dlc FundingInput struct.
  */
-export class FundingInputV0 extends FundingInput implements IDlcMessage {
-  public static type = MessageType.FundingInputV0;
+export class FundingInput implements IDlcMessage {
+  public static type = MessageType.FundingInput;
 
   /**
-   * Deserializes an funding_input_v0 message
+   * Creates a FundingInput from JSON data (e.g., from test vectors)
+   * @param json JSON object representing funding input
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): FundingInput {
+    const instance = new FundingInput();
+
+    instance.inputSerialId = toBigInt(
+      json.inputSerialId || json.input_serial_id,
+    );
+
+    // Parse previous transaction
+    const prevTxHex = json.prevTx || json.prev_tx;
+    if (prevTxHex) {
+      instance.prevTx = Tx.decode(
+        StreamReader.fromBuffer(Buffer.from(prevTxHex, 'hex')),
+      );
+    } else {
+      // Create a minimal transaction for test purposes
+      // TODO: This should be properly implemented when full test vector support is needed
+      const writer = new BufferWriter();
+      writer.writeUInt32BE(2); // version
+      writer.writeUInt8(0); // input count
+      writer.writeUInt8(1); // output count
+      writer.writeUInt64BE(BigInt(100000000)); // output value
+      writer.writeUInt8(25); // script length
+      writer.writeBytes(Buffer.alloc(25)); // script
+      writer.writeUInt32BE(0); // locktime
+
+      const txBytes = writer.toBuffer();
+      instance.prevTx = Tx.decode(StreamReader.fromBuffer(txBytes));
+    }
+
+    instance.prevTxVout = json.prevTxVout || json.prev_tx_vout || 0;
+    instance.sequence = new Sequence(json.sequence || 0xffffffff);
+    instance.maxWitnessLen = json.maxWitnessLen || json.max_witness_len || 108;
+
+    const redeemScript = json.redeemScript || json.redeem_script || '';
+    instance.redeemScript = Buffer.from(redeemScript, 'hex');
+
+    return instance;
+  }
+
+  /**
+   * Deserializes a funding_input message
    * @param buf
    */
-  public static deserialize(buf: Buffer): FundingInputV0 {
-    const instance = new FundingInputV0();
+  public static deserialize(buf: Buffer): FundingInput {
+    const instance = new FundingInput();
     const reader = new BufferReader(buf);
 
     reader.readBigSize(); // read type
@@ -52,7 +73,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
       StreamReader.fromBuffer(reader.readBytes(prevTxLen)),
     );
     instance.prevTxVout = reader.readUInt32BE();
-    instance.sequence = new Sequence(reader.readUInt32LE());
+    instance.sequence = new Sequence(reader.readUInt32BE());
     instance.maxWitnessLen = reader.readUInt16BE();
     const redeemScriptLen = reader.readUInt16BE();
     instance.redeemScript = reader.readBytes(redeemScriptLen);
@@ -61,9 +82,38 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * The type for funding_input_v0 message. funding_input_v0 = 42772
+   * Deserializes a funding_input message without TLV wrapper (for use in DlcOffer)
+   * This matches rust-dlc behavior where FundingInput is in a vector without individual TLV wrappers
+   * @param buf
    */
-  public type = FundingInputV0.type;
+  public static deserializeBody(buf: Buffer): FundingInput {
+    const instance = new FundingInput();
+    const reader = new BufferReader(buf);
+
+    // No TLV type/length to read - funding input body is serialized directly
+    instance.inputSerialId = reader.readUInt64BE();
+
+    // Read prev_tx with BigSize length (to match rust-dlc)
+    const prevTxLen = Number(reader.readBigSize());
+    instance.prevTx = Tx.decode(
+      StreamReader.fromBuffer(reader.readBytes(prevTxLen)),
+    );
+
+    instance.prevTxVout = reader.readUInt32BE();
+    instance.sequence = new Sequence(reader.readUInt32BE());
+    instance.maxWitnessLen = reader.readUInt16BE();
+
+    // Test: Read redeem_script with simple u16 length (to match rust-bitcoin ScriptBuf)
+    const redeemScriptLen = reader.readUInt16BE();
+    instance.redeemScript = reader.readBytes(redeemScriptLen);
+
+    return instance;
+  }
+
+  /**
+   * The type for funding_input message. funding_input = 42772
+   */
+  public type = FundingInput.type;
 
   public length: bigint;
 
@@ -98,12 +148,11 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Converts funding_input_v0 to JSON
+   * Converts funding_input to JSON (canonical rust-dlc format)
    */
-  public toJSON(): IFundingInputV0JSON {
+  public toJSON(): IFundingInputJSON {
     return {
-      type: this.type,
-      inputSerialId: Number(this.inputSerialId),
+      inputSerialId: bigIntToNumber(this.inputSerialId),
       prevTx: this.prevTx.serialize().toString('hex'),
       prevTxVout: this.prevTxVout,
       sequence: this.sequence.value,
@@ -113,7 +162,7 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
   }
 
   /**
-   * Serializes the funding_input_v0 message into a Buffer
+   * Serializes the funding_input message into a Buffer
    */
   public serialize(): Buffer {
     const writer = new BufferWriter();
@@ -134,10 +183,30 @@ export class FundingInputV0 extends FundingInput implements IDlcMessage {
 
     return writer.toBuffer();
   }
+
+  public serializeBody(): Buffer {
+    // Serialize funding input body without TLV wrapper (for embedding in DlcOffer)
+    // This matches rust-dlc behavior where FundingInput.write() doesn't add type_id
+    const writer = new BufferWriter();
+    writer.writeUInt64BE(this.inputSerialId);
+
+    // Use BigSize for prev_tx length to match rust-dlc (prev_tx, vec)
+    writer.writeBigSize(this.prevTx.serialize().length);
+    writer.writeBytes(this.prevTx.serialize());
+
+    writer.writeUInt32BE(this.prevTxVout);
+    writer.writeUInt32BE(this.sequence.value);
+    writer.writeUInt16BE(this.maxWitnessLen);
+
+    // Test: Use simple u16 length for redeem_script to match rust-bitcoin ScriptBuf
+    writer.writeUInt16BE(this.redeemScript.length);
+    writer.writeBytes(this.redeemScript);
+
+    return writer.toBuffer();
+  }
 }
 
-export interface IFundingInputV0JSON {
-  type: number;
+export interface IFundingInputJSON {
   inputSerialId: number;
   prevTx: string;
   prevTxVout: number;

@@ -348,7 +348,7 @@ export class NoiseSocket extends Duplex {
   }
 
   // tslint:disable-next-line: member-ordering
-  public _read() {
+  public _read(): void {
     if (this._handshakeState !== HANDSHAKE_STATE.READY) {
       return;
     }
@@ -366,12 +366,16 @@ export class NoiseSocket extends Duplex {
   }
 
   // tslint:disable-next-line: member-ordering
-  public _write(data: Buffer, encoding: string, cb: (err: Error) => void) {
+  public _write(
+    data: Buffer,
+    encoding: string,
+    cb: (err: Error) => void,
+  ): void {
     const c = this._noiseState.encryptMessage(data);
     this._socket.write(c, cb);
   }
 
-  public _final() {
+  public _final(): void {
     //
   }
 }

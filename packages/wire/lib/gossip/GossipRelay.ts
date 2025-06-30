@@ -104,7 +104,7 @@ export class GossipRelay {
    * Starts relay to peers. This enables messages to be enqueued and
    * periodically sent to the peers.
    */
-  public start() {
+  public start(): void {
     if (this._state === GossipRelayState.Active) return;
     this.logger.info('starting gossip relay for all peers');
     this._state = GossipRelayState.Active;
@@ -115,7 +115,7 @@ export class GossipRelay {
   /**
    * Stops relay to peers.
    */
-  public stop() {
+  public stop(): void {
     if (this._state === GossipRelayState.Inactive) return;
     this.logger.info('stopping gossip relay for all peers');
     clearTimeout(this._timer);
@@ -126,7 +126,7 @@ export class GossipRelay {
    * Adds a new peer to relay messages to
    * @param peer
    */
-  public addPeer(peer: IPeer) {
+  public addPeer(peer: IPeer): void {
     this._peers.set(peer, this._queue.length);
   }
 
@@ -134,7 +134,7 @@ export class GossipRelay {
    * Removes the peer from relay
    * @param peer
    */
-  public removePeer(peer: IPeer) {
+  public removePeer(peer: IPeer): void {
     this._peers.delete(peer);
   }
 
@@ -142,7 +142,7 @@ export class GossipRelay {
    * Enqueues a message to be broadcast to peers.
    * @param msg
    */
-  public enqueue(msg: IWireMessage) {
+  public enqueue(msg: IWireMessage): void {
     if (this.state !== GossipRelayState.Active) return;
 
     // For chan_ann messages there is never an update so we only

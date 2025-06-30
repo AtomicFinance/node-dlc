@@ -42,7 +42,7 @@ export class CommitmentSecretStore {
    * @param secret 32-byte secp256k1 secret
    * @param i commitment number
    */
-  public insert(secret: Buffer, i: bigint) {
+  public insert(secret: Buffer, i: bigint): void {
     const B = CommitmentSecretStore.calcIndex(i);
 
     // validate that the new secret allows derivation of known keys
@@ -66,7 +66,7 @@ export class CommitmentSecretStore {
    * commitment nmber.
    * @param i derivation number starting at 2^48-1 down to zero.
    */
-  public derive(i: bigint) {
+  public derive(i: bigint): Buffer {
     for (let b = 0; b < this.secrets.length; b++) {
       // construct a mask of the upper bits. Basically we lop off
       // the lower b bits and then right-shift back into place

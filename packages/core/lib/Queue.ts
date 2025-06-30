@@ -23,7 +23,7 @@ export class Queue<T> {
   /**
    * Enqueue a value
    */
-  public enqueue(value: T) {
+  public enqueue(value: T): void {
     this._list.add(value);
   }
 

@@ -1,7 +1,8 @@
 // tslint:disable: no-unused-expression
-import { BitField, ShortChannelId } from '@node-dlc/common';
 import { Value } from '@node-dlc/bitcoin';
+import { BitField, ShortChannelId } from '@node-dlc/common';
 import { expect } from 'chai';
+
 import { ChannelUpdateMessage } from '../../lib/messages/ChannelUpdateMessage';
 
 describe('ChannelUpdateMessage', () => {

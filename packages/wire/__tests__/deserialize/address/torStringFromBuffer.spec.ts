@@ -1,5 +1,6 @@
-import { expect } from "chai";
-import { torStringFromBuffer } from "../../../lib/deserialize/address/torStringFromBuffer";
+import { expect } from 'chai';
+
+import { torStringFromBuffer } from '../../../lib/deserialize/address/torStringFromBuffer';
 
 const tests: Array<[string, Buffer, string]> = [
   [
@@ -14,11 +15,11 @@ const tests: Array<[string, Buffer, string]> = [
   ],
 ]; // prettier-ignore
 
-describe("torStringFromBuffer", () => {
-    for (const [title, input, expected] of tests) {
-        it(title, () => {
-            const actual = torStringFromBuffer(input);
-            expect(actual).to.equal(expected);
-        });
-    }
+describe('torStringFromBuffer', () => {
+  for (const [title, input, expected] of tests) {
+    it(title, () => {
+      const actual = torStringFromBuffer(input);
+      expect(actual).to.equal(expected);
+    });
+  }
 });

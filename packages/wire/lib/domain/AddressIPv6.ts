@@ -13,7 +13,7 @@ export class AddressIPv6 extends Address {
     return AddressType.IPv6;
   }
 
-  public toString() {
+  public toString(): string {
     return `[${this.host}]:${this.port}`;
   }
 }

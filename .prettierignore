@@ -1,0 +1,64 @@
+# Compiled output
+**/dist/
+**/build/
+**/lib/
+
+# Source maps
+**/*.js.map
+**/*.d.ts.map
+
+# Dependencies
+node_modules/
+
+# Test vectors (these are reference data and shouldn't be reformatted)
+**/test_vectors/
+**/test_inputs/
+
+# Generated files
+**/*.d.ts
+
+# Cache
+.nyc_output/
+coverage/
+
+# Database files (LevelDB)
+**/tmp-leveldb/
+**/*.ldb
+**/CURRENT
+**/LOCK
+**/LOG
+**/LOG.old
+**/MANIFEST-*
+
+# Fixture files (test data)
+**/__fixtures__/
+**/*.txt
+**/*.bin
+**/*.dat
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Lock files
+yarn.lock
+package-lock.json
+
+# Temporary files
+tmp/
+temp/
+
+# Binary files that shouldn't be formatted
+**/*.wasm
+**/*.exe
+**/*.so
+**/*.dylib
+**/*.dll

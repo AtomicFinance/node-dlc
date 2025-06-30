@@ -54,14 +54,14 @@ export class TxOut implements ICloneable<TxOut> {
   /**
    * Returns the TxOut as a string
    */
-  public toString() {
+  public toString(): string {
     return `value="${this.value.sats}", scriptPubKey="${this.scriptPubKey}"`;
   }
 
   /**
    * Returns the TxOut as a JSON object
    */
-  public toJSON() {
+  public toJSON(): { value: string; scriptPubKey: string } {
     return {
       value: this.value.sats.toString(),
       scriptPubKey: this.scriptPubKey.toJSON(),

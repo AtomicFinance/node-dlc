@@ -114,6 +114,13 @@ export class BufferReader {
   }
 
   /**
+   * Read a 64-bit double (f64) in big-endian format
+   */
+  public readDoubleBE(): number {
+    return this._readStandard(this.readDoubleBE.name, 8);
+  }
+
+  /**
    * Reads a variable length unsigned integer as specified in the protocol
    * documentation and aways returns a BN to maintain a consistant call
    * signature.
@@ -187,6 +194,33 @@ export class BufferReader {
           throw new Error('decoded varint is not canonical');
         return val;
       }
+    }
+  }
+
+  /**
+   * Read a sibling sub-type with type identifier (as per dlcspecs PR #163)
+   * Returns both the type identifier and the remaining data
+   * @returns Object with typeId and remaining buffer data
+   */
+  public readSiblingType(): { typeId: number; data: Buffer } {
+    const typeId = Number(this.readBigSize());
+    const data = this.readBytes(); // Read remaining data
+    return { typeId, data };
+  }
+
+  /**
+   * Read an optional sub-type (as per dlcspecs PR #163)
+   * Returns null if the field is absent, or the data buffer if present
+   * @returns Buffer data or null if absent
+   */
+  public readOptional(): Buffer | null {
+    const present = this.readUInt8();
+    if (present === 0x00) {
+      return null;
+    } else if (present === 0x01) {
+      return this.readBytes(); // Read remaining data
+    } else {
+      throw new Error(`Invalid optional field marker: ${present}`);
     }
   }
 

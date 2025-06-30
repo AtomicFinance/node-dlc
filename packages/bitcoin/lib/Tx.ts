@@ -247,6 +247,7 @@ export class Tx {
     else return this._serializeLegacy();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public toJSON() {
     return {
       version: this.version,
@@ -256,7 +257,7 @@ export class Tx {
     };
   }
 
-  public toHex(pretty = false) {
+  public toHex(pretty = false): string {
     if (!pretty) return this.serialize().toString('hex');
     else return this._prettyHex();
   }

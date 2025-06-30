@@ -1,4 +1,4 @@
-export function calcBytes(num: bigint) {
+export function calcBytes(num: bigint): number {
   let b = 0;
   while (num > BigInt(0)) {
     b += 1;

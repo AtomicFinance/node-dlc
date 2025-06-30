@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tx } from '@node-dlc/bitcoin';
 import { Block, Transaction } from 'bitcoinjs-lib';
 import { EventEmitter } from 'events';
 
-import { DlcTransactionsV0 } from '../messages/DlcTransactions';
+import { DlcTransactions } from '../messages/DlcTransactions';
 import { sleep } from '../util';
 import { IDlcStore } from './DlcStore';
 import {
@@ -40,7 +41,7 @@ export class ChainManager extends EventEmitter {
   public chainClient: IChainFilterChainClient;
   public logger: ILogger;
   public dlcStore: IDlcStore;
-  public dlcTxsList: DlcTransactionsV0[];
+  public dlcTxsList: DlcTransactions[];
 
   constructor(
     logger: ILogger,
@@ -75,7 +76,7 @@ export class ChainManager extends EventEmitter {
     this.started = true;
   }
 
-  public async updateFundBroadcast(dlcTxs: DlcTransactionsV0): Promise<void> {
+  public async updateFundBroadcast(dlcTxs: DlcTransactions): Promise<void> {
     const info = await this.chainClient.getBlockchainInfo();
     const block = await this.chainClient.getBlock(info.bestblockhash);
 
@@ -84,7 +85,7 @@ export class ChainManager extends EventEmitter {
     await this.dlcStore.saveDlcTransactions(dlcTxs);
   }
 
-  public async updateCloseBroadcast(dlcTxs: DlcTransactionsV0): Promise<void> {
+  public async updateCloseBroadcast(dlcTxs: DlcTransactions): Promise<void> {
     const info = await this.chainClient.getBlockchainInfo();
     const block = await this.chainClient.getBlock(info.bestblockhash);
 
@@ -94,7 +95,7 @@ export class ChainManager extends EventEmitter {
   }
 
   public async updateFundEpoch(
-    dlcTxs: DlcTransactionsV0,
+    dlcTxs: DlcTransactions,
     block: HasHeight & HasHash,
   ): Promise<void> {
     this.logger.info(
@@ -115,7 +116,7 @@ export class ChainManager extends EventEmitter {
   }
 
   public async updateCloseEpoch(
-    dlcTxs: DlcTransactionsV0,
+    dlcTxs: DlcTransactions,
     tx: Tx,
     block: HasHeight & HasHash,
   ): Promise<void> {
@@ -173,7 +174,7 @@ export class ChainManager extends EventEmitter {
     await this._validateUtxos(this.dlcTxsList);
   }
 
-  private async _validateUtxos(_dlcTxsList: DlcTransactionsV0[]) {
+  private async _validateUtxos(_dlcTxsList: DlcTransactions[]) {
     if (!this.chainClient) {
       this.logger.info('skipping utxo validation, no chain_client configured');
       return;
@@ -184,14 +185,14 @@ export class ChainManager extends EventEmitter {
     );
 
     const dlcTxsCount = dlcTxsList.reduce(
-      (acc, msg) => acc + (msg instanceof DlcTransactionsV0 ? 1 : 0),
+      (acc, msg) => acc + (msg instanceof DlcTransactions ? 1 : 0),
       0,
     );
     this.logger.info('validating %d funding utxos', dlcTxsCount);
 
     if (!dlcTxsCount) return;
 
-    const dlcTxsToVerify: DlcTransactionsV0[] = [];
+    const dlcTxsToVerify: DlcTransactions[] = [];
 
     const oct = Math.trunc(dlcTxsCount / 16);
     for (let i = 0; i < dlcTxsList.length; i++) {
@@ -202,7 +203,7 @@ export class ChainManager extends EventEmitter {
           (((i + 1) / dlcTxsCount) * 100).toFixed(2),
         );
       }
-      if (dlcTxs instanceof DlcTransactionsV0) {
+      if (dlcTxs instanceof DlcTransactions) {
         const utxo = await this.chainClient.getUtxo(
           dlcTxs.fundTx.txId.toString(),
           dlcTxs.fundTxVout,
@@ -243,7 +244,7 @@ export class ChainManager extends EventEmitter {
     await this._validateClosingUtxos(dlcTxsToVerify);
   }
 
-  private async _validateClosingUtxos(dlcTxsList: DlcTransactionsV0[]) {
+  private async _validateClosingUtxos(dlcTxsList: DlcTransactions[]) {
     let info = await this.chainClient.getBlockchainInfo();
 
     if (this.blockHeight === 0) {
@@ -310,7 +311,7 @@ export class ChainManager extends EventEmitter {
   }
 
   private async _checkOutpoints(
-    dlcTxsList: DlcTransactionsV0[],
+    dlcTxsList: DlcTransactions[],
     tx: Tx,
     blockHash: string,
   ) {
