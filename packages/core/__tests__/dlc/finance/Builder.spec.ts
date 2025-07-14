@@ -386,24 +386,107 @@ describe('OrderOffer Builder', () => {
   });
 
   describe('computeRoundingModulus', () => {
-    it('should properly compute the rounding modulus for 0.0001 BTC', () => {
-      const modulus = computeRoundingModulus(100000, 10000);
-      expect(modulus).to.equal(BigInt(10));
+    describe('with satoshi inputs (existing functionality)', () => {
+      it('should properly compute the rounding modulus for 0.0001 BTC', () => {
+        const modulus = computeRoundingModulus(BigInt(100000), BigInt(10000));
+        expect(modulus).to.equal(BigInt(10));
+      });
+
+      it('should properly compute the rounding modulus for 1 BTC', () => {
+        const modulus = computeRoundingModulus(
+          BigInt(100000),
+          BigInt(100000000),
+        );
+        expect(modulus).to.equal(BigInt(100000));
+      });
+
+      it('should properly compute the rounding modulus for 1.25 BTC', () => {
+        const modulus = computeRoundingModulus(BigInt(5000), BigInt(125000000));
+        expect(modulus).to.equal(BigInt(6250));
+      });
+
+      it('should properly compute the rounding modulus for 0.9 BTC', () => {
+        const modulus = computeRoundingModulus(
+          BigInt(100000),
+          BigInt(90000000),
+        );
+        expect(modulus).to.equal(BigInt(90000));
+      });
     });
 
-    it('should properly compute the rounding modulus for 1 BTC', () => {
-      const modulus = computeRoundingModulus(100000, 100000000);
-      expect(modulus).to.equal(BigInt(100000));
+    describe('with bitcoin amount inputs (new functionality)', () => {
+      it('should properly compute the rounding modulus for 0.001 BTC rounding with 0.1 BTC contract size', () => {
+        const modulus = computeRoundingModulus(0.001, 0.1); // 0.001 BTC rounding, 0.1 BTC contract
+        expect(modulus).to.equal(BigInt(10000)); // (0.001 * 1e8) * (0.1 * 1e8) / 1e8 = 10000
+      });
+
+      it('should properly compute the rounding modulus for 0.0001 BTC rounding with 1 BTC contract size', () => {
+        const modulus = computeRoundingModulus(0.0001, 1); // 0.0001 BTC rounding, 1 BTC contract
+        expect(modulus).to.equal(BigInt(10000)); // (0.0001 * 1e8) * (1 * 1e8) / 1e8 = 10000
+      });
+
+      it('should properly compute the rounding modulus for 0.001 BTC rounding with 1.5 BTC contract size', () => {
+        const modulus = computeRoundingModulus(0.001, 1.5); // 0.001 BTC rounding, 1.5 BTC contract
+        expect(modulus).to.equal(BigInt(150000)); // (0.001 * 1e8) * (1.5 * 1e8) / 1e8 = 150000
+      });
+
+      it('should properly compute the rounding modulus for 0.0005 BTC rounding with 0.5 BTC contract size', () => {
+        const modulus = computeRoundingModulus(0.0005, 0.5); // 0.0005 BTC rounding, 0.5 BTC contract
+        expect(modulus).to.equal(BigInt(25000)); // (0.0005 * 1e8) * (0.5 * 1e8) / 1e8 = 25000
+      });
+
+      it('should handle fractional bitcoin amounts correctly', () => {
+        const modulus = computeRoundingModulus(0.00001, 0.12345); // Very small amounts
+        expect(modulus).to.equal(BigInt(123)); // (0.00001 * 1e8) * (0.12345 * 1e8) / 1e8 = 123.45 -> 123 (rounded down)
+      });
     });
 
-    it('should properly compute the rounding modulus for 1.25 BTC', () => {
-      const modulus = computeRoundingModulus(5000, 125000000);
-      expect(modulus).to.equal(BigInt(6250));
+    describe('with Value object inputs', () => {
+      it('should properly compute the rounding modulus with Value objects', () => {
+        const rounding = Value.fromBitcoin(0.001);
+        const contractSize = Value.fromBitcoin(1);
+        const modulus = computeRoundingModulus(rounding, contractSize);
+        expect(modulus).to.equal(BigInt(100000)); // (0.001 * 1e8) * (1 * 1e8) / 1e8 = 100000
+      });
+
+      it('should properly compute the rounding modulus with mixed Value and number inputs', () => {
+        const rounding = Value.fromBitcoin(0.001);
+        const contractSize = 1.5; // number input
+        const modulus = computeRoundingModulus(rounding, contractSize);
+        expect(modulus).to.equal(BigInt(150000)); // (0.001 * 1e8) * (1.5 * 1e8) / 1e8 = 150000
+      });
     });
 
-    it('should properly compute the rounding modulus for 0.9 BTC', () => {
-      const modulus = computeRoundingModulus(100000, 90000000);
-      expect(modulus).to.equal(BigInt(90000));
+    describe('with BigInt inputs', () => {
+      it('should properly compute the rounding modulus with BigInt inputs', () => {
+        const modulus = computeRoundingModulus(
+          BigInt(100000),
+          BigInt(100000000),
+        );
+        expect(modulus).to.equal(BigInt(100000));
+      });
+
+      it('should properly compute the rounding modulus with mixed BigInt and number inputs', () => {
+        const modulus = computeRoundingModulus(BigInt(100000), 1); // BigInt rounding, number contract size
+        expect(modulus).to.equal(BigInt(100000)); // 100000 * (1 * 1e8) / 1e8 = 100000
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should handle zero rounding correctly', () => {
+        const modulus = computeRoundingModulus(0, 1);
+        expect(modulus).to.equal(BigInt(0));
+      });
+
+      it('should handle zero contract size correctly', () => {
+        const modulus = computeRoundingModulus(0.001, 0);
+        expect(modulus).to.equal(BigInt(0));
+      });
+
+      it('should handle very small bitcoin amounts', () => {
+        const modulus = computeRoundingModulus(0.00000001, 0.00000001); // 1 satoshi each
+        expect(modulus).to.equal(BigInt(0)); // (1 * 1) / 1e8 = 0 (rounded down)
+      });
     });
   });
 });
