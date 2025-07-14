@@ -92,10 +92,18 @@ export const computeRoundingModulus = (
   contractSize: number | bigint | Value,
 ): bigint => {
   const roundingInSats =
-    rounding instanceof Value ? rounding.sats : BigInt(rounding);
+    rounding instanceof Value
+      ? rounding.sats
+      : typeof rounding === 'number'
+      ? BigInt(Math.round(rounding * 1e8)) // Convert bitcoin amount to satoshis
+      : rounding;
 
   const contractSizeInSats =
-    contractSize instanceof Value ? contractSize.sats : BigInt(contractSize);
+    contractSize instanceof Value
+      ? contractSize.sats
+      : typeof contractSize === 'number'
+      ? BigInt(Math.round(contractSize * 1e8)) // Convert bitcoin amount to satoshis
+      : contractSize;
 
   return (roundingInSats * contractSizeInSats) / BigInt(1e8);
 };
