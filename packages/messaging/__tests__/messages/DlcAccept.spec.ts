@@ -216,6 +216,78 @@ describe('DlcAccept', () => {
           instance.validate();
         }).to.throw(Error);
       });
+
+      it('should allow single funded DLCs with zero acceptCollateral', () => {
+        // Set up single funded DLC with zero collateral
+        instance.acceptCollateral = BigInt(0);
+        instance.fundingInputs = [];
+        instance.markAsSingleFunded();
+
+        expect(function () {
+          instance.validate();
+        }).to.not.throw(Error);
+      });
+
+      it('should throw if single funded DLC funding amount is insufficient', () => {
+        // Set up single funded DLC with insufficient funding
+        instance.acceptCollateral = BigInt(300000000);
+        instance.fundingInputs = [];
+        instance.markAsSingleFunded();
+
+        expect(function () {
+          instance.validate();
+        }).to.throw(
+          'For single funded DLCs, fundingAmount must be at least acceptCollateral',
+        );
+      });
+    });
+
+    describe('Single Funded DLC Methods', () => {
+      it('should correctly identify single funded DLCs', () => {
+        // Initially not single funded
+        expect(instance.isSingleFunded()).to.be.false;
+
+        // Mark as single funded
+        instance.markAsSingleFunded();
+
+        expect(instance.isSingleFunded()).to.be.true;
+      });
+
+      it('should not identify regular DLCs as single funded', () => {
+        // Default test setup has non-zero acceptCollateral
+        expect(instance.isSingleFunded()).to.be.false;
+      });
+
+      it('should mark DLC as single funded', () => {
+        expect(function () {
+          instance.markAsSingleFunded();
+        }).to.not.throw(Error);
+
+        expect(instance.singleFunded).to.be.true;
+      });
+
+      it('should auto-detect single funded DLCs during deserialization', () => {
+        // Set up single funded DLC with zero collateral
+        instance.acceptCollateral = BigInt(0);
+
+        // Serialize and deserialize
+        const serialized = instance.serialize();
+        const deserialized = DlcAccept.deserialize(serialized);
+
+        // Should auto-detect as single funded
+        expect(deserialized.singleFunded).to.be.true;
+        expect(deserialized.isSingleFunded()).to.be.true;
+      });
+
+      it('should not auto-detect regular DLCs as single funded', () => {
+        // Default test setup has non-zero acceptCollateral
+        const serialized = instance.serialize();
+        const deserialized = DlcAccept.deserialize(serialized);
+
+        // Should not be detected as single funded
+        expect(deserialized.singleFunded).to.be.false;
+        expect(deserialized.isSingleFunded()).to.be.false;
+      });
     });
   });
 

@@ -385,25 +385,111 @@ describe('DlcOffer', () => {
         }).to.throw(Error);
       });
 
-      it('should throw if totalCollateral <= offerCollateral', () => {
-        instance.contractInfo.totalCollateral = BigInt(200000000);
-        instance.offerCollateral = BigInt(200000000);
-        expect(function () {
-          instance.validate();
-        }).to.throw(Error);
-
-        instance.contractInfo.totalCollateral = BigInt(200000000);
-        instance.offerCollateral = BigInt(200000001);
-        expect(function () {
-          instance.validate();
-        }).to.throw(Error);
-      });
-
       it('should throw if funding amount less than offer collateral', () => {
         instance.offerCollateral = BigInt(3e8);
         expect(function () {
           instance.validate();
         }).to.throw(Error);
+      });
+
+      it('should allow single funded DLCs when totalCollateral equals offerCollateral', () => {
+        // Set up single funded DLC
+        instance.contractInfo.totalCollateral = BigInt(99999999);
+        instance.offerCollateral = BigInt(99999999);
+        instance.markAsSingleFunded();
+
+        expect(function () {
+          instance.validate();
+        }).to.not.throw(Error);
+      });
+
+      it('should throw if marked as single funded but collateral amounts do not match', () => {
+        instance.contractInfo.totalCollateral = BigInt(200000000);
+        instance.offerCollateral = BigInt(99999999);
+
+        expect(function () {
+          instance.markAsSingleFunded();
+        }).to.throw(
+          'Cannot mark as single funded: totalCollateral (200000000) must equal offerCollateral (99999999)',
+        );
+      });
+
+      it('should validate single funded DLC funding amount correctly', () => {
+        // Set up single funded DLC
+        instance.contractInfo.totalCollateral = BigInt(99999999);
+        instance.offerCollateral = BigInt(99999999);
+        instance.markAsSingleFunded();
+
+        // Funding amount should be at least totalCollateral for single funded DLCs
+        expect(function () {
+          instance.validate();
+        }).to.not.throw(Error);
+      });
+
+      it('should throw if single funded DLC funding amount is insufficient', () => {
+        // Set up single funded DLC with insufficient funding
+        instance.contractInfo.totalCollateral = BigInt(300000000);
+        instance.offerCollateral = BigInt(300000000);
+        instance.markAsSingleFunded();
+
+        expect(function () {
+          instance.validate();
+        }).to.throw(
+          'For single funded DLCs, fundingAmount must be at least totalCollateral',
+        );
+      });
+    });
+
+    describe('Single Funded DLC Methods', () => {
+      it('should correctly identify single funded DLCs', () => {
+        // Initially not single funded
+        expect(instance.isSingleFunded()).to.be.false;
+
+        // Mark as single funded
+        instance.contractInfo.totalCollateral = BigInt(99999999);
+        instance.offerCollateral = BigInt(99999999);
+        instance.markAsSingleFunded();
+
+        expect(instance.isSingleFunded()).to.be.true;
+      });
+
+      it('should auto-detect single funded DLCs based on collateral amounts', () => {
+        // Set equal collateral amounts
+        instance.contractInfo.totalCollateral = BigInt(99999999);
+        instance.offerCollateral = BigInt(99999999);
+
+        // Should be detected as single funded even without explicit flag
+        expect(instance.isSingleFunded()).to.be.true;
+      });
+
+      it('should not identify regular DLCs as single funded', () => {
+        // Default test setup has different collateral amounts
+        expect(instance.isSingleFunded()).to.be.false;
+      });
+
+      it('should mark DLC as single funded when collateral amounts are equal', () => {
+        instance.contractInfo.totalCollateral = BigInt(99999999);
+        instance.offerCollateral = BigInt(99999999);
+
+        expect(function () {
+          instance.markAsSingleFunded();
+        }).to.not.throw(Error);
+
+        expect(instance.singleFunded).to.be.true;
+      });
+
+      it('should auto-detect single funded DLCs during deserialization', () => {
+        // Set up single funded DLC
+        instance.contractInfo.totalCollateral = BigInt(99999999);
+        instance.offerCollateral = BigInt(99999999);
+
+        // Serialize and deserialize
+        const serialized = instance.serialize();
+        const deserialized = DlcOffer.deserialize(serialized);
+
+        // Should auto-detect as single funded
+        expect(deserialized.singleFunded).to.be.true;
+        expect(deserialized.isSingleFunded()).to.be.true;
       });
     });
   });
