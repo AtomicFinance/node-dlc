@@ -89,7 +89,7 @@ export class SingleOrderNegotiationFields extends OrderNegotiationFields {
     return instance;
   }
 
-  public variant: 'Single' = 'Single';
+  public variant = 'Single' as const;
   public discriminator = 0;
 
   /**
@@ -160,7 +160,7 @@ export class DisjointOrderNegotiationFields extends OrderNegotiationFields {
     return instance;
   }
 
-  public variant: 'Disjoint' = 'Disjoint';
+  public variant = 'Disjoint' as const;
   public discriminator = 1;
   public orderOffer: OrderOffer;
 

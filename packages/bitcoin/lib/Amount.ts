@@ -1,4 +1,4 @@
-import { Value } from '.';
+import { Value } from './Value';
 
 /**
  * Represents bitcoin amount that can be converted to or from multiple

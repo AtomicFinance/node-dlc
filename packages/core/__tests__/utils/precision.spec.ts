@@ -17,8 +17,8 @@ describe('getPrecision', () => {
   });
 
   it('should get correct precision for max decimal points', () => {
-    const num = new BigNumber(1.112233445566778899);
-    expect(getPrecision(num)).eq(1122334455667788);
+    const num = new BigNumber('1.112233445566778899');
+    expect(getPrecision(num)).eq(1122334455667789);
   });
 });
 
@@ -34,7 +34,7 @@ describe('fromPrecision', () => {
   });
 
   it('should throw error if precision is too large', () => {
-    const num = 11223344556677889;
+    const num = Number('11223344556677889');
     expect(() => fromPrecision(num)).to.throw(Error);
   });
 });

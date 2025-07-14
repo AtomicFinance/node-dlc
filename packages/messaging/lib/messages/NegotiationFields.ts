@@ -102,7 +102,7 @@ export class SingleNegotiationFields extends NegotiationFields {
     return instance;
   }
 
-  public variant: 'Single' = 'Single';
+  public variant = 'Single' as const;
   public discriminator = 0;
   public roundingIntervals: RoundingIntervals;
 
@@ -202,7 +202,7 @@ export class DisjointNegotiationFields extends NegotiationFields {
     return instance;
   }
 
-  public variant: 'Disjoint' = 'Disjoint';
+  public variant = 'Disjoint' as const;
   public discriminator = 1;
   public negotiationFields: NegotiationFields[] = [];
 
