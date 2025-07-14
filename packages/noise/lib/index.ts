@@ -9,8 +9,8 @@ import { NoiseState } from './noise-state';
 
 export { NoiseError } from './noise-error';
 export { NoiseServer } from './noise-server';
-export { NoiseServerOptions } from './noise-server-options';
 export { NoiseServerListenOptions } from './noise-server-listen-options';
+export { NoiseServerOptions } from './noise-server-options';
 export { NoiseSocket } from './noise-socket';
 export { NoiseSocketOptions } from './noise-socket-options';
 export { NoiseState } from './noise-state';

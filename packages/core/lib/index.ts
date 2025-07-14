@@ -1,18 +1,6 @@
 export * from '@node-dlc/bitcoin';
 
 // Explicitly re-export commonly used types from bitcoin for better TypeScript support
-export {
-  Value,
-  Script,
-  HashValue,
-  HashByteOrder,
-  OutPoint,
-  Tx,
-  TxIn,
-  TxOut,
-  TxBuilder,
-} from '@node-dlc/bitcoin';
-
 export * from './AsyncProcessingQueue';
 export * from './Base32';
 export * from './BigIntUtils';
@@ -23,15 +11,26 @@ export * from './LinkedListNode';
 export * from './Queue';
 export * from './ShortChannelId';
 export * from './ShortChannelIdUtils';
+export {
+  HashByteOrder,
+  HashValue,
+  OutPoint,
+  Script,
+  Tx,
+  TxBuilder,
+  TxIn,
+  TxOut,
+  Value,
+} from '@node-dlc/bitcoin';
 
 // Explicitly export the utility functions that wire needs
 export {
   shortChannelIdFromBuffer,
   shortChannelIdFromNumber,
+  shortChannelIdFromString,
   shortChannelIdToBuffer,
   shortChannelIdToNumber,
   shortChannelIdToString,
-  shortChannelIdFromString,
 } from './ShortChannelIdUtils';
 
 // Lightning subdirectory exports (excluding ChannelId to avoid conflict)
@@ -63,6 +62,5 @@ export * from './dlc/finance/LongCall';
 export * from './dlc/finance/LongPut';
 export * from './dlc/finance/OptionInfo';
 export * from './dlc/finance/ShortPut';
-
 export * from './utils/BigIntUtils';
 export * from './utils/Precision';

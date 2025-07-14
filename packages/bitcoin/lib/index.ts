@@ -1,3 +1,4 @@
+export * from './Amount';
 export * from './Base58';
 export * from './Base58Check';
 export * from './BitcoinError';
@@ -5,6 +6,7 @@ export * from './BitcoinErrorCode';
 export * from './Block';
 export * from './HashByteOrder';
 export * from './HashValue';
+export * from './ICloneable';
 export * from './LexicographicalSorters';
 export * from './LockTime';
 export * from './OpCodes';
@@ -24,5 +26,3 @@ export * from './TxOut';
 export * from './Value';
 export * from './Wif';
 export * from './Witness';
-export * from './Amount';
-export * from './ICloneable';
