@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/noise",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "BOLT 8 Lightning Network Noise Protocol Socket",
   "main": "dist/index.js",
   "scripts": {
@@ -26,8 +26,8 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/crypto": "^1.0.0",
-    "@node-dlc/logger": "^1.0.0"
+    "@node-dlc/crypto": "^1.0.1",
+    "@node-dlc/logger": "^1.0.1"
   },
   "publishConfig": {
     "access": "public"

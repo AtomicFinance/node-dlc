@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/wire",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lightning Network Wire Protocol",
   "scripts": {
     "test": "../../node_modules/.bin/nyc --reporter=lcov --reporter=text --extension=.ts ../../node_modules/.bin/mocha --require ts-node/register --recursive \"__tests__/**/*.spec.*\"",
@@ -26,13 +26,13 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^1.0.0",
-    "@node-dlc/bufio": "^1.0.0",
-    "@node-dlc/checksum": "^1.0.0",
-    "@node-dlc/common": "^1.0.0",
-    "@node-dlc/crypto": "^1.0.0",
-    "@node-dlc/logger": "^1.0.0",
-    "@node-dlc/noise": "^1.0.0"
+    "@node-dlc/bitcoin": "^1.0.1",
+    "@node-dlc/bufio": "^1.0.1",
+    "@node-dlc/checksum": "^1.0.1",
+    "@node-dlc/common": "^1.0.1",
+    "@node-dlc/crypto": "^1.0.1",
+    "@node-dlc/logger": "^1.0.1",
+    "@node-dlc/noise": "^1.0.1"
   },
   "publishConfig": {
     "access": "public"
