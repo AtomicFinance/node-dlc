@@ -281,6 +281,12 @@ export class DlcAccept implements IDlcMessage {
       }
     }
 
+    // Auto-detect single funded DLCs based on minimal acceptCollateral
+    // In single funded DLCs, acceptCollateral is typically 0 or very small
+    if (instance.acceptCollateral === BigInt(0)) {
+      instance.singleFunded = true;
+    }
+
     return instance;
   }
 
@@ -320,6 +326,28 @@ export class DlcAccept implements IDlcMessage {
 
   // Store unknown TLVs for forward compatibility
   public unknownTlvs?: Array<{ type: number; data: Buffer }>;
+
+  /**
+   * Flag to indicate if this is a single funded DLC
+   * In single funded DLCs, the acceptor provides minimal or no collateral
+   */
+  public singleFunded = false;
+
+  /**
+   * Marks this DLC accept as single funded
+   * For single funded DLCs, acceptCollateral is typically 0 or minimal
+   */
+  public markAsSingleFunded(): void {
+    this.singleFunded = true;
+  }
+
+  /**
+   * Checks if this DLC accept is for a single funded DLC
+   * @returns True if this is a single funded DLC
+   */
+  public isSingleFunded(): boolean {
+    return this.singleFunded;
+  }
 
   /**
    * Get funding, change and payout address from DlcAccept
@@ -402,8 +430,20 @@ export class DlcAccept implements IDlcMessage {
       const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
-    if (this.acceptCollateral >= fundingAmount) {
-      throw new Error('fundingAmount must be greater than acceptCollateral');
+
+    if (this.isSingleFunded()) {
+      // For single funded DLCs, acceptor may provide minimal or no collateral
+      // fundingAmount should be >= acceptCollateral (allowing for 0 collateral case)
+      if (this.acceptCollateral > 0 && fundingAmount < this.acceptCollateral) {
+        throw new Error(
+          'For single funded DLCs, fundingAmount must be at least acceptCollateral',
+        );
+      }
+    } else {
+      // For regular DLCs, funding amount must be greater than accept collateral
+      if (this.acceptCollateral >= fundingAmount) {
+        throw new Error('fundingAmount must be greater than acceptCollateral');
+      }
     }
   }
 

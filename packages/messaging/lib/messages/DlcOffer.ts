@@ -226,6 +226,13 @@ export class DlcOffer implements IDlcMessage {
       }
     }
 
+    // Auto-detect single funded DLCs
+    if (
+      instance.contractInfo.getTotalCollateral() === instance.offerCollateral
+    ) {
+      instance.singleFunded = true;
+    }
+
     return instance;
   }
 
@@ -278,6 +285,37 @@ export class DlcOffer implements IDlcMessage {
 
   // Store unknown TLVs for forward compatibility
   public unknownTlvs?: Array<{ type: number; data: Buffer }>;
+
+  /**
+   * Flag to indicate if this is a single funded DLC
+   * In single funded DLCs, totalCollateral equals offerCollateral
+   */
+  public singleFunded = false;
+
+  /**
+   * Marks this DLC offer as single funded and validates that collateral amounts are correct
+   * @throws Will throw an error if totalCollateral doesn't equal offerCollateral
+   */
+  public markAsSingleFunded(): void {
+    const totalCollateral = this.contractInfo.getTotalCollateral();
+    if (totalCollateral !== this.offerCollateral) {
+      throw new Error(
+        `Cannot mark as single funded: totalCollateral (${totalCollateral}) must equal offerCollateral (${this.offerCollateral})`,
+      );
+    }
+    this.singleFunded = true;
+  }
+
+  /**
+   * Checks if this DLC offer is single funded (totalCollateral == offerCollateral)
+   * @returns True if this is a single funded DLC
+   */
+  public isSingleFunded(): boolean {
+    return (
+      this.singleFunded ||
+      this.contractInfo.getTotalCollateral() === this.offerCollateral
+    );
+  }
 
   /**
    * Get funding, change and payout address from DlcOffer
@@ -400,8 +438,19 @@ export class DlcOffer implements IDlcMessage {
     this.contractInfo.validate();
 
     // totalCollateral should be > offerCollateral (logical validation)
-    if (this.contractInfo.getTotalCollateral() <= this.offerCollateral) {
-      throw new Error('totalCollateral should be greater than offerCollateral');
+    // Exception: for single funded DLCs, totalCollateral == offerCollateral is allowed
+    if (this.isSingleFunded()) {
+      if (this.contractInfo.getTotalCollateral() !== this.offerCollateral) {
+        throw new Error(
+          'For single funded DLCs, totalCollateral must equal offerCollateral',
+        );
+      }
+    } else {
+      if (this.contractInfo.getTotalCollateral() <= this.offerCollateral) {
+        throw new Error(
+          'totalCollateral should be greater than offerCollateral',
+        );
+      }
     }
 
     // validate funding amount
@@ -409,8 +458,19 @@ export class DlcOffer implements IDlcMessage {
       const input = fundingInput as FundingInput;
       return acc + input.prevTx.outputs[input.prevTxVout].value.sats;
     }, BigInt(0));
-    if (this.offerCollateral >= fundingAmount) {
-      throw new Error('fundingAmount must be greater than offerCollateral');
+
+    if (this.isSingleFunded()) {
+      // For single funded DLCs, funding amount must cover the full total collateral plus fees
+      if (fundingAmount < this.contractInfo.getTotalCollateral()) {
+        throw new Error(
+          'For single funded DLCs, fundingAmount must be at least totalCollateral',
+        );
+      }
+    } else {
+      // For regular DLCs, funding amount must be greater than offer collateral
+      if (this.offerCollateral >= fundingAmount) {
+        throw new Error('fundingAmount must be greater than offerCollateral');
+      }
     }
   }
 
