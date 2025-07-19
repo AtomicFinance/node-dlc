@@ -53,6 +53,8 @@ export enum MessageType {
   FundingInput = 42772,
   FundingInputV0 = FundingInput, // Backward compatibility alias
 
+  DlcInput = 42773,
+
   CetAdaptorSignatures = 42774,
   CetAdaptorSignaturesV0 = CetAdaptorSignatures, // Backward compatibility alias
 

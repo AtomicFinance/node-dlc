@@ -1,0 +1,17 @@
+{
+  "generated_at": "2025-07-18T07:13:31Z",
+  "rust_cli_path": "/Users/matthewblack/code/github.com/AtomicFinance/node-dlc/rust-dlc-cli/target/release/dlc-compat",
+  "test_vectors": [
+    {
+      "type": "enhanced-dlc-messages",
+      "description": "DLC messages with optional DlcInput support in funding inputs",
+      "files": []
+    }
+  ],
+  "versions": {
+    "rust_commit": "84192913e4c7da86d5b8c01c9f8705e1f9b7e9be",
+    "node_commit": "84192913e4c7da86d5b8c01c9f8705e1f9b7e9be",
+    "rust_branch": "master",
+    "node_branch": "master"
+  }
+}
