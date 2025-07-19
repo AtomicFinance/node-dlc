@@ -14,7 +14,8 @@
     "bootstrap:ci": "lerna bootstrap --hoist",
     "new:version": "lerna version --no-push --no-git-tag-version && lerna clean --yes && lerna bootstrap",
     "publish:all": "lerna publish from-package",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "update-dlcspecs-vectors": "./scripts/update-dlcspecs-vectors.sh"
   },
   "pre-commit": [
     "lint"
