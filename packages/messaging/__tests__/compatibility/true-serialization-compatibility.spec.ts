@@ -30,11 +30,15 @@ function callRustCli(command: string, input?: string): RustDlcCliResult {
   const cliCmd = `cd ${rustCliPath} && cargo run --bin dlc-compat -- ${command}`;
 
   try {
+    // Use shorter timeout in CI environments to avoid test timeouts
+    const isCI = process.env.CI === 'true';
+    const cliTimeout = isCI ? 60000 : 300000; // 1 minute in CI, 5 minutes locally
+
     const result = execSync(cliCmd, {
       input: input || '',
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 300000, // 5 minutes to handle Rust compilation and execution
+      timeout: cliTimeout,
     });
 
     return JSON.parse(result.trim());
@@ -136,7 +140,9 @@ describe('True DLC Serialization Compatibility Tests', () => {
 
       if (testData.offer_message) {
         it(`should have Node.js DlcOffer compatible with Rust-DLC CLI for ${filename}`, function () {
-          this.timeout(10000); // Rust CLI calls can be slow
+          // Use longer timeout in CI to account for slower build times
+          const isCI = process.env.CI === 'true';
+          this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
           const nodeOffer = DlcOffer.fromJSON(testData.offer_message.message);
           const nodeJson = nodeOffer.toJSON();
@@ -162,7 +168,9 @@ describe('True DLC Serialization Compatibility Tests', () => {
 
       if (testData.accept_message) {
         it(`should have Node.js DlcAccept compatible with Rust-DLC CLI for ${filename}`, function () {
-          this.timeout(10000); // Rust CLI calls can be slow
+          // Use longer timeout in CI to account for slower build times
+          const isCI = process.env.CI === 'true';
+          this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
           const nodeAccept = DlcAccept.fromJSON(
             testData.accept_message.message,
@@ -190,7 +198,9 @@ describe('True DLC Serialization Compatibility Tests', () => {
 
       if (testData.sign_message) {
         it(`should have Node.js DlcSign compatible with Rust-DLC CLI for ${filename}`, function () {
-          this.timeout(10000); // Rust CLI calls can be slow
+          // Use longer timeout in CI to account for slower build times
+          const isCI = process.env.CI === 'true';
+          this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
           const nodeSign = DlcSign.fromJSON(testData.sign_message.message);
           const nodeJson = nodeSign.toJSON();
