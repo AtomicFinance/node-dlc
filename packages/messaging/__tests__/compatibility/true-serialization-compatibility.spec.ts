@@ -61,36 +61,36 @@ function callRustCli(command: string, input?: string): RustDlcCliResult {
   }
 }
 
-describe('True DLC Serialization Compatibility Tests', () => {
-  const testVectorsDir = path.join(__dirname, '../../test_vectors/dlcspecs');
-  let testVectorFiles: string[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allTestData: { [filename: string]: any } = {};
+// Load test vectors at module level so they're available for test generation
+const testVectorsDir = path.join(__dirname, '../../test_vectors/dlcspecs');
+const testVectorFiles: string[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const allTestData: { [filename: string]: any } = {};
 
-  before(() => {
-    if (fs.existsSync(testVectorsDir)) {
-      testVectorFiles = fs
-        .readdirSync(testVectorsDir)
-        .filter((f) => f.endsWith('.json'))
-        .sort(); // Sort for consistent test order
+// Load test data synchronously at module level
+if (fs.existsSync(testVectorsDir)) {
+  const files = fs
+    .readdirSync(testVectorsDir)
+    .filter((f) => f.endsWith('.json'))
+    .sort(); // Sort for consistent test order
 
-      // Load all test vector files using json-bigint to preserve large integers
-      testVectorFiles.forEach((filename) => {
-        // if (filename !== 'enum_3_of_3_test.json') return;
-        const filePath = path.join(testVectorsDir, filename);
-        try {
-          const fileContent = fs.readFileSync(filePath, 'utf8');
-          allTestData[filename] = JSONBigInt.parse(fileContent);
-        } catch (error) {
-          console.warn(
-            `Failed to load test vector ${filename}:`,
-            error.message,
-          );
-        }
-      });
+  files.forEach((filename) => {
+    // if (filename !== 'enum_3_of_3_test.json') return;
+    const filePath = path.join(testVectorsDir, filename);
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      allTestData[filename] = JSONBigInt.parse(fileContent);
+      testVectorFiles.push(filename);
+    } catch (error) {
+      console.warn(
+        `Failed to load test vector ${filename}:`,
+        (error as Error).message,
+      );
     }
   });
+}
 
+describe('True DLC Serialization Compatibility Tests', () => {
   describe('Comprehensive Test Vector Coverage', () => {
     it('should discover and load all available test vector files', () => {
       expect(testVectorFiles.length).to.be.greaterThan(
@@ -102,510 +102,231 @@ describe('True DLC Serialization Compatibility Tests', () => {
         'Should load test data',
       );
 
-      console.log(`\n📋 Test Vector Discovery:`);
+      console.log(`\nTest Vector Discovery:`);
       console.log(`  Found ${testVectorFiles.length} test vector files:`);
       testVectorFiles.forEach((file, index) => {
-        const hasOfferMessage = allTestData[file]?.offer_message ? '✅' : '❌';
+        const hasOfferMessage = allTestData[file]?.offer_message
+          ? '[OFFER]'
+          : '[NO_OFFER]';
         const hasAcceptMessage = allTestData[file]?.accept_message
-          ? '✅'
-          : '❌';
-        const hasSignMessage = allTestData[file]?.sign_message ? '✅' : '❌';
+          ? '[ACCEPT]'
+          : '[NO_ACCEPT]';
+        const hasSignMessage = allTestData[file]?.sign_message
+          ? '[SIGN]'
+          : '[NO_SIGN]';
         console.log(
           `  ${
             index + 1
-          }. ${file} (O:${hasOfferMessage} A:${hasAcceptMessage} S:${hasSignMessage})`,
+          }. ${file} (${hasOfferMessage} ${hasAcceptMessage} ${hasSignMessage})`,
         );
       });
     });
   });
 
   describe('Round-trip Serialization Compatibility', () => {
-    it('should test Node.js vs Current Rust-DLC Serialization Compatibility', () => {
-      let nodeVsRustOfferPass = 0;
-      let nodeVsRustAcceptPass = 0;
-      let nodeVsRustSignPass = 0;
-      let nodeVsRustOfferFail = 0;
-      let nodeVsRustAcceptFail = 0;
-      let nodeVsRustSignFail = 0;
+    // Test representative samples against current Rust-DLC CLI for compatibility
+    const rustCompatTestVectors = [
+      'enum_3_of_3_test.json',
+      'single_oracle_numerical_test.json',
+    ];
 
-      // Test only the first test vector for now to debug
-      const filename = 'enum_3_of_3_test.json';
+    rustCompatTestVectors.forEach((filename) => {
       const testData = allTestData[filename];
+      if (!testData) return;
 
-      if (testData) {
-        console.log(
-          `\n🔬 Testing Node.js vs Current Rust-DLC for ${filename}:`,
-        );
+      if (testData.offer_message) {
+        it(`should have Node.js DlcOffer compatible with Rust-DLC CLI for ${filename}`, function () {
+          this.timeout(10000); // Rust CLI calls can be slow
 
-        // Test DlcOffer
-        if (testData.offer_message) {
-          try {
-            const nodeOffer = DlcOffer.fromJSON(testData.offer_message.message);
-            const nodeJson = nodeOffer.toJSON();
-            const nodeHex = nodeOffer.serialize().toString('hex');
+          const nodeOffer = DlcOffer.fromJSON(testData.offer_message.message);
+          const nodeJson = nodeOffer.toJSON();
+          const nodeHex = nodeOffer.serialize().toString('hex');
 
-            // Get current rust-dlc serialization
-            const rustSerialization = callRustCli(
-              'serialize -t offer',
-              JSONBigInt.stringify(nodeJson),
-            );
+          const rustSerialization = callRustCli(
+            'serialize -t offer',
+            JSONBigInt.stringify(nodeJson),
+          );
 
-            if (rustSerialization.status === 'success') {
-              const rustHex = rustSerialization.data;
-              if (nodeHex === rustHex) {
-                nodeVsRustOfferPass++;
-                console.log(
-                  `    ✅ DlcOffer: Node.js matches current rust-dlc serialization`,
-                );
-              } else {
-                nodeVsRustOfferFail++;
-                console.log(
-                  `    ❌ DlcOffer: Node.js vs rust-dlc hex mismatch`,
-                );
-                console.log(
-                  `       Node.js length: ${nodeHex.length}, Rust length: ${rustHex.length}`,
-                );
-                console.log(
-                  `       Node.js first 100: ${nodeHex.substring(0, 100)}`,
-                );
-                console.log(
-                  `       Rust first 100:    ${rustHex.substring(0, 100)}`,
-                );
-                // Show where the difference starts
-                for (
-                  let i = 0;
-                  i < Math.min(nodeHex.length, rustHex.length);
-                  i += 2
-                ) {
-                  if (
-                    nodeHex.substring(i, i + 2) !== rustHex.substring(i, i + 2)
-                  ) {
-                    console.log(
-                      `       First difference at byte ${
-                        i / 2
-                      }: Node=${nodeHex.substring(
-                        i,
-                        i + 2,
-                      )} vs Rust=${rustHex.substring(i, i + 2)}`,
-                    );
-                    break;
-                  }
-                }
-              }
-            } else {
-              nodeVsRustOfferFail++;
-              console.log(
-                `    ❌ DlcOffer: rust-dlc serialization failed: ${rustSerialization.message}`,
-              );
-            }
-          } catch (error) {
-            nodeVsRustOfferFail++;
-            console.log(`    ❌ DlcOffer: Node.js error: ${error.message}`);
-          }
-        }
+          expect(rustSerialization.status).to.equal(
+            'success',
+            `Rust CLI serialization failed: ${rustSerialization.message}`,
+          );
 
-        // Test DlcAccept
-        if (testData.accept_message) {
-          try {
-            const nodeAccept = DlcAccept.fromJSON(
-              testData.accept_message.message,
-            );
-            const nodeJson = nodeAccept.toJSON();
-            const nodeHex = nodeAccept.serialize().toString('hex');
-
-            // Get current rust-dlc serialization
-            const rustSerialization = callRustCli(
-              'serialize -t accept',
-              JSONBigInt.stringify(nodeJson),
-            );
-
-            if (rustSerialization.status === 'success') {
-              const rustHex = rustSerialization.data;
-              if (nodeHex === rustHex) {
-                nodeVsRustAcceptPass++;
-                console.log(
-                  `    ✅ DlcAccept: Node.js matches current rust-dlc serialization`,
-                );
-              } else {
-                nodeVsRustAcceptFail++;
-                console.log(
-                  `    ❌ DlcAccept: Node.js vs rust-dlc hex mismatch`,
-                );
-                console.log(
-                  `       Node.js length: ${nodeHex.length}, Rust length: ${rustHex.length}`,
-                );
-                console.log(
-                  `       Node.js first 100: ${nodeHex.substring(0, 100)}`,
-                );
-                console.log(
-                  `       Rust first 100:    ${rustHex.substring(0, 100)}`,
-                );
-              }
-            } else {
-              nodeVsRustAcceptFail++;
-              console.log(
-                `    ❌ DlcAccept: rust-dlc serialization failed: ${rustSerialization.message}`,
-              );
-            }
-          } catch (error) {
-            nodeVsRustAcceptFail++;
-            console.log(`    ❌ DlcAccept: Node.js error: ${error.message}`);
-          }
-        }
-
-        // Test DlcSign
-        if (testData.sign_message) {
-          try {
-            const nodeSign = DlcSign.fromJSON(testData.sign_message.message);
-            const nodeJson = nodeSign.toJSON();
-            const nodeHex = nodeSign.serialize().toString('hex');
-
-            // Get current rust-dlc serialization
-            const rustSerialization = callRustCli(
-              'serialize -t sign',
-              JSONBigInt.stringify(nodeJson),
-            );
-
-            if (rustSerialization.status === 'success') {
-              const rustHex = rustSerialization.data;
-              if (nodeHex === rustHex) {
-                nodeVsRustSignPass++;
-                console.log(
-                  `    ✅ DlcSign: Node.js matches current rust-dlc serialization`,
-                );
-              } else {
-                nodeVsRustSignFail++;
-                console.log(`    ❌ DlcSign: Node.js vs rust-dlc hex mismatch`);
-                console.log(
-                  `       Node.js length: ${nodeHex.length}, Rust length: ${rustHex.length}`,
-                );
-                console.log(
-                  `       Node.js first 100: ${nodeHex.substring(0, 100)}`,
-                );
-                console.log(
-                  `       Rust first 100:    ${rustHex.substring(0, 100)}`,
-                );
-              }
-            } else {
-              nodeVsRustSignFail++;
-              console.log(
-                `    ❌ DlcSign: rust-dlc serialization failed: ${rustSerialization.message}`,
-              );
-            }
-          } catch (error) {
-            nodeVsRustSignFail++;
-            console.log(`    ❌ DlcSign: Node.js error: ${error.message}`);
-          }
-        }
+          const rustHex = rustSerialization.data;
+          expect(nodeHex).to.equal(
+            rustHex,
+            `Node.js vs Rust-DLC CLI serialization mismatch for ${filename}`,
+          );
+        });
       }
 
-      console.log(`\n📊 Node.js vs Current Rust-DLC Compatibility Results:`);
-      console.log(
-        `  ✅ DlcOffer compatibility: ${nodeVsRustOfferPass} pass, ${nodeVsRustOfferFail} fail`,
-      );
-      console.log(
-        `  ✅ DlcAccept compatibility: ${nodeVsRustAcceptPass} pass, ${nodeVsRustAcceptFail} fail`,
-      );
-      console.log(
-        `  ✅ DlcSign compatibility: ${nodeVsRustSignPass} pass, ${nodeVsRustSignFail} fail`,
-      );
+      if (testData.accept_message) {
+        it(`should have Node.js DlcAccept compatible with Rust-DLC CLI for ${filename}`, function () {
+          this.timeout(10000); // Rust CLI calls can be slow
 
-      // This is the real compatibility test - we want Node.js to match current rust-dlc
-      expect(
-        nodeVsRustOfferPass + nodeVsRustAcceptPass + nodeVsRustSignPass,
-      ).to.be.greaterThan(
-        -1,
-        'At least some compatibility with current rust-dlc',
-      );
+          const nodeAccept = DlcAccept.fromJSON(
+            testData.accept_message.message,
+          );
+          const nodeJson = nodeAccept.toJSON();
+          const nodeHex = nodeAccept.serialize().toString('hex');
+
+          const rustSerialization = callRustCli(
+            'serialize -t accept',
+            JSONBigInt.stringify(nodeJson),
+          );
+
+          expect(rustSerialization.status).to.equal(
+            'success',
+            `Rust CLI serialization failed: ${rustSerialization.message}`,
+          );
+
+          const rustHex = rustSerialization.data;
+          expect(nodeHex).to.equal(
+            rustHex,
+            `Node.js vs Rust-DLC CLI serialization mismatch for ${filename}`,
+          );
+        });
+      }
+
+      if (testData.sign_message) {
+        it(`should have Node.js DlcSign compatible with Rust-DLC CLI for ${filename}`, function () {
+          this.timeout(10000); // Rust CLI calls can be slow
+
+          const nodeSign = DlcSign.fromJSON(testData.sign_message.message);
+          const nodeJson = nodeSign.toJSON();
+          const nodeHex = nodeSign.serialize().toString('hex');
+
+          const rustSerialization = callRustCli(
+            'serialize -t sign',
+            JSONBigInt.stringify(nodeJson),
+          );
+
+          expect(rustSerialization.status).to.equal(
+            'success',
+            `Rust CLI serialization failed: ${rustSerialization.message}`,
+          );
+
+          const rustHex = rustSerialization.data;
+          expect(nodeHex).to.equal(
+            rustHex,
+            `Node.js vs Rust-DLC CLI serialization mismatch for ${filename}`,
+          );
+        });
+      }
     });
 
-    it('should test DlcOffer serialization against all test vectors', () => {
-      let passCount = 0;
-      let failCount = 0;
-      const results: Array<{
-        file: string;
-        status: string;
-        error?: string;
-      }> = [];
+    // Generate individual test cases for DlcOffer serialization
+    testVectorFiles.forEach((filename) => {
+      const testData = allTestData[filename];
+      if (!testData?.offer_message) return;
 
-      testVectorFiles.forEach((filename) => {
-        const testData = allTestData[filename];
-        if (!testData?.offer_message) {
-          return; // Skip if no offer message in this test vector
-        }
-
+      it(`should correctly serialize DlcOffer for ${filename}`, () => {
         const expectedHex = testData.offer_message.serialized;
         const messageJson = testData.offer_message.message;
 
-        try {
-          const offer = DlcOffer.fromJSON(messageJson);
-          const actualHex = offer.serialize().toString('hex');
+        const offer = DlcOffer.fromJSON(messageJson);
+        const actualHex = offer.serialize().toString('hex');
 
-          if (actualHex === expectedHex) {
-            passCount++;
-            results.push({ file: filename, status: 'PASS' });
-          } else {
-            failCount++;
-            // // stringify json
-            // console.log(
-            //   'offer.toJSON',
-            //   JSON.stringify(offer.toJSON(), null, 2),
-            // );
-            results.push({
-              file: filename,
-              status: 'FAIL',
-              error: `Hex mismatch. Expected:\n${expectedHex}\nGot:\n${actualHex}`,
-            });
-
-            console.log('messageJson', messageJson);
-          }
-        } catch (error) {
-          failCount++;
-          results.push({
-            file: filename,
-            status: 'ERROR',
-            error: error.message.slice(0, 100) + '...',
-          });
-        }
+        expect(actualHex).to.equal(
+          expectedHex,
+          `DlcOffer serialization mismatch for ${filename}`,
+        );
       });
-
-      console.log(`\n📊 DlcOffer Serialization Test Results:`);
-      console.log(`  ✅ Passed: ${passCount}/${testVectorFiles.length}`);
-      console.log(`  ❌ Failed: ${failCount}/${testVectorFiles.length}`);
-
-      if (failCount > 0) {
-        console.log(`\n📋 Detailed Results:`);
-        results.forEach((result, index) => {
-          const icon = result.status === 'PASS' ? '✅' : '❌';
-          console.log(
-            `  ${index + 1}. ${icon} ${result.file} - ${result.status}`,
-          );
-          if (result.error) {
-            console.log(`     Error: ${result.error}`);
-          }
-        });
-      }
-
-      // For now, we expect some failures since fromJSON implementations are still incomplete
-      expect(testVectorFiles.length).to.be.greaterThan(
-        0,
-        'Should have test vectors to test',
-      );
     });
 
-    it('should test DlcAccept serialization against all test vectors', () => {
-      let passCount = 0;
-      let failCount = 0;
-      const results: Array<{
-        file: string;
-        status: string;
-        error?: string;
-      }> = [];
+    // Generate individual test cases for DlcAccept serialization
+    testVectorFiles.forEach((filename) => {
+      const testData = allTestData[filename];
+      if (!testData?.accept_message) return;
 
-      testVectorFiles.forEach((filename) => {
-        const testData = allTestData[filename];
-        if (!testData?.accept_message) {
-          return; // Skip if no accept message in this test vector
-        }
-
+      it(`should correctly serialize DlcAccept for ${filename}`, () => {
         const expectedHex = testData.accept_message.serialized;
         const messageJson = testData.accept_message.message;
 
-        try {
-          const accept = DlcAccept.fromJSON(messageJson);
-          const actualHex = accept.serialize().toString('hex');
+        const accept = DlcAccept.fromJSON(messageJson);
+        const actualHex = accept.serialize().toString('hex');
 
-          if (actualHex === expectedHex) {
-            passCount++;
-            results.push({ file: filename, status: 'PASS' });
-          } else {
-            failCount++;
-            results.push({
-              file: filename,
-              status: 'FAIL',
-              error: `Hex mismatch. Expected:\n${expectedHex}\nGot:\n${actualHex}`,
-            });
-          }
-        } catch (error) {
-          failCount++;
-          results.push({
-            file: filename,
-            status: 'ERROR',
-            error: error.message.slice(0, 100) + '...',
-          });
-        }
+        expect(actualHex).to.equal(
+          expectedHex,
+          `DlcAccept serialization mismatch for ${filename}`,
+        );
       });
-
-      console.log(`\n📊 DlcAccept Serialization Test Results:`);
-      console.log(`  ✅ Passed: ${passCount}/${testVectorFiles.length}`);
-      console.log(`  ❌ Failed: ${failCount}/${testVectorFiles.length}`);
-
-      if (failCount > 0) {
-        console.log(`\n📋 Detailed Results:`);
-        results.forEach((result, index) => {
-          const icon = result.status === 'PASS' ? '✅' : '❌';
-          console.log(
-            `  ${index + 1}. ${icon} ${result.file} - ${result.status}`,
-          );
-          if (result.error) {
-            console.log(`     Error: ${result.error}`);
-          }
-        });
-      }
-
-      // For now, we expect some failures since fromJSON implementations are still incomplete
-      expect(testVectorFiles.length).to.be.greaterThan(
-        0,
-        'Should have test vectors to test',
-      );
     });
 
-    it('should test DlcSign serialization against all test vectors', () => {
-      let passCount = 0;
-      let failCount = 0;
-      const results: Array<{
-        file: string;
-        status: string;
-        error?: string;
-      }> = [];
+    // Generate individual test cases for DlcSign serialization
+    testVectorFiles.forEach((filename) => {
+      const testData = allTestData[filename];
+      if (!testData?.sign_message) return;
 
-      testVectorFiles.forEach((filename) => {
-        const testData = allTestData[filename];
-        if (!testData?.sign_message) {
-          return; // Skip if no sign message in this test vector
-        }
-
+      it(`should correctly serialize DlcSign for ${filename}`, () => {
         const expectedHex = testData.sign_message.serialized;
         const messageJson = testData.sign_message.message;
 
-        try {
-          const sign = DlcSign.fromJSON(messageJson);
-          const actualHex = sign.serialize().toString('hex');
+        const sign = DlcSign.fromJSON(messageJson);
+        const actualHex = sign.serialize().toString('hex');
 
-          if (actualHex === expectedHex) {
-            passCount++;
-            results.push({ file: filename, status: 'PASS' });
-          } else {
-            failCount++;
-            results.push({
-              file: filename,
-              status: 'FAIL',
-              error: `Hex mismatch. Expected:\n${expectedHex}\nGot:\n${actualHex}`,
-            });
-          }
-        } catch (error) {
-          failCount++;
-          results.push({
-            file: filename,
-            status: 'ERROR',
-            error: error.message.slice(0, 100) + '...',
-          });
-        }
+        expect(actualHex).to.equal(
+          expectedHex,
+          `DlcSign serialization mismatch for ${filename}`,
+        );
       });
-
-      console.log(`\n📊 DlcSign Serialization Test Results:`);
-      console.log(`  ✅ Passed: ${passCount}/${testVectorFiles.length}`);
-      console.log(`  ❌ Failed: ${failCount}/${testVectorFiles.length}`);
-
-      if (failCount > 0) {
-        console.log(`\n📋 Detailed Results:`);
-        results.forEach((result, index) => {
-          const icon = result.status === 'PASS' ? '✅' : '❌';
-          console.log(
-            `  ${index + 1}. ${icon} ${result.file} - ${result.status}`,
-          );
-          if (result.error) {
-            console.log(`     Error: ${result.error}`);
-          }
-        });
-      }
-
-      // For now, we expect some failures since fromJSON implementations are still incomplete
-      expect(testVectorFiles.length).to.be.greaterThan(
-        0,
-        'Should have test vectors to test',
-      );
     });
 
-    it('should demonstrate current deserialization behavior across all test vectors', () => {
-      let offerDeserializePass = 0;
-      let acceptDeserializePass = 0;
-      let signDeserializePass = 0;
-      let offerDeserializeFail = 0;
-      let acceptDeserializeFail = 0;
-      let signDeserializeFail = 0;
+    // Generate individual test cases for DlcOffer deserialization
+    testVectorFiles.forEach((filename) => {
+      const testData = allTestData[filename];
+      if (!testData?.offer_message) return;
 
-      testVectorFiles.forEach((filename) => {
-        const testData = allTestData[filename];
+      it(`should correctly deserialize DlcOffer for ${filename}`, () => {
+        const serializedHex = testData.offer_message.serialized;
+        const inputBuffer = Buffer.from(serializedHex, 'hex');
 
-        // Test DlcOffer deserialization
-        if (testData?.offer_message) {
-          try {
-            const serializedHex = testData.offer_message.serialized;
-            const inputBuffer = Buffer.from(serializedHex, 'hex');
-            const offer = DlcOffer.deserialize(inputBuffer);
-            const reserializedHex = offer.serialize().toString('hex');
-            if (reserializedHex === serializedHex) {
-              offerDeserializePass++;
-            } else {
-              offerDeserializeFail++;
-            }
-          } catch (error) {
-            offerDeserializeFail++;
-          }
-        }
+        const offer = DlcOffer.deserialize(inputBuffer);
+        const reserializedHex = offer.serialize().toString('hex');
 
-        // Test DlcAccept deserialization
-        if (testData?.accept_message) {
-          try {
-            const serializedHex = testData.accept_message.serialized;
-            const inputBuffer = Buffer.from(serializedHex, 'hex');
-            const accept = DlcAccept.deserialize(inputBuffer);
-            const reserializedHex = accept.serialize().toString('hex');
-            if (reserializedHex === serializedHex) {
-              acceptDeserializePass++;
-            } else {
-              acceptDeserializeFail++;
-            }
-          } catch (error) {
-            acceptDeserializeFail++;
-          }
-        }
-
-        // Test DlcSign deserialization
-        if (testData?.sign_message) {
-          try {
-            const serializedHex = testData.sign_message.serialized;
-            const inputBuffer = Buffer.from(serializedHex, 'hex');
-            const sign = DlcSign.deserialize(inputBuffer);
-            const reserializedHex = sign.serialize().toString('hex');
-            if (reserializedHex === serializedHex) {
-              signDeserializePass++;
-            } else {
-              signDeserializeFail++;
-            }
-          } catch (error) {
-            signDeserializeFail++;
-          }
-        }
+        expect(reserializedHex).to.equal(
+          serializedHex,
+          `DlcOffer deserialization round-trip failed for ${filename}`,
+        );
       });
+    });
 
-      console.log(`\n📊 Deserialization Test Results:`);
-      console.log(
-        `  DlcOffer: ${offerDeserializePass} pass, ${offerDeserializeFail} fail`,
-      );
-      console.log(
-        `  DlcAccept: ${acceptDeserializePass} pass, ${acceptDeserializeFail} fail`,
-      );
-      console.log(
-        `  DlcSign: ${signDeserializePass} pass, ${signDeserializeFail} fail`,
-      );
+    // Generate individual test cases for DlcAccept deserialization
+    testVectorFiles.forEach((filename) => {
+      const testData = allTestData[filename];
+      if (!testData?.accept_message) return;
 
-      // This documents current deserialization status - we expect failures due to format differences
-      expect(testVectorFiles.length).to.be.greaterThan(
-        0,
-        'Should have test vectors to test',
-      );
+      it(`should correctly deserialize DlcAccept for ${filename}`, () => {
+        const serializedHex = testData.accept_message.serialized;
+        const inputBuffer = Buffer.from(serializedHex, 'hex');
+
+        const accept = DlcAccept.deserialize(inputBuffer);
+        const reserializedHex = accept.serialize().toString('hex');
+
+        expect(reserializedHex).to.equal(
+          serializedHex,
+          `DlcAccept deserialization round-trip failed for ${filename}`,
+        );
+      });
+    });
+
+    // Generate individual test cases for DlcSign deserialization
+    testVectorFiles.forEach((filename) => {
+      const testData = allTestData[filename];
+      if (!testData?.sign_message) return;
+
+      it(`should correctly deserialize DlcSign for ${filename}`, () => {
+        const serializedHex = testData.sign_message.serialized;
+        const inputBuffer = Buffer.from(serializedHex, 'hex');
+
+        const sign = DlcSign.deserialize(inputBuffer);
+        const reserializedHex = sign.serialize().toString('hex');
+
+        expect(reserializedHex).to.equal(
+          serializedHex,
+          `DlcSign deserialization round-trip failed for ${filename}`,
+        );
+      });
     });
   });
 });
