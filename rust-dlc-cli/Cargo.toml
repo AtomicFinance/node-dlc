@@ -14,9 +14,9 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 hex = "0.4"
 anyhow = "1.0"
-# Use the latest version from crates.io
-dlc-messages = { version = "0.7.1", features = ["use-serde"] }
-dlc = { version = "0.7.1" }
+# Use bennyhodl's fork with DLC input support from PR #4
+dlc-messages = { git = "https://github.com/bennyhodl/rust-dlc.git", branch = "spliced-contract", features = ["use-serde"] }
+dlc = { git = "https://github.com/bennyhodl/rust-dlc.git", branch = "spliced-contract" }
 lightning = { version = "0.0.125", features = ["std"] }
 bitcoin = { version = "0.32.2", features = ["serde"] }
-secp256k1-zkp = { version = "0.11.0", features = ["serde", "global-context"] } 
+secp256k1-zkp = { version = "0.11.0", features = ["serde", "global-context"] }

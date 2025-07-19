@@ -30,11 +30,15 @@ function callRustCli(command: string, input?: string): RustDlcCliResult {
   const cliCmd = `cd ${rustCliPath} && cargo run --bin dlc-compat -- ${command}`;
 
   try {
+    // Use shorter timeout in CI environments to avoid test timeouts
+    const isCI = process.env.CI === 'true';
+    const cliTimeout = isCI ? 60000 : 300000; // 1 minute in CI, 5 minutes locally
+
     const result = execSync(cliCmd, {
       input: input || '',
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 300000, // 5 minutes to handle Rust compilation and execution
+      timeout: cliTimeout,
     });
 
     return JSON.parse(result.trim());
@@ -127,7 +131,9 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
       if (!testData?.offer_message) return;
 
       it(`should have Rust-compatible offer for ${filename}`, function () {
-        this.timeout(10000); // 10 seconds per individual test
+        // Use longer timeout in CI to account for slower build times
+        const isCI = process.env.CI === 'true';
+        this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
         // Step 1: Create Node.js DLC message from JSON
         const nodeOffer = DlcOffer.fromJSON(testData.offer_message.message);
@@ -172,7 +178,9 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
       if (!testData?.accept_message) return;
 
       it(`should have Rust-compatible accept for ${filename}`, function () {
-        this.timeout(10000); // 10 seconds per individual test
+        // Use longer timeout in CI to account for slower build times
+        const isCI = process.env.CI === 'true';
+        this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
         const nodeAccept = DlcAccept.fromJSON(testData.accept_message.message);
         const nodeJson = nodeAccept.toJSON();
@@ -198,7 +206,9 @@ describe('Rust-DLC Cross-Language Compatibility Tests', () => {
       if (!testData?.sign_message) return;
 
       it(`should have Rust-compatible sign for ${filename}`, function () {
-        this.timeout(10000); // 10 seconds per individual test
+        // Use longer timeout in CI to account for slower build times
+        const isCI = process.env.CI === 'true';
+        this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
         const nodeSign = DlcSign.fromJSON(testData.sign_message.message);
         const nodeJson = nodeSign.toJSON();

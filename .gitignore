@@ -121,3 +121,5 @@ rust-dlc-cli/temp_*.txt
 rust-dlc-cli/clean_*.txt
 rust-dlc-cli/correct_*.txt
 rust-dlc-cli/expected_*.hex
+# Backup directories
+packages/messaging/test_vectors/dlcspecs_backup_*/
