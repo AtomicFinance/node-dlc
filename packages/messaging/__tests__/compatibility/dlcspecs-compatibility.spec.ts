@@ -261,18 +261,18 @@ describe('DLC Ecosystem Compatibility Tests', () => {
       const failures = allResults.filter((r) => !r.success);
 
       const reportLines = [
-        `🎯 DLCSpecs Test Vector Results (With Version Compatibility):`,
-        `📋 Files Processed: ${dlcSpecsFiles.length}`,
-        `📊 Tests Run: ${allResults.length}`,
-        `✅ Success Rate: ${Math.round(dlcSpecsSuccessRate * 100)}% (${
+        `DLCSpecs Test Vector Results (With Version Compatibility):`,
+        `Files Processed: ${dlcSpecsFiles.length}`,
+        `Tests Run: ${allResults.length}`,
+        `Success Rate: ${Math.round(dlcSpecsSuccessRate * 100)}% (${
           allResults.filter((r) => r.success).length
         }/${allResults.length})`,
         '',
-        '🔄 Version Analysis:',
+        'Version Analysis:',
         `  • Old format (pre-protocol_version): ${oldFormatCount}`,
         `  • New format (with protocol_version): ${newFormatCount}`,
         '',
-        '📈 By Message Type:',
+        'By Message Type:',
         ...Object.entries(byMessageType).map(([type, results]) => {
           const successCount = results.filter((r) => r.success).length;
           const rate =
@@ -284,7 +284,7 @@ describe('DLC Ecosystem Compatibility Tests', () => {
       ];
 
       if (failures.length > 0) {
-        reportLines.push('', '❌ Failures:');
+        reportLines.push('', 'Failures:');
         failures.forEach((f) => {
           reportLines.push(`  • ${f.filename} (${f.messageType}): ${f.error}`);
         });
@@ -396,16 +396,16 @@ describe('DLC Ecosystem Compatibility Tests', () => {
       const failures = allResults.filter((r) => !r.success);
 
       const reportLines = [
-        `🦀 Rust-DLC Test Vector Results:`,
-        `📋 Files Processed: ${rustDlcFiles.length}`,
-        `📊 Tests Run: ${allResults.length}`,
-        `✅ Success Rate: ${Math.round(rustDlcSuccessRate * 100)}% (${
+        `Rust-DLC Test Vector Results:`,
+        `Files Processed: ${rustDlcFiles.length}`,
+        `Tests Run: ${allResults.length}`,
+        `Success Rate: ${Math.round(rustDlcSuccessRate * 100)}% (${
           allResults.filter((r) => r.success).length
         }/${allResults.length})`,
       ];
 
       if (failures.length > 0) {
-        reportLines.push('', '❌ Failures:');
+        reportLines.push('', 'Failures:');
         failures.forEach((f) => {
           reportLines.push(`  • ${f.filename}: ${f.error}`);
         });
