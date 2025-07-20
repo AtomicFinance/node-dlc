@@ -10,7 +10,8 @@ describe('DlcInput', () => {
       '023da092f6980e58d2c037173180e9a465476026ee50f96695963e8efe436f54eb',
     remoteFundPubkey:
       '025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357',
-    fundValue: 100000000, // 1 BTC in satoshis
+    contractId:
+      '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // 32-byte contract ID
   };
 
   beforeEach(() => {
@@ -22,24 +23,26 @@ describe('DlcInput', () => {
       const input = DlcInput.fromJSON({
         localFundPubkey: testData.localFundPubkey,
         remoteFundPubkey: testData.remoteFundPubkey,
-        fundValue: testData.fundValue,
+        contractId: testData.contractId,
       });
 
       expect(input.localFundPubkey).to.be.instanceOf(Buffer);
       expect(input.remoteFundPubkey).to.be.instanceOf(Buffer);
-      expect(input.fundValue).to.equal(BigInt(testData.fundValue));
+      expect(input.contractId).to.be.instanceOf(Buffer);
+      expect(input.contractId.toString('hex')).to.equal(testData.contractId);
     });
 
     it('should create DlcInput from JSON with snake_case', () => {
       const input = DlcInput.fromJSON({
         local_fund_pubkey: testData.localFundPubkey,
         remote_fund_pubkey: testData.remoteFundPubkey,
-        fund_value: testData.fundValue,
+        contract_id: testData.contractId,
       });
 
       expect(input.localFundPubkey).to.be.instanceOf(Buffer);
       expect(input.remoteFundPubkey).to.be.instanceOf(Buffer);
-      expect(input.fundValue).to.equal(BigInt(testData.fundValue));
+      expect(input.contractId).to.be.instanceOf(Buffer);
+      expect(input.contractId.toString('hex')).to.equal(testData.contractId);
     });
   });
 
@@ -49,7 +52,7 @@ describe('DlcInput', () => {
 
       expect(json.localFundPubkey).to.equal(testData.localFundPubkey);
       expect(json.remoteFundPubkey).to.equal(testData.remoteFundPubkey);
-      expect(json.fundValue).to.equal(testData.fundValue);
+      expect(json.contractId).to.equal(testData.contractId);
     });
   });
 
@@ -64,7 +67,7 @@ describe('DlcInput', () => {
       expect(deserialized.remoteFundPubkey).to.deep.equal(
         dlcInput.remoteFundPubkey,
       );
-      expect(deserialized.fundValue).to.equal(dlcInput.fundValue);
+      expect(deserialized.contractId).to.deep.equal(dlcInput.contractId);
     });
 
     it('should serialize and deserialize body correctly', () => {
@@ -77,7 +80,7 @@ describe('DlcInput', () => {
       expect(deserialized.remoteFundPubkey).to.deep.equal(
         dlcInput.remoteFundPubkey,
       );
-      expect(deserialized.fundValue).to.equal(dlcInput.fundValue);
+      expect(deserialized.contractId).to.deep.equal(dlcInput.contractId);
     });
   });
 
@@ -98,10 +101,10 @@ describe('DlcInput', () => {
       );
     });
 
-    it('should throw error for zero fundValue', () => {
-      dlcInput.fundValue = BigInt('0');
+    it('should throw error for invalid contractId', () => {
+      dlcInput.contractId = Buffer.alloc(16); // Wrong size - should be 32 bytes
       expect(() => dlcInput.validate()).to.throw(
-        'fundValue must be greater than 0',
+        'contractId must be a 32-byte buffer',
       );
     });
   });

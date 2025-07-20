@@ -44,7 +44,8 @@ describe('FundingInput', () => {
             '023da092f6980e58d2c037173180e9a465476026ee50f96695963e8efe436f54eb',
           remoteFundPubkey:
             '025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357',
-          fundValue: 100000000,
+          contractId:
+            '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         },
       });
 
@@ -59,8 +60,8 @@ describe('FundingInput', () => {
       expect(deserialized.dlcInput!.remoteFundPubkey).to.deep.equal(
         fundingInputWithDlc.dlcInput!.remoteFundPubkey,
       );
-      expect(deserialized.dlcInput!.fundValue).to.equal(
-        fundingInputWithDlc.dlcInput!.fundValue,
+      expect(deserialized.dlcInput!.contractId).to.deep.equal(
+        fundingInputWithDlc.dlcInput!.contractId,
       );
 
       // Test body serialize/deserialize (used in DlcOffer)
@@ -74,8 +75,8 @@ describe('FundingInput', () => {
       expect(deserializedBody.dlcInput!.remoteFundPubkey).to.deep.equal(
         fundingInputWithDlc.dlcInput!.remoteFundPubkey,
       );
-      expect(deserializedBody.dlcInput!.fundValue).to.equal(
-        fundingInputWithDlc.dlcInput!.fundValue,
+      expect(deserializedBody.dlcInput!.contractId).to.deep.equal(
+        fundingInputWithDlc.dlcInput!.contractId,
       );
     });
 
@@ -133,7 +134,8 @@ describe('FundingInput', () => {
             '023da092f6980e58d2c037173180e9a465476026ee50f96695963e8efe436f54eb',
           remoteFundPubkey:
             '025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357',
-          fundValue: 100000000,
+          contractId:
+            '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         },
       });
 
@@ -142,7 +144,7 @@ describe('FundingInput', () => {
       // Find where the DLC input optional marker should be
       // It should be at: 8 (inputSerialId) + 1-9 (prevTx length) + prevTx.length + 4 (prevTxVout) + 4 (sequence) + 2 (maxWitnessLen) + 2 (redeemScript.length) + redeemScript.length
       const dlcInputMarkerIndex =
-        serializedBodyWithDlc.length - (33 + 33 + 8 + 1); // DLC input data + marker
+        serializedBodyWithDlc.length - (33 + 33 + 32 + 1); // DLC input data + marker (contractId is 32 bytes)
       expect(serializedBodyWithDlc[dlcInputMarkerIndex]).to.equal(0x01);
     });
   });

@@ -255,6 +255,6 @@ export interface IFundingInputJSON {
   dlcInput?: {
     localFundPubkey: string;
     remoteFundPubkey: string;
-    fundValue: number;
+    contractId: string;
   };
 }

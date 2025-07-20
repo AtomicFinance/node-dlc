@@ -1,13 +1,11 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
-import { validPublicKey } from '@node-dlc/crypto';
 
 import { MessageType } from '../MessageType';
-import { bigIntToNumber, toBigInt } from '../util';
 import { IDlcMessage } from './DlcMessage';
 
 /**
  * DlcInput contains information about a DLC input to be used in a funding transaction.
- * Contains the local and remote funding public keys and the value of the DLC input.
+ * Contains the local and remote funding public keys and the contract ID of the DLC input.
  * Matches rust-dlc DlcInput struct.
  */
 export class DlcInput implements IDlcMessage {
@@ -37,9 +35,13 @@ export class DlcInput implements IDlcMessage {
       throw new Error('remoteFundPubkey is required');
     }
 
-    // Parse fund value (in satoshis)
-    const fundValue = json.fundValue || json.fund_value;
-    instance.fundValue = toBigInt(fundValue);
+    // Parse contract ID (32 bytes)
+    const contractId = json.contractId || json.contract_id;
+    if (typeof contractId === 'string') {
+      instance.contractId = Buffer.from(contractId, 'hex');
+    } else {
+      throw new Error('contractId is required');
+    }
 
     return instance;
   }
@@ -61,8 +63,8 @@ export class DlcInput implements IDlcMessage {
     // Read remote funding public key (33 bytes)
     instance.remoteFundPubkey = reader.readBytes(33);
 
-    // Read fund value (8 bytes)
-    instance.fundValue = reader.readUInt64BE();
+    // Read contract ID (32 bytes)
+    instance.contractId = reader.readBytes(32);
 
     return instance;
   }
@@ -81,14 +83,14 @@ export class DlcInput implements IDlcMessage {
     // Read remote funding public key (33 bytes)
     instance.remoteFundPubkey = reader.readBytes(33);
 
-    // Read fund value (8 bytes)
-    instance.fundValue = reader.readUInt64BE();
+    // Read contract ID (32 bytes)
+    instance.contractId = reader.readBytes(32);
 
     return instance;
   }
 
   /**
-   * The type for dlc_input message. dlc_input = 42774
+   * The type for dlc_input message. dlc_input = 42773
    */
   public type = DlcInput.type;
 
@@ -98,7 +100,7 @@ export class DlcInput implements IDlcMessage {
 
   public remoteFundPubkey: Buffer;
 
-  public fundValue: bigint;
+  public contractId: Buffer;
 
   /**
    * Validates correctness of all fields
@@ -111,8 +113,8 @@ export class DlcInput implements IDlcMessage {
     if (!this.remoteFundPubkey) {
       throw new Error('remoteFundPubkey is required');
     }
-    if (this.fundValue <= BigInt('0')) {
-      throw new Error('fundValue must be greater than 0');
+    if (!this.contractId || this.contractId.length !== 32) {
+      throw new Error('contractId must be a 32-byte buffer');
     }
   }
 
@@ -123,7 +125,7 @@ export class DlcInput implements IDlcMessage {
     return {
       localFundPubkey: this.localFundPubkey.toString('hex'),
       remoteFundPubkey: this.remoteFundPubkey.toString('hex'),
-      fundValue: bigIntToNumber(this.fundValue),
+      contractId: this.contractId.toString('hex'),
     };
   }
 
@@ -137,7 +139,7 @@ export class DlcInput implements IDlcMessage {
     const dataWriter = new BufferWriter();
     dataWriter.writeBytes(this.localFundPubkey);
     dataWriter.writeBytes(this.remoteFundPubkey);
-    dataWriter.writeUInt64BE(this.fundValue);
+    dataWriter.writeBytes(this.contractId);
 
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
@@ -152,7 +154,7 @@ export class DlcInput implements IDlcMessage {
     const writer = new BufferWriter();
     writer.writeBytes(this.localFundPubkey);
     writer.writeBytes(this.remoteFundPubkey);
-    writer.writeUInt64BE(this.fundValue);
+    writer.writeBytes(this.contractId);
 
     return writer.toBuffer();
   }
@@ -161,5 +163,5 @@ export class DlcInput implements IDlcMessage {
 export interface IDlcInputJSON {
   localFundPubkey: string;
   remoteFundPubkey: string;
-  fundValue: number;
+  contractId: string;
 }
