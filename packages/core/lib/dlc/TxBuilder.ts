@@ -16,6 +16,9 @@ import Decimal from 'decimal.js';
 
 import { DualFundingTxFinalizer } from './TxFinalizer';
 
+// Dust limit matching C++ implementation (1000 satoshis)
+export const DUST_LIMIT = BigInt(1000);
+
 export class DlcTxBuilder {
   constructor(
     readonly dlcOffer: DlcOffer,
@@ -33,6 +36,71 @@ export class BatchDlcTxBuilder {
     readonly dlcOffers: DlcOffer[],
     readonly dlcAccepts: DlcAcceptWithoutSigs[],
   ) {}
+
+  /**
+   * Calculates the maximum collateral that can be used given a set of funding inputs
+   * for exact-amount DLC scenarios (no change outputs).
+   *
+   * @param fundingInputs The inputs to be used for funding
+   * @param feeRatePerVb Fee rate in satoshis per virtual byte
+   * @param numContracts Number of DLC contracts being created (default: 1)
+   * @returns Maximum collateral amount in satoshis
+   *
+   * @example
+   * ```typescript
+   * // Calculate max collateral for DLC splicing scenario
+   * const dlcFundingInput = getDlcFundingInput(); // 970,332 sats
+   * const additionalInput = getAdditionalInput(); // 100,000 sats
+   * const inputs = [dlcFundingInput, additionalInput];
+   *
+   * const maxCollateral = BatchDlcTxBuilder.calculateMaxCollateral(
+   *   inputs,
+   *   BigInt(1), // 1 sat/vB fee rate
+   *   1 // Single DLC contract
+   * );
+   *
+   * // Use maxCollateral in DLC offer to ensure exact amount with no change
+   * const dlcOffer = createDlcOffer(contractInfo, maxCollateral, ...);
+   * ```
+   */
+  public static calculateMaxCollateral(
+    fundingInputs: FundingInput[],
+    feeRatePerVb: bigint,
+    numContracts = 1,
+  ): bigint {
+    // Calculate total input value
+    const totalInputValue = fundingInputs.reduce((total, input) => {
+      return total + input.prevTx.outputs[input.prevTxVout].value.sats;
+    }, BigInt(0));
+
+    // Create a temporary finalizer to calculate fees
+    const fakeSPK = Buffer.from(
+      '0014663117d27e78eb432505180654e603acb30e8a4a',
+      'hex',
+    );
+    const finalizer = new DualFundingTxFinalizer(
+      fundingInputs,
+      fakeSPK,
+      fakeSPK,
+      [], // No accepter inputs for single-funded scenario
+      fakeSPK,
+      fakeSPK,
+      feeRatePerVb,
+      numContracts,
+    );
+
+    // For exact-amount scenarios, we need to account for:
+    // 1. Future fees (for CET/refund transactions)
+    // 2. Funding transaction fees
+    const futureFee = finalizer.offerFutureFee;
+    const fundingFee = finalizer.offerFundingFee;
+
+    // Maximum collateral is input value minus all fees
+    const maxCollateral = totalInputValue - futureFee - fundingFee;
+
+    // Ensure we don't return negative values
+    return maxCollateral > BigInt(0) ? maxCollateral : BigInt(0);
+  }
 
   public buildFundingTransaction(): Tx {
     const tx = new TxBuilder();
@@ -152,6 +220,25 @@ export class BatchDlcTxBuilder {
     const acceptChangeValue =
       acceptTotalFunding - acceptInput - finalizer.acceptFees;
 
+    // Validate that we have sufficient funds
+    if (offerChangeValue < BigInt(0)) {
+      throw new Error(
+        `Insufficient funds for offerer: need ${
+          offerInput + finalizer.offerFees
+        } sats, have ${offerTotalFunding} sats`,
+      );
+    }
+
+    // In single-funded DLCs, if accepter has no inputs, they don't pay fees
+    // This matches the C++ layer behavior where parties with no inputs have zero fees
+    if (acceptChangeValue < BigInt(0) && acceptTotalFunding > BigInt(0)) {
+      throw new Error(
+        `Insufficient funds for accepter: need ${
+          acceptInput + finalizer.acceptFees
+        } sats, have ${acceptTotalFunding} sats`,
+      );
+    }
+
     const outputs: Output[] = [];
     witScripts.forEach((witScript, i) => {
       outputs.push({
@@ -160,16 +247,25 @@ export class BatchDlcTxBuilder {
         serialId: this.dlcOffers[i].fundOutputSerialId,
       });
     });
-    outputs.push({
-      value: Value.fromSats(Number(offerChangeValue)),
-      script: Script.p2wpkhLock(this.dlcOffers[0].changeSpk.slice(2)),
-      serialId: this.dlcOffers[0].changeSerialId,
-    });
-    outputs.push({
-      value: Value.fromSats(Number(acceptChangeValue)),
-      script: Script.p2wpkhLock(this.dlcAccepts[0].changeSpk.slice(2)),
-      serialId: this.dlcAccepts[0].changeSerialId,
-    });
+
+    // Dust filtering: Only create change outputs if they're above dust threshold
+    // This matches the C++ implementation and enables "exact amount" DLC scenarios
+    // where all input value goes into the DLC funding output with no change
+    if (offerChangeValue >= DUST_LIMIT) {
+      outputs.push({
+        value: Value.fromSats(Number(offerChangeValue)),
+        script: Script.p2wpkhLock(this.dlcOffers[0].changeSpk.slice(2)),
+        serialId: this.dlcOffers[0].changeSerialId,
+      });
+    }
+
+    if (acceptChangeValue >= DUST_LIMIT) {
+      outputs.push({
+        value: Value.fromSats(Number(acceptChangeValue)),
+        script: Script.p2wpkhLock(this.dlcAccepts[0].changeSpk.slice(2)),
+        serialId: this.dlcAccepts[0].changeSerialId,
+      });
+    }
 
     outputs.sort((a, b) => Number(a.serialId) - Number(b.serialId));
 
