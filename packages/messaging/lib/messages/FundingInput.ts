@@ -3,6 +3,7 @@ import { BufferReader, BufferWriter, StreamReader } from '@node-dlc/bufio';
 
 import { MessageType } from '../MessageType';
 import { bigIntToNumber, toBigInt } from '../util';
+import { DlcInput } from './DlcInput';
 import { IDlcMessage } from './DlcMessage';
 
 /**
@@ -54,6 +55,12 @@ export class FundingInput implements IDlcMessage {
     const redeemScript = json.redeemScript || json.redeem_script || '';
     instance.redeemScript = Buffer.from(redeemScript, 'hex');
 
+    // Parse optional DLC input
+    const dlcInput = json.dlcInput || json.dlc_input;
+    if (dlcInput) {
+      instance.dlcInput = DlcInput.fromJSON(dlcInput);
+    }
+
     return instance;
   }
 
@@ -77,6 +84,14 @@ export class FundingInput implements IDlcMessage {
     instance.maxWitnessLen = reader.readUInt16BE();
     const redeemScriptLen = reader.readUInt16BE();
     instance.redeemScript = reader.readBytes(redeemScriptLen);
+
+    // Read optional DLC input using rust-dlc Optional format (0x00/0x01 prefix)
+    if (reader.position < reader.buffer.length) {
+      const dlcInputData = reader.readOptional();
+      if (dlcInputData) {
+        instance.dlcInput = DlcInput.deserializeBody(dlcInputData);
+      }
+    }
 
     return instance;
   }
@@ -107,6 +122,14 @@ export class FundingInput implements IDlcMessage {
     const redeemScriptLen = reader.readUInt16BE();
     instance.redeemScript = reader.readBytes(redeemScriptLen);
 
+    // Read optional DLC input using rust-dlc Optional format (0x00/0x01 prefix)
+    if (reader.position < reader.buffer.length) {
+      const dlcInputData = reader.readOptional();
+      if (dlcInputData) {
+        instance.dlcInput = DlcInput.deserializeBody(dlcInputData);
+      }
+    }
+
     return instance;
   }
 
@@ -128,6 +151,8 @@ export class FundingInput implements IDlcMessage {
   public maxWitnessLen: number;
 
   public redeemScript: Buffer;
+
+  public dlcInput?: DlcInput;
 
   public scriptSigLength(): number {
     if (this.redeemScript.length > 0) {
@@ -151,7 +176,7 @@ export class FundingInput implements IDlcMessage {
    * Converts funding_input to JSON (canonical rust-dlc format)
    */
   public toJSON(): IFundingInputJSON {
-    return {
+    const result: IFundingInputJSON = {
       inputSerialId: bigIntToNumber(this.inputSerialId),
       prevTx: this.prevTx.serialize().toString('hex'),
       prevTxVout: this.prevTxVout,
@@ -159,6 +184,12 @@ export class FundingInput implements IDlcMessage {
       maxWitnessLen: this.maxWitnessLen,
       redeemScript: this.redeemScript.toString('hex'),
     };
+
+    if (this.dlcInput) {
+      result.dlcInput = this.dlcInput.toJSON();
+    }
+
+    return result;
   }
 
   /**
@@ -177,6 +208,10 @@ export class FundingInput implements IDlcMessage {
     dataWriter.writeUInt16BE(this.maxWitnessLen);
     dataWriter.writeUInt16BE(this.redeemScript.length);
     dataWriter.writeBytes(this.redeemScript);
+
+    // Write optional DLC input using rust-dlc Optional format (0x00/0x01 prefix)
+    const dlcInputData = this.dlcInput ? this.dlcInput.serializeBody() : null;
+    dataWriter.writeOptional(dlcInputData);
 
     writer.writeBigSize(dataWriter.size);
     writer.writeBytes(dataWriter.toBuffer());
@@ -202,6 +237,10 @@ export class FundingInput implements IDlcMessage {
     writer.writeUInt16BE(this.redeemScript.length);
     writer.writeBytes(this.redeemScript);
 
+    // Write optional DLC input using rust-dlc Optional format (0x00/0x01 prefix)
+    const dlcInputData = this.dlcInput ? this.dlcInput.serializeBody() : null;
+    writer.writeOptional(dlcInputData);
+
     return writer.toBuffer();
   }
 }
@@ -213,4 +252,9 @@ export interface IFundingInputJSON {
   sequence: number;
   maxWitnessLen: number;
   redeemScript: string;
+  dlcInput?: {
+    localFundPubkey: string;
+    remoteFundPubkey: string;
+    contractId: string;
+  };
 }

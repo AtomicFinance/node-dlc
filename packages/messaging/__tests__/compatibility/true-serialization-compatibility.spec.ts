@@ -30,11 +30,15 @@ function callRustCli(command: string, input?: string): RustDlcCliResult {
   const cliCmd = `cd ${rustCliPath} && cargo run --bin dlc-compat -- ${command}`;
 
   try {
+    // Use shorter timeout in CI environments to avoid test timeouts
+    const isCI = process.env.CI === 'true';
+    const cliTimeout = isCI ? 60000 : 300000; // 1 minute in CI, 5 minutes locally
+
     const result = execSync(cliCmd, {
       input: input || '',
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 300000, // 5 minutes to handle Rust compilation and execution
+      timeout: cliTimeout,
     });
 
     return JSON.parse(result.trim());
@@ -136,7 +140,9 @@ describe('True DLC Serialization Compatibility Tests', () => {
 
       if (testData.offer_message) {
         it(`should have Node.js DlcOffer compatible with Rust-DLC CLI for ${filename}`, function () {
-          this.timeout(10000); // Rust CLI calls can be slow
+          // Use longer timeout in CI to account for slower build times
+          const isCI = process.env.CI === 'true';
+          this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
           const nodeOffer = DlcOffer.fromJSON(testData.offer_message.message);
           const nodeJson = nodeOffer.toJSON();
@@ -162,7 +168,9 @@ describe('True DLC Serialization Compatibility Tests', () => {
 
       if (testData.accept_message) {
         it(`should have Node.js DlcAccept compatible with Rust-DLC CLI for ${filename}`, function () {
-          this.timeout(10000); // Rust CLI calls can be slow
+          // Use longer timeout in CI to account for slower build times
+          const isCI = process.env.CI === 'true';
+          this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
           const nodeAccept = DlcAccept.fromJSON(
             testData.accept_message.message,
@@ -190,7 +198,9 @@ describe('True DLC Serialization Compatibility Tests', () => {
 
       if (testData.sign_message) {
         it(`should have Node.js DlcSign compatible with Rust-DLC CLI for ${filename}`, function () {
-          this.timeout(10000); // Rust CLI calls can be slow
+          // Use longer timeout in CI to account for slower build times
+          const isCI = process.env.CI === 'true';
+          this.timeout(isCI ? 90000 : 15000); // 90s in CI, 15s locally
 
           const nodeSign = DlcSign.fromJSON(testData.sign_message.message);
           const nodeJson = nodeSign.toJSON();
@@ -220,6 +230,14 @@ describe('True DLC Serialization Compatibility Tests', () => {
       const testData = allTestData[filename];
       if (!testData?.offer_message) return;
 
+      // Skip DlcInput test vectors as they were programmatically generated without serialized hex
+      if (filename === 'enum_3_of_5_with_dlc_input_test.json') {
+        it.skip(
+          `should correctly serialize DlcOffer for ${filename} (SKIP: Programmatically generated test vector)`,
+        );
+        return;
+      }
+
       it(`should correctly serialize DlcOffer for ${filename}`, () => {
         const expectedHex = testData.offer_message.serialized;
         const messageJson = testData.offer_message.message;
@@ -238,6 +256,14 @@ describe('True DLC Serialization Compatibility Tests', () => {
     testVectorFiles.forEach((filename) => {
       const testData = allTestData[filename];
       if (!testData?.accept_message) return;
+
+      // Skip DlcInput test vectors as they were programmatically generated without serialized hex
+      if (filename === 'enum_3_of_5_with_dlc_input_test.json') {
+        it.skip(
+          `should correctly serialize DlcAccept for ${filename} (SKIP: Programmatically generated test vector)`,
+        );
+        return;
+      }
 
       it(`should correctly serialize DlcAccept for ${filename}`, () => {
         const expectedHex = testData.accept_message.serialized;
@@ -277,6 +303,14 @@ describe('True DLC Serialization Compatibility Tests', () => {
       const testData = allTestData[filename];
       if (!testData?.offer_message) return;
 
+      // Skip DlcInput test vectors as they were programmatically generated without serialized hex
+      if (filename === 'enum_3_of_5_with_dlc_input_test.json') {
+        it.skip(
+          `should correctly deserialize DlcOffer for ${filename} (SKIP: Programmatically generated test vector)`,
+        );
+        return;
+      }
+
       it(`should correctly deserialize DlcOffer for ${filename}`, () => {
         const serializedHex = testData.offer_message.serialized;
         const inputBuffer = Buffer.from(serializedHex, 'hex');
@@ -295,6 +329,14 @@ describe('True DLC Serialization Compatibility Tests', () => {
     testVectorFiles.forEach((filename) => {
       const testData = allTestData[filename];
       if (!testData?.accept_message) return;
+
+      // Skip DlcInput test vectors as they were programmatically generated without serialized hex
+      if (filename === 'enum_3_of_5_with_dlc_input_test.json') {
+        it.skip(
+          `should correctly deserialize DlcAccept for ${filename} (SKIP: Programmatically generated test vector)`,
+        );
+        return;
+      }
 
       it(`should correctly deserialize DlcAccept for ${filename}`, () => {
         const serializedHex = testData.accept_message.serialized;

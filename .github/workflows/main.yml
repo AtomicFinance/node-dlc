@@ -43,7 +43,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust-dlc-cli/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('rust-dlc-cli/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust-dlc-cli/Cargo.lock') }}-git-deps
           restore-keys: |
             ${{ runner.os }}-cargo-
 
@@ -67,11 +67,14 @@ jobs:
           if [ -d "rust-dlc-cli" ]; then
             echo "Building rust-dlc-cli for compatibility tests..."
             cd rust-dlc-cli
+            # Pre-fetch git dependencies to avoid network timeouts during tests
+            cargo fetch
             cargo build --release
           else
             echo "rust-dlc-cli directory not found, skipping Rust CLI build"
           fi
-        timeout-minutes: 10
+        timeout-minutes: 15
 
       - name: Run tests
         run: yarn test
+        timeout-minutes: 30

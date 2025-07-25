@@ -22,6 +22,11 @@ export class DualFundingTxFinalizer {
     changeSPK: Buffer,
     numContracts: number,
   ): IFees {
+    // If no inputs, return zero fees (matches C++ layer behavior for single-funded DLCs)
+    if (_inputs.length === 0) {
+      return { futureFee: BigInt(0), fundingFee: BigInt(0) };
+    }
+
     _inputs.forEach((input) => {
       if (input.type !== MessageType.FundingInput) {
         console.error('input', input);
