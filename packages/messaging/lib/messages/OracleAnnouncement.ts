@@ -39,7 +39,7 @@ export class OracleAnnouncement implements IDlcMessage {
         json.announcement_signature,
       'hex',
     );
-    instance.oraclePubkey = Buffer.from(
+    instance.oraclePublicKey = Buffer.from(
       json.oraclePublicKey || json.oraclePubkey || json.oracle_public_key,
       'hex',
     );
@@ -61,7 +61,7 @@ export class OracleAnnouncement implements IDlcMessage {
     reader.readBigSize(); // read type
     instance.length = reader.readBigSize();
     instance.announcementSig = reader.readBytes(64);
-    instance.oraclePubkey = reader.readBytes(32);
+    instance.oraclePublicKey = reader.readBytes(32);
     instance.oracleEvent = OracleEvent.deserialize(getTlv(reader));
 
     return instance;
@@ -78,7 +78,7 @@ export class OracleAnnouncement implements IDlcMessage {
   public announcementSig: Buffer;
 
   /** The public key of the oracle (32 bytes, x-only). */
-  public oraclePubkey: Buffer;
+  public oraclePublicKey: Buffer;
 
   /** The description of the event and attesting. */
   public oracleEvent: OracleEvent;
@@ -93,7 +93,7 @@ export class OracleAnnouncement implements IDlcMessage {
     this.oracleEvent.validate();
 
     // Validate oracle public key format (32 bytes for x-only)
-    if (!this.oraclePubkey || this.oraclePubkey.length !== 32) {
+    if (!this.oraclePublicKey || this.oraclePublicKey.length !== 32) {
       throw new Error('Oracle public key must be 32 bytes (x-only format)');
     }
 
@@ -110,7 +110,7 @@ export class OracleAnnouncement implements IDlcMessage {
         'DLC/oracle/announcement/v0',
         this.oracleEvent.serialize(),
       );
-      verify(this.oraclePubkey, msg, this.announcementSig);
+      verify(this.oraclePublicKey, msg, this.announcementSig);
     } catch (error) {
       throw new Error(`Invalid announcement signature: ${error.message}`);
     }
@@ -144,7 +144,7 @@ export class OracleAnnouncement implements IDlcMessage {
   public toJSON(): OracleAnnouncementJSON {
     return {
       announcementSignature: this.announcementSig.toString('hex'),
-      oraclePublicKey: this.oraclePubkey.toString('hex'),
+      oraclePublicKey: this.oraclePublicKey.toString('hex'),
       oracleEvent: this.oracleEvent.toJSON(),
     };
   }
@@ -158,7 +158,7 @@ export class OracleAnnouncement implements IDlcMessage {
 
     const dataWriter = new BufferWriter();
     dataWriter.writeBytes(this.announcementSig);
-    dataWriter.writeBytes(this.oraclePubkey);
+    dataWriter.writeBytes(this.oraclePublicKey);
     dataWriter.writeBytes(this.oracleEvent.serialize());
 
     writer.writeBigSize(dataWriter.size);

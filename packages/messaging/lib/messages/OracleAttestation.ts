@@ -17,6 +17,30 @@ export class OracleAttestation implements IDlcMessage {
   public static type = MessageType.OracleAttestation;
 
   /**
+   * Creates an Attestation from JSON data
+   * @param json JSON object representing oracle announcement
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
+  public static fromJSON(json: any): OracleAttestation {
+    const instance = new OracleAttestation();
+
+    // Handle different field name variations
+    instance.eventId = json.eventId;
+    instance.oraclePublicKey = Buffer.from(
+      json.oraclePublicKey || json.oraclePubkey || json.oracle_public_key,
+      'hex',
+    );
+
+    instance.signatures = json.signatures.map((signature: string) =>
+      Buffer.from(signature, 'hex'),
+    );
+
+    instance.outcomes = json.outcomes;
+
+    return instance;
+  }
+
+  /**
    * Deserializes an oracle_attestation message
    * @param buf
    */
@@ -42,18 +66,18 @@ export class OracleAttestation implements IDlcMessage {
           const eventIdBuf = reader.readBytes(Number(eventIdLength));
           instance.eventId = eventIdBuf.toString();
         }
-        instance.oraclePubkey = reader.readBytes(32);
+        instance.oraclePublicKey = reader.readBytes(32);
       } else {
         // Event ID length is unreasonable, probably old format without event_id
         reader.position = currentPos;
         instance.eventId = ''; // Default empty event ID for old format
-        instance.oraclePubkey = reader.readBytes(32);
+        instance.oraclePublicKey = reader.readBytes(32);
       }
     } catch (error) {
       // If reading fails, assume old format without event_id
       reader.position = currentPos;
       instance.eventId = ''; // Default empty event ID for old format
-      instance.oraclePubkey = reader.readBytes(32);
+      instance.oraclePublicKey = reader.readBytes(32);
     }
 
     const numSignatures = reader.readUInt16BE();
@@ -122,7 +146,7 @@ export class OracleAttestation implements IDlcMessage {
   public eventId: string;
 
   /** The public key of the oracle (32 bytes, x-only). */
-  public oraclePubkey: Buffer;
+  public oraclePublicKey: Buffer;
 
   /** The signatures over the event outcome (64 bytes each, Schnorr format). */
   public signatures: Buffer[] = [];
@@ -152,7 +176,7 @@ export class OracleAttestation implements IDlcMessage {
     }
 
     // Validate oracle public key format
-    if (!this.oraclePubkey || this.oraclePubkey.length !== 32) {
+    if (!this.oraclePublicKey || this.oraclePublicKey.length !== 32) {
       throw new Error('Oracle public key must be 32 bytes (x-only format)');
     }
 
@@ -177,7 +201,7 @@ export class OracleAttestation implements IDlcMessage {
       const outcome = this.outcomes[index];
       try {
         const msg = math.taggedHash('DLC/oracle/attestation/v0', outcome);
-        verify(this.oraclePubkey, msg, sig);
+        verify(this.oraclePublicKey, msg, sig);
       } catch (error) {
         throw new Error(
           `Invalid signature for outcome "${outcome}" at index ${index}: ${error.message}`,
@@ -199,7 +223,7 @@ export class OracleAttestation implements IDlcMessage {
    */
   private validateAgainstAnnouncement(announcement: OracleAnnouncement): void {
     // Validate oracle public key matches announcement
-    if (!this.oraclePubkey.equals(announcement.oraclePubkey)) {
+    if (!this.oraclePublicKey.equals(announcement.oraclePublicKey)) {
       throw new Error('Oracle public key must match announcement');
     }
 
@@ -246,7 +270,7 @@ export class OracleAttestation implements IDlcMessage {
     return {
       type: this.type,
       eventId: this.eventId,
-      oraclePubkey: this.oraclePubkey.toString('hex'),
+      oraclePublicKey: this.oraclePublicKey.toString('hex'),
       signatures: this.signatures.map((sig) => sig.toString('hex')),
       outcomes: this.outcomes,
     };
@@ -262,7 +286,7 @@ export class OracleAttestation implements IDlcMessage {
     const dataWriter = new BufferWriter();
     dataWriter.writeBigSize(this.eventId.length);
     dataWriter.writeBytes(Buffer.from(this.eventId));
-    dataWriter.writeBytes(this.oraclePubkey);
+    dataWriter.writeBytes(this.oraclePublicKey);
     dataWriter.writeUInt16BE(this.signatures.length);
 
     for (const signature of this.signatures) {
@@ -284,9 +308,9 @@ export class OracleAttestation implements IDlcMessage {
 }
 
 export interface OracleAttestationJSON {
-  type: number;
+  type?: number; // Made optional for rust-dlc compatibility
   eventId: string;
-  oraclePubkey: string;
+  oraclePublicKey: string;
   signatures: string[];
   outcomes: string[];
 }
