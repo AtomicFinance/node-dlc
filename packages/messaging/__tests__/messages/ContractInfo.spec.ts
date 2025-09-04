@@ -46,7 +46,7 @@ describe('ContractInfo', () => {
           'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4',
           'hex',
         );
-        oracleAnnouncement.oraclePubkey = Buffer.from(
+        oracleAnnouncement.oraclePublicKey = Buffer.from(
           'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b',
           'hex',
         );
@@ -168,7 +168,7 @@ describe('ContractInfo', () => {
           'c3347aa29db9f5e619483a92e746be91982bc66127e856bee62daeb91148cb92a1074a802a481c008ba44143c752e519c28d906658e5257d9d82e80ef66cbf0f',
           'hex',
         );
-        oracleAnnouncement.oraclePubkey = Buffer.from(
+        oracleAnnouncement.oraclePublicKey = Buffer.from(
           '4f15b5e4b8000c33a8e5bbdbc6802375a7d6e7cefcfbf098aa51ce7da0f910c1',
           'hex',
         );
@@ -206,7 +206,7 @@ describe('ContractInfo', () => {
           'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4',
           'hex',
         );
-        oracleAnnouncement.oraclePubkey = Buffer.from(
+        oracleAnnouncement.oraclePublicKey = Buffer.from(
           'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b',
           'hex',
         );
@@ -304,7 +304,7 @@ describe('ContractInfo', () => {
           'c3347aa29db9f5e619483a92e746be91982bc66127e856bee62daeb91148cb92a1074a802a481c008ba44143c752e519c28d906658e5257d9d82e80ef66cbf0f',
           'hex',
         );
-        oracleAnnouncement.oraclePubkey = Buffer.from(
+        oracleAnnouncement.oraclePublicKey = Buffer.from(
           '4f15b5e4b8000c33a8e5bbdbc6802375a7d6e7cefcfbf098aa51ce7da0f910c1',
           'hex',
         );

@@ -34,7 +34,7 @@ describe('OracleAttestation', () => {
       const instance = new OracleAttestation();
 
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
-      instance.oraclePubkey = oraclePubkey;
+      instance.oraclePublicKey = oraclePubkey;
       instance.signatures.push(attestationSig);
       instance.outcomes.push('NO');
 
@@ -50,7 +50,7 @@ describe('OracleAttestation', () => {
       // Create a test instance and serialize it first for round-trip testing
       const originalInstance = new OracleAttestation();
       originalInstance.eventId = 'BTC-USD-OVER-50K-COINBASE';
-      originalInstance.oraclePubkey = oraclePubkey;
+      originalInstance.oraclePublicKey = oraclePubkey;
       originalInstance.signatures.push(attestationSig);
       originalInstance.outcomes.push('NO');
 
@@ -60,7 +60,7 @@ describe('OracleAttestation', () => {
 
       expect(Number(instance.length)).to.be.greaterThan(0); // Length is calculated automatically
       expect(instance.eventId).to.equal('BTC-USD-OVER-50K-COINBASE');
-      expect(instance.oraclePubkey).to.deep.equal(oraclePubkey);
+      expect(instance.oraclePublicKey).to.deep.equal(oraclePubkey);
       expect(instance.signatures[0]).to.deep.equal(attestationSig);
       expect(instance.outcomes[0]).to.equal('NO');
     });
@@ -71,7 +71,7 @@ describe('OracleAttestation', () => {
       const instance = new OracleAttestation();
 
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
-      instance.oraclePubkey = oraclePubkey;
+      instance.oraclePublicKey = oraclePubkey;
       instance.signatures.push(attestationSig);
       instance.outcomes.push('NO');
 
@@ -84,7 +84,7 @@ describe('OracleAttestation', () => {
       const instance = new OracleAttestation();
 
       instance.eventId = 'BTC-USD-OVER-50K-COINBASE';
-      instance.oraclePubkey = invalidOraclePubkey;
+      instance.oraclePublicKey = invalidOraclePubkey;
       instance.signatures.push(attestationSig);
       instance.outcomes.push('NO');
 
@@ -119,8 +119,8 @@ describe('OracleAttestation', () => {
       it('deserializes Atomic oracle attestation', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.eventId).to.equal(testVectors.atomic.metadata.eventId);
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.signatures).to.be.an('array');
         expect(instance.outcomes).to.be.an('array');
         expect(instance.signatures.length).to.equal(instance.outcomes.length);
@@ -149,7 +149,9 @@ describe('OracleAttestation', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAttestation.deserialize(serialized);
         expect(deserialized.eventId).to.equal(instance.eventId);
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
         expect(deserialized.outcomes).to.deep.equal(instance.outcomes);
       });
     });
@@ -170,8 +172,8 @@ describe('OracleAttestation', () => {
       it('deserializes Lava oracle attestation', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.eventId).to.be.a('string');
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.signatures).to.be.an('array');
         expect(instance.outcomes).to.be.an('array');
         expect(instance.signatures.length).to.equal(instance.outcomes.length);
@@ -192,7 +194,9 @@ describe('OracleAttestation', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAttestation.deserialize(serialized);
         expect(deserialized.eventId).to.equal(instance.eventId);
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
         expect(deserialized.outcomes).to.deep.equal(instance.outcomes);
       });
     });
@@ -216,8 +220,8 @@ describe('OracleAttestation', () => {
       it('deserializes rust-dlc enum oracle attestation', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.eventId).to.equal('sports-match-001');
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.signatures).to.be.an('array');
         expect(instance.outcomes).to.be.an('array');
         expect(instance.signatures.length).to.equal(instance.outcomes.length);
@@ -237,7 +241,9 @@ describe('OracleAttestation', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAttestation.deserialize(serialized);
         expect(deserialized.eventId).to.equal(instance.eventId);
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
         expect(deserialized.outcomes).to.deep.equal(instance.outcomes);
       });
     });
@@ -256,8 +262,8 @@ describe('OracleAttestation', () => {
       it('deserializes rust-dlc numeric oracle attestation', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.eventId).to.equal('btc-price-test');
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.signatures).to.be.an('array');
         expect(instance.outcomes).to.be.an('array');
         expect(instance.signatures.length).to.equal(instance.outcomes.length);
@@ -284,7 +290,9 @@ describe('OracleAttestation', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAttestation.deserialize(serialized);
         expect(deserialized.eventId).to.equal(instance.eventId);
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
         expect(deserialized.outcomes).to.deep.equal(instance.outcomes);
       });
     });

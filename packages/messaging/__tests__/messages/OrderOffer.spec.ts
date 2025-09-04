@@ -43,7 +43,7 @@ describe('OrderOffer', () => {
       const oracleInfo = new SingleOracleInfo();
       const announcement = new OracleAnnouncement();
       announcement.announcementSig = Buffer.alloc(64);
-      announcement.oraclePubkey = Buffer.alloc(32);
+      announcement.oraclePublicKey = Buffer.alloc(32);
 
       const oracleEvent = new OracleEvent();
       oracleEvent.oracleNonces = [Buffer.alloc(32)];

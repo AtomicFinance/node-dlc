@@ -39,7 +39,7 @@ describe('OracleAnnouncement', () => {
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
-      instance.oraclePubkey = oraclePubkey;
+      instance.oraclePublicKey = oraclePubkey;
       instance.oracleEvent = OracleEvent.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
@@ -113,7 +113,7 @@ describe('OracleAnnouncement', () => {
 
       expect(instance.length).to.deep.equal(BigInt(164));
       expect(instance.announcementSig).to.deep.equal(announcementSig);
-      expect(instance.oraclePubkey).to.deep.equal(oraclePubkey);
+      expect(instance.oraclePublicKey).to.deep.equal(oraclePubkey);
       expect(instance.oracleEvent.serialize().toString('hex')).to.equal(
         'fdd822' + // type oracle_event
           '40' + // length
@@ -139,7 +139,7 @@ describe('OracleAnnouncement', () => {
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
-      instance.oraclePubkey = oraclePubkey;
+      instance.oraclePublicKey = oraclePubkey;
       instance.oracleEvent = OracleEvent.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
@@ -170,7 +170,7 @@ describe('OracleAnnouncement', () => {
 
       instance.length = BigInt(164);
       instance.announcementSig = announcementSig;
-      instance.oraclePubkey = invalidOraclePubkey;
+      instance.oraclePublicKey = invalidOraclePubkey;
       instance.oracleEvent = OracleEvent.deserialize(
         Buffer.from(
           'fdd822' + // type oracle_event
@@ -218,7 +218,7 @@ describe('OracleAnnouncement', () => {
           'hex',
         ),
       );
-      expect(instance.oraclePubkey).to.deep.equal(
+      expect(instance.oraclePublicKey).to.deep.equal(
         Buffer.from(
           'b8b005b07acf849ad2cec22107331dedbf5a607654fad4eafe39c278e27dde68',
           'hex',
@@ -261,8 +261,8 @@ describe('OracleAnnouncement', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.announcementSig).to.be.instanceOf(Buffer);
         expect(instance.announcementSig.length).to.equal(64);
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
         expect(instance.getEventId()).to.equal(
           testVectors.atomic.metadata.eventId,
@@ -288,7 +288,9 @@ describe('OracleAnnouncement', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAnnouncement.deserialize(serialized);
         expect(deserialized.getEventId()).to.equal(instance.getEventId());
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
       });
     });
 
@@ -305,8 +307,8 @@ describe('OracleAnnouncement', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.announcementSig).to.be.instanceOf(Buffer);
         expect(instance.announcementSig.length).to.equal(64);
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
       });
 
@@ -326,7 +328,9 @@ describe('OracleAnnouncement', () => {
 
         const deserialized = OracleAnnouncement.deserialize(serialized);
         expect(deserialized.getEventId()).to.equal(instance.getEventId());
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
       });
     });
 
@@ -342,8 +346,8 @@ describe('OracleAnnouncement', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.announcementSig).to.be.instanceOf(Buffer);
         expect(instance.announcementSig.length).to.equal(64);
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
         expect(instance.getEventId()).to.equal('sports-match-001');
       });
@@ -363,7 +367,9 @@ describe('OracleAnnouncement', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAnnouncement.deserialize(serialized);
         expect(deserialized.getEventId()).to.equal(instance.getEventId());
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
       });
     });
 
@@ -382,8 +388,8 @@ describe('OracleAnnouncement', () => {
         expect(Number(instance.length)).to.be.greaterThan(0);
         expect(instance.announcementSig).to.be.instanceOf(Buffer);
         expect(instance.announcementSig.length).to.equal(64);
-        expect(instance.oraclePubkey).to.be.instanceOf(Buffer);
-        expect(instance.oraclePubkey.length).to.equal(32);
+        expect(instance.oraclePublicKey).to.be.instanceOf(Buffer);
+        expect(instance.oraclePublicKey.length).to.equal(32);
         expect(instance.oracleEvent).to.be.instanceOf(OracleEvent);
         expect(instance.getEventId()).to.equal('btc-price-test');
       });
@@ -408,7 +414,9 @@ describe('OracleAnnouncement', () => {
         const serialized = instance.serialize();
         const deserialized = OracleAnnouncement.deserialize(serialized);
         expect(deserialized.getEventId()).to.equal(instance.getEventId());
-        expect(deserialized.oraclePubkey).to.deep.equal(instance.oraclePubkey);
+        expect(deserialized.oraclePublicKey).to.deep.equal(
+          instance.oraclePublicKey,
+        );
       });
     });
   });
