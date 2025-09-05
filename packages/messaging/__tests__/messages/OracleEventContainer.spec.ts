@@ -13,7 +13,7 @@ describe('OracleEventContainer', () => {
       'fab22628f6e2602e1671c286a2f63a9246794008627a1749639217f4214cb4a9494c93d1a852221080f44f697adb4355df59eb339f6ba0f9b01ba661a8b108d4',
       'hex',
     );
-    announcement.oraclePubkey = Buffer.from(
+    announcement.oraclePublicKey = Buffer.from(
       'da078bbb1d34e7729e38e2ae34236e776da121af442626fa31e31ae55a279a0b',
       'hex',
     );
@@ -39,7 +39,7 @@ describe('OracleEventContainer', () => {
   function createTestOracleAttestation(): OracleAttestation {
     const attestation = new OracleAttestation();
     attestation.eventId = 'BTC-USD-OVER-50K-COINBASE';
-    attestation.oraclePubkey = Buffer.from(
+    attestation.oraclePublicKey = Buffer.from(
       '1d5dcdba2e64cb116cc0c375a0856298f0058b778f46bfe625ac6576204889e4',
       'hex',
     );
