@@ -34,13 +34,13 @@ describe('LeveldbOracleStore', () => {
     // Create oracle announcement
     const oracleAnnouncement = new OracleAnnouncement();
     oracleAnnouncement.announcementSig = Buffer.alloc(64, 0xfa);
-    oracleAnnouncement.oraclePubkey = Buffer.alloc(32, 0xda);
+    oracleAnnouncement.oraclePublicKey = Buffer.alloc(32, 0xda);
     oracleAnnouncement.oracleEvent = oracleEvent;
 
     // Create oracle attestation
     const oracleAttestation = new OracleAttestation();
     oracleAttestation.eventId = 'BTC-USD-OVER-50K-COINBASE';
-    oracleAttestation.oraclePubkey = Buffer.from(
+    oracleAttestation.oraclePublicKey = Buffer.from(
       '1d5dcdba2e64cb116cc0c375a0856298f0058b778f46bfe625ac6576204889e4',
       'hex',
     );

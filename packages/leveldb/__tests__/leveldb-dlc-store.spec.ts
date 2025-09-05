@@ -61,7 +61,7 @@ describe('LeveldbDlcStore', () => {
     // Create oracle announcement
     const oracleAnnouncement = new OracleAnnouncement();
     oracleAnnouncement.announcementSig = Buffer.alloc(64, 0xfa);
-    oracleAnnouncement.oraclePubkey = Buffer.alloc(32, 0xda);
+    oracleAnnouncement.oraclePublicKey = Buffer.alloc(32, 0xda);
     oracleAnnouncement.oracleEvent = oracleEvent;
 
     // Create oracle info
