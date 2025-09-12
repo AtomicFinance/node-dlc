@@ -45,7 +45,7 @@ export class BufferWriter {
    * @param val
    */
   public writeUInt8(val: number): void {
-    this._writeStandard(this.writeUInt8.name, val, 1);
+    this._writeStandard('writeUInt8', val, 1);
   }
 
   /**
@@ -53,7 +53,7 @@ export class BufferWriter {
    * @param val
    */
   public writeUInt16LE(val: number): void {
-    this._writeStandard(this.writeUInt16LE.name, val, 2);
+    this._writeStandard('writeUInt16LE', val, 2);
   }
 
   /**
@@ -61,7 +61,7 @@ export class BufferWriter {
    * @param val
    */
   public writeUInt16BE(val: number): void {
-    this._writeStandard(this.writeUInt16BE.name, val, 2);
+    this._writeStandard('writeUInt16BE', val, 2);
   }
 
   /**
@@ -69,7 +69,7 @@ export class BufferWriter {
    * @param val
    */
   public writeUInt32LE(val: number): void {
-    this._writeStandard(this.writeUInt32LE.name, val, 4);
+    this._writeStandard('writeUInt32LE', val, 4);
   }
 
   /**
@@ -77,7 +77,7 @@ export class BufferWriter {
    * @param val
    */
   public writeUInt32BE(val: number): void {
-    this._writeStandard(this.writeUInt32BE.name, val, 4);
+    this._writeStandard('writeUInt32BE', val, 4);
   }
 
   /**
@@ -86,7 +86,7 @@ export class BufferWriter {
    */
   public writeUInt64LE(value: number | bigint): void {
     const val = BigInt(value);
-    if (val < 0 || val >= BigInt(2) ** BigInt(64)) {
+    if (val < 0 || val >= BigInt('18446744073709551616')) {
       throw new RangeError(
         `The value of "value" is out of range. It must be >= 0 and <= 18446744073709551615. Received ${value.toString()}`,
       );
@@ -101,7 +101,7 @@ export class BufferWriter {
    */
   public writeUInt64BE(value: number | bigint): void {
     const val = BigInt(value);
-    if (val < 0 || val >= BigInt(2) ** BigInt(64)) {
+    if (val < 0 || val >= BigInt('18446744073709551616')) {
       throw new RangeError(
         `The value of "value" is out of range. It must be >= 0 and <= 18446744073709551615. Received ${value.toString()}`,
       );
@@ -127,7 +127,15 @@ export class BufferWriter {
   public writeBytes(buffer: Buffer): void {
     if (!buffer || !buffer.length) return;
     this._expand(buffer.length);
-    buffer.copy(this._buffer, this._position);
+    // React Native fix: Handle missing copy() method
+    if (typeof buffer.copy === 'function') {
+      buffer.copy(this._buffer, this._position);
+    } else {
+      // Fallback: manual copy for React Native Buffer polyfill
+      for (let i = 0; i < buffer.length; i++) {
+        this._buffer[this._position + i] = buffer[i];
+      }
+    }
     this._position += buffer.length;
   }
 
@@ -270,7 +278,15 @@ export class BufferWriter {
 
       // copy the old data to the new buffer and then dispose of the old
       // buffer
-      this._buffer.copy(newBuf);
+      // React Native fix: Handle missing copy() method
+      if (typeof this._buffer.copy === 'function') {
+        this._buffer.copy(newBuf);
+      } else {
+        // Fallback: manual copy for React Native Buffer polyfill
+        for (let i = 0; i < this._buffer.length; i++) {
+          newBuf[i] = this._buffer[i];
+        }
+      }
       this._buffer = newBuf;
     }
   }
