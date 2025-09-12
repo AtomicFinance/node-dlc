@@ -68,35 +68,35 @@ export class BufferReader {
    * Read a UInt8 number
    */
   public readUInt8(): number {
-    return this._readStandard(this.readUInt8.name, 1);
+    return this._readStandard('readUInt8', 1);
   }
 
   /**
    * Read a UInt16 number as little-endian
    */
   public readUInt16LE(): number {
-    return this._readStandard(this.readUInt16LE.name, 2);
+    return this._readStandard('readUInt16LE', 2);
   }
 
   /**
    * Read a UInt16 number as big-endian
    */
   public readUInt16BE(): number {
-    return this._readStandard(this.readUInt16BE.name, 2);
+    return this._readStandard('readUInt16BE', 2);
   }
 
   /**
    * Read a UInt32 number as little-endian
    */
   public readUInt32LE(): number {
-    return this._readStandard(this.readUInt32LE.name, 4);
+    return this._readStandard('readUInt32LE', 4);
   }
 
   /**
    * Read a UInt32 number as big-endian
    */
   public readUInt32BE(): number {
-    return this._readStandard(this.readUInt32BE.name, 4);
+    return this._readStandard('readUInt32BE', 4);
   }
 
   /**
@@ -117,7 +117,7 @@ export class BufferReader {
    * Read a 64-bit double (f64) in big-endian format
    */
   public readDoubleBE(): number {
-    return this._readStandard(this.readDoubleBE.name, 8);
+    return this._readStandard('readDoubleBE', 8);
   }
 
   /**
