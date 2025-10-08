@@ -43,7 +43,7 @@ export class Amount extends Value {
     return Number(this.sats) / 1e8;
   }
 
-  private constructor(picoSats: bigint) {
+  public constructor(picoSats: bigint) {
     super(picoSats);
   }
 
