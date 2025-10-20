@@ -135,8 +135,10 @@ export class DlcOffer implements IDlcMessage {
       reader.position,
       reader.position + 5,
     );
-    const possibleProtocolVersion = nextBytes.readUInt32BE(0);
-    const possibleContractFlags = nextBytes.readUInt8(4);
+    const nextBytesBuffer = Buffer.from(nextBytes);
+    const nextBytesReader = new BufferReader(nextBytesBuffer);
+    const possibleProtocolVersion = nextBytesReader.readUInt32BE();
+    const possibleContractFlags = nextBytesReader.readUInt8();
 
     // Heuristic: protocol_version should be 1, contract_flags should be 0
     // If first 4 bytes are reasonable protocol version (1-10) and next byte is 0, assume new format
@@ -160,7 +162,7 @@ export class DlcOffer implements IDlcMessage {
 
     // ContractInfo is serialized as sibling type in dlcspecs PR #163 format
     instance.contractInfo = ContractInfo.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
     // Skip past the ContractInfo we just read
     const contractInfoLength = instance.contractInfo.serialize().length;
@@ -177,7 +179,7 @@ export class DlcOffer implements IDlcMessage {
     for (let i = 0; i < fundingInputsLen; i++) {
       // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
       const fundingInput = FundingInput.deserializeBody(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
       instance.fundingInputs.push(fundingInput);
 
