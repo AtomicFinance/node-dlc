@@ -128,7 +128,7 @@ export class DlcClose implements IDlcMessage {
     for (let i = 0; i < fundingInputsLen; i++) {
       // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
       const fundingInput = FundingInput.deserializeBody(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
       instance.fundingInputs.push(fundingInput);
 
@@ -139,7 +139,7 @@ export class DlcClose implements IDlcMessage {
 
     // Handle FundingSignatures - deserialize raw data (no TLV wrapper) like DlcSign
     instance.fundingSignatures = FundingSignatures.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
 
     // Skip past the funding signatures we just read
