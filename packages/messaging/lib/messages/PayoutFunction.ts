@@ -112,7 +112,7 @@ export class PayoutFunction implements IDlcMessage {
       // Read payout curve piece
       const payoutCurvePieceStartPos = reader.position;
       const payoutCurvePiece = PayoutCurvePiece.deserialize(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
 
       // Skip past the payout curve piece bytes

@@ -203,7 +203,7 @@ export class DlcAccept implements IDlcMessage {
     for (let i = 0; i < fundingInputsLen; i++) {
       // FundingInput body is serialized directly without TLV wrapper in rust-dlc format
       const fundingInput = FundingInput.deserializeBody(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
       instance.fundingInputs.push(fundingInput);
 
@@ -219,7 +219,7 @@ export class DlcAccept implements IDlcMessage {
     if (parseCets) {
       // Read CET adaptor signatures directly to match serialize format (no TLV wrapping)
       instance.cetAdaptorSignatures = CetAdaptorSignatures.deserialize(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
 
       // Skip past the CET adaptor signatures we just read

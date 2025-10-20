@@ -212,7 +212,7 @@ export class NumericalDescriptor
     // Parse payout function - need to calculate its size to avoid consuming all bytes
     const payoutFunctionStartPos = reader.position;
     const tempPayoutFunction = PayoutFunction.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
     instance.payoutFunction = tempPayoutFunction;
 
@@ -222,7 +222,7 @@ export class NumericalDescriptor
 
     // Parse remaining bytes as rounding intervals
     instance.roundingIntervals = RoundingIntervals.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
 
     return instance;

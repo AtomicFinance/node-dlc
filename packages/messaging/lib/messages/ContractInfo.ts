@@ -123,7 +123,7 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
 
     // Read contract descriptor as sibling type (starts with its own type prefix)
     instance.contractDescriptor = ContractDescriptor.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
     // Skip past the contract descriptor we just read
     const descLength = instance.contractDescriptor.serialize().length;
@@ -134,12 +134,12 @@ export class SingleContractInfo extends ContractInfo implements IDlcMessage {
     if (oracleType === 0) {
       // Single oracle
       instance.oracleInfo = SingleOracleInfo.deserializeBody(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
     } else if (oracleType === 1) {
       // Multi oracle
       instance.oracleInfo = MultiOracleInfo.deserializeBody(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
     } else {
       throw new Error(`Unknown oracle info type: ${oracleType}`);
@@ -277,7 +277,7 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
     for (let i = 0; i < numDisjointEvents; i++) {
       // Read contract descriptor as sibling type (starts with its own type prefix)
       const contractDescriptor = ContractDescriptor.deserialize(
-        reader.buffer.subarray(reader.position),
+        Buffer.from(reader.buffer.subarray(reader.position)),
       );
       // Skip past the contract descriptor we just read
       const descLength = contractDescriptor.serialize().length;
@@ -290,12 +290,12 @@ export class DisjointContractInfo extends ContractInfo implements IDlcMessage {
       if (oracleType === 0) {
         // Single oracle
         oracleInfo = SingleOracleInfo.deserializeBody(
-          reader.buffer.subarray(reader.position),
+          Buffer.from(reader.buffer.subarray(reader.position)),
         );
       } else if (oracleType === 1) {
         // Multi oracle
         oracleInfo = MultiOracleInfo.deserializeBody(
-          reader.buffer.subarray(reader.position),
+          Buffer.from(reader.buffer.subarray(reader.position)),
         );
       } else {
         throw new Error(`Unknown oracle info type: ${oracleType}`);

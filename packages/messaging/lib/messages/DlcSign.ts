@@ -156,7 +156,7 @@ export class DlcSign implements IDlcMessage {
 
     // Read CET adaptor signatures directly to match serialize format (no TLV wrapping)
     instance.cetAdaptorSignatures = CetAdaptorSignatures.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
 
     // Skip past the CET adaptor signatures we just read
@@ -167,7 +167,7 @@ export class DlcSign implements IDlcMessage {
 
     // Read funding signatures directly to match serialize format (no TLV wrapping)
     instance.fundingSignatures = FundingSignatures.deserialize(
-      reader.buffer.subarray(reader.position),
+      Buffer.from(reader.buffer.subarray(reader.position)),
     );
 
     // Skip past the funding signatures we just read
