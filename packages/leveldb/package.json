@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/leveldb",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "DLC LevelDB",
   "scripts": {
     "start": "npm run build && node dist/index.js",
@@ -23,12 +23,12 @@
     "url": "git+https://github.com/atomicfinance/node-dlc.git"
   },
   "dependencies": {
-    "@node-dlc/bitcoin": "^1.1.3",
-    "@node-dlc/bufio": "^1.1.3",
-    "@node-dlc/core": "^1.1.3",
-    "@node-dlc/crypto": "^1.1.3",
-    "@node-dlc/messaging": "^1.1.3",
-    "@node-dlc/wire": "^1.1.3",
+    "@node-dlc/bitcoin": "^1.1.4",
+    "@node-dlc/bufio": "^1.1.4",
+    "@node-dlc/core": "^1.1.4",
+    "@node-dlc/crypto": "^1.1.4",
+    "@node-dlc/messaging": "^1.1.4",
+    "@node-dlc/wire": "^1.1.4",
     "classic-level": "^3.0.0",
     "cryptr": "^6.0.2",
     "dotenv": "^8.2.0",
