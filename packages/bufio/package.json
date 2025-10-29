@@ -22,6 +22,6 @@
     "access": "public"
   },
   "dependencies": {
-    "decimal.js": "10.4.3"
+    "decimal.js": "10.6.0"
   }
 }

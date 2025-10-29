@@ -30,7 +30,7 @@
     "@node-dlc/messaging": "^1.1.4",
     "bignumber.js": "^9.0.1",
     "bitcoin-networks": "^1.0.0",
-    "decimal.js": "10.4.3"
+    "decimal.js": "10.6.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9"
