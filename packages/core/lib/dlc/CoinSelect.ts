@@ -77,7 +77,7 @@ export const dualFundingCoinSelect = (
     Number(utxoScore(b, feeRate) - utxoScore(a, feeRate)),
   );
 
-  let inAccum = 0;
+  let inAccum = BigInt(0);
   const inputs: UTXO[] = [];
   const outAccum =
     collaterals.reduce((acc, val) => acc + val, BigInt(0)) +
@@ -87,10 +87,10 @@ export const dualFundingCoinSelect = (
     const utxo = utxos[i];
     const utxoBytes = inputBytes();
     const utxoFee = feeRate * utxoBytes;
-    const utxoValue = utxo.value;
+    const utxoValue = BigInt(utxo.value);
 
     // skip detrimental input
-    if (utxoFee > utxo.value) {
+    if (utxoFee > utxoValue) {
       if (i === utxos.length - 1)
         return {
           fee: dualFees(feeRate, 1, collaterals.length),
