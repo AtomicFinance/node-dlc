@@ -78,9 +78,6 @@ jobs:
           fi
         timeout-minutes: 15
 
-      - name: Clear Nx cache
-        run: rm -rf node_modules/.cache
-
       - name: Run tests
         run: yarn test
         timeout-minutes: 30
