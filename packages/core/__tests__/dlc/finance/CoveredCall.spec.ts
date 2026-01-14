@@ -34,10 +34,8 @@ describe('CoveredCall', () => {
 
     describe('buildPayoutFunction', () => {
       it('should build payout function', () => {
-        const {
-          payoutFunction,
-          totalCollateral,
-        } = CoveredCall.buildPayoutFunction(4000n, 1000000n, 2, 17);
+        const { payoutFunction, totalCollateral } =
+          CoveredCall.buildPayoutFunction(4000n, 1000000n, 2, 17);
 
         // Test basic structure
         expect(payoutFunction).to.not.be.undefined;

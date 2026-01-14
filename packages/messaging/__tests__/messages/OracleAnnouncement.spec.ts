@@ -232,8 +232,10 @@ describe('OracleAnnouncement', () => {
       );
       expect(instance.oracleEvent.eventMaturityEpoch).to.equal(1613779200);
       expect(
-        (instance.oracleEvent
-          .eventDescriptor as DigitDecompositionEventDescriptor).unit,
+        (
+          instance.oracleEvent
+            .eventDescriptor as DigitDecompositionEventDescriptor
+        ).unit,
       ).to.equal('btc/usd');
     });
 

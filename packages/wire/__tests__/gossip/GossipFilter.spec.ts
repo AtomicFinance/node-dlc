@@ -354,8 +354,7 @@ describe('GossipFilter', () => {
       it('should abort processing and return error', async () => {
         chainClient.getBlock.reset();
         chainClient.getBlock.resolves({
-          hash:
-            '00000000368ca807643298b36987833a726eb1e3ce6c3139fd7ff64454f03b10',
+          hash: '00000000368ca807643298b36987833a726eb1e3ce6c3139fd7ff64454f03b10',
           confirmations: 276288,
           strippedsize: 13966,
           size: 19842,
@@ -409,10 +408,8 @@ describe('GossipFilter', () => {
           confirmations: 276288,
           value: 0.16777216,
           scriptPubKey: {
-            asm:
-              '0 fdef2b21b827959dcaf3d31f8f0f859cd81ec5d335614ed4e338cdf8ce9d6fcb',
-            hex:
-              '0020edef2b21b827959dcaf3d31f8f0f859cd81ec5d335614ed4e338cdf8ce9d6fcb',
+            asm: '0 fdef2b21b827959dcaf3d31f8f0f859cd81ec5d335614ed4e338cdf8ce9d6fcb',
+            hex: '0020edef2b21b827959dcaf3d31f8f0f859cd81ec5d335614ed4e338cdf8ce9d6fcb',
             reqSigs: 1,
             type: 'witness_v0_scripthash',
             addresses: [

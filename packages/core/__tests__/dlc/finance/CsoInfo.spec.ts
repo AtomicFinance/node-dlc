@@ -510,10 +510,10 @@ describe('CsoInfo', () => {
     );
 
     // Subtract 1 from outcomePayout to create gap in point outcome payout
-    (payoutFunction.payoutFunctionPieces[0]
-      .payoutCurvePiece as PolynomialPayoutCurvePiece).points[1].outcomePayout -= BigInt(
-      1,
-    );
+    (
+      payoutFunction.payoutFunctionPieces[0]
+        .payoutCurvePiece as PolynomialPayoutCurvePiece
+    ).points[1].outcomePayout -= BigInt(1);
 
     expect(() => validateCsoPayoutFunction(payoutFunction)).to.throw(Error);
   });

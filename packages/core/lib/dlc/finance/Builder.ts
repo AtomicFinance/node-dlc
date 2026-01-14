@@ -698,8 +698,10 @@ export const buildCustomStrategyOrderOffer = (
   (orderOffer.positionInfo as OrderPositionInfo).contractSize =
     contractSize.sats;
 
-  (orderOffer.positionInfo as OrderPositionInfo).instrumentName = ((orderOffer.contractInfo as SingleContractInfo)
-    .oracleInfo as SingleOracleInfo).announcement.oracleEvent.eventId;
+  (orderOffer.positionInfo as OrderPositionInfo).instrumentName = (
+    (orderOffer.contractInfo as SingleContractInfo)
+      .oracleInfo as SingleOracleInfo
+  ).announcement.oracleEvent.eventId;
 
   if (!skipValidation) orderOffer.validate();
 

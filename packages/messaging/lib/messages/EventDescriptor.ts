@@ -64,7 +64,8 @@ export abstract class EventDescriptor {
  */
 export class EnumEventDescriptor
   extends EventDescriptor
-  implements IDlcMessage {
+  implements IDlcMessage
+{
   public static type = MessageType.EnumEventDescriptorV0;
 
   /**
@@ -151,7 +152,8 @@ export type EnumEventDescriptorV0 = EnumEventDescriptor;
  */
 export class DigitDecompositionEventDescriptor
   extends EventDescriptor
-  implements IDlcMessage {
+  implements IDlcMessage
+{
   public static type = MessageType.DigitDecompositionEventDescriptor;
 
   /**
@@ -267,8 +269,10 @@ export class DigitDecompositionEventDescriptor
 }
 
 // Legacy support - keep V0 alias for backward compatibility
-export const DigitDecompositionEventDescriptorV0 = DigitDecompositionEventDescriptor;
-export type DigitDecompositionEventDescriptorV0 = DigitDecompositionEventDescriptor;
+export const DigitDecompositionEventDescriptorV0 =
+  DigitDecompositionEventDescriptor;
+export type DigitDecompositionEventDescriptorV0 =
+  DigitDecompositionEventDescriptor;
 
 export interface IEnumEventDescriptorJSON {
   enumEvent: {
@@ -291,4 +295,5 @@ export interface IDigitDecompositionEventDescriptorJSON {
 export type IEnumEventDescriptorV0JSON = IEnumEventDescriptorJSON;
 
 // Legacy interface
-export type IDigitDecompositionEventDescriptorV0JSON = IDigitDecompositionEventDescriptorJSON;
+export type IDigitDecompositionEventDescriptorV0JSON =
+  IDigitDecompositionEventDescriptorJSON;

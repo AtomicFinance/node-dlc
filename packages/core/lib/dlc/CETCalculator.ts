@@ -310,9 +310,8 @@ export function splitIntoRanges(
         isAscending ? Number(rounding) / 2 : -Number(rounding) / 2,
       );
 
-      let nextMidRoundedOutcome = curve.getOutcomeForPayout(
-        nextMidRoundedPayout,
-      );
+      let nextMidRoundedOutcome =
+        curve.getOutcomeForPayout(nextMidRoundedPayout);
 
       // Handle invalid outcomes from getOutcomeForPayout
       if (nextMidRoundedOutcome < 0) {

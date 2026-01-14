@@ -170,9 +170,12 @@ describe('OrderOffer Builder', () => {
           network,
         );
 
-        const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
-          .contractDescriptor as ContractDescriptorV1)
-          .payoutFunction as PayoutFunctionV0).payoutFunctionPieces;
+        const payoutCurvePieces = (
+          (
+            (orderOffer.contractInfo as ContractInfoV0)
+              .contractDescriptor as ContractDescriptorV1
+          ).payoutFunction as PayoutFunctionV0
+        ).payoutFunctionPieces;
 
         expect(() => orderOffer.validate()).to.not.throw(Error);
         expect(orderOffer.contractInfo.totalCollateral).to.equal(
@@ -227,9 +230,12 @@ describe('OrderOffer Builder', () => {
         offerFees,
       );
 
-      const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
-        .contractDescriptor as ContractDescriptorV1)
-        .payoutFunction as PayoutFunctionV0).payoutFunctionPieces;
+      const payoutCurvePieces = (
+        (
+          (orderOffer.contractInfo as ContractInfoV0)
+            .contractDescriptor as ContractDescriptorV1
+        ).payoutFunction as PayoutFunctionV0
+      ).payoutFunctionPieces;
 
       expect(() => orderOffer.validate()).to.not.throw(Error);
       expect(orderOffer.contractInfo.totalCollateral).to.equal(
@@ -283,9 +289,12 @@ describe('OrderOffer Builder', () => {
         acceptFees,
       );
 
-      const payoutCurvePieces = (((orderOffer.contractInfo as ContractInfoV0)
-        .contractDescriptor as ContractDescriptorV1)
-        .payoutFunction as PayoutFunctionV0).payoutFunctionPieces;
+      const payoutCurvePieces = (
+        (
+          (orderOffer.contractInfo as ContractInfoV0)
+            .contractDescriptor as ContractDescriptorV1
+        ).payoutFunction as PayoutFunctionV0
+      ).payoutFunctionPieces;
 
       expect(() => orderOffer.validate()).to.not.throw(Error);
       expect(orderOffer.contractInfo.totalCollateral).to.equal(

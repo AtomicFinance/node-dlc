@@ -26,7 +26,7 @@
     "node": ">=10.17"
   },
   "dependencies": {
-    "secp256k1": "^4.0.2"
+    "secp256k1": "^5.0.1"
   },
   "publishConfig": {
     "access": "public"

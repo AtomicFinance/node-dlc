@@ -520,20 +520,16 @@ describe('LeveldbDlcStore', () => {
   // Create fresh objects for batch testing to avoid serialization issues
   const dlcOfferForBatch = createTestDlcOffer();
   // Increase funding input amount to match minimum collateral for batch
-  (dlcOfferForBatch
-    .fundingInputs[0] as FundingInput).prevTx.outputs[0].value = Value.fromBitcoin(
-    4,
-  );
+  (dlcOfferForBatch.fundingInputs[0] as FundingInput).prevTx.outputs[0].value =
+    Value.fromBitcoin(4);
 
   // Create fresh dlcAccept for batch testing
   const dlcOfferForBatchHex = dlcOfferForBatch.serialize();
   const tempContractIdForBatch = sha256(dlcOfferForBatchHex);
   const dlcAcceptForBatch = createTestDlcAccept(tempContractIdForBatch);
   // Increase funding input amount to match minimum collateral for batch
-  (dlcAcceptForBatch
-    .fundingInputs[0] as FundingInput).prevTx.outputs[0].value = Value.fromBitcoin(
-    4,
-  );
+  (dlcAcceptForBatch.fundingInputs[0] as FundingInput).prevTx.outputs[0].value =
+    Value.fromBitcoin(4);
 
   before(async () => {
     util.rmdir('.testdb');

@@ -29,7 +29,7 @@
     "@node-dlc/crypto": "^1.1.5",
     "@node-dlc/messaging": "^1.1.5",
     "bignumber.js": "^9.0.1",
-    "bitcoin-networks": "^1.0.0",
+    "bitcoin-network": "0.1.0",
     "decimal.js": "10.6.0"
   },
   "devDependencies": {

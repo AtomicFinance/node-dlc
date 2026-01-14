@@ -70,15 +70,13 @@ describe('OptionInfo', () => {
     });
 
     it('should throw on an invalid curve', () => {
-      const {
-        totalCollateral,
-        payoutFunction,
-      } = CoveredCall.buildPayoutFunction(
-        strikePrice,
-        contractSize,
-        oracleBase,
-        oracleDigits,
-      );
+      const { totalCollateral, payoutFunction } =
+        CoveredCall.buildPayoutFunction(
+          strikePrice,
+          contractSize,
+          oracleBase,
+          oracleDigits,
+        );
 
       const invalidDlcOffer = buildDlcOfferFixture(
         oracleDigits,
@@ -89,7 +87,8 @@ describe('OptionInfo', () => {
       );
 
       const contractInfo = invalidDlcOffer.contractInfo as SingleContractInfo;
-      const contractDescriptor = contractInfo.contractDescriptor as NumericalDescriptor;
+      const contractDescriptor =
+        contractInfo.contractDescriptor as NumericalDescriptor;
       const payoutFunc = contractDescriptor.payoutFunction as PayoutFunction;
       const hyperbolaPiece = payoutFunc.payoutFunctionPieces[0]
         .payoutCurvePiece as HyperbolaPayoutCurvePiece;
@@ -172,7 +171,8 @@ describe('OptionInfo', () => {
       );
 
       const contractInfo = invalidDlcOffer.contractInfo as SingleContractInfo;
-      const contractDescriptor = contractInfo.contractDescriptor as NumericalDescriptor;
+      const contractDescriptor =
+        contractInfo.contractDescriptor as NumericalDescriptor;
       const payoutFunc = contractDescriptor.payoutFunction as PayoutFunction;
       const hyperbolaPiece = payoutFunc.payoutFunctionPieces[0]
         .payoutCurvePiece as HyperbolaPayoutCurvePiece;

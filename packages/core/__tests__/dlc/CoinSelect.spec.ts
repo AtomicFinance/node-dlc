@@ -84,8 +84,7 @@ describe('CoinSelect', () => {
 
       utxos.push({
         address: 'bcrt1qjzut0906d9sk4hml4k6sz6cssljktf4c7yl80f',
-        txid:
-          'c7bf12ac16aba1cf6c7769117294853453f7da3006363dfe4e8979847e32f7e1',
+        txid: 'c7bf12ac16aba1cf6c7769117294853453f7da3006363dfe4e8979847e32f7e1',
         value: 10000,
         vout: Math.floor(Math.random() * 11), // random integer between 0 and 10
       });
