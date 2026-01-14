@@ -9,6 +9,9 @@
     }
   },
   "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
     "test": {
       "cache": false
     }
