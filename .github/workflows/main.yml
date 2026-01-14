@@ -62,6 +62,9 @@ jobs:
       - name: Run linting
         run: yarn lint
 
+      - name: Build all packages
+        run: yarn build
+
       - name: Build rust-dlc-cli for compatibility tests
         run: |
           if [ -d "rust-dlc-cli" ]; then
