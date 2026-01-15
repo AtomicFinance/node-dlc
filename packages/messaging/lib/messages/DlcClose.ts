@@ -64,18 +64,19 @@ export class DlcClose implements IDlcMessage {
       // Handle different possible structures
       if (sigData.fundingSignatures) {
         // Standard format
-        instance.fundingSignatures.witnessElements = sigData.fundingSignatures.map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (sig: any) =>
+        instance.fundingSignatures.witnessElements =
+          sigData.fundingSignatures.map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sig.witnessElements?.map((elem: any) => {
-              const witness = new ScriptWitnessV0();
-              witness.length =
-                elem.length || Buffer.from(elem.witness || '', 'hex').length;
-              witness.witness = Buffer.from(elem.witness || '', 'hex');
-              return witness;
-            }) || [],
-        );
+            (sig: any) =>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              sig.witnessElements?.map((elem: any) => {
+                const witness = new ScriptWitnessV0();
+                witness.length =
+                  elem.length || Buffer.from(elem.witness || '', 'hex').length;
+                witness.witness = Buffer.from(elem.witness || '', 'hex');
+                return witness;
+              }) || [],
+          );
       } else if (Array.isArray(sigData)) {
         // Array format
         instance.fundingSignatures.witnessElements = sigData.map(

@@ -1,5 +1,5 @@
 import { Value } from '@node-dlc/bitcoin';
-import { BitcoinNetworks } from 'bitcoin-networks';
+import { BitcoinNetworks } from 'bitcoin-network';
 import { expect } from 'chai';
 
 import {
@@ -248,11 +248,8 @@ describe('DlcOffer', () => {
         const serialized = instance.serialize();
         const deserialized = DlcOffer.deserialize(serialized);
 
-        const {
-          fundingAddress,
-          changeAddress,
-          payoutAddress,
-        } = deserialized.getAddresses(bitcoinNetwork);
+        const { fundingAddress, changeAddress, payoutAddress } =
+          deserialized.getAddresses(bitcoinNetwork);
 
         expect(fundingAddress).to.equal(expectedFundingAddress);
         expect(changeAddress).to.equal(expectedChangeAddress);

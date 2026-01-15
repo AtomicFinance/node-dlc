@@ -306,7 +306,8 @@ export const getCsoInfoFromContractInfo = (
       throw Error('Unknown oracle info type');
   }
 
-  const contractDescriptor = contractInfo.contractDescriptor as NumericalDescriptor;
+  const contractDescriptor =
+    contractInfo.contractDescriptor as NumericalDescriptor;
   if (contractDescriptor.payoutFunction.type !== MessageType.PayoutFunction)
     throw Error('Only PayoutFunction currently supported');
 
@@ -440,7 +441,8 @@ export const validateCsoPayoutFunction = (
       'CSO Payout Function PayoutCurvePieces must be PolynomialCurvePieces',
     );
 
-    const payoutCurvePiece = piece.payoutCurvePiece as PolynomialPayoutCurvePiece;
+    const payoutCurvePiece =
+      piece.payoutCurvePiece as PolynomialPayoutCurvePiece;
     const points = payoutCurvePiece.points;
 
     // eventOutcome should always be ascending

@@ -73,7 +73,8 @@ export abstract class ContractDescriptor {
  */
 export class EnumeratedDescriptor
   extends ContractDescriptor
-  implements IDlcMessage {
+  implements IDlcMessage
+{
   public static contractDescriptorType = ContractDescriptorType.Enumerated;
 
   /**
@@ -172,7 +173,8 @@ export class EnumeratedDescriptor
  */
 export class NumericalDescriptor
   extends ContractDescriptor
-  implements IDlcMessage {
+  implements IDlcMessage
+{
   public static contractDescriptorType = ContractDescriptorType.NumericOutcome;
 
   /**

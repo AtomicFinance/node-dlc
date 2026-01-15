@@ -63,9 +63,8 @@ export class OrderAccept implements IDlcMessage {
       // Read the remaining bytes as negotiationFields (not TLV format)
       const remainingLength = buf.length - reader.position;
       const remainingBytes = reader.readBytes(remainingLength);
-      instance.negotiationFields = OrderNegotiationFields.deserialize(
-        remainingBytes,
-      );
+      instance.negotiationFields =
+        OrderNegotiationFields.deserialize(remainingBytes);
     }
 
     return instance;

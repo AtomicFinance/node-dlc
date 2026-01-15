@@ -25,7 +25,7 @@ export abstract class LeveldbBase {
   protected async _safeGet<T>(key: Buffer): Promise<T> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return ((await this._db.get(key)) as unknown) as T;
+      return (await this._db.get(key)) as unknown as T;
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (err.notFound) return;

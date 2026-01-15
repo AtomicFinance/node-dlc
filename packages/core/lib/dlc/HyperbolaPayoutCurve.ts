@@ -153,10 +153,8 @@ export class HyperbolaPayoutCurve implements PayoutCurve {
   ): CETPayout[] {
     if (payoutFunction.payoutFunctionPieces.length !== 1)
       throw new Error('Must have at least one piece');
-    const {
-      endPoint,
-      payoutCurvePiece,
-    } = payoutFunction.payoutFunctionPieces[0];
+    const { endPoint, payoutCurvePiece } =
+      payoutFunction.payoutFunctionPieces[0];
 
     if (
       payoutCurvePiece.payoutCurvePieceType !==

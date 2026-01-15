@@ -147,9 +147,8 @@ export class BatchDlcTxBuilder {
       if (input.type !== MessageType.FundingInput)
         throw new Error('Input is not a funding input');
     });
-    const offerFundingInputs: FundingInput[] = this.dlcOffers[0].fundingInputs.map(
-      (input) => input as FundingInput,
-    );
+    const offerFundingInputs: FundingInput[] =
+      this.dlcOffers[0].fundingInputs.map((input) => input as FundingInput);
 
     const offerTotalFunding = offerFundingInputs.reduce((total, input) => {
       return total + input.prevTx.outputs[input.prevTxVout].value.sats;

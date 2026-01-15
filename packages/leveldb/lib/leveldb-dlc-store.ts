@@ -94,7 +94,8 @@ export class LeveldbDlcStore extends LeveldbBase {
 
           switch (dlcOffer.contractInfo.contractInfoType) {
             case ContractInfoType.Single: {
-              const singleContractInfo = dlcOffer.contractInfo as SingleContractInfo;
+              const singleContractInfo =
+                dlcOffer.contractInfo as SingleContractInfo;
               if (
                 this._checkOracleInfoForEventId(
                   singleContractInfo.oracleInfo,
@@ -106,11 +107,12 @@ export class LeveldbDlcStore extends LeveldbBase {
               break;
             }
             case ContractInfoType.Disjoint: {
-              const disjointContractInfo = dlcOffer.contractInfo as DisjointContractInfo;
-              const hasMatchingEvent = disjointContractInfo.contractOraclePairs.some(
-                (pair) =>
+              const disjointContractInfo =
+                dlcOffer.contractInfo as DisjointContractInfo;
+              const hasMatchingEvent =
+                disjointContractInfo.contractOraclePairs.some((pair) =>
                   this._checkOracleInfoForEventId(pair.oracleInfo, eventId),
-              );
+                );
               if (hasMatchingEvent) {
                 results.push(dlcOffer);
               }

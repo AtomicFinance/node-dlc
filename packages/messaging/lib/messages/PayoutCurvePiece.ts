@@ -68,7 +68,8 @@ export abstract class PayoutCurvePiece {
  */
 export class PolynomialPayoutCurvePiece
   extends PayoutCurvePiece
-  implements IDlcMessage {
+  implements IDlcMessage
+{
   public static payoutCurvePieceType = PayoutCurvePieceType.Polynomial;
 
   /**
@@ -171,7 +172,8 @@ export class PolynomialPayoutCurvePiece
  */
 export class HyperbolaPayoutCurvePiece
   extends PayoutCurvePiece
-  implements IDlcMessage {
+  implements IDlcMessage
+{
   public static payoutCurvePieceType = PayoutCurvePieceType.Hyperbola;
 
   /**

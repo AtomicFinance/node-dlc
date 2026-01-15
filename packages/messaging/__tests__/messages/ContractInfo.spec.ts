@@ -245,7 +245,8 @@ describe('ContractInfo', () => {
           expect(instance.oracleInfo).to.be.instanceof(SingleOracleInfo);
 
           // Verify the contract descriptor was properly deserialized
-          const enumDescriptor = instance.contractDescriptor as EnumeratedDescriptor;
+          const enumDescriptor =
+            instance.contractDescriptor as EnumeratedDescriptor;
           expect(enumDescriptor.outcomes.length).to.equal(3);
           expect(enumDescriptor.outcomes[0].outcome).to.equal('outcome1');
           expect(enumDescriptor.outcomes[1].outcome).to.equal('outcome2');

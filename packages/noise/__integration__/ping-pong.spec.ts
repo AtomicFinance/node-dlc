@@ -52,7 +52,7 @@ function createServer(done) {
     socket.on('error', done);
   });
 
-  server.listen({ port: 10000, host: '127.0.0.1' });
+  server.listen({ port: 10001, host: '127.0.0.1' });
 
   return server;
 }
@@ -63,7 +63,7 @@ function createClient(done) {
   const es = Buffer.from("1212121212121212121212121212121212121212121212121212121212121212", "hex"); // prettier-ignore
   let count = 0;
 
-  const socket = noise.connect({ ls, es, rpk, host: '127.0.0.1', port: 10000 });
+  const socket = noise.connect({ ls, es, rpk, host: '127.0.0.1', port: 10001 });
 
   socket.on('data', (data) => {
     if (count > 1000) return; // received reply to last message and socket hasn"t closed yet
