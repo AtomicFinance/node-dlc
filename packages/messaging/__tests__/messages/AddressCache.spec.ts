@@ -1,4 +1,4 @@
-import { BitcoinNetworks } from 'bitcoin-networks';
+import { BitcoinNetworks } from 'bitcoin-network';
 import { expect } from 'chai';
 
 import { AddressCache, IAddressCache } from '../../lib/messages/AddressCache';

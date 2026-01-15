@@ -1,5 +1,5 @@
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
-import { BitcoinNetwork } from 'bitcoin-networks';
+import { BitcoinNetwork } from 'bitcoin-network';
 import { address } from 'bitcoinjs-lib';
 
 import { MessageType } from '../MessageType';

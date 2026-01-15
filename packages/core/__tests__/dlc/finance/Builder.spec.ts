@@ -5,7 +5,7 @@ import {
   OracleAnnouncement,
   PayoutFunctionV0,
 } from '@node-dlc/messaging';
-import { BitcoinNetworks } from 'bitcoin-networks';
+import { BitcoinNetworks } from 'bitcoin-network';
 import { expect } from 'chai';
 import sinon from 'sinon';
 

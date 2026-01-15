@@ -15,7 +15,7 @@ import {
   BitcoinNetwork,
   BitcoinNetworks,
   chainHashFromNetwork,
-} from 'bitcoin-networks';
+} from 'bitcoin-network';
 import Decimal from 'decimal.js';
 
 import { dustThreshold } from '../CoinSelect';

@@ -1,7 +1,7 @@
 import { Script } from '@node-dlc/bitcoin';
 import { BufferReader, BufferWriter } from '@node-dlc/bufio';
 import { hash160 } from '@node-dlc/crypto';
-import { BitcoinNetwork } from 'bitcoin-networks';
+import { BitcoinNetwork } from 'bitcoin-network';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 

@@ -1,5 +1,5 @@
 import { Value } from '@node-dlc/bitcoin';
-import { BitcoinNetworks } from 'bitcoin-networks';
+import { BitcoinNetworks } from 'bitcoin-network';
 import { expect } from 'chai';
 
 import {
