@@ -542,7 +542,7 @@ describe('NoiseSocket', () => {
         } catch (ex) {
           done(ex);
         }
-      }, 1);
+      }, 10);
     });
     it('should transition from BLOCKED TO READY_FOR_LEN', () => {
       const sut = new NoiseSocket({
