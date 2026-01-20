@@ -178,7 +178,7 @@ export class FundingInput implements IDlcMessage {
       );
     }
 
-    const scriptPubKey = output.scriptPubKey.serialize();
+    const scriptPubKey = output.scriptPubKey.serializeCmds();
     // P2WPKH: OP_0 <20-byte-key-hash> = 0x0014{20 bytes} = 22 bytes total
     // P2WSH:  OP_0 <32-byte-script-hash> = 0x0020{32 bytes} = 34 bytes total
     // P2TR:   OP_1 <32-byte-pubkey> = 0x5120{32 bytes} = 34 bytes total
