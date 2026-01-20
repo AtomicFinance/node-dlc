@@ -1,8 +1,5 @@
-import { Sequence, Tx } from '@node-dlc/bitcoin';
-import { StreamReader } from '@node-dlc/bufio';
 import { expect } from 'chai';
 
-import { DlcInput } from '../../lib/messages/DlcInput';
 import { FundingInput } from '../../lib/messages/FundingInput';
 
 describe('FundingInput', () => {
@@ -150,11 +147,46 @@ describe('FundingInput', () => {
   });
 
   describe('validate', () => {
-    it('should ensure inputs are segwit', () => {
+    // Valid segwit transaction with P2WPKH output at index 0
+    const validSegwitTx =
+      '020000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff03520101ffffffff0200f2052a01000000160014f32b43ed1a9f5a7f09023af065a212d8a159c7f70000000000000000266a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf90120000000000000000000000000000000000000000000000000000000000000000000000000';
+
+    it('should throw if output is not segwit (OP_RETURN)', () => {
+      // Using output index 1 which is an OP_RETURN output (not a segwit output)
+      const fundingInput = FundingInput.fromJSON({
+        inputSerialId: 1,
+        prevTx: validSegwitTx,
+        prevTxVout: 1, // OP_RETURN output - not valid for funding
+        sequence: 4294967295,
+        maxWitnessLen: 108,
+        redeemScript: '',
+      });
+
+      expect(function () {
+        fundingInput.validate();
+      }).to.throw('fundingInput must spend a segwit output');
+    });
+
+    it('should pass validation for P2WPKH output', () => {
+      const fundingInput = FundingInput.fromJSON({
+        inputSerialId: 1,
+        prevTx: validSegwitTx,
+        prevTxVout: 0, // P2WPKH output
+        sequence: 4294967295,
+        maxWitnessLen: 108,
+        redeemScript: '',
+      });
+
+      expect(function () {
+        fundingInput.validate();
+      }).to.not.throw();
+    });
+
+    it('should pass validation for P2WSH output', () => {
       const fundingInput = FundingInput.fromJSON({
         inputSerialId: 1,
         prevTx:
-          '02000000000100c2eb0b00000000160014e70dcc9ffa7ff84c889c9e79b218708bae3bc95800000000', // has no inputs
+          '0200000001f58f85b356ad5bb5b6d0ef3eb863be8a6cb95e08e1e9e92885b4b22e7e51eb9d0000000000ffffffff01008c8647000000002200201234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef00000000', // P2WSH output
         prevTxVout: 0,
         sequence: 4294967295,
         maxWitnessLen: 108,
@@ -163,7 +195,22 @@ describe('FundingInput', () => {
 
       expect(function () {
         fundingInput.validate();
-      }).to.throw(Error);
+      }).to.not.throw();
+    });
+
+    it('should throw if prevTxVout does not exist', () => {
+      const fundingInput = FundingInput.fromJSON({
+        inputSerialId: 1,
+        prevTx: validSegwitTx,
+        prevTxVout: 5, // Output index 5 doesn't exist
+        sequence: 4294967295,
+        maxWitnessLen: 108,
+        redeemScript: '',
+      });
+
+      expect(function () {
+        fundingInput.validate();
+      }).to.throw('fundingInput prevTxVout 5 does not exist in prevTx');
     });
   });
 });

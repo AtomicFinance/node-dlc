@@ -168,8 +168,38 @@ export class FundingInput implements IDlcMessage {
    */
   public validate(): void {
     // 1. Type is set automatically in class
-    // 2. Ensure inputs are segwit
-    if (!this.prevTx.isSegWit) throw new Error('fundingInput must be segwit');
+    // 2. Ensure the output being spent is a segwit output (P2WPKH or P2WSH)
+    // Note: We check the output script type, not whether prevTx was created with segwit inputs.
+    // This allows spending UTXOs from transactions that used legacy inputs but have segwit outputs.
+    const output = this.prevTx.outputs[this.prevTxVout];
+    if (!output) {
+      throw new Error(
+        `fundingInput prevTxVout ${this.prevTxVout} does not exist in prevTx`,
+      );
+    }
+
+    const scriptPubKey = output.scriptPubKey.serializeCmds();
+    // P2WPKH: OP_0 <20-byte-key-hash> = 0x0014{20 bytes} = 22 bytes total
+    // P2WSH:  OP_0 <32-byte-script-hash> = 0x0020{32 bytes} = 34 bytes total
+    // P2TR:   OP_1 <32-byte-pubkey> = 0x5120{32 bytes} = 34 bytes total
+    const isP2WPKH =
+      scriptPubKey.length === 22 &&
+      scriptPubKey[0] === 0x00 &&
+      scriptPubKey[1] === 0x14;
+    const isP2WSH =
+      scriptPubKey.length === 34 &&
+      scriptPubKey[0] === 0x00 &&
+      scriptPubKey[1] === 0x20;
+    const isP2TR =
+      scriptPubKey.length === 34 &&
+      scriptPubKey[0] === 0x51 &&
+      scriptPubKey[1] === 0x20;
+
+    if (!isP2WPKH && !isP2WSH && !isP2TR) {
+      throw new Error(
+        'fundingInput must spend a segwit output (P2WPKH, P2WSH, or P2TR)',
+      );
+    }
   }
 
   /**
