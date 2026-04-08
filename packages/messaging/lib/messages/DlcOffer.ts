@@ -127,35 +127,9 @@ export class DlcOffer implements IDlcMessage {
       );
     }
 
-    // BACKWARD COMPATIBILITY: Detect old vs new format
-    // New format: [type][protocol_version: 4 bytes][contract_flags: 1 byte][chain_hash: 32 bytes]
-    // Old format: [type][contract_flags: 1 byte][chain_hash: 32 bytes]
-
-    const nextBytes = reader.buffer.subarray(
-      reader.position,
-      reader.position + 5,
-    );
-    const nextBytesBuffer = Buffer.from(nextBytes);
-    const nextBytesReader = new BufferReader(nextBytesBuffer);
-    const possibleProtocolVersion = nextBytesReader.readUInt32BE();
-    const possibleContractFlags = nextBytesReader.readUInt8();
-
-    // Heuristic: protocol_version should be 1, contract_flags should be 0
-    // If first 4 bytes are reasonable protocol version (1-10) and next byte is 0, assume new format
-    const isNewFormat =
-      possibleProtocolVersion >= 1 &&
-      possibleProtocolVersion <= 10 &&
-      possibleContractFlags === 0;
-
-    if (isNewFormat) {
-      // New format with protocol_version
-      instance.protocolVersion = reader.readUInt32BE();
-      instance.contractFlags = reader.readBytes(1);
-    } else {
-      // Old format without protocol_version
-      instance.protocolVersion = 1; // Default to version 1
-      instance.contractFlags = reader.readBytes(1);
-    }
+    // Read protocol_version as 4 bytes (u32) as per dlcspecs PR #163
+    instance.protocolVersion = reader.readUInt32BE();
+    instance.contractFlags = reader.readBytes(1);
 
     instance.chainHash = reader.readBytes(32);
     instance.temporaryContractId = reader.readBytes(32);
