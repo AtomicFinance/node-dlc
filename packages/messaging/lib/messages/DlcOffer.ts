@@ -127,8 +127,23 @@ export class DlcOffer implements IDlcMessage {
       );
     }
 
-    // Read protocol_version as 4 bytes (u32) as per dlcspecs PR #163
-    instance.protocolVersion = reader.readUInt32BE();
+    // BACKWARD COMPATIBILITY: Detect old vs new format
+    // New format: [type][protocol_version: 4 bytes][contract_flags: 1 byte][chain_hash: 32 bytes]
+    // Old format: [type][contract_flags: 1 byte][chain_hash: 32 bytes]
+    //
+    // Heuristic: peek first 4 bytes as u32. In new format this is protocol_version (1-10).
+    // In old format these are contract_flags (0x00/0x01) + first 3 chain_hash bytes,
+    // which always produces values outside 1-10 for any Bitcoin network.
+    const peekBuf = Buffer.from(
+      reader.buffer.subarray(reader.position, reader.position + 4),
+    );
+    const possibleProtocolVersion = new BufferReader(peekBuf).readUInt32BE();
+
+    if (possibleProtocolVersion >= 1 && possibleProtocolVersion <= 10) {
+      instance.protocolVersion = reader.readUInt32BE();
+    } else {
+      instance.protocolVersion = 1;
+    }
     instance.contractFlags = reader.readBytes(1);
 
     instance.chainHash = reader.readBytes(32);
