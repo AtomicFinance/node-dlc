@@ -144,11 +144,11 @@ export class Script implements ICloneable<Script> {
     }
 
     return new Script(
-            Script.number(m),
-            ...pubkeys,
-            Script.number(pubkeys.length),
-            OpCode.OP_CHECKMULTISIG,
-        ); // prettier-ignore
+      Script.number(m),
+      ...pubkeys,
+      Script.number(pubkeys.length),
+      OpCode.OP_CHECKMULTISIG,
+    ); // prettier-ignore
   }
 
   /**
@@ -170,9 +170,9 @@ export class Script implements ICloneable<Script> {
       asssertValidSig(sig);
     }
     return new Script(
-            OpCode.OP_0,
-            ...sigs
-        ); // prettier-ignore
+      OpCode.OP_0,
+      ...sigs
+    ); // prettier-ignore
   }
 
   /**
@@ -198,10 +198,10 @@ export class Script implements ICloneable<Script> {
     }
 
     return new Script(
-            OpCode.OP_HASH160,
-            scriptHash160,
-            OpCode.OP_EQUAL,
-        ); // prettier-ignore
+      OpCode.OP_HASH160,
+      scriptHash160,
+      OpCode.OP_EQUAL,
+    ); // prettier-ignore
   }
 
   /**
@@ -255,9 +255,9 @@ export class Script implements ICloneable<Script> {
     const hash160PubKey = value.length === 20 ? value : hash160(value);
 
     return new Script(
-            OpCode.OP_0,
-            hash160PubKey,
-        ); // prettier-ignore
+      OpCode.OP_0,
+      hash160PubKey,
+    ); // prettier-ignore
   }
 
   /**
@@ -274,9 +274,25 @@ export class Script implements ICloneable<Script> {
     }
 
     return new Script(
-            OpCode.OP_0,
-            sha256Script,
-        ); // prettier-ignore
+      OpCode.OP_0,
+      sha256Script,
+    ); // prettier-ignore
+  }
+
+  /**
+   * Create a standard Pay-to-Taproot scriptPubKey by accepting the
+   * sha256 of the Taproot as input. It is of the format:
+   *   OP_1 <x-only-tweaked-pubkey>
+   */
+  public static p2trLock(taproot: Buffer): Script {
+    if (taproot.length !== 32) {
+      throw new BitcoinError(BitcoinErrorCode.Hash256Invalid);
+    }
+
+    return new Script(
+      OpCode.OP_1,
+      taproot,
+    ); // prettier-ignore
   }
 
   /**
@@ -362,7 +378,7 @@ export class Script implements ICloneable<Script> {
 
   /**
    * Returns true if other script is an exact match of the current script.
-   * This requires all data element sto be exact matches and all operations
+   * This requires all data elements to be exact matches and all operations
    * to be exact matches.
    * @param other
    */
