@@ -315,6 +315,13 @@ export class Script implements ICloneable<Script> {
   }
 
   /**
+   * Parses raw script command bytes without a leading length prefix.
+   */
+  public static fromRaw(buf: Buffer): Script {
+    return new Script(...Script.parseCmds(buf));
+  }
+
+  /**
    * When supplied with a Buffer of cmds this method will parse the commands
    * into data blocks or op_codes depending on the meaning of the bytes
    * @param buf
