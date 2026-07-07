@@ -23,6 +23,12 @@ describe('Script', () => {
     );
   });
 
+  it('throws when parsing empty raw script bytes', () => {
+    expect(() => Script.fromRaw(Buffer.alloc(0))).to.throw(
+      'Cannot parse empty script',
+    );
+  });
+
   it('throws on invalid length pubkey', () => {
     const buffer = Buffer.from([0x00, 0x01, 0x02]);
     expect(() => Script.p2trLock(buffer)).to.throw();

@@ -318,6 +318,10 @@ export class Script implements ICloneable<Script> {
    * Parses raw script command bytes without a leading length prefix.
    */
   public static fromRaw(buf: Buffer): Script {
+    if (buf.length === 0) {
+      throw new Error('Cannot parse empty script');
+    }
+
     return new Script(...Script.parseCmds(buf));
   }
 
