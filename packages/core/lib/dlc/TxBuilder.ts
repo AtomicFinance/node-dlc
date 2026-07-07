@@ -253,7 +253,7 @@ export class BatchDlcTxBuilder {
     if (offerChangeValue >= DUST_LIMIT) {
       outputs.push({
         value: Value.fromSats(Number(offerChangeValue)),
-        script: Script.p2wpkhLock(this.dlcOffers[0].changeSpk.slice(2)),
+        script: Script.fromRaw(this.dlcOffers[0].changeSpk),
         serialId: this.dlcOffers[0].changeSerialId,
       });
     }
@@ -261,7 +261,7 @@ export class BatchDlcTxBuilder {
     if (acceptChangeValue >= DUST_LIMIT) {
       outputs.push({
         value: Value.fromSats(Number(acceptChangeValue)),
-        script: Script.p2wpkhLock(this.dlcAccepts[0].changeSpk.slice(2)),
+        script: Script.fromRaw(this.dlcAccepts[0].changeSpk),
         serialId: this.dlcAccepts[0].changeSerialId,
       });
     }

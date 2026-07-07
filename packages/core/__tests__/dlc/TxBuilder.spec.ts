@@ -1,4 +1,4 @@
-import { Value } from '@node-dlc/bitcoin';
+import { Script, Value } from '@node-dlc/bitcoin';
 import {
   DlcAcceptWithoutSigs,
   DlcOffer,
@@ -77,7 +77,13 @@ describe('TxBuilder', () => {
   const createTestDlcAccept = (
     acceptCollateral: bigint,
     fundingInputs: FundingInput[] = [],
+    scripts: { payoutSpk?: Buffer; changeSpk?: Buffer } = {},
   ): DlcAcceptWithoutSigs => {
+    const defaultSpk = Buffer.from(
+      '0014' + Buffer.alloc(20).toString('hex'),
+      'hex',
+    );
+
     return new DlcAcceptWithoutSigs(
       1, // protocolVersion
       Buffer.alloc(32), // temporaryContractId
@@ -87,10 +93,10 @@ describe('TxBuilder', () => {
         '02F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9',
         'hex',
       ),
-      Buffer.from('0014' + Buffer.alloc(20).toString('hex'), 'hex'), // payoutSpk
+      scripts.payoutSpk ?? defaultSpk,
       BigInt(4), // payoutSerialId
       fundingInputs,
-      Buffer.from('0014' + Buffer.alloc(20).toString('hex'), 'hex'), // changeSpk
+      scripts.changeSpk ?? defaultSpk,
       BigInt(5), // changeSerialId
     );
   };
@@ -293,6 +299,40 @@ describe('TxBuilder', () => {
       expect(Number(changeOutput.value.sats)).to.be.at.least(
         Number(DUST_LIMIT),
       );
+    });
+
+    it('should preserve offer Taproot change scriptPubKey', () => {
+      const offerInput = createTestFundingInput(BigInt(1050000));
+      const offer = createTestDlcOffer(BigInt(1000000), [offerInput]);
+      const accept = createTestDlcAccept(BigInt(0), []);
+      const taprootSpk = Script.p2trLock(Buffer.alloc(32, 1)).serializeCmds();
+      offer.changeSpk = taprootSpk;
+
+      const builder = new BatchDlcTxBuilder([offer], [accept]);
+      const tx = builder.buildFundingTransaction();
+
+      const hasTaprootChange = tx.outputs.some((output) =>
+        output.scriptPubKey.serializeCmds().equals(taprootSpk),
+      );
+      expect(hasTaprootChange).to.equal(true);
+    });
+
+    it('should preserve accept Taproot change scriptPubKey', () => {
+      const offerInput = createTestFundingInput(BigInt(1000000));
+      const acceptInput = createTestFundingInput(BigInt(1050000), 2);
+      const offer = createTestDlcOffer(BigInt(500000), [offerInput]);
+      const taprootSpk = Script.p2trLock(Buffer.alloc(32, 2)).serializeCmds();
+      const accept = createTestDlcAccept(BigInt(500000), [acceptInput], {
+        changeSpk: taprootSpk,
+      });
+
+      const builder = new BatchDlcTxBuilder([offer], [accept]);
+      const tx = builder.buildFundingTransaction();
+
+      const hasTaprootChange = tx.outputs.some((output) =>
+        output.scriptPubKey.serializeCmds().equals(taprootSpk),
+      );
+      expect(hasTaprootChange).to.equal(true);
     });
   });
 
