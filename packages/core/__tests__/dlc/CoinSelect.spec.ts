@@ -1,7 +1,13 @@
 import { Value } from '@node-dlc/bitcoin';
 import { expect } from 'chai';
 
-import { dualFees, dualFundingCoinSelect, UTXO } from '../../lib';
+import {
+  dualFees,
+  dualFundingCoinSelect,
+  dustThreshold,
+  getMaxWitnessLen,
+  UTXO,
+} from '../../lib';
 
 const getUtxos = (totalCollateral: bigint, numUtxos = 1) => {
   const utxos: UTXO[] = [];
@@ -173,6 +179,72 @@ describe('CoinSelect', () => {
       // Expecting it to select fewer UTXOs due to the low cost of adding an input
       expect(inputs.length).to.be.lessThan(10);
       expect(fee).to.equal(BigInt(687));
+    });
+
+    it('should calculate lower fees for taproot inputs', () => {
+      const feeRate = BigInt(450);
+      const p2wpkhFee = dualFees(feeRate, 1, 1);
+      const p2trFee = dualFees(feeRate, [getMaxWitnessLen('p2tr')], 1);
+
+      expect(p2trFee).to.be.lessThan(p2wpkhFee);
+    });
+
+    it('should select taproot UTXOs using taproot witness costs', () => {
+      const feeRate = BigInt(10);
+      const offerCollateral = Value.fromSats(20000);
+      const p2trAddress =
+        'bcrt1pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqqenm';
+      const p2trFee = dualFees(feeRate, [getMaxWitnessLen('p2tr')], 1);
+      const p2wpkhFee = dualFees(feeRate, [getMaxWitnessLen('p2wpkh')], 1);
+      const p2trDust = dustThreshold(feeRate, {
+        address: p2trAddress,
+        txid: '',
+        value: 0,
+        vout: 0,
+        scriptType: 'p2tr',
+      });
+      const p2wpkhDust = dustThreshold(feeRate, {
+        address: 'bcrt1qjzut0906d9sk4hml4k6sz6cssljktf4c7yl80f',
+        txid: '',
+        value: 0,
+        vout: 0,
+        scriptType: 'p2wpkh',
+      });
+      const p2trRequired = offerCollateral.sats + p2trFee + p2trDust;
+      const p2wpkhRequired = offerCollateral.sats + p2wpkhFee + p2wpkhDust;
+
+      // Value sits above Taproot requirements but below P2WPKH requirements.
+      const p2trUtxo: UTXO = {
+        address: p2trAddress,
+        txid: 'c7bf12ac16aba1cf6c7769117294853453f7da3006363dfe4e8979847e32f7e1',
+        value: Number(p2trRequired),
+        vout: 0,
+        scriptType: 'p2tr',
+      };
+
+      const p2wpkhUtxo: UTXO = {
+        ...p2trUtxo,
+        address: 'bcrt1qjzut0906d9sk4hml4k6sz6cssljktf4c7yl80f',
+        scriptType: 'p2wpkh',
+      };
+
+      expect(p2trRequired).to.be.lessThan(p2wpkhRequired);
+      expect(BigInt(p2trUtxo.value)).to.equal(p2trRequired);
+      expect(BigInt(p2trUtxo.value)).to.be.lessThan(p2wpkhRequired);
+
+      const taprootSelection = dualFundingCoinSelect(
+        [p2trUtxo],
+        [offerCollateral.sats],
+        feeRate,
+      );
+      const p2wpkhSelection = dualFundingCoinSelect(
+        [p2wpkhUtxo],
+        [offerCollateral.sats],
+        feeRate,
+      );
+
+      expect(taprootSelection.inputs.length).to.equal(1);
+      expect(p2wpkhSelection.inputs.length).to.equal(0);
     });
   });
 });

@@ -4,6 +4,49 @@ import { Decimal } from 'decimal.js';
 const BATCH_FUND_TX_BASE_WEIGHT = 42;
 const FUNDING_OUTPUT_SIZE = 43;
 
+export type FundingInputScriptType = 'p2wpkh' | 'p2wsh' | 'p2tr';
+
+export const FUNDING_INPUT_MAX_WITNESS_LEN: Record<
+  FundingInputScriptType,
+  number
+> = {
+  p2wpkh: 108,
+  p2wsh: 108,
+  p2tr: 66,
+};
+
+export const DEFAULT_MAX_WITNESS_LEN = FUNDING_INPUT_MAX_WITNESS_LEN.p2wpkh;
+
+export const getMaxWitnessLen = (
+  scriptType: FundingInputScriptType = 'p2wpkh',
+): number => FUNDING_INPUT_MAX_WITNESS_LEN[scriptType];
+
+export const fundingInputVBytes = (
+  maxWitnessLen = DEFAULT_MAX_WITNESS_LEN,
+  scriptSigLength = 0,
+): bigint =>
+  BigInt(
+    new Decimal(164 + maxWitnessLen + scriptSigLength).div(4).ceil().toNumber(),
+  );
+
+const fundingInputWithWitnessLen = (maxWitnessLen: number): FundingInput => {
+  const input = new FundingInput();
+  input.maxWitnessLen = maxWitnessLen;
+  input.redeemScript = Buffer.from('', 'hex');
+  return input;
+};
+
+const fundingInputsWithWitnessLens = (
+  count: number,
+  maxWitnessLenOrLens: number | number[] = DEFAULT_MAX_WITNESS_LEN,
+): FundingInput[] => {
+  const witnessLens = Array.isArray(maxWitnessLenOrLens)
+    ? maxWitnessLenOrLens
+    : Array.from({ length: count }, () => maxWitnessLenOrLens);
+
+  return witnessLens.map(fundingInputWithWitnessLen);
+};
+
 export class DualFundingTxFinalizer {
   constructor(
     readonly offerInputs: FundingInput[],
@@ -175,19 +218,19 @@ export const getFinalizer = (
   offerInputs?: FundingInput[],
   acceptInputs?: FundingInput[],
   numContracts?: number,
+  offerMaxWitnessLen: number | number[] = DEFAULT_MAX_WITNESS_LEN,
+  acceptMaxWitnessLen: number | number[] = DEFAULT_MAX_WITNESS_LEN,
 ): DualFundingTxFinalizer => {
-  const input = new FundingInput();
-  input.maxWitnessLen = 108;
-  input.redeemScript = Buffer.from('', 'hex');
-
   const fakeSPK = Buffer.from(
     '0014663117d27e78eb432505180654e603acb30e8a4a',
     'hex',
   );
 
-  offerInputs = offerInputs || Array.from({ length: 1 }, () => input);
+  offerInputs =
+    offerInputs || fundingInputsWithWitnessLens(1, offerMaxWitnessLen);
 
-  acceptInputs = acceptInputs || Array.from({ length: 1 }, () => input);
+  acceptInputs =
+    acceptInputs || fundingInputsWithWitnessLens(1, acceptMaxWitnessLen);
 
   return new DualFundingTxFinalizer(
     offerInputs,
@@ -206,12 +249,16 @@ export const getFinalizerByCount = (
   numOfferInputs: number,
   numAcceptInputs: number,
   numContracts: number,
+  offerMaxWitnessLen: number | number[] = DEFAULT_MAX_WITNESS_LEN,
+  acceptMaxWitnessLen: number | number[] = DEFAULT_MAX_WITNESS_LEN,
 ): DualFundingTxFinalizer => {
-  const input = new FundingInput();
-  input.maxWitnessLen = 108;
-  input.redeemScript = Buffer.from('', 'hex');
-
-  const offerInputs = Array.from({ length: numOfferInputs }, () => input);
-  const acceptInputs = Array.from({ length: numAcceptInputs }, () => input);
+  const offerInputs = fundingInputsWithWitnessLens(
+    numOfferInputs,
+    offerMaxWitnessLen,
+  );
+  const acceptInputs = fundingInputsWithWitnessLens(
+    numAcceptInputs,
+    acceptMaxWitnessLen,
+  );
   return getFinalizer(feeRate, offerInputs, acceptInputs, numContracts);
 };
