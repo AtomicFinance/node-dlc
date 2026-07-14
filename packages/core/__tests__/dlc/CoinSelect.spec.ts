@@ -196,22 +196,9 @@ describe('CoinSelect', () => {
         'bcrt1pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqqenm';
       const p2trFee = dualFees(feeRate, [getMaxWitnessLen('p2tr')], 1);
       const p2wpkhFee = dualFees(feeRate, [getMaxWitnessLen('p2wpkh')], 1);
-      const p2trDust = dustThreshold(feeRate, {
-        address: p2trAddress,
-        txid: '',
-        value: 0,
-        vout: 0,
-        scriptType: 'p2tr',
-      });
-      const p2wpkhDust = dustThreshold(feeRate, {
-        address: 'bcrt1qjzut0906d9sk4hml4k6sz6cssljktf4c7yl80f',
-        txid: '',
-        value: 0,
-        vout: 0,
-        scriptType: 'p2wpkh',
-      });
-      const p2trRequired = offerCollateral.sats + p2trFee + p2trDust;
-      const p2wpkhRequired = offerCollateral.sats + p2wpkhFee + p2wpkhDust;
+      const changeBuffer = dustThreshold(feeRate);
+      const p2trRequired = offerCollateral.sats + p2trFee + changeBuffer;
+      const p2wpkhRequired = offerCollateral.sats + p2wpkhFee + changeBuffer;
 
       // Value sits above Taproot requirements but below P2WPKH requirements.
       const p2trUtxo: UTXO = {

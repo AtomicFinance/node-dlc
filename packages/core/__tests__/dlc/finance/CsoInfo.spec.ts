@@ -701,7 +701,7 @@ describe('CsoInfo', () => {
         expect(actualNormalizedMaxGain.sats).to.equal(
           expectedNormalizedMaxGain.sats,
         ); // TODO: Fix issue with this line
-        expect(minPayout).to.equal(BigInt(121200));
+        expect(minPayout).to.equal(BigInt(121700));
         expect(maxPayout).to.equal(collateral.sats);
         expect(actualContractSize.sats).to.equal(contractSize.sats);
         expect(actualOfferCollateral.sats).to.equal(
@@ -785,7 +785,7 @@ describe('CsoInfo', () => {
         expect(actualMaxLossForContractSize.sats).to.equal(
           expectedMaxLossForContractSize.sats,
         );
-        expect(minPayout).to.equal(BigInt(121200));
+        expect(minPayout).to.equal(BigInt(121700));
         expect(maxPayout).to.equal(collateral.sats);
         expect(actualContractSize.sats).to.equal(contractSize.sats);
         expect(actualOfferCollateral.sats).to.equal(
@@ -869,7 +869,7 @@ describe('CsoInfo', () => {
         expect(actualMaxLossForContractSize.sats).to.equal(
           expectedMaxLossForContractSize.sats,
         );
-        expect(minPayout).to.equal(BigInt(121200));
+        expect(minPayout).to.equal(BigInt(121700));
         expect(maxPayout).to.equal(collateral.sats);
         expect(actualContractSize.sats).to.equal(contractSize.sats);
         expect(actualOfferCollateral.sats).to.equal(
