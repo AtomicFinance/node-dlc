@@ -36,12 +36,12 @@ describe('TxFinalizer', () => {
         getMaxWitnessLen('p2tr'),
       );
 
-      expect(p2trFinalizer.offerFundingFee).to.be.lessThan(
-        p2wpkhFinalizer.offerFundingFee,
-      );
-      expect(p2trFinalizer.acceptFundingFee).to.be.lessThan(
-        p2wpkhFinalizer.acceptFundingFee,
-      );
+      expect(
+        p2trFinalizer.offerFundingFee < p2wpkhFinalizer.offerFundingFee,
+      ).to.equal(true);
+      expect(
+        p2trFinalizer.acceptFundingFee < p2wpkhFinalizer.acceptFundingFee,
+      ).to.equal(true);
     });
   });
 });

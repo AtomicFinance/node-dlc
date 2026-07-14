@@ -186,7 +186,7 @@ describe('CoinSelect', () => {
       const p2wpkhFee = dualFees(feeRate, 1, 1);
       const p2trFee = dualFees(feeRate, [getMaxWitnessLen('p2tr')], 1);
 
-      expect(p2trFee).to.be.lessThan(p2wpkhFee);
+      expect(p2trFee < p2wpkhFee).to.equal(true);
     });
 
     it('should select taproot UTXOs using taproot witness costs', () => {
@@ -228,9 +228,9 @@ describe('CoinSelect', () => {
         scriptType: 'p2wpkh',
       };
 
-      expect(p2trRequired).to.be.lessThan(p2wpkhRequired);
+      expect(p2trRequired < p2wpkhRequired).to.equal(true);
       expect(BigInt(p2trUtxo.value)).to.equal(p2trRequired);
-      expect(BigInt(p2trUtxo.value)).to.be.lessThan(p2wpkhRequired);
+      expect(BigInt(p2trUtxo.value) < p2wpkhRequired).to.equal(true);
 
       const taprootSelection = dualFundingCoinSelect(
         [p2trUtxo],
