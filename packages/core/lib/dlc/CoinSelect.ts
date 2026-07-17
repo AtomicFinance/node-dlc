@@ -1,6 +1,11 @@
-import { FundingInput } from '@node-dlc/messaging';
-
-import { DualFundingTxFinalizer } from './TxFinalizer';
+import {
+  DEFAULT_MAX_WITNESS_LEN,
+  DualFundingTxFinalizer,
+  FundingInputScriptType,
+  fundingInputVBytes,
+  fundingInputWithWitnessLen,
+  getMaxWitnessLen,
+} from './TxFinalizer';
 
 export interface UTXO {
   txid: string;
@@ -8,43 +13,79 @@ export interface UTXO {
   value: number;
   address: string;
   derivationPath?: string;
+  scriptPubKey?: Buffer | string;
+  scriptType?: FundingInputScriptType;
 }
 
-const TX_INPUT_SIZE = {
-  LEGACY: 148,
-  P2SH: 92,
-  BECH32: 69,
+const scriptPubKeyBuffer = (scriptPubKey: Buffer | string): Buffer => {
+  return Buffer.isBuffer(scriptPubKey)
+    ? scriptPubKey
+    : Buffer.from(scriptPubKey, 'hex');
 };
 
-const inputBytes = () => {
-  return BigInt(TX_INPUT_SIZE.BECH32);
+const scriptTypeFromUtxo = (utxo?: UTXO): FundingInputScriptType => {
+  if (!utxo) return 'p2wpkh';
+
+  if (utxo.scriptType) return utxo.scriptType;
+
+  if (utxo.scriptPubKey) {
+    const scriptPubKey = scriptPubKeyBuffer(utxo.scriptPubKey);
+    if (
+      scriptPubKey.length === 34 &&
+      scriptPubKey[0] === 0x51 &&
+      scriptPubKey[1] === 0x20
+    )
+      return 'p2tr';
+    if (
+      scriptPubKey.length === 34 &&
+      scriptPubKey[0] === 0x00 &&
+      scriptPubKey[1] === 0x20
+    )
+      return 'p2wsh';
+  }
+
+  if (/^(bc|tb|bcrt)1p/i.test(utxo.address)) return 'p2tr';
+
+  return 'p2wpkh';
 };
 
-export const dustThreshold = (feeRate: bigint): bigint => {
-  return BigInt(inputBytes()) * feeRate;
+const inputBytes = (utxo?: UTXO): bigint => {
+  return fundingInputVBytes(getMaxWitnessLen(scriptTypeFromUtxo(utxo)));
+};
+
+export const dustThreshold = (feeRate: bigint, utxo?: UTXO): bigint => {
+  return inputBytes(utxo) * feeRate;
 };
 
 // order by descending value, minus the inputs approximate fee
 const utxoScore = (x: UTXO, feeRate: bigint): bigint => {
-  return BigInt(x.value) - feeRate * inputBytes();
+  return BigInt(x.value) - feeRate * inputBytes(x);
 };
+
+const witnessLensFromInputCount = (
+  numInputsOrWitnessLens: number | number[],
+): number[] =>
+  Array.isArray(numInputsOrWitnessLens)
+    ? numInputsOrWitnessLens
+    : Array.from(
+        { length: numInputsOrWitnessLens },
+        () => DEFAULT_MAX_WITNESS_LEN,
+      );
 
 export const dualFees = (
   feeRate: bigint,
-  numInputs: number,
+  numInputsOrWitnessLens: number | number[],
   numContracts: number,
 ): bigint => {
-  const input = new FundingInput();
-  input.maxWitnessLen = 108;
-  input.redeemScript = Buffer.from('', 'hex');
-
   const fakeSPK = Buffer.from(
     '0014663117d27e78eb432505180654e603acb30e8a4a',
     'hex',
   );
 
-  const offerInputs = Array.from({ length: numInputs }, () => input);
-  const acceptInputs = Array.from({ length: 1 }, () => input);
+  const offerInputs = witnessLensFromInputCount(numInputsOrWitnessLens).map(
+    fundingInputWithWitnessLen,
+  );
+  const acceptInputs = [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)];
 
   return new DualFundingTxFinalizer(
     offerInputs,
@@ -85,7 +126,7 @@ export const dualFundingCoinSelect = (
 
   for (let i = 0; i < utxos.length; ++i) {
     const utxo = utxos[i];
-    const utxoBytes = inputBytes();
+    const utxoBytes = inputBytes(utxo);
     const utxoFee = feeRate * utxoBytes;
     const utxoValue = utxo.value;
 
@@ -102,7 +143,11 @@ export const dualFundingCoinSelect = (
     inAccum += utxoValue;
     inputs.push(utxo);
 
-    const fee = dualFees(feeRate, inputs.length, collaterals.length);
+    const fee = dualFees(
+      feeRate,
+      inputs.map((input) => getMaxWitnessLen(scriptTypeFromUtxo(input))),
+      collaterals.length,
+    );
 
     // go again?
     if (inAccum < outAccum + fee) continue;
