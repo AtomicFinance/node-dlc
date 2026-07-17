@@ -1,6 +1,6 @@
 {
   "name": "@node-dlc/bufio",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Buffer IO utilities ",
   "keywords": [],
   "author": "Brian Mancini <bmancini@gmail.com>",
