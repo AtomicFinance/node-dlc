@@ -1,10 +1,9 @@
-import { FundingInput } from '@node-dlc/messaging';
-
 import {
   DEFAULT_MAX_WITNESS_LEN,
   DualFundingTxFinalizer,
   FundingInputScriptType,
   fundingInputVBytes,
+  fundingInputWithWitnessLen,
   getMaxWitnessLen,
 } from './TxFinalizer';
 
@@ -61,13 +60,6 @@ export const dustThreshold = (feeRate: bigint, utxo?: UTXO): bigint => {
 // order by descending value, minus the inputs approximate fee
 const utxoScore = (x: UTXO, feeRate: bigint): bigint => {
   return BigInt(x.value) - feeRate * inputBytes(x);
-};
-
-const fundingInputWithWitnessLen = (maxWitnessLen: number): FundingInput => {
-  const input = new FundingInput();
-  input.maxWitnessLen = maxWitnessLen;
-  input.redeemScript = Buffer.from('', 'hex');
-  return input;
 };
 
 const witnessLensFromInputCount = (

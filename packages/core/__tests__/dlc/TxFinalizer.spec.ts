@@ -43,5 +43,11 @@ describe('TxFinalizer', () => {
         p2trFinalizer.acceptFundingFee < p2wpkhFinalizer.acceptFundingFee,
       ).to.equal(true);
     });
+
+    it('should reject mismatched witness length arrays', () => {
+      expect(() =>
+        getFinalizerByCount(BigInt(1), 2, 1, 1, [getMaxWitnessLen('p2tr')]),
+      ).to.throw('Expected 2 witness lengths, got 1');
+    });
   });
 });

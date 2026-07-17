@@ -29,7 +29,9 @@ export const fundingInputVBytes = (
     new Decimal(164 + maxWitnessLen + scriptSigLength).div(4).ceil().toNumber(),
   );
 
-const fundingInputWithWitnessLen = (maxWitnessLen: number): FundingInput => {
+export const fundingInputWithWitnessLen = (
+  maxWitnessLen: number,
+): FundingInput => {
   const input = new FundingInput();
   input.maxWitnessLen = maxWitnessLen;
   input.redeemScript = Buffer.from('', 'hex');
@@ -40,6 +42,15 @@ const fundingInputsWithWitnessLens = (
   count: number,
   maxWitnessLenOrLens: number | number[] = DEFAULT_MAX_WITNESS_LEN,
 ): FundingInput[] => {
+  if (
+    Array.isArray(maxWitnessLenOrLens) &&
+    maxWitnessLenOrLens.length !== count
+  ) {
+    throw new Error(
+      `Expected ${count} witness lengths, got ${maxWitnessLenOrLens.length}`,
+    );
+  }
+
   const witnessLens = Array.isArray(maxWitnessLenOrLens)
     ? maxWitnessLenOrLens
     : Array.from({ length: count }, () => maxWitnessLenOrLens);
