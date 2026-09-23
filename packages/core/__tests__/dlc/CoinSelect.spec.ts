@@ -233,5 +233,33 @@ describe('CoinSelect', () => {
       expect(taprootSelection.inputs.length).to.equal(1);
       expect(p2wpkhSelection.inputs.length).to.equal(0);
     });
+
+    it('should charge the sole funder full base weights when single funded', () => {
+      const feeRate = BigInt(10);
+      expect(dualFees(feeRate, 1, 1, true)).to.equal(BigInt(3000));
+      expect(dualFees(feeRate, 1, 1) < dualFees(feeRate, 1, 1, true)).to.equal(
+        true,
+      );
+    });
+
+    it('should select enough inputs for a single-funded contract', () => {
+      // 5000 sat collateral at 10 sat/vB needs 8000 sats of inputs with one
+      // p2wpkh input, so a lone 7950 sat UTXO must not be accepted.
+      const feeRate = BigInt(10);
+      const utxos = [7950, 3000].map((value, vout) => ({
+        ...getUtxos(BigInt(value))[0],
+        vout,
+      }));
+
+      const { fee, inputs } = dualFundingCoinSelect(
+        utxos,
+        [BigInt(5000)],
+        feeRate,
+        true,
+      );
+
+      expect(inputs.length).to.equal(2);
+      expect(fee).to.equal(dualFees(feeRate, 2, 1, true));
+    });
   });
 });

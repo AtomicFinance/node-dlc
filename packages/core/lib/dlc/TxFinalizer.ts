@@ -3,6 +3,10 @@ import { Decimal } from 'decimal.js';
 
 const BATCH_FUND_TX_BASE_WEIGHT = 42;
 const FUNDING_OUTPUT_SIZE = 43;
+// Full CET/refund base weight (rust-dlc CET_BASE_WEIGHT). Dual-funded parties
+// each pay the spec's 249-weight half, a sole funder pays all 500.
+const CET_BASE_WEIGHT = 500;
+const HALF_CET_BASE_WEIGHT = 249;
 
 export type FundingInputScriptType = 'p2wpkh' | 'p2wsh' | 'p2tr';
 
@@ -75,6 +79,7 @@ export class DualFundingTxFinalizer {
     payoutSPK: Buffer,
     changeSPK: Buffer,
     numContracts: number,
+    soleFunder: boolean,
   ): IFees {
     // If no inputs, return zero fees (matches C++ layer behavior for single-funded DLCs)
     if (_inputs.length === 0) {
@@ -91,7 +96,10 @@ export class DualFundingTxFinalizer {
       (input) => input as FundingInput,
     );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
-    const futureFeeWeight = 249 + 4 * payoutSPK.length;
+    // A sole funder pays the full base weight (matches ddk-dlc), otherwise the
+    // base weight is split between the two funding parties.
+    const cetBaseWeight = soleFunder ? CET_BASE_WEIGHT : HALF_CET_BASE_WEIGHT;
+    const futureFeeWeight = cetBaseWeight + 4 * payoutSPK.length;
     const futureFeeVBytes = new Decimal(futureFeeWeight)
       .times(numContracts)
       .div(4)
@@ -103,8 +111,9 @@ export class DualFundingTxFinalizer {
     const inputWeight = inputs.reduce((total, input) => {
       return total + 164 + input.maxWitnessLen + input.scriptSigLength();
     }, 0);
-    const contractWeight =
-      (BATCH_FUND_TX_BASE_WEIGHT + FUNDING_OUTPUT_SIZE * numContracts * 4) / 2;
+    const fundTxBaseWeight =
+      BATCH_FUND_TX_BASE_WEIGHT + FUNDING_OUTPUT_SIZE * numContracts * 4;
+    const contractWeight = soleFunder ? fundTxBaseWeight : fundTxBaseWeight / 2;
     const outputWeight = 36 + 4 * changeSPK.length + contractWeight;
     const weight = outputWeight + inputWeight;
     const vbytes = new Decimal(weight).div(4).ceil().toNumber();
@@ -119,6 +128,7 @@ export class DualFundingTxFinalizer {
       this.offerPayoutSPK,
       this.offerChangeSPK,
       this.numContracts,
+      this.acceptInputs.length === 0,
     );
   }
 
@@ -128,6 +138,7 @@ export class DualFundingTxFinalizer {
       this.acceptPayoutSPK,
       this.acceptChangeSPK,
       this.numContracts,
+      this.offerInputs.length === 0,
     );
   }
 

@@ -76,6 +76,7 @@ export const dualFees = (
   feeRate: bigint,
   numInputsOrWitnessLens: number | number[],
   numContracts: number,
+  singleFunded = false,
 ): bigint => {
   const fakeSPK = Buffer.from(
     '0014663117d27e78eb432505180654e603acb30e8a4a',
@@ -85,7 +86,11 @@ export const dualFees = (
   const offerInputs = witnessLensFromInputCount(numInputsOrWitnessLens).map(
     fundingInputWithWitnessLen,
   );
-  const acceptInputs = [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)];
+  // With no accept inputs the offerer is the sole funder and pays the full
+  // fund tx and CET base weights (matches ddk-dlc).
+  const acceptInputs = singleFunded
+    ? []
+    : [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)];
 
   return new DualFundingTxFinalizer(
     offerInputs,
@@ -104,6 +109,7 @@ export const dualFees = (
  * @param utxos - UTXOs to select from
  * @param collaterals - Collaterals to fund (just one for non-batch tx)
  * @param feeRate - Fee rate in satoshis per byte
+ * @param singleFunded - Offerer funds the whole contract (accepter has no inputs)
  * @returns Inputs and fee
  * @description
  * Add inputs until we reach or surpass the target value (or deplete)
@@ -113,6 +119,7 @@ export const dualFundingCoinSelect = (
   utxos: UTXO[],
   collaterals: bigint[], // in satoshis
   feeRate: bigint,
+  singleFunded = false,
 ): { inputs: UTXO[]; fee: bigint } => {
   utxos = [...utxos].sort((a, b) =>
     Number(utxoScore(b, feeRate) - utxoScore(a, feeRate)),
@@ -134,7 +141,7 @@ export const dualFundingCoinSelect = (
     if (utxoFee > utxo.value) {
       if (i === utxos.length - 1)
         return {
-          fee: dualFees(feeRate, 1, collaterals.length),
+          fee: dualFees(feeRate, 1, collaterals.length, singleFunded),
           inputs: [],
         };
       continue;
@@ -147,6 +154,7 @@ export const dualFundingCoinSelect = (
       feeRate,
       inputs.map((input) => getMaxWitnessLen(scriptTypeFromUtxo(input))),
       collaterals.length,
+      singleFunded,
     );
 
     // go again?
@@ -156,7 +164,7 @@ export const dualFundingCoinSelect = (
   }
 
   return {
-    fee: dualFees(feeRate, 1, collaterals.length),
+    fee: dualFees(feeRate, 1, collaterals.length, singleFunded),
     inputs: [],
   };
 };
