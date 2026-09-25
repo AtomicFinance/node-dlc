@@ -3,6 +3,10 @@ import { Decimal } from 'decimal.js';
 
 const BATCH_FUND_TX_BASE_WEIGHT = 42;
 const FUNDING_OUTPUT_SIZE = 43;
+// Full CET/refund base weight (rust-dlc CET_BASE_WEIGHT). Dual-funded parties
+// each pay the spec's 249-weight half, a sole funder pays all 500.
+const CET_BASE_WEIGHT = 500;
+const HALF_CET_BASE_WEIGHT = 249;
 
 export type FundingInputScriptType = 'p2wpkh' | 'p2wsh' | 'p2tr';
 
@@ -58,6 +62,12 @@ const fundingInputsWithWitnessLens = (
   return witnessLens.map(fundingInputWithWitnessLen);
 };
 
+// Only an explicit empty array means the counterparty funds nothing. Callers
+// (e.g. bitcoin-abstraction-layer offer checks) pass null before the accept
+// is known, which keeps the dual-funded split.
+const isSingleFunded = (counterpartyInputs?: FundingInput[] | null): boolean =>
+  Array.isArray(counterpartyInputs) && counterpartyInputs.length === 0;
+
 export class DualFundingTxFinalizer {
   constructor(
     readonly offerInputs: FundingInput[],
@@ -75,9 +85,10 @@ export class DualFundingTxFinalizer {
     payoutSPK: Buffer,
     changeSPK: Buffer,
     numContracts: number,
+    singleFunded: boolean,
   ): IFees {
     // If no inputs, return zero fees (matches C++ layer behavior for single-funded DLCs)
-    if (_inputs.length === 0) {
+    if (!_inputs?.length) {
       return { futureFee: BigInt(0), fundingFee: BigInt(0) };
     }
 
@@ -91,7 +102,10 @@ export class DualFundingTxFinalizer {
       (input) => input as FundingInput,
     );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
-    const futureFeeWeight = 249 + 4 * payoutSPK.length;
+    // A sole funder pays the full base weight (matches ddk-dlc), otherwise the
+    // base weight is split between the two funding parties.
+    const cetBaseWeight = singleFunded ? CET_BASE_WEIGHT : HALF_CET_BASE_WEIGHT;
+    const futureFeeWeight = cetBaseWeight + 4 * payoutSPK.length;
     const futureFeeVBytes = new Decimal(futureFeeWeight)
       .times(numContracts)
       .div(4)
@@ -103,8 +117,11 @@ export class DualFundingTxFinalizer {
     const inputWeight = inputs.reduce((total, input) => {
       return total + 164 + input.maxWitnessLen + input.scriptSigLength();
     }, 0);
-    const contractWeight =
-      (BATCH_FUND_TX_BASE_WEIGHT + FUNDING_OUTPUT_SIZE * numContracts * 4) / 2;
+    const fundTxBaseWeight =
+      BATCH_FUND_TX_BASE_WEIGHT + FUNDING_OUTPUT_SIZE * numContracts * 4;
+    const contractWeight = singleFunded
+      ? fundTxBaseWeight
+      : fundTxBaseWeight / 2;
     const outputWeight = 36 + 4 * changeSPK.length + contractWeight;
     const weight = outputWeight + inputWeight;
     const vbytes = new Decimal(weight).div(4).ceil().toNumber();
@@ -119,6 +136,7 @@ export class DualFundingTxFinalizer {
       this.offerPayoutSPK,
       this.offerChangeSPK,
       this.numContracts,
+      isSingleFunded(this.acceptInputs),
     );
   }
 
@@ -128,6 +146,7 @@ export class DualFundingTxFinalizer {
       this.acceptPayoutSPK,
       this.acceptChangeSPK,
       this.numContracts,
+      isSingleFunded(this.offerInputs),
     );
   }
 

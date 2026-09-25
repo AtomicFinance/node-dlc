@@ -233,5 +233,70 @@ describe('CoinSelect', () => {
       expect(taprootSelection.inputs.length).to.equal(1);
       expect(p2wpkhSelection.inputs.length).to.equal(0);
     });
+
+    it('should charge the sole funder full base weights when single funded', () => {
+      const feeRate = BigInt(10);
+      expect(dualFees(feeRate, 1, 1, true)).to.equal(BigInt(3000));
+      expect(dualFees(feeRate, 1, 1) < dualFees(feeRate, 1, 1, true)).to.equal(
+        true,
+      );
+    });
+
+    it('should select enough inputs for a single-funded contract', () => {
+      // ddk-dlc requires 8000 sats of inputs for 5000 sat collateral at
+      // 10 sat/vB with one p2wpkh input, so a lone 7950 sat UTXO must not be
+      // accepted (the selector adds a dust cushion on top of that).
+      const feeRate = BigInt(10);
+      const utxos = [7950, 3000].map((value, vout) => ({
+        ...getUtxos(BigInt(value))[0],
+        vout,
+      }));
+
+      const { fee, inputs } = dualFundingCoinSelect(
+        utxos,
+        [BigInt(5000)],
+        feeRate,
+        true,
+      );
+
+      expect(inputs.length).to.equal(2);
+      expect(fee).to.equal(dualFees(feeRate, 2, 1, true));
+    });
+
+    it('should pin the single-funded threshold to collateral + dust + full fees', () => {
+      const feeRate = BigInt(10);
+      const collateral = BigInt(5000);
+      const required =
+        collateral + dustThreshold(feeRate) + dualFees(feeRate, 1, 1, true);
+      const exact = { ...getUtxos(required)[0], vout: 0 };
+      const oneBelow = { ...getUtxos(required - BigInt(1))[0], vout: 1 };
+
+      expect(
+        dualFundingCoinSelect([exact], [collateral], feeRate, true).inputs
+          .length,
+      ).to.equal(1);
+      expect(
+        dualFundingCoinSelect([oneBelow], [collateral], feeRate, true).inputs
+          .length,
+      ).to.equal(0);
+    });
+
+    it('should return the single-funded fee estimate when nothing is selectable', () => {
+      const feeRate = BigInt(10);
+      const expected = dualFees(feeRate, 1, 1, true);
+
+      expect(
+        dualFundingCoinSelect([], [BigInt(5000)], feeRate, true).fee,
+      ).to.equal(expected);
+      // 100 sat UTXO costs 680 sats to spend at 10 sat/vB -> detrimental
+      expect(
+        dualFundingCoinSelect(
+          getUtxos(BigInt(100)),
+          [BigInt(5000)],
+          feeRate,
+          true,
+        ).fee,
+      ).to.equal(expected);
+    });
   });
 });

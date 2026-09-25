@@ -1,7 +1,10 @@
+import { FundingInput } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
 import {
   DEFAULT_MAX_WITNESS_LEN,
+  DualFundingTxFinalizer,
+  fundingInputWithWitnessLen,
   getFinalizerByCount,
   getMaxWitnessLen,
 } from '../../lib';
@@ -48,6 +51,63 @@ describe('TxFinalizer', () => {
       expect(() =>
         getFinalizerByCount(BigInt(1), 2, 1, 1, [getMaxWitnessLen('p2tr')]),
       ).to.throw('Expected 2 witness lengths, got 1');
+    });
+  });
+
+  describe('single-funded', () => {
+    const feeRate = BigInt(10);
+
+    it('should charge the sole funder full fund tx and CET base weights (matches ddk-dlc)', () => {
+      const finalizer = getFinalizerByCount(feeRate, 1, 0, 1);
+      // fund: 214 base + 272 p2wpkh input + 88 change spk + 36 = 610 wu -> 153 vB
+      expect(finalizer.offerFundingFee).to.equal(BigInt(1530));
+      // cet: 500 base + 88 payout spk = 588 wu -> 147 vB
+      expect(finalizer.offerFutureFee).to.equal(BigInt(1470));
+      expect(finalizer.offerFees).to.equal(BigInt(3000));
+      expect(finalizer.acceptFees).to.equal(BigInt(0));
+    });
+
+    it('should be symmetric when the accepter is the sole funder', () => {
+      const finalizer = getFinalizerByCount(feeRate, 0, 1, 1);
+      expect(finalizer.acceptFees).to.equal(BigInt(3000));
+      expect(finalizer.offerFees).to.equal(BigInt(0));
+    });
+
+    it('should charge the sole funder full batch base weights for multiple contracts', () => {
+      const finalizer = getFinalizerByCount(feeRate, 1, 0, 3);
+      // fund: 42 + 43*3*4 = 558 base + 272 + 88 + 36 = 954 wu -> 239 vB
+      expect(finalizer.offerFundingFee).to.equal(BigInt(2390));
+      // cet: (500 + 88) * 3 = 1764 wu -> 441 vB
+      expect(finalizer.offerFutureFee).to.equal(BigInt(4410));
+      expect(finalizer.acceptFees).to.equal(BigInt(0));
+    });
+
+    it('should keep the half split when accept inputs are unknown (null)', () => {
+      const spk = Buffer.from(
+        '0014663117d27e78eb432505180654e603acb30e8a4a',
+        'hex',
+      );
+      const finalizer = new DualFundingTxFinalizer(
+        [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)],
+        spk,
+        spk,
+        null as unknown as FundingInput[],
+        spk,
+        spk,
+        feeRate,
+      );
+      expect(finalizer.offerFees).to.equal(
+        getFinalizerByCount(feeRate, 1, 1, 1).offerFees,
+      );
+      expect(finalizer.acceptFees).to.equal(BigInt(0));
+    });
+
+    it('should keep the half split for dual-funded contracts', () => {
+      const finalizer = getFinalizerByCount(feeRate, 1, 1, 1);
+      // fund: 107 half base + 272 + 88 + 36 = 503 wu -> 126 vB
+      expect(finalizer.offerFundingFee).to.equal(BigInt(1260));
+      // cet: 249 half base + 88 = 337 wu -> 85 vB
+      expect(finalizer.offerFutureFee).to.equal(BigInt(850));
     });
   });
 });
