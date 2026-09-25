@@ -1,9 +1,7 @@
 import {
-  DEFAULT_MAX_WITNESS_LEN,
-  DualFundingTxFinalizer,
   FundingInputScriptType,
   fundingInputVBytes,
-  fundingInputWithWitnessLen,
+  getFinalizerByCount,
   getMaxWitnessLen,
 } from './TxFinalizer';
 
@@ -62,45 +60,26 @@ const utxoScore = (x: UTXO, feeRate: bigint): bigint => {
   return BigInt(x.value) - feeRate * inputBytes(x);
 };
 
-const witnessLensFromInputCount = (
-  numInputsOrWitnessLens: number | number[],
-): number[] =>
-  Array.isArray(numInputsOrWitnessLens)
-    ? numInputsOrWitnessLens
-    : Array.from(
-        { length: numInputsOrWitnessLens },
-        () => DEFAULT_MAX_WITNESS_LEN,
-      );
-
 export const dualFees = (
   feeRate: bigint,
   numInputsOrWitnessLens: number | number[],
   numContracts: number,
   singleFunded = false,
 ): bigint => {
-  const fakeSPK = Buffer.from(
-    '0014663117d27e78eb432505180654e603acb30e8a4a',
-    'hex',
-  );
-
-  const offerInputs = witnessLensFromInputCount(numInputsOrWitnessLens).map(
-    fundingInputWithWitnessLen,
-  );
+  const witnessLens = Array.isArray(numInputsOrWitnessLens)
+    ? numInputsOrWitnessLens
+    : undefined;
+  const numInputs = Array.isArray(numInputsOrWitnessLens)
+    ? numInputsOrWitnessLens.length
+    : numInputsOrWitnessLens;
   // With no accept inputs the offerer is the sole funder and pays the full
   // fund tx and CET base weights (matches ddk-dlc).
-  const acceptInputs = singleFunded
-    ? []
-    : [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)];
-
-  return new DualFundingTxFinalizer(
-    offerInputs,
-    fakeSPK,
-    fakeSPK,
-    acceptInputs,
-    fakeSPK,
-    fakeSPK,
+  return getFinalizerByCount(
     feeRate,
+    numInputs,
+    singleFunded ? 0 : 1,
     numContracts,
+    witnessLens,
   ).offerFees;
 };
 

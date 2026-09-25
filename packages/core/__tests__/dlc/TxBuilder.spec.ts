@@ -123,6 +123,20 @@ describe('TxBuilder', () => {
       expect(Number(maxCollateral)).to.be.lessThan(1000000);
     });
 
+    it('should deduct full sole-funder fund tx and CET fees', () => {
+      const fundingInputs = [createTestFundingInput(BigInt(1000000))];
+      const feeRate = BigInt(10);
+
+      const maxCollateral = BatchDlcTxBuilder.calculateMaxCollateral(
+        fundingInputs,
+        feeRate,
+        1,
+      );
+
+      // 1530 fund fee + 1470 CET fee: full base weights, not the half split
+      expect(maxCollateral).to.equal(BigInt(1000000) - BigInt(3000));
+    });
+
     it('should calculate maximum collateral for multiple inputs', () => {
       const fundingInputs = [
         createTestFundingInput(BigInt(500000)),
@@ -299,6 +313,28 @@ describe('TxBuilder', () => {
       expect(Number(changeOutput.value.sats)).to.be.at.least(
         Number(DUST_LIMIT),
       );
+    });
+
+    it('should size single-funded funding output and change with full sole-funder fees', () => {
+      const offerInput = createTestFundingInput(BigInt(1000000));
+      const offer = createTestDlcOffer(
+        BigInt(500000),
+        [offerInput],
+        BigInt(10),
+      );
+      const accept = createTestDlcAccept(BigInt(0), []);
+
+      const tx = new BatchDlcTxBuilder(
+        [offer],
+        [accept],
+      ).buildFundingTransaction();
+      const values = tx.outputs.map((output) => output.value.sats);
+
+      expect(values.length).to.equal(2);
+      // funding = collateral + full CET fee (1470)
+      expect(values).to.include(BigInt(501470));
+      // change = inputs - collateral - (1530 fund + 1470 CET)
+      expect(values).to.include(BigInt(497000));
     });
 
     it('should preserve offer Taproot change scriptPubKey', () => {
