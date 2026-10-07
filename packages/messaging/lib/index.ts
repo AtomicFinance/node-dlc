@@ -38,6 +38,7 @@ export * from './messages/OrderOffer';
 export * from './messages/OrderPositionInfo';
 export * from './messages/PayoutCurvePiece';
 export * from './messages/PayoutFunction';
+export * from './messages/PayoutScriptOverrides';
 export * from './messages/RoundingIntervals';
 export * from './messages/ScriptWitnessV0';
 export * from './MessageType';
