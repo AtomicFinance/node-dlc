@@ -7,6 +7,7 @@ import {
   OrderIrcInfoV0,
   OrderMetadataV0,
   OrderPositionInfo,
+  PayoutScriptOverrides,
 } from '../../lib';
 import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
 import { SingleContractInfo } from '../../lib/messages/ContractInfo';
@@ -203,6 +204,25 @@ describe('DlcOffer', () => {
         expect(DlcOffer.deserialize(serialized).type).to.equal(
           MessageType.DlcOffer,
         );
+      });
+
+      it('deserializes with payout script overrides', () => {
+        const overrides = new PayoutScriptOverrides();
+        overrides.overrides = [
+          {
+            outcome: 'lose',
+            scriptPubkey: Buffer.from('0014aabb', 'hex'),
+          },
+        ];
+        instance.payoutScriptOverrides = overrides;
+
+        const deserialized = DlcOffer.deserialize(instance.serialize());
+
+        expect(deserialized.unknownTlvs).to.equal(undefined);
+        expect(
+          deserialized.payoutScriptOverrides?.scriptFor('lose'),
+        ).to.deep.equal(Buffer.from('0014aabb', 'hex'));
+        expect(deserialized.serialize()).to.deep.equal(instance.serialize());
       });
 
       it('deserializes with positioninfo', () => {

@@ -28,6 +28,10 @@ import {
   OrderMetadataV0,
 } from './OrderMetadata';
 import { IOrderPositionInfoJSON, OrderPositionInfo } from './OrderPositionInfo';
+import {
+  IPayoutScriptOverridesJSON,
+  PayoutScriptOverrides,
+} from './PayoutScriptOverrides';
 
 export const LOCKTIME_THRESHOLD = 500000000;
 
@@ -207,6 +211,10 @@ export class DlcOffer implements IDlcMessage {
           }
           instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
           break;
+        case MessageType.PayoutScriptOverrides:
+          instance.payoutScriptOverrides =
+            PayoutScriptOverrides.deserialize(buf);
+          break;
         default:
           // Store unknown TLVs for future compatibility
           if (!instance.unknownTlvs) {
@@ -273,6 +281,8 @@ export class DlcOffer implements IDlcMessage {
   public positionInfo?: OrderPositionInfo;
 
   public batchFundingGroups?: BatchFundingGroup[];
+
+  public payoutScriptOverrides?: PayoutScriptOverrides;
 
   // Store unknown TLVs for forward compatibility
   public unknownTlvs?: Array<{ type: number; data: Buffer }>;
@@ -478,6 +488,8 @@ export class DlcOffer implements IDlcMessage {
       this.batchFundingGroups.forEach((fundingInfo) =>
         tlvs.push(fundingInfo.toJSON()),
       );
+    if (this.payoutScriptOverrides)
+      tlvs.push(this.payoutScriptOverrides.toJSON());
 
     // Include unknown TLVs for debugging
     if (this.unknownTlvs) {
@@ -552,6 +564,8 @@ export class DlcOffer implements IDlcMessage {
       this.batchFundingGroups.forEach((fundingInfo) =>
         writer.writeBytes(fundingInfo.serialize()),
       );
+    if (this.payoutScriptOverrides)
+      writer.writeBytes(this.payoutScriptOverrides.serialize());
 
     // Write unknown TLVs for forward compatibility
     if (this.unknownTlvs) {
@@ -588,6 +602,7 @@ export interface IDlcOfferJSON {
     | IOrderIrcInfoJSON
     | IOrderPositionInfoJSON
     | IBatchFundingGroupJSON
+    | IPayoutScriptOverridesJSON
     | unknown
   )[]; // Made optional - for unknown TLVs
 }
