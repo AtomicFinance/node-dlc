@@ -181,6 +181,36 @@ describe('CoinSelect', () => {
       expect(fee).to.equal(BigInt(687));
     });
 
+    it('reserves fees for the extra override bytes', () => {
+      const feeRate = BigInt(10);
+      expect(dualFees(feeRate, 1, 1, 78)).to.equal(
+        dualFees(feeRate, 1, 1) + BigInt(78) * feeRate,
+      );
+
+      // A UTXO that covers the collateral at the plain fee but not with a
+      // 100-byte override in place of a 22-byte accept script.
+      const collateral = BigInt(100000);
+      const utxo: UTXO = {
+        address: 'bcrt1qjzut0906d9sk4hml4k6sz6cssljktf4c7yl80f',
+        txid: 'c7bf12ac16aba1cf6c7769117294853453f7da3006363dfe4e8979847e32f7e1',
+        value: Number(
+          collateral + dualFees(feeRate, 1, 1) + dustThreshold(feeRate),
+        ),
+        vout: 0,
+      };
+      expect(
+        dualFundingCoinSelect([utxo], [collateral], feeRate).inputs,
+      ).to.have.length(1);
+      const withOverride = dualFundingCoinSelect(
+        [utxo],
+        [collateral],
+        feeRate,
+        78,
+      );
+      expect(withOverride.inputs).to.have.length(0);
+      expect(withOverride.fee).to.equal(dualFees(feeRate, 1, 1, 78));
+    });
+
     it('should calculate lower fees for taproot inputs', () => {
       const feeRate = BigInt(450);
       const p2wpkhFee = dualFees(feeRate, 1, 1);

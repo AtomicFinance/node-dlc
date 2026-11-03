@@ -212,6 +212,19 @@ describe('TxBuilder', () => {
     });
   });
 
+  describe('BatchDlcTxBuilder.calculateMaxCollateral - payout script overrides', () => {
+    it('leaves room for the extra override bytes', () => {
+      const inputs = [createTestFundingInput(BigInt(1000000))];
+      const feeRate = BigInt(5);
+      expect(
+        BatchDlcTxBuilder.calculateMaxCollateral(inputs, feeRate, 1, 12),
+      ).to.equal(
+        BatchDlcTxBuilder.calculateMaxCollateral(inputs, feeRate, 1) -
+          BigInt(12) * feeRate,
+      );
+    });
+  });
+
   describe('BatchDlcTxBuilder.buildFundingTransaction - Dust Filtering', () => {
     it('should create change outputs when above dust threshold', () => {
       // Create inputs with sufficient value for both collateral and change
@@ -509,6 +522,57 @@ describe('TxBuilder', () => {
       expect(overridden.funding).to.equal(plain.funding + extra);
       expect(overridden.acceptChange).to.equal(plain.acceptChange - extra);
       expect(overridden.offerChange).to.equal(plain.offerChange);
+    });
+
+    it('has a lone funding offerer reserve the extra bytes', () => {
+      const feeRate = BigInt(2);
+      const singleFunded = (overrides?: PayoutScriptOverrides) => {
+        const offer = createTestDlcOffer(
+          BigInt(1000000),
+          [createTestFundingInput(BigInt(1010000))],
+          feeRate,
+        );
+        offer.payoutScriptOverrides = overrides;
+        const accept = createTestDlcAccept(BigInt(0));
+        const tx = new BatchDlcTxBuilder(
+          [offer],
+          [accept],
+        ).buildFundingTransaction();
+        return tx.outputs.map((o) => o.value.sats);
+      };
+
+      const [plainFunding, plainChange] = singleFunded();
+      const [funding, change] = singleFunded(overridesPaying(p2tr));
+      expect(funding).to.equal(plainFunding + BigInt(12) * feeRate);
+      expect(change).to.equal(plainChange - BigInt(12) * feeRate);
+    });
+
+    it('charges each contract of a batch for its own overrides', () => {
+      const offerInput = createTestFundingInput(BigInt(3000000));
+      const acceptInput = createTestFundingInput(BigInt(3000000), 2);
+      const offers = [0, 1].map((i) => {
+        const offer = createTestDlcOffer(BigInt(1000000), [offerInput]);
+        offer.fundOutputSerialId = BigInt(10 + i);
+        return offer;
+      });
+      const accepts = [0, 1].map(() =>
+        createTestDlcAccept(BigInt(1000000), [acceptInput]),
+      );
+      const fundingOutputs = () =>
+        new BatchDlcTxBuilder(offers, accepts)
+          .buildFundingTransaction()
+          .outputs.map((o) => o.value.sats);
+
+      const plain = fundingOutputs();
+      offers[0].payoutScriptOverrides = overridesPaying(p2tr);
+      const mixed = fundingOutputs();
+
+      // Outputs by serial id: offer change (3), accept change (5), then the
+      // funding outputs (10, 11). Only the first contract has an override.
+      expect(mixed[2]).to.equal(plain[2] + BigInt(12));
+      expect(mixed[3]).to.equal(plain[3]);
+      expect(mixed[1]).to.equal(plain[1] - BigInt(12));
+      expect(mixed[0]).to.equal(plain[0]);
     });
 
     it('keeps the fee when the override script is no longer', () => {

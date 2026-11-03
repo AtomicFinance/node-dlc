@@ -69,27 +69,46 @@ export class DualFundingTxFinalizer {
     readonly feeRate: bigint,
     readonly numContracts = 1,
     /**
-     * The length of the longest script a CET may pay the accepter: its payout
-     * script, or a longer PayoutScriptOverrides script paid in its place. The
-     * accepter's CET fee is reserved at this length so an overridden CET keeps
-     * the offer's fee rate; when the accepter funds nothing, the offerer
-     * reserves the bytes beyond the accepter's payout script. Defaults to the
-     * accepter's payout script.
+     * Bytes by which the scripts CETs may pay the accepter exceed its payout
+     * script, summed over the batch's contracts: for each contract, the
+     * longest PayoutScriptOverrides script minus the accept payout script,
+     * or zero. Each byte is one vbyte of CET fee, paid by whoever pays for
+     * the accepter's output, as dlcdevkit has it: the accepter when it funds,
+     * otherwise the offerer.
      */
-    readonly acceptPayoutScriptLen = acceptPayoutSPK.length,
+    readonly acceptOverrideExtraLen = 0,
   ) {
-    if (acceptPayoutScriptLen < acceptPayoutSPK.length) {
-      throw new Error(
-        'acceptPayoutScriptLen must be at least the accept payout script length',
-      );
+    if (
+      !Number.isInteger(acceptOverrideExtraLen) ||
+      acceptOverrideExtraLen < 0
+    ) {
+      throw new Error('acceptOverrideExtraLen must be a non-negative integer');
     }
+  }
+
+  /** The CET fee for the extra override bytes, in sats. */
+  public get overrideExtraFee(): bigint {
+    return this.feeRate * BigInt(this.acceptOverrideExtraLen);
+  }
+
+  /** The part of `overrideExtraFee` in the offerer's future fee. */
+  public get offerOverrideExtraFee(): bigint {
+    return this.acceptInputs.length === 0 && this.offerInputs.length > 0
+      ? this.overrideExtraFee
+      : BigInt(0);
+  }
+
+  /** The part of `overrideExtraFee` in the accepter's future fee. */
+  public get acceptOverrideExtraFee(): bigint {
+    return this.acceptInputs.length > 0 ? this.overrideExtraFee : BigInt(0);
   }
 
   private computeFees(
     _inputs: FundingInput[],
-    payoutScriptLen: number,
+    payoutSPK: Buffer,
     changeSPK: Buffer,
     numContracts: number,
+    extraFutureFee: bigint,
   ): IFees {
     // If no inputs, return zero fees (matches C++ layer behavior for single-funded DLCs)
     if (_inputs.length === 0) {
@@ -106,13 +125,13 @@ export class DualFundingTxFinalizer {
       (input) => input as FundingInput,
     );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
-    const futureFeeWeight = 249 + 4 * payoutScriptLen;
+    const futureFeeWeight = 249 + 4 * payoutSPK.length;
     const futureFeeVBytes = new Decimal(futureFeeWeight)
       .times(numContracts)
       .div(4)
       .ceil()
       .toNumber();
-    const futureFee = this.feeRate * BigInt(futureFeeVBytes);
+    const futureFee = this.feeRate * BigInt(futureFeeVBytes) + extraFutureFee;
 
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-funding-transaction
     const inputWeight = inputs.reduce((total, input) => {
@@ -128,34 +147,23 @@ export class DualFundingTxFinalizer {
     return { futureFee, fundingFee };
   }
 
-  /**
-   * The bytes by which the longest script a CET may pay the accepter exceeds
-   * its payout script. dlcdevkit has whoever pays for the accepter's output
-   * pay for them: the accepter when it funds, otherwise the offerer.
-   */
-  private get acceptOverrideExtraLen(): number {
-    return this.acceptPayoutScriptLen - this.acceptPayoutSPK.length;
-  }
-
   private getOfferFees(): IFees {
-    // An accepter with no inputs pays no fees here, so the offerer reserves
-    // the extra override bytes for it. Without overrides this adds nothing.
-    const extraLen =
-      this.acceptInputs.length === 0 ? this.acceptOverrideExtraLen : 0;
     return this.computeFees(
       this.offerInputs,
-      this.offerPayoutSPK.length + extraLen,
+      this.offerPayoutSPK,
       this.offerChangeSPK,
       this.numContracts,
+      this.offerOverrideExtraFee,
     );
   }
 
   private getAcceptFees(): IFees {
     return this.computeFees(
       this.acceptInputs,
-      this.acceptPayoutScriptLen,
+      this.acceptPayoutSPK,
       this.acceptChangeSPK,
       this.numContracts,
+      this.acceptOverrideExtraFee,
     );
   }
 
