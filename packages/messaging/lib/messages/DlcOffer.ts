@@ -5,15 +5,22 @@ import { BitcoinNetwork } from 'bitcoin-network';
 import { address } from 'bitcoinjs-lib';
 import secp256k1 from 'secp256k1';
 
-import { MessageType, PROTOCOL_VERSION } from '../MessageType';
+import {
+  ContractDescriptorType,
+  MessageType,
+  PROTOCOL_VERSION,
+} from '../MessageType';
 import { deserializeTlv } from '../serialize/deserializeTlv';
 import { getTlv } from '../serialize/getTlv';
 import { bigIntToNumber, toBigInt } from '../util';
 import { BatchFundingGroup, IBatchFundingGroupJSON } from './BatchFundingGroup';
+import { ContractDescriptor, EnumeratedDescriptor } from './ContractDescriptor';
 import {
   ContractInfo,
+  DisjointContractInfo,
   IDisjointContractInfoJSON,
   ISingleContractInfoJSON,
+  SingleContractInfo,
 } from './ContractInfo';
 import { IDlcMessage } from './DlcMessage';
 import { FundingInput, IFundingInputJSON } from './FundingInput';
@@ -212,6 +219,11 @@ export class DlcOffer implements IDlcMessage {
           instance.batchFundingGroups.push(BatchFundingGroup.deserialize(buf));
           break;
         case MessageType.PayoutScriptOverrides:
+          // dlcdevkit rejects a repeated record; reading either copy would
+          // build different CETs from it.
+          if (instance.payoutScriptOverrides) {
+            throw new Error('DlcOffer has two PayoutScriptOverrides records');
+          }
           instance.payoutScriptOverrides =
             PayoutScriptOverrides.deserialize(buf);
           break;
@@ -339,6 +351,73 @@ export class DlcOffer implements IDlcMessage {
   }
 
   /**
+   * The checks dlcdevkit makes on a PayoutScriptOverrides record when an
+   * offer arrives, as far as they can be made from the offer: an override
+   * must cover a CET, no CET may be covered twice, and a covered CET must pay
+   * the accepter at least the dust limit, or there is no output to redirect.
+   *
+   * Enum overrides are checked in full. A numeric range must find a numeric
+   * descriptor; which of its CETs the range covers, and whether it covers any
+   * of them only in part, is checked where the CETs are built.
+   */
+  private validatePayoutScriptOverrides(): void {
+    const overrides = this.payoutScriptOverrides.overrides;
+    this.payoutScriptOverrides.validate();
+
+    const descriptors: ContractDescriptor[] =
+      this.contractInfo instanceof DisjointContractInfo
+        ? this.contractInfo.contractOraclePairs.map((p) => p.contractDescriptor)
+        : [(this.contractInfo as SingleContractInfo).contractDescriptor];
+    const totalCollateral = this.contractInfo.getTotalCollateral();
+    const covered = new Set<string>();
+
+    for (const o of overrides) {
+      const outcome = o.outcome;
+      if (outcome.type === 'numeric') {
+        if (
+          !descriptors.some(
+            (d) =>
+              d.contractDescriptorType ===
+              ContractDescriptorType.NumericOutcome,
+          )
+        ) {
+          throw new Error(
+            `Payout override for values ${outcome.start}..=${outcome.end} covers no CET of the offer`,
+          );
+        }
+        continue;
+      }
+
+      let coversAny = false;
+      descriptors.forEach((descriptor, index) => {
+        if (!(descriptor instanceof EnumeratedDescriptor)) return;
+        descriptor.outcomes.forEach((payout, position) => {
+          if (payout.outcome !== outcome.outcome) return;
+          coversAny = true;
+          const acceptPayout = totalCollateral - payout.localPayout;
+          if (acceptPayout < BigInt(1000)) {
+            throw new Error(
+              `Payout override for ${outcome.outcome} covers a CET that pays the accepter ${acceptPayout}, under the 1000 sat dust limit`,
+            );
+          }
+          const key = `${index}:${position}`;
+          if (covered.has(key)) {
+            throw new Error(
+              `Payout override for ${outcome.outcome} covers a CET another override covers`,
+            );
+          }
+          covered.add(key);
+        });
+      });
+      if (!coversAny) {
+        throw new Error(
+          `Payout override for ${outcome.outcome} covers no CET of the offer`,
+        );
+      }
+    }
+  }
+
+  /**
    * Validates correctness of all fields in DlcOffer
    * Updated validation rules as per dlcspecs PR #163
    * @throws Will throw an error if validation fails
@@ -437,6 +516,8 @@ export class DlcOffer implements IDlcMessage {
 
     // validate contractInfo
     this.contractInfo.validate();
+
+    if (this.payoutScriptOverrides) this.validatePayoutScriptOverrides();
 
     // totalCollateral should be > offerCollateral (logical validation)
     // Exception: for single funded DLCs, totalCollateral == offerCollateral is allowed
