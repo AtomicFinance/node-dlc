@@ -3,6 +3,7 @@ import {
   DlcAcceptWithoutSigs,
   DlcOffer,
   FundingInput,
+  PayoutScriptOverrides,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
@@ -459,6 +460,60 @@ describe('TxBuilder', () => {
       // Should have 2 funding outputs + change outputs (if any)
       expect(tx.outputs.length).to.be.at.least(2);
       expect(tx.inputs.length).to.equal(3); // All unique inputs
+    });
+  });
+  describe('BatchDlcTxBuilder.buildFundingTransaction - payout script overrides', () => {
+    const p2tr = Buffer.from('5120' + '11'.repeat(32), 'hex');
+
+    const overridesPaying = (script: Buffer): PayoutScriptOverrides => {
+      const overrides = new PayoutScriptOverrides();
+      overrides.overrides = [
+        {
+          outcome: { type: 'enum', outcome: 'liquidated' },
+          scriptPubkey: script,
+        },
+      ];
+      return overrides;
+    };
+
+    const build = (overrides?: PayoutScriptOverrides, feeRate = BigInt(1)) => {
+      const offer = createTestDlcOffer(
+        BigInt(1000000),
+        [createTestFundingInput(BigInt(1010000))],
+        feeRate,
+      );
+      offer.payoutScriptOverrides = overrides;
+      const accept = createTestDlcAccept(BigInt(1000000), [
+        createTestFundingInput(BigInt(1005000), 2),
+      ]);
+      const tx = new BatchDlcTxBuilder(
+        [offer],
+        [accept],
+      ).buildFundingTransaction();
+      // Outputs by serial id: funding (1), offer change (3), accept change (5).
+      return {
+        funding: tx.outputs[0].value.sats,
+        offerChange: tx.outputs[1].value.sats,
+        acceptChange: tx.outputs[2].value.sats,
+      };
+    };
+
+    it('reserves the accepter CET fee for a longer override script', () => {
+      const feeRate = BigInt(3);
+      const plain = build(undefined, feeRate);
+      const overridden = build(overridesPaying(p2tr), feeRate);
+
+      // ceil((249 + 4 * 34) / 4) - ceil((249 + 4 * 22) / 4) = 97 - 85 vbytes,
+      // paid by the accepter.
+      const extra = BigInt(12) * feeRate;
+      expect(overridden.funding).to.equal(plain.funding + extra);
+      expect(overridden.acceptChange).to.equal(plain.acceptChange - extra);
+      expect(overridden.offerChange).to.equal(plain.offerChange);
+    });
+
+    it('keeps the fee when the override script is no longer', () => {
+      const short = Buffer.from('0014' + '22'.repeat(20), 'hex');
+      expect(build(overridesPaying(short))).to.deep.equal(build());
     });
   });
 });

@@ -2,6 +2,8 @@ import { expect } from 'chai';
 
 import {
   DEFAULT_MAX_WITNESS_LEN,
+  DualFundingTxFinalizer,
+  fundingInputWithWitnessLen,
   getFinalizerByCount,
   getMaxWitnessLen,
 } from '../../lib';
@@ -48,6 +50,33 @@ describe('TxFinalizer', () => {
       expect(() =>
         getFinalizerByCount(BigInt(1), 2, 1, 1, [getMaxWitnessLen('p2tr')]),
       ).to.throw('Expected 2 witness lengths, got 1');
+    });
+  });
+  describe('acceptPayoutScriptLen', () => {
+    const p2wpkh = Buffer.alloc(22);
+    const inputs = () => [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)];
+    const finalizer = (acceptPayoutScriptLen?: number) =>
+      new DualFundingTxFinalizer(
+        inputs(),
+        p2wpkh,
+        p2wpkh,
+        inputs(),
+        p2wpkh,
+        p2wpkh,
+        BigInt(2),
+        1,
+        acceptPayoutScriptLen,
+      );
+
+    it('prices the accepter CET output at the given length', () => {
+      // ceil((249 + 4 * 34) / 4) = 97 vbytes, against 85 for P2WPKH.
+      expect(finalizer(34).acceptFutureFee).to.equal(BigInt(97 * 2));
+      expect(finalizer().acceptFutureFee).to.equal(BigInt(85 * 2));
+      expect(finalizer(34).offerFutureFee).to.equal(finalizer().offerFutureFee);
+    });
+
+    it('rejects a length shorter than the accept payout script', () => {
+      expect(() => finalizer(21)).to.throw(/at least/);
     });
   });
 });

@@ -141,6 +141,7 @@ export class BatchDlcTxBuilder {
       this.dlcAccepts[0].changeSpk,
       this.dlcOffers[0].feeRatePerVb,
       this.dlcOffers.length,
+      this.acceptPayoutScriptLen(),
     );
 
     this.dlcOffers[0].fundingInputs.forEach((input) => {
@@ -273,6 +274,23 @@ export class BatchDlcTxBuilder {
     });
 
     return tx.toTx();
+  }
+
+  /**
+   * The longest script any CET of the batch may pay the accepter: its payout
+   * script or a PayoutScriptOverrides script, as dlcdevkit prices it.
+   */
+  private acceptPayoutScriptLen(): number {
+    const acceptPayoutSpk = this.dlcAccepts[0].payoutSpk;
+    return this.dlcOffers.reduce(
+      (len, offer) =>
+        Math.max(
+          len,
+          offer.payoutScriptOverrides?.acceptPayoutScriptLen(acceptPayoutSpk) ??
+            0,
+        ),
+      acceptPayoutSpk.length,
+    );
   }
 
   private ensureSameFundingInputs(): void {

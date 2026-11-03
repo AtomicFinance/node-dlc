@@ -68,11 +68,24 @@ export class DualFundingTxFinalizer {
     readonly acceptChangeSPK: Buffer,
     readonly feeRate: bigint,
     readonly numContracts = 1,
-  ) {}
+    /**
+     * The length of the longest script a CET may pay the accepter: its payout
+     * script, or a longer PayoutScriptOverrides script paid in its place. The
+     * accepter's CET fee is reserved at this length so an overridden CET keeps
+     * the offer's fee rate. Defaults to the accepter's payout script.
+     */
+    readonly acceptPayoutScriptLen = acceptPayoutSPK.length,
+  ) {
+    if (acceptPayoutScriptLen < acceptPayoutSPK.length) {
+      throw new Error(
+        'acceptPayoutScriptLen must be at least the accept payout script length',
+      );
+    }
+  }
 
   private computeFees(
     _inputs: FundingInput[],
-    payoutSPK: Buffer,
+    payoutScriptLen: number,
     changeSPK: Buffer,
     numContracts: number,
   ): IFees {
@@ -91,7 +104,7 @@ export class DualFundingTxFinalizer {
       (input) => input as FundingInput,
     );
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-contract-execution-or-refund-transaction
-    const futureFeeWeight = 249 + 4 * payoutSPK.length;
+    const futureFeeWeight = 249 + 4 * payoutScriptLen;
     const futureFeeVBytes = new Decimal(futureFeeWeight)
       .times(numContracts)
       .div(4)
@@ -116,7 +129,7 @@ export class DualFundingTxFinalizer {
   private getOfferFees(): IFees {
     return this.computeFees(
       this.offerInputs,
-      this.offerPayoutSPK,
+      this.offerPayoutSPK.length,
       this.offerChangeSPK,
       this.numContracts,
     );
@@ -125,7 +138,7 @@ export class DualFundingTxFinalizer {
   private getAcceptFees(): IFees {
     return this.computeFees(
       this.acceptInputs,
-      this.acceptPayoutSPK,
+      this.acceptPayoutScriptLen,
       this.acceptChangeSPK,
       this.numContracts,
     );
