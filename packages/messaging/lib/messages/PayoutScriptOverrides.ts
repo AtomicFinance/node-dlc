@@ -19,7 +19,8 @@ export interface INumericOverrideOutcome {
 
 export type OverrideOutcome = IEnumOverrideOutcome | INumericOverrideOutcome;
 
-const UTF8 = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM keeps a leading byte order mark in the outcome, as dlcdevkit does.
+const UTF8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 const ENUM_VARIANT = 0;
 const NUMERIC_VARIANT = 1;

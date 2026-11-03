@@ -66,6 +66,20 @@ describe('PayoutScriptOverrides TLV', () => {
     expect(() => PayoutScriptOverrides.deserialize(bad)).to.throw();
   });
 
+  it('keeps a leading byte order mark in an outcome', () => {
+    const overrides = new PayoutScriptOverrides();
+    overrides.overrides = [
+      {
+        outcome: { type: 'enum', outcome: '\uFEFFwin' },
+        scriptPubkey: ENUM_SCRIPT,
+      },
+    ];
+    const wire = overrides.serialize();
+    const decoded = PayoutScriptOverrides.deserialize(wire);
+    expect(decoded.overrides).to.deep.equal(overrides.overrides);
+    expect(decoded.serialize()).to.deep.equal(wire);
+  });
+
   it('round trips an empty record, which dlcdevkit accepts', () => {
     const empty = Buffer.from('fdfded0100', 'hex');
     const decoded = PayoutScriptOverrides.deserialize(empty);
