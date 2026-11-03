@@ -10,7 +10,10 @@ import {
   PayoutScriptOverrides,
 } from '../../lib';
 import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
-import { SingleContractInfo } from '../../lib/messages/ContractInfo';
+import {
+  DisjointContractInfo,
+  SingleContractInfo,
+} from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
   DlcOfferContainer,
@@ -671,6 +674,43 @@ describe('DlcOffer', () => {
     it('rejects a numeric range on an enum contract', () => {
       withOverrides({ type: 'numeric', start: BigInt(0), end: BigInt(10) });
       expect(() => instance.validate()).to.throw(/covers no CET/);
+    });
+
+    describe('on a disjoint contract', () => {
+      beforeEach(() => {
+        const single = createTestContractInfo();
+        const second = createTestContractInfo();
+        const descriptor = second.contractDescriptor as EnumeratedDescriptor;
+        descriptor.outcomes = [
+          { outcome: 'liquidated', localPayout: BigInt(0) },
+          { outcome: 'win', localPayout: BigInt(200000000) },
+        ];
+        const disjoint = new DisjointContractInfo();
+        disjoint.totalCollateral = single.totalCollateral;
+        disjoint.contractOraclePairs = [
+          {
+            contractDescriptor: single.contractDescriptor,
+            oracleInfo: single.oracleInfo,
+          },
+          {
+            contractDescriptor: descriptor,
+            oracleInfo: second.oracleInfo,
+          },
+        ];
+        instance.contractInfo = disjoint;
+      });
+
+      it('finds an outcome in a later contract info', () => {
+        withOverrides({ type: 'enum', outcome: 'liquidated' });
+        expect(() => instance.validate()).to.not.throw();
+      });
+
+      it('checks dust in every contract info the outcome appears in', () => {
+        // 'win' pays the accepter everything in the first contract info and
+        // nothing in the second.
+        withOverrides({ type: 'enum', outcome: 'win' });
+        expect(() => instance.validate()).to.throw(/dust limit/);
+      });
     });
 
     it('rejects an empty script', () => {
