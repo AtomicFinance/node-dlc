@@ -75,6 +75,26 @@ describe('TxFinalizer', () => {
       expect(finalizer(34).offerFutureFee).to.equal(finalizer().offerFutureFee);
     });
 
+    it('has the offerer reserve the extra bytes when the accepter funds nothing', () => {
+      const singleFunded = (acceptPayoutScriptLen?: number) =>
+        new DualFundingTxFinalizer(
+          inputs(),
+          p2wpkh,
+          p2wpkh,
+          [],
+          p2wpkh,
+          p2wpkh,
+          BigInt(2),
+          1,
+          acceptPayoutScriptLen,
+        );
+
+      // ceil((249 + 4 * (22 + 12)) / 4) = 97 vbytes, against 85 without.
+      expect(singleFunded().offerFutureFee).to.equal(BigInt(85 * 2));
+      expect(singleFunded(34).offerFutureFee).to.equal(BigInt(97 * 2));
+      expect(singleFunded(34).acceptFees).to.equal(BigInt(0));
+    });
+
     it('rejects a length shorter than the accept payout script', () => {
       expect(() => finalizer(21)).to.throw(/at least/);
     });

@@ -72,7 +72,9 @@ export class DualFundingTxFinalizer {
      * The length of the longest script a CET may pay the accepter: its payout
      * script, or a longer PayoutScriptOverrides script paid in its place. The
      * accepter's CET fee is reserved at this length so an overridden CET keeps
-     * the offer's fee rate. Defaults to the accepter's payout script.
+     * the offer's fee rate; when the accepter funds nothing, the offerer
+     * reserves the bytes beyond the accepter's payout script. Defaults to the
+     * accepter's payout script.
      */
     readonly acceptPayoutScriptLen = acceptPayoutSPK.length,
   ) {
@@ -126,10 +128,23 @@ export class DualFundingTxFinalizer {
     return { futureFee, fundingFee };
   }
 
+  /**
+   * The bytes by which the longest script a CET may pay the accepter exceeds
+   * its payout script. dlcdevkit has whoever pays for the accepter's output
+   * pay for them: the accepter when it funds, otherwise the offerer.
+   */
+  private get acceptOverrideExtraLen(): number {
+    return this.acceptPayoutScriptLen - this.acceptPayoutSPK.length;
+  }
+
   private getOfferFees(): IFees {
+    // An accepter with no inputs pays no fees here, so the offerer reserves
+    // the extra override bytes for it. Without overrides this adds nothing.
+    const extraLen =
+      this.acceptInputs.length === 0 ? this.acceptOverrideExtraLen : 0;
     return this.computeFees(
       this.offerInputs,
-      this.offerPayoutSPK.length,
+      this.offerPayoutSPK.length + extraLen,
       this.offerChangeSPK,
       this.numContracts,
     );
