@@ -60,6 +60,20 @@ describe('PayoutScriptOverrides TLV', () => {
     expect(() => PayoutScriptOverrides.deserialize(bad)).to.throw(/variant 2/);
   });
 
+  it('rejects an outcome that is not valid UTF-8', () => {
+    const bad = Buffer.from(WIRE);
+    bad[7] = 0xff; // first byte of the outcome string
+    expect(() => PayoutScriptOverrides.deserialize(bad)).to.throw();
+  });
+
+  it('round trips an empty record, which dlcdevkit accepts', () => {
+    const empty = Buffer.from('fdfded0100', 'hex');
+    const decoded = PayoutScriptOverrides.deserialize(empty);
+    expect(decoded.overrides).to.deep.equal([]);
+    expect(() => decoded.validate()).to.not.throw();
+    expect(decoded.serialize()).to.deep.equal(empty);
+  });
+
   it('rejects trailing bytes in the body', () => {
     const bad = Buffer.concat([
       Buffer.from('fdfded0200', 'hex'), // zero overrides

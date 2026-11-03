@@ -19,6 +19,8 @@ export interface INumericOverrideOutcome {
 
 export type OverrideOutcome = IEnumOverrideOutcome | INumericOverrideOutcome;
 
+const UTF8 = new TextDecoder('utf-8', { fatal: true });
+
 const ENUM_VARIANT = 0;
 const NUMERIC_VARIANT = 1;
 
@@ -71,7 +73,8 @@ export class PayoutScriptOverrides implements IDlcMessage {
         const outcomeLength = Number(reader.readBigSize());
         outcome = {
           type: 'enum',
-          outcome: reader.readBytes(outcomeLength).toString('utf8'),
+          // dlcdevkit rejects an outcome that is not valid UTF-8.
+          outcome: UTF8.decode(reader.readBytes(outcomeLength)),
         };
       } else if (variant === NUMERIC_VARIANT) {
         outcome = {
