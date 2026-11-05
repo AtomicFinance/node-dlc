@@ -625,6 +625,55 @@ describe('DlcOffer', () => {
       expect(deserialized.toJSON()).to.deep.equal(dlcOffer.toJSON());
     });
   });
+  describe('dlcdevkit compatibility', () => {
+    // dlcdevkit's enum_dual_funded.offer.bin fixture with a PayoutScriptOverrides
+    // record that dlcdevkit itself set and encoded: the "down" outcome pays
+    // 0014 + 0x11 * 20 in place of the accepter's payout script.
+    const ddkOffer = Buffer.from(
+      'a71a000000010006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7' +
+        'b2b73cf188910f407b2ea781987f17452053fcbb7bcba5b7416872233df4008b' +
+        'b38d1218eb95fd0000000000000186a0000202757000000000000186a004646f' +
+        '776e000000000000000000fdd824a7c575d0f83e794a4c154d4335905cf32914' +
+        '21b64c363087e1425b4cf2f0d37a99809a27464fc47cf39935c50acfb448fd44' +
+        '7ba451ca06c8bad80cd4355cac256f44b9c62b2e40f9623c61ec464829cf5af4' +
+        '9e0abf99cdac5564d05158ddf5a925fdd8224300019c5530e4385ebc41cdaf82' +
+        '57edf9a2baaf8506a4099103211e6ed7382103ed67000002eefdd8060a000202' +
+        '757004646f776e0e73746174656c6573732d74657374031b84c5567b12644099' +
+        '5d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f00160014db945efb35' +
+        '604305b8e8e59b3dceebb4959f97ba86aaa90d6c8141fb000000000000c35001' +
+        '0000000000000001520200000001000000000000000000000000000000000000' +
+        '0000000000000000000000000000ffffffff00ffffffff01f049020000000000' +
+        '160014db945efb35604305b8e8e59b3dceebb4959f97ba0000000000000000ff' +
+        'ffffff006c00000000160014db945efb35604305b8e8e59b3dceebb4959f97ba' +
+        'a1f65695663e5fe18d49787f6e6bd72b0000000000000002000002ee000003e8' +
+        'fdfded1f010004646f776e001600141111111111111111111111111111111111' +
+        '111111',
+      'hex',
+    );
+
+    it('decodes an offer dlcdevkit encoded with overrides', () => {
+      const offer = DlcOffer.deserialize(ddkOffer);
+
+      expect(offer.unknownTlvs).to.equal(undefined);
+      expect(offer.payoutScriptOverrides.overrides).to.deep.equal([
+        {
+          outcome: { type: 'enum', outcome: 'down' },
+          scriptPubkey: Buffer.from(
+            '00141111111111111111111111111111111111111111',
+            'hex',
+          ),
+        },
+      ]);
+      expect(() => offer.validate()).to.not.throw();
+    });
+
+    it('re-encodes the offer to the bytes dlcdevkit wrote', () => {
+      expect(
+        DlcOffer.deserialize(ddkOffer).serialize().toString('hex'),
+      ).to.equal(ddkOffer.toString('hex'));
+    });
+  });
+
   describe('payout script overrides validation', () => {
     const script = Buffer.from('0014aabb', 'hex');
 
