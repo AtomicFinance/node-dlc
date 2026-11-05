@@ -2,6 +2,8 @@ import { expect } from 'chai';
 
 import {
   DEFAULT_MAX_WITNESS_LEN,
+  DualFundingTxFinalizer,
+  fundingInputWithWitnessLen,
   getFinalizerByCount,
   getMaxWitnessLen,
 } from '../../lib';
@@ -48,6 +50,44 @@ describe('TxFinalizer', () => {
       expect(() =>
         getFinalizerByCount(BigInt(1), 2, 1, 1, [getMaxWitnessLen('p2tr')]),
       ).to.throw('Expected 2 witness lengths, got 1');
+    });
+  });
+  describe('acceptOverrideExtraLen', () => {
+    const p2wpkh = Buffer.alloc(22);
+    const inputs = () => [fundingInputWithWitnessLen(DEFAULT_MAX_WITNESS_LEN)];
+    const finalizer = (acceptFunds: boolean, extraLen?: number) =>
+      new DualFundingTxFinalizer(
+        inputs(),
+        p2wpkh,
+        p2wpkh,
+        acceptFunds ? inputs() : [],
+        p2wpkh,
+        p2wpkh,
+        BigInt(2),
+        1,
+        extraLen,
+      );
+
+    it('has the accepter pay for the extra bytes when it funds', () => {
+      // A 34-byte override for a 22-byte accept script: 12 extra vbytes,
+      // ceil((249 + 4 * 34) / 4) = 97 against 85.
+      expect(finalizer(true).acceptFutureFee).to.equal(BigInt(85 * 2));
+      expect(finalizer(true, 12).acceptFutureFee).to.equal(BigInt(97 * 2));
+      expect(finalizer(true, 12).offerFutureFee).to.equal(
+        finalizer(true).offerFutureFee,
+      );
+    });
+
+    it('has the offerer pay for them when the accepter funds nothing', () => {
+      expect(finalizer(false, 12).offerFutureFee).to.equal(
+        finalizer(false).offerFutureFee + BigInt(12 * 2),
+      );
+      expect(finalizer(false, 12).acceptFees).to.equal(BigInt(0));
+    });
+
+    it('rejects a negative or fractional length', () => {
+      expect(() => finalizer(true, -1)).to.throw(/non-negative integer/);
+      expect(() => finalizer(true, 1.5)).to.throw(/non-negative integer/);
     });
   });
 });

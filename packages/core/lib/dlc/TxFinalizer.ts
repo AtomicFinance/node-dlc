@@ -68,13 +68,47 @@ export class DualFundingTxFinalizer {
     readonly acceptChangeSPK: Buffer,
     readonly feeRate: bigint,
     readonly numContracts = 1,
-  ) {}
+    /**
+     * Bytes by which the scripts CETs may pay the accepter exceed its payout
+     * script, summed over the batch's contracts: for each contract, the
+     * longest PayoutScriptOverrides script minus the accept payout script,
+     * or zero. Each byte is one vbyte of CET fee, paid by whoever pays for
+     * the accepter's output, as dlcdevkit has it: the accepter when it funds,
+     * otherwise the offerer.
+     */
+    readonly acceptOverrideExtraLen = 0,
+  ) {
+    if (
+      !Number.isInteger(acceptOverrideExtraLen) ||
+      acceptOverrideExtraLen < 0
+    ) {
+      throw new Error('acceptOverrideExtraLen must be a non-negative integer');
+    }
+  }
+
+  /** The CET fee for the extra override bytes, in sats. */
+  public get overrideExtraFee(): bigint {
+    return this.feeRate * BigInt(this.acceptOverrideExtraLen);
+  }
+
+  /** The part of `overrideExtraFee` in the offerer's future fee. */
+  public get offerOverrideExtraFee(): bigint {
+    return this.acceptInputs.length === 0 && this.offerInputs.length > 0
+      ? this.overrideExtraFee
+      : BigInt(0);
+  }
+
+  /** The part of `overrideExtraFee` in the accepter's future fee. */
+  public get acceptOverrideExtraFee(): bigint {
+    return this.acceptInputs.length > 0 ? this.overrideExtraFee : BigInt(0);
+  }
 
   private computeFees(
     _inputs: FundingInput[],
     payoutSPK: Buffer,
     changeSPK: Buffer,
     numContracts: number,
+    extraFutureFee: bigint,
   ): IFees {
     // If no inputs, return zero fees (matches C++ layer behavior for single-funded DLCs)
     if (_inputs.length === 0) {
@@ -97,7 +131,7 @@ export class DualFundingTxFinalizer {
       .div(4)
       .ceil()
       .toNumber();
-    const futureFee = this.feeRate * BigInt(futureFeeVBytes);
+    const futureFee = this.feeRate * BigInt(futureFeeVBytes) + extraFutureFee;
 
     // https://github.com/discreetlogcontracts/dlcspecs/blob/8ee4bbe816c9881c832b1ce320b9f14c72e3506f/Transactions.md#expected-weight-of-the-funding-transaction
     const inputWeight = inputs.reduce((total, input) => {
@@ -119,6 +153,7 @@ export class DualFundingTxFinalizer {
       this.offerPayoutSPK,
       this.offerChangeSPK,
       this.numContracts,
+      this.offerOverrideExtraFee,
     );
   }
 
@@ -128,6 +163,7 @@ export class DualFundingTxFinalizer {
       this.acceptPayoutSPK,
       this.acceptChangeSPK,
       this.numContracts,
+      this.acceptOverrideExtraFee,
     );
   }
 

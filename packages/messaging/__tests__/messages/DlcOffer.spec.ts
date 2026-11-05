@@ -7,9 +7,13 @@ import {
   OrderIrcInfoV0,
   OrderMetadataV0,
   OrderPositionInfo,
+  PayoutScriptOverrides,
 } from '../../lib';
 import { EnumeratedDescriptor } from '../../lib/messages/ContractDescriptor';
-import { SingleContractInfo } from '../../lib/messages/ContractInfo';
+import {
+  DisjointContractInfo,
+  SingleContractInfo,
+} from '../../lib/messages/ContractInfo';
 import {
   DlcOffer,
   DlcOfferContainer,
@@ -202,6 +206,44 @@ describe('DlcOffer', () => {
         const serialized = instance.serialize();
         expect(DlcOffer.deserialize(serialized).type).to.equal(
           MessageType.DlcOffer,
+        );
+      });
+
+      it('deserializes with payout script overrides', () => {
+        const overrides = new PayoutScriptOverrides();
+        overrides.overrides = [
+          {
+            outcome: { type: 'enum', outcome: 'win' },
+            scriptPubkey: Buffer.from('0014aabb', 'hex'),
+          },
+        ];
+        instance.payoutScriptOverrides = overrides;
+
+        const deserialized = DlcOffer.deserialize(instance.serialize());
+
+        expect(deserialized.unknownTlvs).to.equal(undefined);
+        expect(
+          deserialized.payoutScriptOverrides?.scriptForEnumOutcome('win'),
+        ).to.deep.equal(Buffer.from('0014aabb', 'hex'));
+        expect(deserialized.serialize()).to.deep.equal(instance.serialize());
+      });
+
+      it('rejects two payout script override records', () => {
+        const overrides = new PayoutScriptOverrides();
+        overrides.overrides = [
+          {
+            outcome: { type: 'enum', outcome: 'win' },
+            scriptPubkey: Buffer.from('0014aabb', 'hex'),
+          },
+        ];
+        const twice = Buffer.concat([
+          instance.serialize(),
+          overrides.serialize(),
+          overrides.serialize(),
+        ]);
+
+        expect(() => DlcOffer.deserialize(twice)).to.throw(
+          /two PayoutScriptOverrides records/,
         );
       });
 
@@ -581,6 +623,150 @@ describe('DlcOffer', () => {
       const deserialized = DlcOffer.deserialize(serialized);
 
       expect(deserialized.toJSON()).to.deep.equal(dlcOffer.toJSON());
+    });
+  });
+  describe('dlcdevkit compatibility', () => {
+    // dlcdevkit's enum_dual_funded.offer.bin fixture with a PayoutScriptOverrides
+    // record that dlcdevkit itself set and encoded: the "down" outcome pays
+    // 0014 + 0x11 * 20 in place of the accepter's payout script.
+    const ddkOffer = Buffer.from(
+      'a71a000000010006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7' +
+        'b2b73cf188910f407b2ea781987f17452053fcbb7bcba5b7416872233df4008b' +
+        'b38d1218eb95fd0000000000000186a0000202757000000000000186a004646f' +
+        '776e000000000000000000fdd824a7c575d0f83e794a4c154d4335905cf32914' +
+        '21b64c363087e1425b4cf2f0d37a99809a27464fc47cf39935c50acfb448fd44' +
+        '7ba451ca06c8bad80cd4355cac256f44b9c62b2e40f9623c61ec464829cf5af4' +
+        '9e0abf99cdac5564d05158ddf5a925fdd8224300019c5530e4385ebc41cdaf82' +
+        '57edf9a2baaf8506a4099103211e6ed7382103ed67000002eefdd8060a000202' +
+        '757004646f776e0e73746174656c6573732d74657374031b84c5567b12644099' +
+        '5d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f00160014db945efb35' +
+        '604305b8e8e59b3dceebb4959f97ba86aaa90d6c8141fb000000000000c35001' +
+        '0000000000000001520200000001000000000000000000000000000000000000' +
+        '0000000000000000000000000000ffffffff00ffffffff01f049020000000000' +
+        '160014db945efb35604305b8e8e59b3dceebb4959f97ba0000000000000000ff' +
+        'ffffff006c00000000160014db945efb35604305b8e8e59b3dceebb4959f97ba' +
+        'a1f65695663e5fe18d49787f6e6bd72b0000000000000002000002ee000003e8' +
+        'fdfded1f010004646f776e001600141111111111111111111111111111111111' +
+        '111111',
+      'hex',
+    );
+
+    it('decodes an offer dlcdevkit encoded with overrides', () => {
+      const offer = DlcOffer.deserialize(ddkOffer);
+
+      expect(offer.unknownTlvs).to.equal(undefined);
+      expect(offer.payoutScriptOverrides.overrides).to.deep.equal([
+        {
+          outcome: { type: 'enum', outcome: 'down' },
+          scriptPubkey: Buffer.from(
+            '00141111111111111111111111111111111111111111',
+            'hex',
+          ),
+        },
+      ]);
+      expect(() => offer.validate()).to.not.throw();
+    });
+
+    it('re-encodes the offer to the bytes dlcdevkit wrote', () => {
+      expect(
+        DlcOffer.deserialize(ddkOffer).serialize().toString('hex'),
+      ).to.equal(ddkOffer.toString('hex'));
+    });
+  });
+
+  describe('payout script overrides validation', () => {
+    const script = Buffer.from('0014aabb', 'hex');
+
+    function withOverrides(
+      ...outcomes: PayoutScriptOverrides['overrides'][number]['outcome'][]
+    ): void {
+      const overrides = new PayoutScriptOverrides();
+      overrides.overrides = outcomes.map((outcome) => ({
+        outcome,
+        scriptPubkey: script,
+      }));
+      instance.payoutScriptOverrides = overrides;
+    }
+
+    it('accepts an override on an outcome that pays the accepter', () => {
+      withOverrides({ type: 'enum', outcome: 'win' });
+      expect(() => instance.validate()).to.not.throw();
+    });
+
+    it('rejects an outcome no descriptor has', () => {
+      withOverrides({ type: 'enum', outcome: 'liquidated' });
+      expect(() => instance.validate()).to.throw(/covers no CET/);
+    });
+
+    it('rejects an outcome that pays the accepter under the dust limit', () => {
+      // 'lose' pays the offerer everything and the accepter nothing.
+      withOverrides({ type: 'enum', outcome: 'lose' });
+      expect(() => instance.validate()).to.throw(/dust limit/);
+    });
+
+    it('accepts an accepter payout of exactly the dust limit', () => {
+      const descriptor = (instance.contractInfo as SingleContractInfo)
+        .contractDescriptor as EnumeratedDescriptor;
+      descriptor.outcomes[1].localPayout = BigInt(200000000 - 1000);
+      withOverrides({ type: 'enum', outcome: 'draw' });
+      expect(() => instance.validate()).to.not.throw();
+    });
+
+    it('rejects two overrides on one outcome', () => {
+      withOverrides(
+        { type: 'enum', outcome: 'win' },
+        { type: 'enum', outcome: 'win' },
+      );
+      expect(() => instance.validate()).to.throw(/another override covers/);
+    });
+
+    it('rejects a numeric range on an enum contract', () => {
+      withOverrides({ type: 'numeric', start: BigInt(0), end: BigInt(10) });
+      expect(() => instance.validate()).to.throw(/covers no CET/);
+    });
+
+    describe('on a disjoint contract', () => {
+      beforeEach(() => {
+        const single = createTestContractInfo();
+        const second = createTestContractInfo();
+        const descriptor = second.contractDescriptor as EnumeratedDescriptor;
+        descriptor.outcomes = [
+          { outcome: 'liquidated', localPayout: BigInt(0) },
+          { outcome: 'win', localPayout: BigInt(200000000) },
+        ];
+        const disjoint = new DisjointContractInfo();
+        disjoint.totalCollateral = single.totalCollateral;
+        disjoint.contractOraclePairs = [
+          {
+            contractDescriptor: single.contractDescriptor,
+            oracleInfo: single.oracleInfo,
+          },
+          {
+            contractDescriptor: descriptor,
+            oracleInfo: second.oracleInfo,
+          },
+        ];
+        instance.contractInfo = disjoint;
+      });
+
+      it('finds an outcome in a later contract info', () => {
+        withOverrides({ type: 'enum', outcome: 'liquidated' });
+        expect(() => instance.validate()).to.not.throw();
+      });
+
+      it('checks dust in every contract info the outcome appears in', () => {
+        // 'win' pays the accepter everything in the first contract info and
+        // nothing in the second.
+        withOverrides({ type: 'enum', outcome: 'win' });
+        expect(() => instance.validate()).to.throw(/dust limit/);
+      });
+    });
+
+    it('rejects an empty script', () => {
+      withOverrides({ type: 'enum', outcome: 'win' });
+      instance.payoutScriptOverrides.overrides[0].scriptPubkey =
+        Buffer.alloc(0);
+      expect(() => instance.validate()).to.throw(/empty/);
     });
   });
 });

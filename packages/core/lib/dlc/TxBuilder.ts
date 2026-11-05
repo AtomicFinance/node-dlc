@@ -44,6 +44,9 @@ export class BatchDlcTxBuilder {
    * @param fundingInputs The inputs to be used for funding
    * @param feeRatePerVb Fee rate in satoshis per virtual byte
    * @param numContracts Number of DLC contracts being created (default: 1)
+   * @param overrideExtraLen PayoutScriptOverrides bytes the offerer reserves
+   *   CET fee for, summed over the contracts: the bytes by which the longest
+   *   override script exceeds the accepter's payout script (default: 0)
    * @returns Maximum collateral amount in satoshis
    *
    * @example
@@ -67,6 +70,7 @@ export class BatchDlcTxBuilder {
     fundingInputs: FundingInput[],
     feeRatePerVb: bigint,
     numContracts = 1,
+    overrideExtraLen = 0,
   ): bigint {
     // Calculate total input value
     const totalInputValue = fundingInputs.reduce((total, input) => {
@@ -87,6 +91,7 @@ export class BatchDlcTxBuilder {
       fakeSPK,
       feeRatePerVb,
       numContracts,
+      overrideExtraLen,
     );
 
     // For exact-amount scenarios, we need to account for:
@@ -132,6 +137,7 @@ export class BatchDlcTxBuilder {
       Script.p2wshLock(multisigScript),
     );
 
+    const overrideExtraLens = this.overrideExtraLens();
     const finalizer = new DualFundingTxFinalizer(
       this.dlcOffers[0].fundingInputs,
       this.dlcOffers[0].payoutSpk,
@@ -141,6 +147,7 @@ export class BatchDlcTxBuilder {
       this.dlcAccepts[0].changeSpk,
       this.dlcOffers[0].feeRatePerVb,
       this.dlcOffers.length,
+      overrideExtraLens.reduce((total, len) => total + len, 0),
     );
 
     this.dlcOffers[0].fundingInputs.forEach((input) => {
@@ -193,15 +200,20 @@ export class BatchDlcTxBuilder {
       return offerInput + acceptInput;
     });
 
-    const fundingValues = totalInputs.map((totalInput) => {
+    // The extra override bytes are priced per contract, so each funding
+    // output carries its own contract's share rather than an even split.
+    const { offerOverrideExtraFee, acceptOverrideExtraFee } = finalizer;
+    const overrideExtraCharged =
+      offerOverrideExtraFee + acceptOverrideExtraFee > BigInt(0);
+    const fundingValues = totalInputs.map((totalInput, i) => {
       const offerFutureFeePerOffer = new Decimal(
-        finalizer.offerFutureFee.toString(),
+        (finalizer.offerFutureFee - offerOverrideExtraFee).toString(),
       )
         .div(this.dlcOffers.length)
         .ceil()
         .toNumber();
       const acceptFutureFeePerAccept = new Decimal(
-        finalizer.acceptFutureFee.toString(),
+        (finalizer.acceptFutureFee - acceptOverrideExtraFee).toString(),
       )
         .div(this.dlcAccepts.length)
         .ceil()
@@ -210,7 +222,10 @@ export class BatchDlcTxBuilder {
       return (
         totalInput +
         Value.fromSats(offerFutureFeePerOffer).sats +
-        Value.fromSats(acceptFutureFeePerAccept).sats
+        Value.fromSats(acceptFutureFeePerAccept).sats +
+        (overrideExtraCharged
+          ? finalizer.feeRate * BigInt(overrideExtraLens[i])
+          : BigInt(0))
       );
     });
 
@@ -273,6 +288,21 @@ export class BatchDlcTxBuilder {
     });
 
     return tx.toTx();
+  }
+
+  /**
+   * For each contract, the bytes by which the longest PayoutScriptOverrides
+   * script exceeds the accepter's payout script, or zero. dlcdevkit reserves
+   * the accepter's CET fee at the longest script a CET may pay it.
+   */
+  private overrideExtraLens(): number[] {
+    return this.dlcOffers.map((offer, i) => {
+      const acceptPayoutSpk = this.dlcAccepts[i].payoutSpk;
+      const longest =
+        offer.payoutScriptOverrides?.acceptPayoutScriptLen(acceptPayoutSpk) ??
+        acceptPayoutSpk.length;
+      return longest - acceptPayoutSpk.length;
+    });
   }
 
   private ensureSameFundingInputs(): void {

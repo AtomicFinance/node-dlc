@@ -107,6 +107,12 @@ export enum MessageType {
 
   BatchFundingGroup = 65430,
 
+  /**
+   * Per-outcome payout scripts on a DlcOffer. Odd application range, shared
+   * with the ddk-messages record of the same name.
+   */
+  PayoutScriptOverrides = 65005,
+
   IrcMessageV0 = 59314,
 
   NodeAnnouncement = 51394,

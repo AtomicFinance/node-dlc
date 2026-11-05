@@ -3,6 +3,7 @@ import {
   DlcAcceptWithoutSigs,
   DlcOffer,
   FundingInput,
+  PayoutScriptOverrides,
 } from '@node-dlc/messaging';
 import { expect } from 'chai';
 
@@ -208,6 +209,19 @@ describe('TxBuilder', () => {
       );
 
       expect(maxCollateral).to.equal(BigInt(0));
+    });
+  });
+
+  describe('BatchDlcTxBuilder.calculateMaxCollateral - payout script overrides', () => {
+    it('leaves room for the extra override bytes', () => {
+      const inputs = [createTestFundingInput(BigInt(1000000))];
+      const feeRate = BigInt(5);
+      expect(
+        BatchDlcTxBuilder.calculateMaxCollateral(inputs, feeRate, 1, 12),
+      ).to.equal(
+        BatchDlcTxBuilder.calculateMaxCollateral(inputs, feeRate, 1) -
+          BigInt(12) * feeRate,
+      );
     });
   });
 
@@ -459,6 +473,111 @@ describe('TxBuilder', () => {
       // Should have 2 funding outputs + change outputs (if any)
       expect(tx.outputs.length).to.be.at.least(2);
       expect(tx.inputs.length).to.equal(3); // All unique inputs
+    });
+  });
+  describe('BatchDlcTxBuilder.buildFundingTransaction - payout script overrides', () => {
+    const p2tr = Buffer.from('5120' + '11'.repeat(32), 'hex');
+
+    const overridesPaying = (script: Buffer): PayoutScriptOverrides => {
+      const overrides = new PayoutScriptOverrides();
+      overrides.overrides = [
+        {
+          outcome: { type: 'enum', outcome: 'liquidated' },
+          scriptPubkey: script,
+        },
+      ];
+      return overrides;
+    };
+
+    const build = (overrides?: PayoutScriptOverrides, feeRate = BigInt(1)) => {
+      const offer = createTestDlcOffer(
+        BigInt(1000000),
+        [createTestFundingInput(BigInt(1010000))],
+        feeRate,
+      );
+      offer.payoutScriptOverrides = overrides;
+      const accept = createTestDlcAccept(BigInt(1000000), [
+        createTestFundingInput(BigInt(1005000), 2),
+      ]);
+      const tx = new BatchDlcTxBuilder(
+        [offer],
+        [accept],
+      ).buildFundingTransaction();
+      // Outputs by serial id: funding (1), offer change (3), accept change (5).
+      return {
+        funding: tx.outputs[0].value.sats,
+        offerChange: tx.outputs[1].value.sats,
+        acceptChange: tx.outputs[2].value.sats,
+      };
+    };
+
+    it('reserves the accepter CET fee for a longer override script', () => {
+      const feeRate = BigInt(3);
+      const plain = build(undefined, feeRate);
+      const overridden = build(overridesPaying(p2tr), feeRate);
+
+      // ceil((249 + 4 * 34) / 4) - ceil((249 + 4 * 22) / 4) = 97 - 85 vbytes,
+      // paid by the accepter.
+      const extra = BigInt(12) * feeRate;
+      expect(overridden.funding).to.equal(plain.funding + extra);
+      expect(overridden.acceptChange).to.equal(plain.acceptChange - extra);
+      expect(overridden.offerChange).to.equal(plain.offerChange);
+    });
+
+    it('has a lone funding offerer reserve the extra bytes', () => {
+      const feeRate = BigInt(2);
+      const singleFunded = (overrides?: PayoutScriptOverrides) => {
+        const offer = createTestDlcOffer(
+          BigInt(1000000),
+          [createTestFundingInput(BigInt(1010000))],
+          feeRate,
+        );
+        offer.payoutScriptOverrides = overrides;
+        const accept = createTestDlcAccept(BigInt(0));
+        const tx = new BatchDlcTxBuilder(
+          [offer],
+          [accept],
+        ).buildFundingTransaction();
+        return tx.outputs.map((o) => o.value.sats);
+      };
+
+      const [plainFunding, plainChange] = singleFunded();
+      const [funding, change] = singleFunded(overridesPaying(p2tr));
+      expect(funding).to.equal(plainFunding + BigInt(12) * feeRate);
+      expect(change).to.equal(plainChange - BigInt(12) * feeRate);
+    });
+
+    it('charges each contract of a batch for its own overrides', () => {
+      const offerInput = createTestFundingInput(BigInt(3000000));
+      const acceptInput = createTestFundingInput(BigInt(3000000), 2);
+      const offers = [0, 1].map((i) => {
+        const offer = createTestDlcOffer(BigInt(1000000), [offerInput]);
+        offer.fundOutputSerialId = BigInt(10 + i);
+        return offer;
+      });
+      const accepts = [0, 1].map(() =>
+        createTestDlcAccept(BigInt(1000000), [acceptInput]),
+      );
+      const fundingOutputs = () =>
+        new BatchDlcTxBuilder(offers, accepts)
+          .buildFundingTransaction()
+          .outputs.map((o) => o.value.sats);
+
+      const plain = fundingOutputs();
+      offers[0].payoutScriptOverrides = overridesPaying(p2tr);
+      const mixed = fundingOutputs();
+
+      // Outputs by serial id: offer change (3), accept change (5), then the
+      // funding outputs (10, 11). Only the first contract has an override.
+      expect(mixed[2]).to.equal(plain[2] + BigInt(12));
+      expect(mixed[3]).to.equal(plain[3]);
+      expect(mixed[1]).to.equal(plain[1] - BigInt(12));
+      expect(mixed[0]).to.equal(plain[0]);
+    });
+
+    it('keeps the fee when the override script is no longer', () => {
+      const short = Buffer.from('0014' + '22'.repeat(20), 'hex');
+      expect(build(overridesPaying(short))).to.deep.equal(build());
     });
   });
 });
